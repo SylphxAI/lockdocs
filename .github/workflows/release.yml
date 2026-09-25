@@ -1,8 +1,10 @@
 name: release
 
-# Publishes when packages/lockdocs/package.json carries a version that is not
-# on npm yet: native binaries -> @sylphx/lockdocs -> GitHub release -> MCP
-# Registry. Bump with `bun scripts/set-version.ts X.Y.Z && cargo update -w` in a PR.
+# Publishes when packages/lockdocs/package.json carries a version without a
+# GitHub release yet: native binaries -> npm (each package skipped when already
+# live) -> npx smoke -> GitHub release -> MCP Registry. The GitHub release is
+# the last durable step before the registry, so a failed run resumes on the
+# next push. Bump with `bun scripts/set-version.ts X.Y.Z && cargo update -w`.
 
 on:
   push:
@@ -25,13 +27,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - id: v
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           V=$(node -p "require('./packages/lockdocs/package.json').version")
           echo "version=$V" >> "$GITHUB_OUTPUT"
-          if npm view "@sylphx/lockdocs@$V" version >/dev/null 2>&1; then
-            echo "publish=false" >> "$GITHUB_OUTPUT"; echo "@sylphx/lockdocs@$V already published"
+          if gh release view "v$V" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"; echo "lockdocs $V already released"
           else
-            echo "publish=true" >> "$GITHUB_OUTPUT"; echo "will publish $V"
+            echo "publish=true" >> "$GITHUB_OUTPUT"; echo "will release $V"
           fi
 
   build:
@@ -130,9 +134,8 @@ jobs:
           }
           for key in darwin-arm64 darwin-x64 linux-x64-gnu linux-arm64-gnu win32-x64-msvc; do pub packages/npm/$key; done
           pub packages/lockdocs
-          pub packages/alias
           # The registry can take minutes to serve new versions; wait once for all.
-          for dir in packages/npm/* packages/lockdocs packages/alias; do
+          for dir in packages/npm/* packages/lockdocs; do
             name=$(node -p "require('./$dir/package.json').name")
             for i in $(seq 1 120); do npm view "$name@$V" version >/dev/null 2>&1 && break; sleep 5; done
             npm view "$name@$V" version >/dev/null 2>&1 || { echo "::error::$name@$V not visible after 10 minutes"; exit 1; }
@@ -150,7 +153,6 @@ jobs:
           npx -y "@sylphx/lockdocs@$V" zod "reject unknown keys" | tee docs.out
           grep -q 'zod@3.23.8 README.md' docs.out
           npx -y "@sylphx/lockdocs@$V" api z.object | grep -q 'ZodObject'
-          npx -y "lockdocs@$V" version
       - name: GitHub release
         env:
           GH_TOKEN: ${{ github.token }}

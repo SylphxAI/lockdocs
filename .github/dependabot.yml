@@ -1,0 +1,23 @@
+# bench/projects and the test fixture pin old library versions on purpose
+# (the benchmark compares versions); never bump them.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directories: ["/bench/projects/*", "/crates/lockdocs-core/tests/fixture"]
+    schedule: { interval: monthly }
+    ignore: [{ dependency-name: "*" }]
+  - package-ecosystem: pip
+    directories: ["/bench/projects/*", "/crates/lockdocs-core/tests/fixture"]
+    schedule: { interval: monthly }
+    ignore: [{ dependency-name: "*" }]
+  - package-ecosystem: cargo
+    directories: ["/bench/projects/*", "/crates/lockdocs-core/tests/fixture"]
+    schedule: { interval: monthly }
+    ignore: [{ dependency-name: "*" }]
+  - package-ecosystem: gomod
+    directories: ["/crates/lockdocs-core/tests/fixture"]
+    schedule: { interval: monthly }
+    ignore: [{ dependency-name: "*" }]
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule: { interval: monthly }

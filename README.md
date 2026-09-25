@@ -36,8 +36,6 @@ npx -y @sylphx/lockdocs api axum::Router::route            # exact signature + d
 npx -y @sylphx/lockdocs resolve                            # every pinned version, and whether its docs are here
 ```
 
-`npx lockdocs ...` works too (the unscoped `lockdocs` package is a short alias).
-
 <details>
 <summary>Manual MCP config</summary>
 

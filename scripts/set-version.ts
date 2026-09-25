@@ -14,10 +14,6 @@ json("packages/lockdocs/package.json", (p) => {
   for (const k of Object.keys(p.optionalDependencies)) p.optionalDependencies[k] = v;
 });
 for (const d of readdirSync("packages/npm")) json(`packages/npm/${d}/package.json`, (p) => (p.version = v));
-json("packages/alias/package.json", (p) => {
-  p.version = v;
-  p.dependencies["@sylphx/lockdocs"] = v;
-});
 json("server.json", (s) => {
   s.version = v;
   s.packages[0].version = v;

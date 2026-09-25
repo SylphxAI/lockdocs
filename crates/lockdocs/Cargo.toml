@@ -15,5 +15,4 @@ path = "src/main.rs"
 anyhow = "1"
 lockdocs-core = { path = "../lockdocs-core" }
 serde_json = "1"
-toml_edit = "0.25"
-dirs = "7"
+sylphx-mcp-kit = { git = "https://github.com/SylphxAI/mcp-kit", tag = "v0.1.0" }

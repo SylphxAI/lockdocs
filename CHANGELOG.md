@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1
+
+- **MCP server** now runs on [mcp-kit](https://github.com/SylphxAI/mcp-kit), which uses rmcp, the official Rust MCP SDK, instead of lockdocs' own JSON-RPC loop. Tools and answers are unchanged. The server now also handles protocol negotiation across every spec version, cancellation, progress and pagination.
+- **Shared parts:** `setup`, the npm launcher and the release workflow now come from mcp-kit, shared with the other Sylphx MCP servers.
+
 ## 0.2.0
 
 - **Hybrid retrieval.** BM25 is fused with dense similarity from a small local embedding model (model2vec `potion-retrieval-32M`, distilled from bge-base-en-v1.5, MIT). It is downloaded once (129 MB, SHA-256 verified, stored int8-quantized at 32 MB) on first use; `LOCKDOCS_EMBED=0` or `--offline` keeps lockdocs keyword-only, and any failure falls back to BM25.

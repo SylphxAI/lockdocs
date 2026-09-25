@@ -120,16 +120,18 @@ jobs:
             chmod +x packages/npm/$key/*
           done
           cp README.md LICENSE packages/lockdocs/
-      - name: Publish to npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # npm trusted publishing (OIDC, id-token: write above): no long-lived
+      # token. Each package trusts SylphxAI/lockdocs .github/workflows/release.yml.
+      - name: npm with trusted publishing support
+        run: npm install -g npm@^11.15.0 && npm --version
+      - name: Publish to npm (OIDC, with provenance)
         run: |
           set -euo pipefail
           pub() {
             local dir=$1 name
             name=$(node -p "require('./$dir/package.json').name")
             if npm view "$name@$V" version >/dev/null 2>&1; then echo "= $name@$V already live"; return; fi
-            (cd "$dir" && npm publish --access public)
+            (cd "$dir" && npm publish --access public --provenance)
             echo "+ $name@$V published"
           }
           for key in darwin-arm64 darwin-x64 linux-x64-gnu linux-arm64-gnu win32-x64-msvc; do pub packages/npm/$key; done

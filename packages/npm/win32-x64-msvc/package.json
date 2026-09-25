@@ -1,6 +1,6 @@
 {
   "name": "@sylphx/lockdocs-win32-x64-msvc",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "lockdocs native binary for win32-x64-msvc",
   "os": [
     "win32"

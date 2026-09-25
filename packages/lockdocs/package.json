@@ -1,6 +1,6 @@
 {
   "name": "@sylphx/lockdocs",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "mcpName": "io.github.SylphxAI/lockdocs",
   "description": "Exact-version library docs from your lockfile — local, offline, no rate limits.",
   "bin": {
@@ -15,11 +15,11 @@
     "node": ">=18"
   },
   "optionalDependencies": {
-    "@sylphx/lockdocs-darwin-arm64": "0.2.0",
-    "@sylphx/lockdocs-darwin-x64": "0.2.0",
-    "@sylphx/lockdocs-linux-x64-gnu": "0.2.0",
-    "@sylphx/lockdocs-linux-arm64-gnu": "0.2.0",
-    "@sylphx/lockdocs-win32-x64-msvc": "0.2.0"
+    "@sylphx/lockdocs-darwin-arm64": "0.2.1",
+    "@sylphx/lockdocs-darwin-x64": "0.2.1",
+    "@sylphx/lockdocs-linux-x64-gnu": "0.2.1",
+    "@sylphx/lockdocs-linux-arm64-gnu": "0.2.1",
+    "@sylphx/lockdocs-win32-x64-msvc": "0.2.1"
   },
   "keywords": [
     "mcp",

@@ -16,8 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
       - uses: actions/setup-node@v7
         with:
           node-version: '22'
@@ -33,7 +33,7 @@ jobs:
           echo "$PWD/target/release" >> "$GITHUB_PATH"
           # Warm the per-version caches so the recording shows query time, not indexing.
           for p in next14 next15 pydantic1 pydantic2; do target/release/lockdocs index -C bench/projects/$p >/dev/null; done
-      - uses: charmbracelet/vhs-action@v2
+      - uses: charmbracelet/vhs-action@f6d7db07a432fcd3b06772628d36a57f96d95dcf # v2
         with:
           path: docs/demo.tape
       - uses: actions/upload-artifact@v7

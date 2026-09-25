@@ -99,8 +99,9 @@ pub fn norm_name(eco: Eco, name: &str) -> String {
     }
 }
 
-/// Rough token estimate used for budgets (about 3.6 characters per token for
-/// mixed prose and code; tests in the benchmark use a real tokenizer).
+/// Conservative token estimate used for budgets: 3 characters per token,
+/// which keeps answers within budget under o200k/cl100k tokenizers for
+/// code-heavy text (the benchmark measures with a real tokenizer).
 pub fn est_tokens(s: &str) -> usize {
-    (s.chars().count() * 10).div_ceil(36)
+    s.chars().count().div_ceil(3)
 }

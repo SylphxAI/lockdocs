@@ -504,7 +504,8 @@
    "question": "How do I put a timeout on a future?",
    "expect": [
     [
-     "timeout("
+     "timeout(",
+     "fn timeout"
     ]
    ],
    "reject": [],

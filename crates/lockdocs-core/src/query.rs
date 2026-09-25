@@ -946,7 +946,7 @@ impl Pack {
         }
         if left > 120 {
             // Trim to the remaining budget at a line boundary.
-            let max_chars = left * 36 / 10;
+            let max_chars = left * 3;
             let mut cut = String::new();
             for line in b.lines() {
                 if cut.len() + line.len() + 1 > max_chars {

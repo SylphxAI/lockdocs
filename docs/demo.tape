@@ -20,10 +20,10 @@ Show
 Type "# Is cookies() async? Depends on your Next.js."
 Enter
 Sleep 600ms
-Type "lockdocs api cookies --pkg next | head -6"
+Type "lockdocs api cookies --pkg next | head -5"
 Enter
 Sleep 2.8s
-Type "cd ../next15 && lockdocs api cookies --pkg next | head -6"
+Type "cd ../next15 && lockdocs api cookies --pkg next | head -5"
 Enter
 Sleep 3.2s
 Type "clear"

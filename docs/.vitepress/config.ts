@@ -11,17 +11,28 @@ export default defineConfig({
   appearance: 'force-dark',
   cleanUrls: true,
   lastUpdated: true,
+  sitemap: { hostname: url },
   head: [
     ['link', { rel: 'icon', href: icon }],
     ['meta', { name: 'theme-color', content: '#06080c' }],
-    ['link', { rel: 'canonical', href: url }],
     ['meta', { property: 'og:type', content: 'website' }],
-    ['meta', { property: 'og:title', content: 'lockdocs' }],
-    ['meta', { property: 'og:description', content: desc }],
-    ['meta', { property: 'og:url', content: url }],
+    ['meta', { property: 'og:site_name', content: 'lockdocs' }],
     ['meta', { property: 'og:image', content: `${url}img/demo.gif` }],
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
   ],
+  // Each page names its own URL, so search engines index every page, not just the home page.
+  transformPageData(pageData) {
+    const pageUrl = url + pageData.relativePath.replace(/(^|\/)index\.md$/, '$1').replace(/\.md$/, '')
+    const pageTitle = pageData.frontmatter.title ?? (pageData.title || 'lockdocs')
+    const pageDesc = pageData.frontmatter.description ?? desc
+    pageData.frontmatter.head ??= []
+    pageData.frontmatter.head.push(
+      ['link', { rel: 'canonical', href: pageUrl }],
+      ['meta', { property: 'og:url', content: pageUrl }],
+      ['meta', { property: 'og:title', content: pageTitle }],
+      ['meta', { property: 'og:description', content: pageDesc }],
+    )
+  },
   themeConfig: {
     logo: { src: '/logo.svg', alt: 'lockdocs' },
     nav: [

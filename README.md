@@ -34,6 +34,7 @@ From a terminal, inside any project:
 npx -y @sylphx/lockdocs zod "reject unknown keys"          # docs for the zod version in your lockfile
 npx -y @sylphx/lockdocs api axum::Router::route            # exact signature + doc comment
 npx -y @sylphx/lockdocs resolve                            # every pinned version, and whether its docs are here
+npx -y @sylphx/lockdocs fetch                              # once: add upstream docs at each version's git tag
 ```
 
 <details>
@@ -68,7 +69,9 @@ lockdocs takes the version question off the table:
 - **Exact version, zero config.** It reads `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `bun.lock`, `Cargo.lock`, `uv.lock`, `poetry.lock`, `Pipfile.lock`, `requirements*.txt` and `go.mod`. No library IDs, no "use v14" in the prompt.
 - **Docs that ship with the code.** READMEs, changelogs and `docs/` folders, plus the API reference in the package itself: `.d.ts` declarations with JSDoc, Python docstrings and stubs, rustdoc comments, Go doc comments. If it is installed, it is documented, including your private and internal packages.
 - **Offline and unlimited.** Everything is read from `node_modules`, your virtualenv, `~/.cargo/registry` and the Go module cache. No network, no account, no rate limit, and nothing about your dependencies leaves your machine.
-- **Small, cited answers.** BM25 over symbols and doc sections, packed into a token budget (2,000 by default), every section cited as `package@version path:line`.
+- **Upstream docs at the exact tag, when you want them.** Packages like Next.js, Django and FastAPI ship no docs. `lockdocs fetch` pulls their docs folders from GitHub at the git tag of your pinned version, once, then stays offline.
+- **Meaning, not just words.** Hybrid retrieval: BM25 fused with a small local embedding model (downloaded once, 32 MB on disk), plus API redirects from deprecation notes ("use `model_validate` instead").
+- **Small, cited answers.** Packed into a token budget (1,200 by default), every section cited as `package@version path:line`.
 
 ## What your agent gets
 
@@ -99,31 +102,36 @@ The same call in a pydantic 1 project answers that pydantic 1.10.18 has no `mode
 
 | Ecosystem | Versions from | Docs read from | API reference |
 |---|---|---|---|
-| npm | `package-lock.json`, `npm-shrinkwrap.json`, `pnpm-lock.yaml` (v5-v9), `yarn.lock` (v1 and Berry), `bun.lock`; else `package.json` + `node_modules` | `node_modules` (including pnpm's `.pnpm` store and monorepo roots) | `.d.ts`/`.d.mts`/`.d.cts` with JSDoc; `@types/*` when the package ships none; JSDoc'd JS otherwise |
+| npm | `package-lock.json`, `npm-shrinkwrap.json`, `pnpm-lock.yaml` (v5-v9), `yarn.lock` (v1 and Berry), `bun.lock`; else `package.json` + `node_modules` | `node_modules` (including pnpm's `.pnpm` store and monorepo roots), Yarn PnP zip cache (`.yarn/cache`, global Berry cache) | `.d.ts`/`.d.mts`/`.d.cts` with JSDoc; `@types/*` when the package ships none; JSDoc'd JS otherwise |
 | PyPI | `uv.lock`, `poetry.lock`, `pdm.lock`, `Pipfile.lock`, `requirements*.txt`; else the virtualenv | `.venv`, `venv`, `$VIRTUAL_ENV`, `$CONDA_PREFIX`, then the system interpreter | Docstrings and signatures from `.py`, `.pyi` stubs; README from the wheel's METADATA |
-| crates.io | `Cargo.lock` | `~/.cargo/registry/src` (or `$CARGO_HOME`), `vendor/` | Public items with rustdoc (`///`, `//!`), including items declared inside macros such as tokio's `cfg_rt!` |
+| crates.io | `Cargo.lock` | `~/.cargo/registry/src` (or `$CARGO_HOME`), git dependencies from `~/.cargo/git/checkouts`, `vendor/` | Public items with rustdoc (`///`, `//!`), including items declared inside macros such as tokio's `cfg_rt!` |
 | Go | `go.mod` (with `replace`) | `$GOMODCACHE`/`~/go/pkg/mod`, `vendor/` | Exported funcs, methods, types, interface methods with doc comments; package docs |
 
 Legacy copies bundled inside a package (`zod/v3` inside zod 4, `pydantic/v1` inside pydantic 2) rank below the current API.
 
+### Upstream docs and missing packages (opt-in)
+
+`lockdocs fetch` adds, once, each direct dependency's upstream docs: it finds the GitHub repository in the package's own metadata and the git tag of your pinned version, and downloads only the docs folders at that tag (Markdown, MDX, reStructuredText, docs examples). Answers then cite `next@15.1.0 upstream:docs/01-app/.../cookies.mdx:12`. See [Upstream docs and fetching](https://sylphxai.github.io/lockdocs/guide/fetch).
+
 ### Not installed? Fetch the exact version (opt-in)
 
-Out of the box lockdocs never touches the network. If a pinned package is not installed (a fresh clone, CI, a lockfile you are reviewing), it says so and tells you how to install it. Pass `--fetch` (or set `LOCKDOCS_FETCH=1`, or `lockdocs setup --fetch`) to let it download exactly that version from the registry (npm tarball, PyPI wheel or sdist, crates.io `.crate`, Go module proxy zip) into its cache. Fetched answers say `fetched from registry.npmjs.org`. You can also ask for a version you do not use: `lockdocs npm:zod@4.1.5 "strict object" --fetch`.
+Out of the box lockdocs reads only your disk (plus the one-time embedding model download). If a pinned package is not installed (a fresh clone, CI, a lockfile you are reviewing), it says so and tells you how to install it. Pass `--fetch` (or set `LOCKDOCS_FETCH=1`, or `lockdocs setup --fetch`) to let it download exactly that version from the registry (npm tarball, PyPI wheel or sdist, crates.io `.crate`, Go module proxy zip) into its cache. Fetched answers say `fetched from registry.npmjs.org`. You can also ask for a version you do not use: `lockdocs npm:zod@4.1.5 "strict object" --fetch`.
 
 ## Benchmarks
 
-36 questions whose correct answer depends on the version (zod 3 vs 4, Next.js 14 vs 15, React Router 6 vs 7, pydantic 1 vs 2, axum 0.7 vs 0.8, and tokio), each asked in a real project with that version installed. An answer passes when it contains the version-correct API and none of the other version's. Same questions, same grader, against Context7's anonymous API on the same GitHub-hosted runner ([run](https://github.com/SylphxAI/lockdocs/actions/runs/36118537122)):
+70 questions whose correct answer depends on the version, over 14 libraries (zod, Next.js, React Router, pydantic, axum, tokio, Tailwind CSS, ESLint, Prisma, React, Vite, Express, SQLAlchemy, Django, FastAPI), each asked in a real project with that version installed. An answer passes when it contains the version-correct API and none of the other version's. Same questions and grader against Context7's anonymous API, on a GitHub-hosted runner ([run](https://github.com/SylphxAI/lockdocs/actions/runs/36125903106)):
 
-| | correct | older major | newer major | median tokens | median latency |
-|---|---|---|---|---|---|
-| **lockdocs** | **31/36** | **14/16** | 15/17 | 1,531 | **16 ms** |
-| Context7 (anonymous) | 27/36 | 8/16 | **16/17** | **979** | 1,723 ms |
+| | correct | older majors | newer majors | tokio | median tokens | median latency |
+|---|---|---|---|---|---|---|
+| **lockdocs + `lockdocs fetch`** | **55/70** | **24/33** | 29/34 | 2/3 | **875** | **87 ms** |
+| lockdocs, package files only | 46/70 | 22/33 | 22/34 | 2/3 | 915 | 49 ms |
+| Context7 (anonymous) | 49/70 | 12/33 | **34/34** | **3/3** | 908 | 2,011 ms |
 
-- **Older versions are where agents go wrong, and where lockdocs wins.** All five of Context7's pydantic 1 answers contained pydantic 2 APIs (it serves one unversioned pydantic library), and its Next.js 14 `cookies()` and React Router 6 loader answers lacked that version's API (`ReadonlyRequestCookies`, `json()`).
-- **On the newest versions Context7 is slightly ahead** (16/17 vs 15/17) and returns fewer tokens: its snippets come from docs websites, while lockdocs only knows what ships in the package. lockdocs missed zod 4's `z.strictObject` for "reject unknown keys", pydantic's `model_validate`/`parse_obj` for "create a model from a dict", and ranked `join!` above `select!`.
-- **About 100x lower latency, no quota.** lockdocs latency is per query after a one-time index per version (reported on the benchmark page). One benchmark run used 47 of Context7's 200 anonymous calls (`ratelimit-limit: 200`); lockdocs makes no network calls.
+- **Where versions matter most, lockdocs wins by 2x.** On older majors Context7 often answers with the newest API (all five pydantic 1 questions got pydantic 2 answers).
+- **Context7 still leads on the newest majors and on tokio.** Its index covers docs websites that no package or tag ships (Prisma's docs now describe a later major), and lockdocs has a few ranking misses. The benchmark page lists every question and answer.
+- **~23x faster, no quota.** lockdocs latency is a fresh CLI process per question; `lockdocs fetch` is a one-time 0.6-5 s per project (median 2.4 s).
 
-Method, questions, per-question results and scripts: [benchmark page](https://sylphxai.github.io/lockdocs/benchmarks) and [`bench/`](bench/). Reproduce with `bash bench/setup.sh && python3 bench/run.py target/release/lockdocs bench/projects out.json --context7`.
+Method, questions, per-question results and scripts: [benchmark page](https://sylphxai.github.io/lockdocs/benchmarks) and [`bench/`](bench/).
 
 ## How it compares
 
@@ -146,8 +154,8 @@ Context7 knows many sites and guides that never ship inside a package, so for a 
 1. **Resolve.** Parse every lockfile in the project (and monorepo roots above it) into exact `(ecosystem, name, version)` triples, marking direct dependencies.
 2. **Locate.** Find each package's files on disk and check the installed version against the lockfile. Drift is reported, never hidden.
 3. **Extract.** Split READMEs, changelogs and doc folders into heading-scoped sections; parse `.d.ts`, Python, Rust and Go sources with tree-sitter into symbols with signatures, doc comments and qualified paths (`z.object`, `tokio::task::spawn`, `pydantic.main.BaseModel.model_dump`).
-4. **Index and cache.** BM25 (identifier-aware tokenizer, light stemming, a small programming synonym table) per package, cached on disk by package, version and source, so each version is indexed once, ever.
-5. **Answer.** Rank, then pack results into the token budget with citations.
+4. **Index and cache.** BM25 (identifier-aware tokenizer, light stemming, a small programming synonym table) plus one embedding per entry from a static model2vec model, cached on disk by package, version and source, so each version is indexed once, ever.
+5. **Answer.** Fuse keyword and embedding scores, apply docs signals and deprecation redirects, then pack results into the token budget with citations.
 
 Typical costs on a GitHub-hosted runner: indexing every declaration in Next.js 15 (7,700 symbols) takes about 0.4 s, zod 4 about 0.05 s, once per version; a query then takes 5-20 ms.
 
@@ -158,19 +166,20 @@ lockdocs <package> [question]   Docs for the version this project pins (no quest
 lockdocs resolve [filter]       Pinned versions and where their docs are
 lockdocs docs <question>        Search all direct dependencies (--pkg to focus)
 lockdocs api <symbol>           Exact signature + doc comment
+lockdocs fetch [package...]     Once: upstream docs at each version's tag, missing packages, the model
 lockdocs index [package]        Build indexes ahead of time
 lockdocs cache [clean]          Show or delete the cache
 lockdocs setup                  Configure MCP clients (--client a,b --dry-run --remove --fetch)
 lockdocs mcp                    MCP server on stdio
 
-Options: -C/--root <dir>, --pkg <package>, --tokens <n>, --fetch, --json
+Options: -C/--root <dir>, --pkg <package>, --tokens <n>, --fetch, --offline, --json
 ```
 
 Prebuilt binaries for macOS (arm64, x64), Linux glibc (x64, arm64) and Windows x64 ship through npm; each [GitHub release](https://github.com/SylphxAI/lockdocs/releases) has them too. From source: `cargo install --git https://github.com/SylphxAI/lockdocs lockdocs`.
 
 ## Privacy
 
-lockdocs reads files on your machine and answers over stdio. It makes no network calls unless you enable fetching, and then only to the public registries named above, for the exact package versions requested. The cache lives in your OS cache directory (`LOCKDOCS_CACHE` overrides it).
+lockdocs reads files on your machine and answers over stdio. Network use: the embedding model once from huggingface.co (pinned revision, SHA-256 checked; `LOCKDOCS_EMBED=0` or `--offline` skips it), and, only when you run `lockdocs fetch` or enable fetching, public registries and GitHub for the exact package versions requested. Nothing about your project is sent. The cache lives in your OS cache directory (`LOCKDOCS_CACHE` overrides it).
 
 ## Also from Sylphx
 

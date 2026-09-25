@@ -7,7 +7,7 @@ use std::path::Path;
 pub fn definitions() -> Value {
     let root =
         json!({"type": "string", "description": "Absolute path of the project (defaults to the client's workspace root or the server's working directory)."});
-    let tokens = json!({"type": "integer", "description": "Answer budget in tokens (default 2000).", "minimum": 200, "maximum": 20000});
+    let tokens = json!({"type": "integer", "description": "Answer budget in tokens (default 1200).", "minimum": 200, "maximum": 20000});
     json!([
         {
             "name": "resolve",
@@ -22,7 +22,7 @@ pub fn definitions() -> Value {
         {
             "name": "docs",
             "title": "Search version-exact docs",
-            "description": "Answer a question from the docs of the exact installed version of a dependency: README, changelog, docs folder, and API reference (signatures + doc comments from .d.ts, Python, Rust and Go sources). Returns the most relevant sections within a token budget, each cited as `package@version path:line`. Use it before using a library API you are not sure about for this version. Omit `package` to search all direct dependencies.",
+            "description": "Answer a question from the docs of the exact installed version of a dependency: README, changelog, docs folder, and API reference (signatures + doc comments from .d.ts, Python, Rust and Go sources). Returns the most relevant sections within a token budget (hybrid keyword + embedding search), each cited as `package@version path:line`. Use it before using a library API you are not sure about for this version. Omit `package` to search all direct dependencies.",
             "inputSchema": {"type": "object", "properties": {
                 "query": {"type": "string", "description": "What you need, in words or identifiers, e.g. \"strict object unknown keys\" or \"cookies async\"."},
                 "package": {"type": "string", "description": "Package name, optionally ecosystem- or version-qualified: zod, npm:zod, pydantic, tokio, github.com/gin-gonic/gin. Comma-separate several."},

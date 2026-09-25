@@ -1,0 +1,1 @@
+{ "name": "fixture-pnp", "version": "0.0.0", "private": true, "packageManager": "yarn@4.5.0", "dependencies": { "tiny-pnp": "^1.0.0" } }

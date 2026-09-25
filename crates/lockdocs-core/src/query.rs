@@ -7,14 +7,18 @@ use crate::extract::{Entry, Kind};
 use crate::index::{self, PackageIndex};
 use crate::locate::{self, Source};
 use crate::project::{Project, Spec};
-use crate::{est_tokens, fetch, norm_name, Dep, Eco};
+use crate::{embed, est_tokens, fetch, norm_name, upstream, Dep, Eco};
 use rayon::prelude::*;
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
-pub const DEFAULT_TOKENS: usize = 2000;
+pub const DEFAULT_TOKENS: usize = 1200;
+/// Results scoring below this fraction of the best are left out (after 3).
+const RELEVANCE_FLOOR: f32 = 0.3;
+/// Share of the fused score from the embedding similarity.
+const DENSE_WEIGHT: f32 = 0.45;
 /// Cross-dependency searches index at most this many direct dependencies.
 const MAX_PACKAGES: usize = 80;
 
@@ -187,14 +191,118 @@ impl Engine {
             Ok((src, note)) => {
                 let key = format!("{}:{}@{}:{}", dep.eco, dep.name, src.version, src.dir.display());
                 if let Some(i) = self.indexes.lock().unwrap().get(&key) {
-                    return Resolved::Ready(i.clone(), dep.clone(), note);
+                    // Rebuild once the embedding model has arrived.
+                    if !i.embed.is_empty() || embed::get().is_none() {
+                        return Resolved::Ready(i.clone(), dep.clone(), note);
+                    }
                 }
-                let idx = Arc::new(index::load_or_build(dep, &src, &self.project.root));
+                let up = self.upstream(dep, &src);
+                let idx = Arc::new(index::load_or_build(dep, &src, &self.project.root, up.as_ref()));
                 self.indexes.lock().unwrap().insert(key, idx.clone());
                 Resolved::Ready(idx, dep.clone(), note)
             }
             Err(e) => Resolved::Missing(dep.clone(), e),
         }
+    }
+
+    /// Upstream docs for this exact version: a cached copy, or (when fetching
+    /// is enabled) a one-time download.
+    fn upstream(&self, dep: &Dep, src: &Source) -> Option<(PathBuf, upstream::Manifest)> {
+        if src.version != dep.version || std::env::var("LOCKDOCS_NO_UPSTREAM").is_ok() {
+            return None;
+        }
+        if let Some(c) = upstream::cached(dep) {
+            return Some(c);
+        }
+        if self.opts.fetch && upstream::repo_of(dep, src).is_some() {
+            let _ = upstream::fetch(dep, src);
+            return upstream::cached(dep);
+        }
+        None
+    }
+
+    /// `lockdocs fetch`: download what makes answers complete, once: missing
+    /// packages at their pinned versions, upstream docs at each version's git
+    /// tag, and the embedding model.
+    pub fn fetch_all(&self, package: Option<&str>) -> Result<Answer, String> {
+        let t = std::time::Instant::now();
+        let mut text = String::new();
+        if embed::enabled() {
+            match embed::ensure() {
+                Ok(()) => text.push_str(&format!("  model   {} ready\n", embed::MODEL_ID)),
+                Err(e) => text.push_str(&format!("  model   {} unavailable ({e:#}); keyword search only\n", embed::MODEL_ID)),
+            }
+        }
+        let deps: Vec<Dep> = match package.filter(|p| !p.trim().is_empty()) {
+            Some(p) => {
+                let mut out = Vec::new();
+                for spec in p.split(',').map(str::trim).filter(|s| !s.is_empty()) {
+                    out.extend(self.deps_for(spec)?);
+                }
+                out
+            }
+            None => {
+                let mut seen = HashSet::new();
+                self.project.direct().filter(|d| seen.insert((d.eco, d.name.clone()))).cloned().collect()
+            }
+        };
+        let rows: Vec<(Dep, String, Value)> = deps
+            .par_iter()
+            .map(|d| {
+                let src = match locate::locate(d, &self.project.root)
+                    .filter(|s| s.version == d.version)
+                    .or_else(|| fetch::cached(d))
+                {
+                    Some(s) => Some(s),
+                    None if !d.from.ends_with("(git)") => fetch::fetch(d).ok(),
+                    None => None,
+                };
+                let Some(src) = src else {
+                    return (
+                        d.clone(),
+                        "package files unavailable".to_string(),
+                        json!({"package": d.id(), "status": "missing"}),
+                    );
+                };
+                let status = match upstream::cached(d) {
+                    Some((_, m)) => m,
+                    None => match upstream::fetch(d, &src) {
+                        Ok(m) => m,
+                        Err(e) => {
+                            return (
+                                d.clone(),
+                                format!("upstream docs: {e:#}"),
+                                json!({"package": d.id(), "status": "no-upstream", "error": format!("{e:#}")}),
+                            );
+                        }
+                    },
+                };
+                let line = match (&status.tag, status.files) {
+                    (_, n) if n > 0 => format!(
+                        "upstream docs {}{}: {n} files ({:.1} MB)",
+                        status.tag.as_ref().map(|t| format!("{}@{t}", status.repo)).unwrap_or_default(),
+                        status.site.as_ref().map(|s| format!(" + docs site {s}")).unwrap_or_default(),
+                        status.bytes as f64 / 1e6
+                    ),
+                    _ => format!("no upstream docs ({}: {})", status.repo, status.note.clone().unwrap_or_default()),
+                };
+                (
+                    d.clone(),
+                    line,
+                    json!({"package": d.id(), "repo": status.repo, "tag": status.tag, "files": status.files, "note": status.note}),
+                )
+            })
+            .collect();
+        for (d, line, _) in &rows {
+            text.push_str(&format!("  {:<40} {line}\n", d.id()));
+        }
+        // Rebuild indexes with what was fetched.
+        self.indexes.lock().unwrap().clear();
+        let ms = t.elapsed().as_millis();
+        Ok(Answer {
+            text: format!("Fetched for {} packages in {ms} ms (cached; later queries stay offline):\n{text}", rows.len()),
+            json: json!({"packages": rows.iter().map(|r| r.2.clone()).collect::<Vec<_>>(), "ms": ms, "model": embed::installed()}),
+        })
     }
 
     /// Dependencies for a package spec. A version not in the project is
@@ -448,17 +556,7 @@ impl Engine {
         let bm = Bm25::build(refs.iter().map(|&(pi, ei)| (ready[pi].0.terms[ei].as_slice(), ready[pi].0.lens[ei])));
         let raw_idents = identifiers(q);
         let changes = change_intent(q);
-        let mut scored: Vec<(f32, usize, usize)> = bm
-            .search_weighted(&bm25::expand(&qterms))
-            .into_iter()
-            .take(400)
-            .map(|h| {
-                let (pi, ei) = refs[h.doc as usize];
-                let e = &ready[pi].0.entries[ei];
-                (h.score * boost(e, &raw_idents, changes) * name_hit(e, &qterms), pi, ei)
-            })
-            .collect();
-        scored.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
+        let scored = hybrid_rank(&ready, &refs, &bm, &qterms, q, &raw_idents, changes);
         let mut out = Pack::new(tokens);
         let mut header = String::new();
         for (idx, dep, note) in &ready {
@@ -473,6 +571,9 @@ impl Engine {
                     format!(" · pinned in {}", dep.from)
                 }
             ));
+            if let Some(u) = &idx.upstream {
+                header.push_str(&format!("Upstream docs: {u}\n"));
+            }
             if let Some(n) = note {
                 header.push_str(&format!("Note: {n}\n"));
             }
@@ -489,9 +590,14 @@ impl Engine {
         let mut seen: HashSet<(usize, String, u32)> = HashSet::new();
         let mut hits_json = Vec::new();
         let mut used_pkgs: Vec<String> = Vec::new();
+        let top = scored.first().map_or(0.0, |s| s.0);
         for (score, pi, ei) in scored {
             let idx = &ready[pi].0;
             let e = &idx.entries[ei];
+            // Stop at weak matches once a few good ones are in.
+            if out.blocks >= 3 && score < top * RELEVANCE_FLOOR {
+                break;
+            }
             if !seen.insert((pi, e.file.clone(), e.line)) {
                 continue;
             }
@@ -512,6 +618,17 @@ impl Engine {
             ));
         } else if broad {
             out.prepend(&format!("Sources: {}\n", used_pkgs.join(", ")));
+        }
+        // Packages that ship few docs: point at the one-time upstream fetch.
+        for (idx, dep, _) in &ready {
+            let prose = idx.entries.iter().filter(|e| e.kind == Kind::Prose).count();
+            if !broad && idx.upstream.is_none() && prose < 40 && !self.opts.fetch && upstream::cached(dep).is_none() {
+                out.push_raw(&format!(
+                    "\nTip: {} ships few docs. `lockdocs fetch {}` adds its upstream docs at this version's git tag (one-time download, then offline).\n",
+                    idx.id(),
+                    idx.name
+                ));
+            }
         }
         Ok(Answer {
             json: json!({"query": q, "packages": ready.iter().map(|r| r.0.id()).collect::<Vec<_>>(), "hits": hits_json, "tokens": est_tokens(&out.text)}),
@@ -779,6 +896,143 @@ fn identifiers(q: &str) -> Vec<String> {
         .collect()
 }
 
+/// BM25 and embedding similarity fused (each normalized to its best hit),
+/// then docs-specific boosts, then deprecation redirects ("use X instead")
+/// lift the API they point to. Returns (score, package, entry), best first.
+fn hybrid_rank(
+    ready: &[ReadyPkg],
+    refs: &[(usize, usize)],
+    bm: &Bm25,
+    qterms: &[String],
+    q: &str,
+    idents: &[String],
+    changes: bool,
+) -> Vec<(f32, usize, usize)> {
+    let mut fused: HashMap<usize, (f32, f32)> = HashMap::new();
+    let bm_hits = bm.search_weighted(&bm25::expand(qterms));
+    let bmax = bm_hits.first().map_or(1.0, |h| h.score).max(1e-6);
+    for h in bm_hits.iter().take(1500) {
+        fused.entry(h.doc as usize).or_default().0 = h.score / bmax;
+    }
+    let dense_w = std::env::var("LOCKDOCS_DENSE_WEIGHT").ok().and_then(|v| v.parse().ok()).unwrap_or(DENSE_WEIGHT);
+    let qv = if ready.iter().all(|r| !r.0.vecs.is_empty()) {
+        embed::get().and_then(|m| m.embed(q))
+    } else {
+        None
+    };
+    if let Some(qv) = &qv {
+        let mut sims: Vec<(usize, f32)> = refs
+            .par_iter()
+            .enumerate()
+            .map(|(i, &(pi, ei))| (i, embed::cosine(qv, &ready[pi].0.vecs[ei])))
+            .collect();
+        sims.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+        let cmax = sims.first().map_or(1.0, |s| s.1);
+        let floor = sims.get(300).map_or(0.0, |s| s.1);
+        if std::env::var("LOCKDOCS_DEBUG").is_ok() {
+            eprintln!("dense cmax={cmax:.3} floor={floor:.3}");
+            for (rank, (i, c)) in sims.iter().enumerate() {
+                let (pi, ei) = refs[*i];
+                if rank < 10 {
+                    eprintln!("dense rank {rank} cos={c:.3} {}", ready[pi].0.entries[ei].path);
+                }
+            }
+        }
+        for (i, c) in sims.iter().take(300) {
+            fused.entry(*i).or_default().1 = ((c - floor) / (cmax - floor).max(1e-6)).max(0.0);
+        }
+    }
+    let w = if qv.is_some() { dense_w } else { 0.0 };
+    // Query words that are rare in these packages; common ones ("futures" in
+    // tokio) say little about which entry is meant.
+    let n = refs.len().max(1) as f32;
+    let rare: Vec<String> = qterms.iter().filter(|t| (bm.df(t) as f32) < n * 0.03).cloned().collect();
+    let debug = std::env::var("LOCKDOCS_DEBUG").is_ok();
+    let mut scored: Vec<(f32, usize, usize)> = fused
+        .into_iter()
+        .map(|(i, (b, d))| {
+            let (pi, ei) = refs[i];
+            let e = &ready[pi].0.entries[ei];
+            let s = ((1.0 - w) * b + w * d) * boost(e, idents, changes) * name_hit(e, &rare);
+            if debug && s > 0.3 {
+                eprintln!(
+                    "{s:.3} bm={b:.3} dense={d:.3} boost={:.2} name={:.2} {}",
+                    boost(e, idents, changes),
+                    name_hit(e, &rare),
+                    e.path
+                );
+            }
+            (s, pi, ei)
+        })
+        .collect();
+    scored.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
+    // Deprecation redirects among the top results.
+    let mut lifted: Vec<(f32, usize, String)> = Vec::new();
+    for (s, pi, ei) in scored.iter().take(30) {
+        let e = &ready[*pi].0.entries[*ei];
+        for t in redirects(&format!("{}\n{}", e.sig, e.doc)) {
+            if t != e.name {
+                lifted.push((*s * 0.95, *pi, t));
+            }
+        }
+    }
+    if !lifted.is_empty() {
+        let mut have: HashMap<(usize, usize), usize> = scored.iter().enumerate().map(|(i, (_, pi, ei))| ((*pi, *ei), i)).collect();
+        for (s, pi, name) in lifted {
+            for (ei, e) in ready[pi].0.entries.iter().enumerate() {
+                if e.kind == Kind::Prose || e.kind == Kind::Alias || e.name != name || e.legacy {
+                    continue;
+                }
+                match have.get(&(pi, ei)) {
+                    Some(&i) => scored[i].0 = scored[i].0.max(s),
+                    None => {
+                        have.insert((pi, ei), scored.len());
+                        scored.push((s, pi, ei));
+                    }
+                }
+            }
+        }
+        scored.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
+    }
+    scored
+}
+
+/// API names a doc points readers to: "use `model_validate` instead",
+/// "Consider `z.strictObject(A.shape)`", "renamed to X", "in favor of X".
+pub fn redirects(text: &str) -> Vec<String> {
+    let lower = text.to_ascii_lowercase();
+    let mut out = Vec::new();
+    for pat in [
+        "use ",
+        "consider ",
+        "renamed to ",
+        "replaced by ",
+        "in favor of ",
+        "in favour of ",
+        "instead use ",
+    ] {
+        let mut from = 0;
+        while let Some(i) = lower[from..].find(pat) {
+            let at = from + i + pat.len();
+            from = at;
+            let rest = &text[at..];
+            let rest = rest.trim_start_matches(['`', '\'', '"', '*', ' ']);
+            let ident: String = rest.chars().take_while(|c| c.is_alphanumeric() || matches!(c, '_' | '.' | ':' | '$')).collect();
+            let ident = ident.trim_end_matches(['.', ':']);
+            // Only identifier-looking targets: code spans or names with _ . $ or camelCase.
+            let quoted = text[at..].starts_with('`');
+            let looks = ident.contains(['_', '.', '$']) || ident.chars().skip(1).any(|c| c.is_ascii_uppercase());
+            if ident.len() >= 3 && (quoted || looks) {
+                let last = ident.rsplit(['.', ':']).next().unwrap_or(ident).to_string();
+                if last.len() >= 3 && !out.contains(&last) {
+                    out.push(last);
+                }
+            }
+        }
+    }
+    out
+}
+
 /// Entries whose name (or section heading) carries a query word are about it.
 fn name_hit(e: &Entry, qterms: &[String]) -> f32 {
     let label = if e.kind == Kind::Prose {
@@ -797,6 +1051,11 @@ fn name_hit(e: &Entry, qterms: &[String]) -> f32 {
 
 fn boost(e: &Entry, idents: &[String], changes: bool) -> f32 {
     let mut b = 1.0;
+    // Curated guides from the project's own docs folder answer "how do I" better
+    // than internal symbols do.
+    if e.kind == Kind::Prose && e.file.starts_with("upstream:") {
+        b *= std::env::var("LOCKDOCS_UPSTREAM_BOOST").ok().and_then(|v| v.parse().ok()).unwrap_or(1.35);
+    }
     if e.kind == Kind::Prose {
         if is_changelog(e) {
             b *= if changes { 1.5 } else { 0.5 };
@@ -1016,4 +1275,21 @@ impl Workspace {
 /// Normalized dependency key, exposed for callers that dedupe.
 pub fn dep_key(d: &Dep) -> String {
     format!("{}:{}", d.eco, norm_name(d.eco, &d.name))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::redirects;
+
+    #[test]
+    fn deprecation_redirects() {
+        assert_eq!(redirects("Consider `z.strictObject(A.shape)` instead"), vec!["strictObject"]);
+        assert_eq!(
+            redirects("The `parse_obj` method is deprecated; use `model_validate` instead."),
+            vec!["model_validate"]
+        );
+        assert_eq!(redirects("@deprecated Use .extend instead"), vec!["extend"]);
+        assert_eq!(redirects("You can use this to parse data"), Vec::<String>::new());
+        assert_eq!(redirects("Renamed to OptionalFromRequestParts."), vec!["OptionalFromRequestParts"]);
+    }
 }

@@ -40,7 +40,8 @@ def installed_version(proj, pkg):
 
 def run_lockdocs(binary, proj, q):
     t = time.perf_counter()
-    r = subprocess.run([binary, "docs", q["question"], "--pkg", q["package"], "-C", proj], capture_output=True, text=True)
+    extra = ["--tokens", os.environ["BENCH_TOKENS"]] if os.environ.get("BENCH_TOKENS") else []
+    r = subprocess.run([binary, "docs", q["question"], "--pkg", q["package"], "-C", proj] + extra, capture_output=True, text=True)
     ms = (time.perf_counter() - t) * 1000
     return (r.stdout if r.returncode == 0 else r.stderr), ms, r.returncode
 
@@ -112,95 +113,154 @@ def run_context7(q, version):
             "version_match": "exact" if lib["exact"] else ("same major" if lib["same_major"] else "unversioned")}
 
 
+VARIANTS = [
+    ("keyword", "lockdocs, keyword only (BM25), package files", {"LOCKDOCS_EMBED": "0", "LOCKDOCS_NO_UPSTREAM": "1"}),
+    ("hybrid", "lockdocs, hybrid (BM25 + embeddings), package files", {"LOCKDOCS_NO_UPSTREAM": "1"}),
+    ("fetched", "lockdocs, hybrid + upstream docs (after `lockdocs fetch`)", {}),
+]
+
+
+def run_lockdocs_env(binary, proj, q, env):
+    old = {k: os.environ.get(k) for k in env}
+    os.environ.update(env)
+    try:
+        return run_lockdocs(binary, proj, q)
+    finally:
+        for k, v in old.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+
+
 def main():
     binary, projects, out = sys.argv[1], sys.argv[2], sys.argv[3]
     with_c7 = "--context7" in sys.argv
+    do_fetch = "--fetch" in sys.argv
+    # Reuse Context7 answers from a previous run for identical questions on the
+    # same pinned version (Context7 does not depend on lockdocs changes; this
+    # saves its anonymous quota). Reused rows are counted in the output.
+    c7_cache = {}
+    if "--context7-cache" in sys.argv:
+        prev = json.load(open(sys.argv[sys.argv.index("--context7-cache") + 1]))
+        for r in prev.get("rows", []):
+            if "pass" in r.get("context7", {}):
+                c7_cache[(r["id"], r["question"], r["package"], r["version"])] = r["context7"]
+    reused = 0
     only = None
     if "--only" in sys.argv:
         only = set(sys.argv[sys.argv.index("--only") + 1].split(","))
     qs = json.load(open(os.path.join(HERE, "questions.json")))["questions"]
     if only:
         qs = [q for q in qs if q["id"] in only]
-    # Index every project first and time it (cold, empty cache).
+    projs = sorted({q["project"] for q in qs})
+    # Index every project first and time it (cold cache, package files only).
     index = {}
-    for p in sorted({q["project"] for q in qs}):
+    for p in projs:
         proj = os.path.join(projects, p)
         t = time.perf_counter()
-        r = subprocess.run([binary, "index", "-C", proj, "--json"], capture_output=True, text=True)
+        r = subprocess.run([binary, "index", "-C", proj, "--json"], capture_output=True, text=True, env={**os.environ, "LOCKDOCS_NO_UPSTREAM": "1"})
         index[p] = {"ms": round((time.perf_counter() - t) * 1000), "report": json.loads(r.stdout) if r.returncode == 0 else r.stderr}
+    variants = [v for v in VARIANTS if do_fetch or v[0] != "fetched"]
+    results = {}
+    fetch = {}
+    for name, _, env in variants:
+        if name == "fetched":
+            for p in projs:
+                t = time.perf_counter()
+                r = subprocess.run([binary, "fetch", "-C", os.path.join(projects, p), "--json"], capture_output=True, text=True)
+                fetch[p] = {"ms": round((time.perf_counter() - t) * 1000), "report": json.loads(r.stdout) if r.returncode == 0 else r.stderr[-400:]}
+        for q in qs:
+            proj = os.path.join(projects, q["project"])
+            text, ms, code = run_lockdocs_env(binary, proj, q, env)
+            ok, missing, rej = grade(text, q)
+            first = text.splitlines()[0] if text else ""
+            version = first.split(" · ")[0].rsplit("@", 1)[-1] if "@" in first else ""
+            results[(name, q["id"])] = ({"pass": ok and code == 0, "missing": missing, "rejected": rej, "tokens": count(text), "ms": round(ms, 1)}, version)
+    main_variant = variants[-1][0]
     rows = []
     for q in qs:
-        proj = os.path.join(projects, q["project"])
-        text, ms, code = run_lockdocs(binary, proj, q)
-        ok, missing, rej = grade(text, q)
-        # The version lockdocs answered for (first line "pkg@ver · ...").
-        first = text.splitlines()[0] if text else ""
-        version = first.split(" · ")[0].rsplit("@", 1)[-1] if "@" in first else ""
-        row = {"id": q["id"], "project": q["project"], "package": q["package"], "version": version, "question": q["question"], "why": q["why"],
-               "lockdocs": {"pass": ok and code == 0, "missing": missing, "rejected": rej, "tokens": count(text), "ms": round(ms, 1)}}
+        main_res, version = results[(main_variant, q["id"])]
+        row = {"id": q["id"], "project": q["project"], "package": q["package"], "version": version, "question": q["question"], "why": q["why"], "line": q.get("line", ""),
+               "lockdocs": main_res, "variants": {n: results[(n, q["id"])][0] for n, _, _ in variants}}
         if with_c7:
-            row["context7"] = run_context7(q, version or "0")
+            hit = c7_cache.get((q["id"], q["question"], q["package"], version))
+            if hit is not None:
+                row["context7"] = dict(hit, reused=True)
+                reused += 1
+            else:
+                row["context7"] = run_context7(q, version or "0")
         rows.append(row)
-        print(f"{q['id']:<20} lockdocs {'PASS' if row['lockdocs']['pass'] else 'fail'} {row['lockdocs']['tokens']:>5}t {row['lockdocs']['ms']:>7.1f}ms"
-              + (f" | context7 {('PASS' if row['context7'].get('pass') else row['context7'].get('error') or 'fail')} {row['context7'].get('tokens', '-')}t {row['context7'].get('ms', '-')}ms" if with_c7 else ""),
-              file=sys.stderr)
-    summary = summarize(rows, with_c7)
-    res = {"tokenizer": TOKENIZER, "index": index, "rows": rows, "summary": summary, "context7_calls": c7_state if with_c7 else None,
-           "runner": {"os": os.uname().sysname, "machine": os.uname().machine}}
+        print(f"{q['id']:<20} " + " ".join(f"{n}:{'P' if row['variants'][n]['pass'] else 'f'}" for n, _, _ in variants)
+              + (f" | context7 {('PASS' if row['context7'].get('pass') else row['context7'].get('error') or 'fail')}" if with_c7 else ""), file=sys.stderr)
+    summary = {n: agg([r["variants"][n] for r in rows], len(rows)) for n, _, _ in variants}
+    if with_c7:
+        summary["context7"] = agg([r["context7"] for r in rows if "pass" in r.get("context7", {})], len(rows))
+    res = {"tokenizer": TOKENIZER, "index": index, "fetch": fetch, "rows": rows, "summary": summary, "variants": [[n, label] for n, label, _ in variants],
+           "context7_calls": dict(c7_state, reused=reused) if with_c7 else None, "runner": {"os": os.uname().sysname, "machine": os.uname().machine}}
     json.dump(res, open(out, "w"), indent=1)
     print(markdown(res, with_c7))
 
 
-def summarize(rows, with_c7):
-    def agg(key):
-        rs = [r[key] for r in rows if key in r and "pass" in r[key]]
-        if not rs:
-            return None
-        toks = sorted(x["tokens"] for x in rs)
-        ms = sorted(x["ms"] for x in rs)
-        return {"answered": len(rs), "passed": sum(1 for x in rs if x["pass"]), "total": len(rows),
-                "median_tokens": toks[len(toks) // 2], "median_ms": ms[len(ms) // 2], "p95_ms": ms[min(len(ms) - 1, int(len(ms) * 0.95))]}
-    return {"lockdocs": agg("lockdocs"), "context7": agg("context7") if with_c7 else None}
+def agg(rs, total):
+    if not rs:
+        return None
+    toks = sorted(x["tokens"] for x in rs)
+    ms = sorted(x["ms"] for x in rs)
+    return {"answered": len(rs), "passed": sum(1 for x in rs if x["pass"]), "total": total,
+            "median_tokens": toks[len(toks) // 2], "median_ms": ms[len(ms) // 2], "p95_ms": ms[min(len(ms) - 1, int(len(ms) * 0.95))]}
+
+
+def result_of(r, key):
+    return r.get("context7", {}) if key == "context7" else r["variants"].get(key, {})
 
 
 def markdown(res, with_c7):
     s = res["summary"]
-    out = ["## lockdocs benchmark", "", f"Tokenizer: {res['tokenizer']}. Runner: {res['runner']['os']} {res['runner']['machine']}.", ""]
-    out.append("| | correct | median tokens | median latency | p95 latency |")
-    out.append("|---|---|---|---|---|")
-    for k in ["lockdocs", "context7"]:
-        a = s.get(k)
-        if a:
-            out.append(f"| {k} | {a['passed']}/{a['total']} | {a['median_tokens']} | {a['median_ms']:.0f} ms | {a['p95_ms']:.0f} ms |")
-    lines = {q["id"]: q.get("line", "") for q in json.load(open(os.path.join(HERE, "questions.json")))["questions"]}
-    groups = [("older", "Older major (zod 3, Next 14, React Router 6, pydantic 1, axum 0.7)"), ("newer", "Newer major (zod 4, Next 15, React Router 7, pydantic 2, axum 0.8)"), ("single", "tokio")]
-    out += ["", "| subset | questions | lockdocs |" + (" Context7 |" if with_c7 else ""), "|---|---|---|" + ("---|" if with_c7 else "")]
-    for g, label in groups:
-        rs = [r for r in res["rows"] if lines.get(r["id"]) == g]
-        if not rs:
+    cols = [(n, label) for n, label in res.get("variants", [["lockdocs", "lockdocs"]])]
+    if with_c7:
+        cols.append(("context7", "Context7 (anonymous API)"))
+    out = [f"Tokenizer: {res['tokenizer']}. Runner: {res['runner']['os']} {res['runner']['machine']}. {len(res['rows'])} questions.", ""]
+    groups = [("older", "older major"), ("newer", "newer major"), ("single", "single version")]
+    present = [g for g in groups if any(r.get("line") == g[0] for r in res["rows"])]
+    out.append("| | correct | " + " | ".join(t for _, t in present) + " | median tokens | median latency | p95 latency |")
+    out.append("|---|---|" + "---|" * len(present) + "---|---|---|")
+    for key, label in cols:
+        a = s.get(key)
+        if not a:
             continue
-        l = sum(1 for r in rs if r["lockdocs"]["pass"])
-        line = f"| {label} | {len(rs)} | {l}/{len(rs)} |"
-        if with_c7:
-            c = sum(1 for r in rs if r.get("context7", {}).get("pass"))
-            line += f" {c}/{len(rs)} |"
-        out.append(line)
+        subs = []
+        for g, _ in present:
+            rs = [r for r in res["rows"] if r.get("line") == g]
+            subs.append(f"{sum(1 for r in rs if result_of(r, key).get('pass'))}/{len(rs)}")
+        out.append(f"| {label} | {a['passed']}/{a['total']} | " + " | ".join(subs) + f" | {a['median_tokens']} | {a['median_ms']:.0f} ms | {a['p95_ms']:.0f} ms |")
     if with_c7 and res["context7_calls"]:
         c = res["context7_calls"]
-        out += ["", f"Context7 (anonymous): {c['calls']} HTTP calls, {c['rate_limited']} rate-limited (429), {c['errors']} other errors; ratelimit-limit header {c['limit']}, remaining {c['remaining']}."]
-    out += ["", "| question | version | lockdocs | tokens | ms |" + (" Context7 | tokens | ms | library |" if with_c7 else ""),
-            "|---|---|---|---|---|" + ("---|---|---|---|" if with_c7 else "")]
+        out += ["", f"Context7 (anonymous): {c['calls']} HTTP calls, {c['rate_limited']} rate-limited (429), {c['errors']} other errors; ratelimit-limit header {c['limit']}, remaining {c['remaining']}."
+                + (f" {c['reused']} answers reused from the previous run's identical question and version (see bench/run.py --context7-cache)." if c.get("reused") else "")]
+    head = "| question | version | " + " | ".join(n for n, _ in cols) + " | tokens (last lockdocs) | ms |" + (" Context7 library |" if with_c7 else "")
+    out += ["", head, "|---|---|" + "---|" * len(cols) + "---|---|" + ("---|" if with_c7 else "")]
     for r in res["rows"]:
-        l = r["lockdocs"]
-        line = f"| {r['id']} | {r['package']}@{r['version']} | {'✅' if l['pass'] else '❌'} | {l['tokens']} | {l['ms']:.0f} |"
+        marks = []
+        for key, _ in cols:
+            x = result_of(r, key)
+            marks.append("✅" if x.get("pass") else ("❌" if "pass" in x else f"— ({x.get('error')})"))
+        line = f"| {r['id']} | {r['package']}@{r['version']} | " + " | ".join(marks) + f" | {r['lockdocs']['tokens']} | {r['lockdocs']['ms']:.0f} |"
         if with_c7:
             c = r.get("context7", {})
-            mark = '✅' if c.get('pass') else ('❌' if 'pass' in c else f"— ({c.get('error')})")
-            line += f" {mark} | {c.get('tokens', '')} | {c.get('ms', '')} | {c.get('library', '')} ({c.get('version_match', '')}) |"
+            line += f" {c.get('library', '')} ({c.get('version_match', '')}) |"
         out.append(line)
-    out += ["", "Index build (cold cache, all direct deps):", ""]
-    for p, v in res["index"].items():
-        out.append(f"- {p}: {v['ms']} ms")
+    out += ["", "Index build per project (cold cache, all direct deps, package files):", ""]
+    out.append(", ".join(f"{p} {v['ms']} ms" for p, v in res["index"].items()))
+    if res.get("fetch"):
+        out += ["", "`lockdocs fetch` per project (one-time; upstream docs from GitHub at the version tag):", ""]
+        for p, v in res["fetch"].items():
+            rep = v["report"]
+            if isinstance(rep, dict):
+                pk = ", ".join(f"{x['package']} {x.get('files', 0)} files" for x in rep.get("packages", []) if x.get("files"))
+                out.append(f"- {p}: {v['ms']} ms ({pk or 'no upstream docs'})")
+            else:
+                out.append(f"- {p}: {v['ms']} ms (error)")
     return "\n".join(out)
 
 

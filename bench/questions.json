@@ -88,10 +88,8 @@
      "error:"
     ]
    ],
-   "reject": [
-    "required_error"
-   ],
-   "why": "v4: unified `error` param; required_error removed",
+   "reject": [],
+   "why": "v4: unified `error` param; required_error removed (reject of 'required_error' dropped: v4 migration notes legitimately mention it as removed)",
    "line": "newer"
   },
   {
@@ -546,6 +544,543 @@
    "reject": [],
    "why": "tokio::time::timeout",
    "line": "single"
+  },
+  {
+   "id": "tw3-css",
+   "project": "tailwind3",
+   "package": "tailwindcss",
+   "question": "How do I add Tailwind to my main CSS file?",
+   "expect": [
+    [
+     "@tailwind base",
+     "@tailwind components",
+     "@tailwind utilities"
+    ]
+   ],
+   "reject": [
+    "@import \"tailwindcss\""
+   ],
+   "why": "v3: @tailwind base/components/utilities directives (tailwindcss 3.4 docs, installation)",
+   "line": "older"
+  },
+  {
+   "id": "tw4-css",
+   "project": "tailwind4",
+   "package": "tailwindcss",
+   "question": "How do I add Tailwind to my main CSS file?",
+   "expect": [
+    [
+     "@import \"tailwindcss\"",
+     "@import 'tailwindcss'"
+    ]
+   ],
+   "reject": [],
+   "why": "v4: @import \"tailwindcss\" replaces @tailwind directives (v4 upgrade guide)",
+   "line": "newer"
+  },
+  {
+   "id": "tw3-theme",
+   "project": "tailwind3",
+   "package": "tailwindcss",
+   "question": "How do I add a custom brand color to the theme?",
+   "expect": [
+    [
+     "extend:",
+     "theme.extend",
+     "tailwind.config"
+    ]
+   ],
+   "reject": [],
+   "why": "v3: theme.extend.colors in tailwind.config.js (package stubs/config.full.js; v3 docs customizing colors)",
+   "line": "older"
+  },
+  {
+   "id": "tw4-theme",
+   "project": "tailwind4",
+   "package": "tailwindcss",
+   "question": "How do I add a custom brand color to the theme?",
+   "expect": [
+    [
+     "@theme",
+     "--color-"
+    ]
+   ],
+   "reject": [],
+   "why": "v4: CSS-first @theme { --color-brand: ... } (v4 docs, theme variables)",
+   "line": "newer"
+  },
+  {
+   "id": "eslint8-config",
+   "project": "eslint8",
+   "package": "eslint",
+   "question": "How do I configure ESLint rules for my project?",
+   "expect": [
+    [
+     ".eslintrc",
+     "eslintrc"
+    ]
+   ],
+   "reject": [],
+   "why": "8.57: eslintrc (.eslintrc.*) is the default config system; flat config opt-in (eslint 8 docs, configuring)",
+   "line": "older"
+  },
+  {
+   "id": "eslint9-config",
+   "project": "eslint9",
+   "package": "eslint",
+   "question": "How do I configure ESLint rules for my project?",
+   "expect": [
+    [
+     "eslint.config.js",
+     "eslint.config.mjs",
+     "eslint.config",
+     "flat config"
+    ]
+   ],
+   "reject": [],
+   "why": "9.x: flat config eslint.config.js is the default (eslint 9 migration guide)",
+   "line": "newer"
+  },
+  {
+   "id": "eslint8-ignore",
+   "project": "eslint8",
+   "package": "eslint",
+   "question": "How do I make ESLint ignore certain files?",
+   "expect": [
+    [
+     ".eslintignore",
+     "ignorePatterns"
+    ]
+   ],
+   "reject": [],
+   "why": "8.57: .eslintignore / ignorePatterns (lib/cli-engine/cli-engine.js mentions .eslintignore)",
+   "line": "older"
+  },
+  {
+   "id": "eslint9-ignore",
+   "project": "eslint9",
+   "package": "eslint",
+   "question": "How do I make ESLint ignore certain files?",
+   "expect": [
+    [
+     "ignores:",
+     "\"ignores\"",
+     "globalIgnores("
+    ]
+   ],
+   "reject": [],
+   "why": "9.x: `ignores` in flat config / globalIgnores() from eslint/config (lib/types/config-api.d.ts); .eslintignore only warns",
+   "line": "newer"
+  },
+  {
+   "id": "prisma5-bytes",
+   "project": "prisma5",
+   "package": "@prisma/client",
+   "question": "Which JavaScript type does Prisma Client use for Bytes fields?",
+   "expect": [
+    [
+     "Buffer"
+    ]
+   ],
+   "reject": [
+    "Uint8Array"
+   ],
+   "why": "5.x: Bytes map to Buffer (Prisma 6 upgrade guide: 'Buffer replaced by Uint8Array')",
+   "line": "older"
+  },
+  {
+   "id": "prisma6-bytes",
+   "project": "prisma6",
+   "package": "@prisma/client",
+   "question": "Which JavaScript type does Prisma Client use for Bytes fields?",
+   "expect": [
+    [
+     "Uint8Array"
+    ]
+   ],
+   "reject": [],
+   "why": "6.x: Bytes = Uint8Array (@prisma/client 6.19.3 runtime/library.d.ts:167)",
+   "line": "newer"
+  },
+  {
+   "id": "prisma5-fts",
+   "project": "prisma5",
+   "package": "prisma",
+   "question": "Which preview feature enables full-text search on PostgreSQL?",
+   "expect": [
+    [
+     "fullTextSearch"
+    ]
+   ],
+   "reject": [
+    "fullTextSearchPostgres"
+   ],
+   "why": "5.x: previewFeatures = [\"fullTextSearch\"] (Prisma 5 docs, full-text search)",
+   "line": "older"
+  },
+  {
+   "id": "prisma6-fts",
+   "project": "prisma6",
+   "package": "prisma",
+   "question": "Which preview feature enables full-text search on PostgreSQL?",
+   "expect": [
+    [
+     "fullTextSearchPostgres"
+    ]
+   ],
+   "reject": [],
+   "why": "6.0: renamed to fullTextSearchPostgres (Prisma 6 upgrade guide)",
+   "line": "newer"
+  },
+  {
+   "id": "react18-action",
+   "project": "react18",
+   "package": "react",
+   "question": "Which hook updates state based on the result of a form action?",
+   "expect": [
+    [
+     "useReducer",
+     "useState"
+    ]
+   ],
+   "reject": [
+    "useActionState"
+   ],
+   "why": "18.3: no action hook; useActionState absent from @types/react 18.3.31 (0 matches), use useState/useReducer",
+   "line": "older"
+  },
+  {
+   "id": "react19-action",
+   "project": "react19",
+   "package": "react",
+   "question": "Which hook updates state based on the result of a form action?",
+   "expect": [
+    [
+     "useActionState"
+    ]
+   ],
+   "reject": [],
+   "why": "19: useActionState (@types/react 19.2.18 index.d.ts)",
+   "line": "newer"
+  },
+  {
+   "id": "react18-use",
+   "project": "react18",
+   "package": "react",
+   "question": "How do I read the value of a promise during render, suspending until it resolves?",
+   "expect": [
+    [
+     "Suspense",
+     "useEffect"
+    ]
+   ],
+   "reject": [
+    "function use<",
+    "use(promise"
+   ],
+   "why": "18.3: no `use` API (absent from @types/react 18.3.31); Suspense-enabled data library or useEffect",
+   "line": "older"
+  },
+  {
+   "id": "react19-use",
+   "project": "react19",
+   "package": "react",
+   "question": "How do I read the value of a promise during render, suspending until it resolves?",
+   "expect": [
+    [
+     "use(",
+     "function use<"
+    ]
+   ],
+   "reject": [],
+   "why": "19: use(promise) (@types/react 19.2.18 index.d.ts:1973 `function use<T>(usable: Usable<T>): T`)",
+   "line": "newer"
+  },
+  {
+   "id": "vite5-env",
+   "project": "vite5",
+   "package": "vite",
+   "question": "How do I configure options separately for the client and SSR environments in the Vite config?",
+   "expect": [
+    [
+     "ssr:",
+     "ssr?:",
+     "SSROptions",
+     "build.ssr"
+    ]
+   ],
+   "reject": [
+    "environments:"
+   ],
+   "why": "5.4: `ssr` options / build.ssr; no `environments` in UserConfig (dist/node/index.d.ts, 0 matches)",
+   "line": "older"
+  },
+  {
+   "id": "vite6-env",
+   "project": "vite6",
+   "package": "vite",
+   "question": "How do I configure options separately for the client and SSR environments in the Vite config?",
+   "expect": [
+    [
+     "environments"
+    ]
+   ],
+   "reject": [],
+   "why": "6.x: Environment API, `environments?: Record<string, EnvironmentOptions>` (vite 6.4.3 dist/node/index.d.ts:3901)",
+   "line": "newer"
+  },
+  {
+   "id": "express4-wildcard",
+   "project": "express4",
+   "package": "express",
+   "question": "How do I define a route that matches every remaining path segment with a wildcard?",
+   "expect": [
+    [
+     "'*'",
+     "\"*\"",
+     "/*'",
+     "/*\""
+    ]
+   ],
+   "reject": [
+    "*splat"
+   ],
+   "why": "4.x: app.get('*') / '/files/*' (path-to-regexp 0.1; express 4 routing guide)",
+   "line": "older"
+  },
+  {
+   "id": "express5-wildcard",
+   "project": "express5",
+   "package": "express",
+   "question": "How do I define a route that matches every remaining path segment with a wildcard?",
+   "expect": [
+    [
+     "*splat",
+     "/*name",
+     "{*",
+     "named wildcard"
+    ]
+   ],
+   "reject": [],
+   "why": "5.x: wildcards must be named, '/*splat' (express 5 migration guide, path-to-regexp v8)",
+   "line": "newer"
+  },
+  {
+   "id": "sa14-column",
+   "project": "sqlalchemy14",
+   "package": "sqlalchemy",
+   "question": "How do I declare a model column with Python type annotations?",
+   "expect": [
+    [
+     "Column("
+    ]
+   ],
+   "reject": [
+    "mapped_column"
+   ],
+   "why": "1.4: Column(...) on declarative classes; mapped_column absent in 1.4.54 orm/ (verified)",
+   "line": "older"
+  },
+  {
+   "id": "sa20-column",
+   "project": "sqlalchemy20",
+   "package": "sqlalchemy",
+   "question": "How do I declare a model column with Python type annotations?",
+   "expect": [
+    [
+     "mapped_column",
+     "Mapped["
+    ]
+   ],
+   "reject": [],
+   "why": "2.0: Mapped[...] = mapped_column() (sqlalchemy 2.0.54 orm/_orm_constructors.py)",
+   "line": "newer"
+  },
+  {
+   "id": "sa14-base",
+   "project": "sqlalchemy14",
+   "package": "sqlalchemy",
+   "question": "How do I create the declarative base class for my models?",
+   "expect": [
+    [
+     "declarative_base("
+    ]
+   ],
+   "reject": [
+    "(DeclarativeBase)"
+   ],
+   "why": "1.4: Base = declarative_base(); DeclarativeBase class absent in 1.4.54 (verified)",
+   "line": "older"
+  },
+  {
+   "id": "sa20-base",
+   "project": "sqlalchemy20",
+   "package": "sqlalchemy",
+   "question": "How do I create the declarative base class for my models?",
+   "expect": [
+    [
+     "DeclarativeBase"
+    ]
+   ],
+   "reject": [],
+   "why": "2.0: class Base(DeclarativeBase) (sqlalchemy 2.0.54 orm/decl_api.py)",
+   "line": "newer"
+  },
+  {
+   "id": "dj42-dbdefault",
+   "project": "django42",
+   "package": "django",
+   "question": "How do I set a database-computed default value for a model field?",
+   "expect": [
+    [
+     "default="
+    ]
+   ],
+   "reject": [
+    "db_default"
+   ],
+   "why": "4.2: only Python-side default=; db_default absent in 4.2.30 fields/__init__.py (0 matches)",
+   "line": "older"
+  },
+  {
+   "id": "dj51-dbdefault",
+   "project": "django51",
+   "package": "django",
+   "question": "How do I set a database-computed default value for a model field?",
+   "expect": [
+    [
+     "db_default"
+    ]
+   ],
+   "reject": [],
+   "why": "5.0+: Field.db_default (django 5.1.15 fields/__init__.py, 19 matches)",
+   "line": "newer"
+  },
+  {
+   "id": "dj42-login",
+   "project": "django42",
+   "package": "django",
+   "question": "How do I require login for all views by default?",
+   "expect": [
+    [
+     "login_required",
+     "LoginRequiredMixin"
+    ]
+   ],
+   "reject": [
+    "LoginRequiredMiddleware"
+   ],
+   "why": "4.2: @login_required / LoginRequiredMixin per view; LoginRequiredMiddleware absent in 4.2.30",
+   "line": "older"
+  },
+  {
+   "id": "dj51-login",
+   "project": "django51",
+   "package": "django",
+   "question": "How do I require login for all views by default?",
+   "expect": [
+    [
+     "LoginRequiredMiddleware"
+    ]
+   ],
+   "reject": [],
+   "why": "5.1: django.contrib.auth.middleware.LoginRequiredMiddleware (django 5.1.15)",
+   "line": "newer"
+  },
+  {
+   "id": "fa088-lifespan",
+   "project": "fastapi088",
+   "package": "fastapi",
+   "question": "How do I run code when the application starts up and shuts down?",
+   "expect": [
+    [
+     "on_event"
+    ]
+   ],
+   "reject": [
+    "lifespan="
+   ],
+   "why": "0.88: @app.on_event('startup'/'shutdown'); FastAPI(lifespan=) absent (0.88.0 applications.py, 0 matches; added 0.93)",
+   "line": "older"
+  },
+  {
+   "id": "fa0115-lifespan",
+   "project": "fastapi0115",
+   "package": "fastapi",
+   "question": "How do I run code when the application starts up and shuts down?",
+   "expect": [
+    [
+     "lifespan"
+    ]
+   ],
+   "reject": [],
+   "why": "0.115: FastAPI(lifespan=...) with asynccontextmanager (0.115.14 applications.py)",
+   "line": "newer"
+  },
+  {
+   "id": "fa088-annotated",
+   "project": "fastapi088",
+   "package": "fastapi",
+   "question": "How do I declare a query parameter with validation metadata?",
+   "expect": [
+    [
+     "Query("
+    ]
+   ],
+   "reject": [
+    "Annotated["
+   ],
+   "why": "0.88: q: str = Query(default=None, max_length=50); Annotated support added in 0.95 (0.88.0 dependencies/utils.py, 0 matches)",
+   "line": "older"
+  },
+  {
+   "id": "fa0115-annotated",
+   "project": "fastapi0115",
+   "package": "fastapi",
+   "question": "How do I declare a query parameter with validation metadata?",
+   "expect": [
+    [
+     "Annotated["
+    ]
+   ],
+   "reject": [],
+   "why": "0.115: q: Annotated[str | None, Query(max_length=50)] recommended (0.115.14 dependencies/utils.py)",
+   "line": "newer"
+  },
+  {
+   "id": "next15-proxy",
+   "project": "next15",
+   "package": "next",
+   "question": "How do I run code before a request is completed, for example to redirect or rewrite?",
+   "expect": [
+    [
+     "middleware"
+    ]
+   ],
+   "reject": [
+    "NextProxy",
+    "proxy.ts"
+   ],
+   "why": "15.1: middleware.ts / NextMiddleware; Proxy does not exist before 16",
+   "line": "older"
+  },
+  {
+   "id": "next16-proxy",
+   "project": "next16",
+   "package": "next",
+   "question": "How do I run code before a request is completed, for example to redirect or rewrite?",
+   "expect": [
+    [
+     "proxy.ts",
+     "proxy.js",
+     "NextProxy",
+     "export function proxy",
+     "Proxy allows"
+    ]
+   ],
+   "reject": [],
+   "why": "16: middleware renamed to proxy (next 16.3.6 dist/server/web/types.d.ts: '@deprecated Use NextProxy instead. Middleware has been renamed to Proxy.')",
+   "line": "newer"
   }
  ]
 }

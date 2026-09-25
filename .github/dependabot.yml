@@ -1,23 +1,20 @@
-# bench/projects and the test fixture pin old library versions on purpose
-# (the benchmark compares versions); never bump them.
+# bench/projects pins old library versions on purpose (the benchmark compares
+# versions; they are installed with --ignore-scripts on CI runners and never
+# shipped), and the test fixtures are fake packages: keep both out of updates.
 version: 2
 updates:
   - package-ecosystem: npm
-    directories: ["/bench/projects/*", "/crates/lockdocs-core/tests/fixture"]
+    directory: "/"
+    exclude-paths: ["bench/projects/**", "crates/lockdocs-core/tests/**"]
     schedule: { interval: monthly }
-    ignore: [{ dependency-name: "*" }]
-  - package-ecosystem: pip
-    directories: ["/bench/projects/*", "/crates/lockdocs-core/tests/fixture"]
-    schedule: { interval: monthly }
-    ignore: [{ dependency-name: "*" }]
   - package-ecosystem: cargo
-    directories: ["/bench/projects/*", "/crates/lockdocs-core/tests/fixture"]
+    directory: "/"
+    exclude-paths: ["bench/projects/**", "crates/lockdocs-core/tests/**"]
     schedule: { interval: monthly }
-    ignore: [{ dependency-name: "*" }]
-  - package-ecosystem: gomod
-    directories: ["/crates/lockdocs-core/tests/fixture"]
+  - package-ecosystem: pip
+    directory: "/"
+    exclude-paths: ["bench/projects/**", "crates/lockdocs-core/tests/**"]
     schedule: { interval: monthly }
-    ignore: [{ dependency-name: "*" }]
   - package-ecosystem: github-actions
     directory: "/"
     schedule: { interval: monthly }

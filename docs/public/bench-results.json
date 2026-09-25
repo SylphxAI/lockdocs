@@ -1,0 +1,5256 @@
+{
+ "tokenizer": "tiktoken o200k_base",
+ "index": {
+  "axum07": {
+   "ms": 345,
+   "report": {
+    "missing": [],
+    "ms": 333,
+    "packages": [
+     {
+      "build_ms": 209,
+      "ecosystem": "cargo",
+      "package": "axum@0.7.9",
+      "sections": 262,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/axum-0.7.9",
+      "symbols": 236
+     },
+     {
+      "build_ms": 287,
+      "ecosystem": "cargo",
+      "package": "tokio@1.41.1",
+      "sections": 551,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.41.1",
+      "symbols": 1311
+     }
+    ]
+   }
+  },
+  "axum08": {
+   "ms": 401,
+   "report": {
+    "missing": [],
+    "ms": 390,
+    "packages": [
+     {
+      "build_ms": 179,
+      "ecosystem": "cargo",
+      "package": "axum@0.8.1",
+      "sections": 272,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/axum-0.8.1",
+      "symbols": 264
+     },
+     {
+      "build_ms": 349,
+      "ecosystem": "cargo",
+      "package": "tokio@1.43.0",
+      "sections": 561,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.43.0",
+      "symbols": 1332
+     }
+    ]
+   }
+  },
+  "django42": {
+   "ms": 473,
+   "report": {
+    "missing": [],
+    "ms": 459,
+    "packages": [
+     {
+      "build_ms": 400,
+      "ecosystem": "pypi",
+      "package": "django@4.2.30",
+      "sections": 159,
+      "source": ".venv/lib/python3.12/site-packages",
+      "symbols": 8223
+     }
+    ]
+   }
+  },
+  "django51": {
+   "ms": 480,
+   "report": {
+    "missing": [],
+    "ms": 467,
+    "packages": [
+     {
+      "build_ms": 408,
+      "ecosystem": "pypi",
+      "package": "django@5.1.15",
+      "sections": 159,
+      "source": ".venv/lib/python3.12/site-packages",
+      "symbols": 8391
+     }
+    ]
+   }
+  },
+  "eslint8": {
+   "ms": 182,
+   "report": {
+    "missing": [],
+    "ms": 177,
+    "packages": [
+     {
+      "build_ms": 137,
+      "ecosystem": "npm",
+      "package": "eslint@8.57.1",
+      "sections": 26,
+      "source": "node_modules/eslint",
+      "symbols": 893
+     }
+    ]
+   }
+  },
+  "eslint9": {
+   "ms": 80,
+   "report": {
+    "missing": [],
+    "ms": 75,
+    "packages": [
+     {
+      "build_ms": 35,
+      "ecosystem": "npm",
+      "package": "eslint@9.39.5",
+      "sections": 27,
+      "source": "node_modules/eslint",
+      "symbols": 855
+     }
+    ]
+   }
+  },
+  "express4": {
+   "ms": 72,
+   "report": {
+    "missing": [],
+    "ms": 67,
+    "packages": [
+     {
+      "build_ms": 2,
+      "ecosystem": "npm",
+      "package": "@types/express@4.17.25",
+      "sections": 5,
+      "source": "node_modules/@types/express",
+      "symbols": 35
+     },
+     {
+      "build_ms": 17,
+      "ecosystem": "npm",
+      "package": "express@4.21.2",
+      "sections": 276,
+      "source": "node_modules/express",
+      "symbols": 71
+     }
+    ]
+   }
+  },
+  "express5": {
+   "ms": 48,
+   "report": {
+    "missing": [],
+    "ms": 44,
+    "packages": [
+     {
+      "build_ms": 1,
+      "ecosystem": "npm",
+      "package": "@types/express@5.0.6",
+      "sections": 5,
+      "source": "node_modules/@types/express",
+      "symbols": 34
+     },
+     {
+      "build_ms": 9,
+      "ecosystem": "npm",
+      "package": "express@5.2.1",
+      "sections": 18,
+      "source": "node_modules/express",
+      "symbols": 55
+     }
+    ]
+   }
+  },
+  "fastapi0115": {
+   "ms": 83,
+   "report": {
+    "missing": [],
+    "ms": 79,
+    "packages": [
+     {
+      "build_ms": 34,
+      "ecosystem": "pypi",
+      "package": "fastapi@0.115.14",
+      "sections": 27,
+      "source": ".venv/lib/python3.12/site-packages",
+      "symbols": 258
+     }
+    ]
+   }
+  },
+  "fastapi088": {
+   "ms": 71,
+   "report": {
+    "missing": [],
+    "ms": 67,
+    "packages": [
+     {
+      "build_ms": 20,
+      "ecosystem": "pypi",
+      "package": "fastapi@0.88.0",
+      "sections": 24,
+      "source": ".venv/lib/python3.12/site-packages",
+      "symbols": 253
+     }
+    ]
+   }
+  },
+  "next14": {
+   "ms": 378,
+   "report": {
+    "missing": [],
+    "ms": 366,
+    "packages": [
+     {
+      "build_ms": 322,
+      "ecosystem": "npm",
+      "package": "next@14.2.35",
+      "sections": 9,
+      "source": "node_modules/next",
+      "symbols": 4904
+     },
+     {
+      "build_ms": 43,
+      "ecosystem": "npm",
+      "package": "react@18.3.1",
+      "sections": 4,
+      "source": "node_modules/react",
+      "symbols": 0
+     },
+     {
+      "build_ms": 232,
+      "ecosystem": "npm",
+      "package": "react-dom@18.3.1",
+      "sections": 7,
+      "source": "node_modules/react-dom",
+      "symbols": 0
+     }
+    ]
+   }
+  },
+  "next15": {
+   "ms": 603,
+   "report": {
+    "missing": [],
+    "ms": 591,
+    "packages": [
+     {
+      "build_ms": 404,
+      "ecosystem": "npm",
+      "package": "next@15.1.0",
+      "sections": 9,
+      "source": "node_modules/next",
+      "symbols": 5585
+     },
+     {
+      "build_ms": 53,
+      "ecosystem": "npm",
+      "package": "react@19.0.0",
+      "sections": 4,
+      "source": "node_modules/react",
+      "symbols": 0
+     },
+     {
+      "build_ms": 550,
+      "ecosystem": "npm",
+      "package": "react-dom@19.0.0",
+      "sections": 7,
+      "source": "node_modules/react-dom",
+      "symbols": 0
+     }
+    ]
+   }
+  },
+  "next16": {
+   "ms": 868,
+   "report": {
+    "missing": [],
+    "ms": 840,
+    "packages": [
+     {
+      "build_ms": 773,
+      "ecosystem": "npm",
+      "package": "next@16.3.6",
+      "sections": 3598,
+      "source": "node_modules/next",
+      "symbols": 8354
+     },
+     {
+      "build_ms": 429,
+      "ecosystem": "npm",
+      "package": "react@19.2.8",
+      "sections": 4,
+      "source": "node_modules/react",
+      "symbols": 0
+     },
+     {
+      "build_ms": 550,
+      "ecosystem": "npm",
+      "package": "react-dom@19.2.8",
+      "sections": 7,
+      "source": "node_modules/react-dom",
+      "symbols": 0
+     }
+    ]
+   }
+  },
+  "prisma5": {
+   "ms": 92,
+   "report": {
+    "missing": [],
+    "ms": 87,
+    "packages": [
+     {
+      "build_ms": 47,
+      "ecosystem": "npm",
+      "package": "@prisma/client@5.22.0",
+      "sections": 4,
+      "source": "node_modules/@prisma/client",
+      "symbols": 814
+     },
+     {
+      "build_ms": 50,
+      "ecosystem": "npm",
+      "package": "prisma@5.22.0",
+      "sections": 14,
+      "source": "node_modules/prisma",
+      "symbols": 814
+     }
+    ]
+   }
+  },
+  "prisma6": {
+   "ms": 123,
+   "report": {
+    "missing": [],
+    "ms": 118,
+    "packages": [
+     {
+      "build_ms": 82,
+      "ecosystem": "npm",
+      "package": "@prisma/client@6.19.3",
+      "sections": 4,
+      "source": "node_modules/@prisma/client",
+      "symbols": 851
+     },
+     {
+      "build_ms": 77,
+      "ecosystem": "npm",
+      "package": "prisma@6.19.3",
+      "sections": 14,
+      "source": "node_modules/prisma",
+      "symbols": 851
+     }
+    ]
+   }
+  },
+  "pydantic1": {
+   "ms": 98,
+   "report": {
+    "missing": [],
+    "ms": 94,
+    "packages": [
+     {
+      "build_ms": 50,
+      "ecosystem": "pypi",
+      "package": "pydantic@1.10.18",
+      "sections": 135,
+      "source": ".venv/lib/python3.12/site-packages",
+      "symbols": 573
+     }
+    ]
+   }
+  },
+  "pydantic2": {
+   "ms": 176,
+   "report": {
+    "missing": [],
+    "ms": 170,
+    "packages": [
+     {
+      "build_ms": 121,
+      "ecosystem": "pypi",
+      "package": "pydantic@2.9.2",
+      "sections": 191,
+      "source": ".venv/lib/python3.12/site-packages",
+      "symbols": 1255
+     }
+    ]
+   }
+  },
+  "react18": {
+   "ms": 361,
+   "report": {
+    "missing": [],
+    "ms": 351,
+    "packages": [
+     {
+      "build_ms": 149,
+      "ecosystem": "npm",
+      "package": "@types/react@18.3.31",
+      "sections": 5,
+      "source": "node_modules/@types/react",
+      "symbols": 1853
+     },
+     {
+      "build_ms": 15,
+      "ecosystem": "npm",
+      "package": "@types/react-dom@18.3.7",
+      "sections": 5,
+      "source": "node_modules/@types/react-dom",
+      "symbols": 295
+     },
+     {
+      "build_ms": 284,
+      "ecosystem": "npm",
+      "package": "react@18.3.1",
+      "sections": 4,
+      "source": "node_modules/react",
+      "symbols": 1853
+     },
+     {
+      "build_ms": 265,
+      "ecosystem": "npm",
+      "package": "react-dom@18.3.1",
+      "sections": 7,
+      "source": "node_modules/react-dom",
+      "symbols": 295
+     }
+    ]
+   }
+  },
+  "react19": {
+   "ms": 659,
+   "report": {
+    "missing": [],
+    "ms": 649,
+    "packages": [
+     {
+      "build_ms": 351,
+      "ecosystem": "npm",
+      "package": "@types/react@19.2.18",
+      "sections": 5,
+      "source": "node_modules/@types/react",
+      "symbols": 1829
+     },
+     {
+      "build_ms": 15,
+      "ecosystem": "npm",
+      "package": "@types/react-dom@19.2.7",
+      "sections": 5,
+      "source": "node_modules/@types/react-dom",
+      "symbols": 206
+     },
+     {
+      "build_ms": 353,
+      "ecosystem": "npm",
+      "package": "react@19.2.8",
+      "sections": 4,
+      "source": "node_modules/react",
+      "symbols": 1829
+     },
+     {
+      "build_ms": 582,
+      "ecosystem": "npm",
+      "package": "react-dom@19.2.8",
+      "sections": 7,
+      "source": "node_modules/react-dom",
+      "symbols": 206
+     }
+    ]
+   }
+  },
+  "rr6": {
+   "ms": 279,
+   "report": {
+    "missing": [],
+    "ms": 271,
+    "packages": [
+     {
+      "build_ms": 45,
+      "ecosystem": "npm",
+      "package": "react@18.3.1",
+      "sections": 4,
+      "source": "node_modules/react",
+      "symbols": 0
+     },
+     {
+      "build_ms": 198,
+      "ecosystem": "npm",
+      "package": "react-dom@18.3.1",
+      "sections": 7,
+      "source": "node_modules/react-dom",
+      "symbols": 0
+     },
+     {
+      "build_ms": 25,
+      "ecosystem": "npm",
+      "package": "react-router@6.26.2",
+      "sections": 74,
+      "source": "node_modules/react-router",
+      "symbols": 207
+     },
+     {
+      "build_ms": 204,
+      "ecosystem": "npm",
+      "package": "react-router-dom@6.26.2",
+      "sections": 80,
+      "source": "node_modules/react-router-dom",
+      "symbols": 145
+     }
+    ]
+   }
+  },
+  "rr7": {
+   "ms": 524,
+   "report": {
+    "missing": [],
+    "ms": 516,
+    "packages": [
+     {
+      "build_ms": 259,
+      "ecosystem": "npm",
+      "package": "react@19.0.0",
+      "sections": 4,
+      "source": "node_modules/react",
+      "symbols": 0
+     },
+     {
+      "build_ms": 461,
+      "ecosystem": "npm",
+      "package": "react-dom@19.0.0",
+      "sections": 7,
+      "source": "node_modules/react-dom",
+      "symbols": 0
+     },
+     {
+      "build_ms": 281,
+      "ecosystem": "npm",
+      "package": "react-router@7.1.1",
+      "sections": 92,
+      "source": "node_modules/react-router",
+      "symbols": 1160
+     }
+    ]
+   }
+  },
+  "sqlalchemy14": {
+   "ms": 466,
+   "report": {
+    "missing": [],
+    "ms": 451,
+    "packages": [
+     {
+      "build_ms": 392,
+      "ecosystem": "pypi",
+      "package": "sqlalchemy@1.4.54",
+      "sections": 8,
+      "source": ".venv/lib/python3.12/site-packages",
+      "symbols": 6085
+     }
+    ]
+   }
+  },
+  "sqlalchemy20": {
+   "ms": 604,
+   "report": {
+    "missing": [],
+    "ms": 588,
+    "packages": [
+     {
+      "build_ms": 521,
+      "ecosystem": "pypi",
+      "package": "sqlalchemy@2.0.54",
+      "sections": 8,
+      "source": ".venv/lib/python3.12/site-packages",
+      "symbols": 7275
+     }
+    ]
+   }
+  },
+  "tailwind3": {
+   "ms": 50,
+   "report": {
+    "missing": [],
+    "ms": 46,
+    "packages": [
+     {
+      "build_ms": 9,
+      "ecosystem": "npm",
+      "package": "tailwindcss@3.4.19",
+      "sections": 6,
+      "source": "node_modules/tailwindcss",
+      "symbols": 270
+     }
+    ]
+   }
+  },
+  "tailwind4": {
+   "ms": 46,
+   "report": {
+    "missing": [],
+    "ms": 43,
+    "packages": [
+     {
+      "build_ms": 6,
+      "ecosystem": "npm",
+      "package": "tailwindcss@4.1.18",
+      "sections": 4,
+      "source": "node_modules/tailwindcss",
+      "symbols": 60
+     }
+    ]
+   }
+  },
+  "vite5": {
+   "ms": 91,
+   "report": {
+    "missing": [],
+    "ms": 87,
+    "packages": [
+     {
+      "build_ms": 46,
+      "ecosystem": "npm",
+      "package": "vite@5.4.21",
+      "sections": 131,
+      "source": "node_modules/vite",
+      "symbols": 1325
+     }
+    ]
+   }
+  },
+  "vite6": {
+   "ms": 90,
+   "report": {
+    "missing": [],
+    "ms": 85,
+    "packages": [
+     {
+      "build_ms": 49,
+      "ecosystem": "npm",
+      "package": "vite@6.4.3",
+      "sections": 91,
+      "source": "node_modules/vite",
+      "symbols": 1545
+     }
+    ]
+   }
+  },
+  "zod3": {
+   "ms": 65,
+   "report": {
+    "missing": [],
+    "ms": 61,
+    "packages": [
+     {
+      "build_ms": 28,
+      "ecosystem": "npm",
+      "package": "zod@3.23.8",
+      "sections": 121,
+      "source": "node_modules/zod",
+      "symbols": 713
+     }
+    ]
+   }
+  },
+  "zod4": {
+   "ms": 106,
+   "report": {
+    "missing": [],
+    "ms": 101,
+    "packages": [
+     {
+      "build_ms": 63,
+      "ecosystem": "npm",
+      "package": "zod@4.1.5",
+      "sections": 8,
+      "source": "node_modules/zod",
+      "symbols": 3164
+     }
+    ]
+   }
+  }
+ },
+ "fetch": {
+  "axum07": {
+   "ms": 1636,
+   "report": {
+    "model": true,
+    "ms": 1632,
+    "packages": [
+     {
+      "files": 2,
+      "note": null,
+      "package": "axum@0.7.9",
+      "repo": "github.com/tokio-rs/axum",
+      "tag": "axum-v0.7.9"
+     },
+     {
+      "files": 1,
+      "note": null,
+      "package": "tokio@1.41.1",
+      "repo": "github.com/tokio-rs/tokio",
+      "tag": "tokio-1.41.1"
+     }
+    ]
+   }
+  },
+  "axum08": {
+   "ms": 2101,
+   "report": {
+    "model": true,
+    "ms": 2098,
+    "packages": [
+     {
+      "files": 0,
+      "note": "no git tag found for 0.8.1",
+      "package": "axum@0.8.1",
+      "repo": "github.com/tokio-rs/axum",
+      "tag": null
+     },
+     {
+      "files": 1,
+      "note": null,
+      "package": "tokio@1.43.0",
+      "repo": "github.com/tokio-rs/tokio",
+      "tag": "tokio-1.43.0"
+     }
+    ]
+   }
+  },
+  "django42": {
+   "ms": 4897,
+   "report": {
+    "model": true,
+    "ms": 4893,
+    "packages": [
+     {
+      "files": 601,
+      "note": null,
+      "package": "django@4.2.30",
+      "repo": "github.com/django/django",
+      "tag": "4.2.30"
+     }
+    ]
+   }
+  },
+  "django51": {
+   "ms": 4876,
+   "report": {
+    "model": true,
+    "ms": 4872,
+    "packages": [
+     {
+      "files": 629,
+      "note": null,
+      "package": "django@5.1.15",
+      "repo": "github.com/django/django",
+      "tag": "5.1.15"
+     }
+    ]
+   }
+  },
+  "eslint8": {
+   "ms": 3197,
+   "report": {
+    "model": true,
+    "ms": 3193,
+    "packages": [
+     {
+      "files": 409,
+      "note": null,
+      "package": "eslint@8.57.1",
+      "repo": "github.com/eslint/eslint",
+      "tag": "v8.57.1"
+     }
+    ]
+   }
+  },
+  "eslint9": {
+   "ms": 3391,
+   "report": {
+    "model": true,
+    "ms": 3387,
+    "packages": [
+     {
+      "files": 435,
+      "note": null,
+      "package": "eslint@9.39.5",
+      "repo": "github.com/eslint/eslint",
+      "tag": "v9.39.5"
+     }
+    ]
+   }
+  },
+  "express4": {
+   "ms": 2984,
+   "report": {
+    "model": true,
+    "ms": 2980,
+    "packages": [
+     {
+      "files": 6,
+      "note": null,
+      "package": "@types/express@4.17.25",
+      "repo": "github.com/DefinitelyTyped/DefinitelyTyped",
+      "tag": null
+     },
+     {
+      "files": 10,
+      "note": null,
+      "package": "express@4.21.2",
+      "repo": "github.com/expressjs/express",
+      "tag": "4.21.2"
+     }
+    ]
+   }
+  },
+  "express5": {
+   "ms": 3046,
+   "report": {
+    "model": true,
+    "ms": 3042,
+    "packages": [
+     {
+      "files": 38,
+      "note": null,
+      "package": "@types/express@5.0.6",
+      "repo": "github.com/DefinitelyTyped/DefinitelyTyped",
+      "tag": null
+     },
+     {
+      "files": 40,
+      "note": null,
+      "package": "express@5.2.1",
+      "repo": "github.com/expressjs/express",
+      "tag": "v5.2.1"
+     }
+    ]
+   }
+  },
+  "fastapi0115": {
+   "ms": 2482,
+   "report": {
+    "model": true,
+    "ms": 2478,
+    "packages": [
+     {
+      "files": 180,
+      "note": null,
+      "package": "fastapi@0.115.14",
+      "repo": "github.com/fastapi/fastapi",
+      "tag": "0.115.14"
+     }
+    ]
+   }
+  },
+  "fastapi088": {
+   "ms": 2335,
+   "report": {
+    "model": true,
+    "ms": 2331,
+    "packages": [
+     {
+      "files": 113,
+      "note": null,
+      "package": "fastapi@0.88.0",
+      "repo": "github.com/tiangolo/fastapi",
+      "tag": "0.88.0"
+     }
+    ]
+   }
+  },
+  "next14": {
+   "ms": 4976,
+   "report": {
+    "model": true,
+    "ms": 4972,
+    "packages": [
+     {
+      "files": 318,
+      "note": null,
+      "package": "next@14.2.35",
+      "repo": "github.com/vercel/next.js",
+      "tag": "v14.2.35"
+     },
+     {
+      "files": 3,
+      "note": null,
+      "package": "react@18.3.1",
+      "repo": "github.com/facebook/react",
+      "tag": "v18.3.1"
+     },
+     {
+      "files": 3,
+      "note": null,
+      "package": "react-dom@18.3.1",
+      "repo": "github.com/facebook/react",
+      "tag": "v18.3.1"
+     }
+    ]
+   }
+  },
+  "next15": {
+   "ms": 3429,
+   "report": {
+    "model": true,
+    "ms": 3424,
+    "packages": [
+     {
+      "files": 365,
+      "note": null,
+      "package": "next@15.1.0",
+      "repo": "github.com/vercel/next.js",
+      "tag": "v15.1.0"
+     },
+     {
+      "files": 184,
+      "note": null,
+      "package": "react@19.0.0",
+      "repo": "github.com/facebook/react",
+      "tag": "v19.0.0"
+     },
+     {
+      "files": 184,
+      "note": null,
+      "package": "react-dom@19.0.0",
+      "repo": "github.com/facebook/react",
+      "tag": "v19.0.0"
+     }
+    ]
+   }
+  },
+  "next16": {
+   "ms": 4143,
+   "report": {
+    "model": true,
+    "ms": 4137,
+    "packages": [
+     {
+      "files": 458,
+      "note": null,
+      "package": "next@16.3.6",
+      "repo": "github.com/vercel/next.js",
+      "tag": "v16.3.6"
+     },
+     {
+      "files": 183,
+      "note": null,
+      "package": "react@19.2.8",
+      "repo": "github.com/react/react",
+      "tag": "v19.2.8"
+     },
+     {
+      "files": 183,
+      "note": null,
+      "package": "react-dom@19.2.8",
+      "repo": "github.com/react/react",
+      "tag": "v19.2.8"
+     }
+    ]
+   }
+  },
+  "prisma5": {
+   "ms": 1697,
+   "report": {
+    "model": true,
+    "ms": 1694,
+    "packages": [
+     {
+      "files": 2,
+      "note": null,
+      "package": "@prisma/client@5.22.0",
+      "repo": "github.com/prisma/prisma",
+      "tag": "5.22.0"
+     },
+     {
+      "files": 2,
+      "note": null,
+      "package": "prisma@5.22.0",
+      "repo": "github.com/prisma/prisma",
+      "tag": "5.22.0"
+     }
+    ]
+   }
+  },
+  "prisma6": {
+   "ms": 1739,
+   "report": {
+    "model": true,
+    "ms": 1736,
+    "packages": [
+     {
+      "files": 2,
+      "note": null,
+      "package": "@prisma/client@6.19.3",
+      "repo": "github.com/prisma/prisma",
+      "tag": "6.19.3"
+     },
+     {
+      "files": 2,
+      "note": null,
+      "package": "prisma@6.19.3",
+      "repo": "github.com/prisma/prisma",
+      "tag": "6.19.3"
+     }
+    ]
+   }
+  },
+  "pydantic1": {
+   "ms": 1635,
+   "report": {
+    "model": true,
+    "ms": 1631,
+    "packages": [
+     {
+      "files": 176,
+      "note": null,
+      "package": "pydantic@1.10.18",
+      "repo": "github.com/pydantic/pydantic",
+      "tag": "v1.10.18"
+     }
+    ]
+   }
+  },
+  "pydantic2": {
+   "ms": 1223,
+   "report": {
+    "model": true,
+    "ms": 1219,
+    "packages": [
+     {
+      "files": 80,
+      "note": null,
+      "package": "pydantic@2.9.2",
+      "repo": "github.com/pydantic/pydantic",
+      "tag": "v2.9.2"
+     }
+    ]
+   }
+  },
+  "react18": {
+   "ms": 2396,
+   "report": {
+    "model": true,
+    "ms": 2394,
+    "packages": [
+     {
+      "files": 0,
+      "note": "no git tag found for 18.3.31",
+      "package": "@types/react@18.3.31",
+      "repo": "github.com/DefinitelyTyped/DefinitelyTyped",
+      "tag": null
+     },
+     {
+      "files": 0,
+      "note": "no git tag found for 18.3.7",
+      "package": "@types/react-dom@18.3.7",
+      "repo": "github.com/DefinitelyTyped/DefinitelyTyped",
+      "tag": null
+     },
+     {
+      "files": 3,
+      "note": null,
+      "package": "react@18.3.1",
+      "repo": "github.com/facebook/react",
+      "tag": "v18.3.1"
+     },
+     {
+      "files": 3,
+      "note": null,
+      "package": "react-dom@18.3.1",
+      "repo": "github.com/facebook/react",
+      "tag": "v18.3.1"
+     }
+    ]
+   }
+  },
+  "react19": {
+   "ms": 3314,
+   "report": {
+    "model": true,
+    "ms": 3310,
+    "packages": [
+     {
+      "files": 180,
+      "note": null,
+      "package": "@types/react@19.2.18",
+      "repo": "github.com/DefinitelyTyped/DefinitelyTyped",
+      "tag": null
+     },
+     {
+      "files": 0,
+      "note": "no git tag found for 19.2.7",
+      "package": "@types/react-dom@19.2.7",
+      "repo": "github.com/DefinitelyTyped/DefinitelyTyped",
+      "tag": null
+     },
+     {
+      "files": 183,
+      "note": null,
+      "package": "react@19.2.8",
+      "repo": "github.com/react/react",
+      "tag": "v19.2.8"
+     },
+     {
+      "files": 183,
+      "note": null,
+      "package": "react-dom@19.2.8",
+      "repo": "github.com/react/react",
+      "tag": "v19.2.8"
+     }
+    ]
+   }
+  },
+  "rr6": {
+   "ms": 2184,
+   "report": {
+    "model": true,
+    "ms": 2180,
+    "packages": [
+     {
+      "files": 3,
+      "note": null,
+      "package": "react@18.3.1",
+      "repo": "github.com/facebook/react",
+      "tag": "v18.3.1"
+     },
+     {
+      "files": 3,
+      "note": null,
+      "package": "react-dom@18.3.1",
+      "repo": "github.com/facebook/react",
+      "tag": "v18.3.1"
+     },
+     {
+      "files": 118,
+      "note": null,
+      "package": "react-router@6.26.2",
+      "repo": "github.com/remix-run/react-router",
+      "tag": "react-router@6.26.2"
+     },
+     {
+      "files": 118,
+      "note": null,
+      "package": "react-router-dom@6.26.2",
+      "repo": "github.com/remix-run/react-router",
+      "tag": "react-router-dom@6.26.2"
+     }
+    ]
+   }
+  },
+  "rr7": {
+   "ms": 2112,
+   "report": {
+    "model": true,
+    "ms": 2109,
+    "packages": [
+     {
+      "files": 184,
+      "note": null,
+      "package": "react@19.0.0",
+      "repo": "github.com/facebook/react",
+      "tag": "v19.0.0"
+     },
+     {
+      "files": 184,
+      "note": null,
+      "package": "react-dom@19.0.0",
+      "repo": "github.com/facebook/react",
+      "tag": "v19.0.0"
+     },
+     {
+      "files": 68,
+      "note": null,
+      "package": "react-router@7.1.1",
+      "repo": "github.com/remix-run/react-router",
+      "tag": "react-router@7.1.1"
+     }
+    ]
+   }
+  },
+  "sqlalchemy14": {
+   "ms": 3270,
+   "report": {
+    "model": true,
+    "ms": 3266,
+    "packages": [
+     {
+      "files": 179,
+      "note": null,
+      "package": "sqlalchemy@1.4.54",
+      "repo": "github.com/sqlalchemy/sqlalchemy",
+      "tag": "rel_1_4_54"
+     }
+    ]
+   }
+  },
+  "sqlalchemy20": {
+   "ms": 3201,
+   "report": {
+    "model": true,
+    "ms": 3197,
+    "packages": [
+     {
+      "files": 198,
+      "note": null,
+      "package": "sqlalchemy@2.0.54",
+      "repo": "github.com/sqlalchemy/sqlalchemy",
+      "tag": "rel_2_0_54"
+     }
+    ]
+   }
+  },
+  "tailwind3": {
+   "ms": 725,
+   "report": {
+    "model": true,
+    "ms": 723,
+    "packages": [
+     {
+      "files": 2,
+      "note": null,
+      "package": "tailwindcss@3.4.19",
+      "repo": "github.com/tailwindlabs/tailwindcss",
+      "tag": "v3.4.19"
+     }
+    ]
+   }
+  },
+  "tailwind4": {
+   "ms": 2472,
+   "report": {
+    "model": true,
+    "ms": 2469,
+    "packages": [
+     {
+      "files": 200,
+      "note": null,
+      "package": "tailwindcss@4.1.18",
+      "repo": "github.com/tailwindlabs/tailwindcss",
+      "tag": "v4.1.18"
+     }
+    ]
+   }
+  },
+  "vite5": {
+   "ms": 1379,
+   "report": {
+    "model": true,
+    "ms": 1376,
+    "packages": [
+     {
+      "files": 37,
+      "note": null,
+      "package": "vite@5.4.21",
+      "repo": "github.com/vitejs/vite",
+      "tag": "v5.4.21"
+     }
+    ]
+   }
+  },
+  "vite6": {
+   "ms": 1511,
+   "report": {
+    "model": true,
+    "ms": 1508,
+    "packages": [
+     {
+      "files": 47,
+      "note": null,
+      "package": "vite@6.4.3",
+      "repo": "github.com/vitejs/vite",
+      "tag": "v6.4.3"
+     }
+    ]
+   }
+  },
+  "zod3": {
+   "ms": 612,
+   "report": {
+    "model": true,
+    "ms": 609,
+    "packages": [
+     {
+      "files": 4,
+      "note": null,
+      "package": "zod@3.23.8",
+      "repo": "github.com/colinhacks/zod",
+      "tag": "v3.23.8"
+     }
+    ]
+   }
+  },
+  "zod4": {
+   "ms": 1219,
+   "report": {
+    "model": true,
+    "ms": 1216,
+    "packages": [
+     {
+      "files": 18,
+      "note": null,
+      "package": "zod@4.1.5",
+      "repo": "github.com/colinhacks/zod",
+      "tag": "v4.1.5"
+     }
+    ]
+   }
+  }
+ },
+ "rows": [
+  {
+   "id": "zod3-strict",
+   "project": "zod3",
+   "package": "zod",
+   "version": "3.23.8",
+   "question": "How do I reject unknown keys in an object schema?",
+   "why": "v3: .strict() on ZodObject",
+   "line": "older",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1019,
+    "ms": 84.3
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 1079,
+     "ms": 29.1
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 1070,
+     "ms": 40.4
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 1019,
+     "ms": 84.3
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 685,
+    "ms": 3133,
+    "library": "/colinhacks/zod/v3.24.2",
+    "version_match": "same major",
+    "reused": true
+   }
+  },
+  {
+   "id": "zod4-strict",
+   "project": "zod4",
+   "package": "zod",
+   "version": "4.1.5",
+   "question": "How do I reject unknown keys in an object schema?",
+   "why": "v4: z.strictObject() (.strict() is legacy)",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 946,
+    "ms": 133.8
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 1073,
+     "ms": 55.8
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "strictObject"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 1142,
+     "ms": 48.6
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 946,
+     "ms": 133.8
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 822,
+    "ms": 3267,
+    "library": "/colinhacks/zod/v4.0.1",
+    "version_match": "same major",
+    "reused": true
+   }
+  },
+  {
+   "id": "zod3-email",
+   "project": "zod3",
+   "package": "zod",
+   "version": "3.23.8",
+   "question": "How do I validate that a string is an email address?",
+   "why": "v3: z.string().email(); top-level z.email() does not exist",
+   "line": "older",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1167,
+    "ms": 40.4
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 961,
+     "ms": 5.5
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 1042,
+     "ms": 44.4
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 1167,
+     "ms": 40.4
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1078,
+    "ms": 1785,
+    "library": "/colinhacks/zod/v3.24.2",
+    "version_match": "same major",
+    "reused": true
+   }
+  },
+  {
+   "id": "zod4-email",
+   "project": "zod4",
+   "package": "zod",
+   "version": "4.1.5",
+   "question": "How do I validate that a string is an email address?",
+   "why": "v4: top-level z.email()",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 965,
+    "ms": 58.6
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 1147,
+     "ms": 10.6
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 1038,
+     "ms": 47.6
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 965,
+     "ms": 58.6
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1328,
+    "ms": 1886,
+    "library": "/colinhacks/zod/v4.0.1",
+    "version_match": "same major",
+    "reused": true
+   }
+  },
+  {
+   "id": "zod3-error",
+   "project": "zod3",
+   "package": "zod",
+   "version": "3.23.8",
+   "question": "How do I customize the error message when validation fails?",
+   "why": "v3: message / required_error / errorMap params",
+   "line": "older",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 985,
+    "ms": 45.7
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 868,
+     "ms": 5.4
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 868,
+     "ms": 45.6
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 985,
+     "ms": 45.7
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 890,
+    "ms": 1447,
+    "library": "/colinhacks/zod/v3.24.2",
+    "version_match": "same major",
+    "reused": true
+   }
+  },
+  {
+   "id": "zod4-error",
+   "project": "zod4",
+   "package": "zod",
+   "version": "4.1.5",
+   "question": "How do I customize the error message when validation fails?",
+   "why": "v4: unified `error` param; required_error removed (reject of 'required_error' dropped: v4 migration notes legitimately mention it as removed)",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 989,
+    "ms": 51.6
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 389,
+     "ms": 9.5
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 646,
+     "ms": 46.1
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 989,
+     "ms": 51.6
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 846,
+    "ms": 1938,
+    "library": "/colinhacks/zod/v4.0.1",
+    "version_match": "same major",
+    "reused": true
+   }
+  },
+  {
+   "id": "zod4-record",
+   "project": "zod4",
+   "package": "zod",
+   "version": "4.1.5",
+   "question": "How do I define a record schema with string keys and number values?",
+   "why": "v4: z.record(keySchema, valueSchema)",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1026,
+    "ms": 57.2
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "record("
+      ]
+     ],
+     "rejected": [],
+     "tokens": 1114,
+     "ms": 10.5
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "record("
+      ]
+     ],
+     "rejected": [],
+     "tokens": 1049,
+     "ms": 47.9
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 1026,
+     "ms": 57.2
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 798,
+    "ms": 1815,
+    "library": "/colinhacks/zod/v4.0.1",
+    "version_match": "same major",
+    "reused": true
+   }
+  },
+  {
+   "id": "next14-cookies",
+   "project": "next14",
+   "package": "next",
+   "version": "14.2.35",
+   "question": "Is cookies() from next/headers synchronous or does it return a Promise?",
+   "why": "14: cookies() returns ReadonlyRequestCookies synchronously",
+   "line": "older",
+   "lockdocs": {
+    "pass": false,
+    "missing": [
+     [
+      "ReadonlyRequestCookies"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 849,
+    "ms": 342.1
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "ReadonlyRequestCookies"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 302,
+     "ms": 117.9
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 340,
+     "ms": 61.4
+    },
+    "fetched": {
+     "pass": false,
+     "missing": [
+      [
+       "ReadonlyRequestCookies"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 849,
+     "ms": 342.1
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [
+     [
+      "ReadonlyRequestCookies"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 1144,
+    "ms": 2994,
+    "library": "/vercel/next.js/v14.3.0-canary.87",
+    "version_match": "same major"
+   }
+  },
+  {
+   "id": "next15-cookies",
+   "project": "next15",
+   "package": "next",
+   "version": "15.1.0",
+   "question": "Is cookies() from next/headers synchronous or does it return a Promise?",
+   "why": "15: cookies() is async",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 892,
+    "ms": 392.2
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 662,
+     "ms": 137.0
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 618,
+     "ms": 62.6
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 892,
+     "ms": 392.2
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 980,
+    "ms": 3167,
+    "library": "/vercel/next.js/v15.1.11",
+    "version_match": "same major",
+    "reused": true
+   }
+  },
+  {
+   "id": "next14-headers",
+   "project": "next14",
+   "package": "next",
+   "version": "14.2.35",
+   "question": "How do I read the incoming request headers in a server component?",
+   "why": "14: headers() is sync",
+   "line": "older",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 892,
+    "ms": 79.7
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 376,
+     "ms": 17.8
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 869,
+     "ms": 55.9
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 892,
+     "ms": 79.7
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1363,
+    "ms": 1612,
+    "library": "/vercel/next.js/v14.3.0-canary.87",
+    "version_match": "same major"
+   }
+  },
+  {
+   "id": "next15-headers",
+   "project": "next15",
+   "package": "next",
+   "version": "15.1.0",
+   "question": "How do I read the incoming request headers in a server component?",
+   "why": "15: headers() is async",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 872,
+    "ms": 84.5
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 718,
+     "ms": 19.6
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 897,
+     "ms": 64.8
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 872,
+     "ms": 84.5
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1022,
+    "ms": 1773,
+    "library": "/vercel/next.js/v15.1.11",
+    "version_match": "same major",
+    "reused": true
+   }
+  },
+  {
+   "id": "next14-nostore",
+   "project": "next14",
+   "package": "next",
+   "version": "14.2.35",
+   "question": "How do I opt a server component out of caching so it renders dynamically?",
+   "why": "14: unstable_noStore()",
+   "line": "older",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 761,
+    "ms": 82.1
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 891,
+     "ms": 17.5
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 933,
+     "ms": 56.0
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 761,
+     "ms": 82.1
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 744,
+    "ms": 1564,
+    "library": "/vercel/next.js/v14.3.0-canary.87",
+    "version_match": "same major"
+   }
+  },
+  {
+   "id": "next15-connection",
+   "project": "next15",
+   "package": "next",
+   "version": "15.1.0",
+   "question": "How do I opt a server component out of caching so it renders dynamically?",
+   "why": "15: connection() (unstable_noStore deprecated)",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 798,
+    "ms": 93.1
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 899,
+     "ms": 19.7
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 924,
+     "ms": 61.4
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 798,
+     "ms": 93.1
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1281,
+    "ms": 1786,
+    "library": "/vercel/next.js/v15.1.11",
+    "version_match": "same major",
+    "reused": true
+   }
+  },
+  {
+   "id": "next15-after",
+   "project": "next15",
+   "package": "next",
+   "version": "15.1.0",
+   "question": "How do I run code after the response has finished streaming?",
+   "why": "15.1: after() from next/server (unstable_after in 15.0)",
+   "line": "newer",
+   "lockdocs": {
+    "pass": false,
+    "missing": [
+     [
+      "unstable_after",
+      "after(",
+      "function after"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 879,
+    "ms": 91.9
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 923,
+     "ms": 19.6
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 855,
+     "ms": 63.3
+    },
+    "fetched": {
+     "pass": false,
+     "missing": [
+      [
+       "unstable_after",
+       "after(",
+       "function after"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 879,
+     "ms": 91.9
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1951,
+    "ms": 1982,
+    "library": "/vercel/next.js/v15.1.11",
+    "version_match": "same major",
+    "reused": true
+   }
+  },
+  {
+   "id": "rr6-json",
+   "project": "rr6",
+   "package": "react-router",
+   "version": "6.26.2",
+   "question": "How do I return data with a custom HTTP status code from a loader?",
+   "why": "v6: json() helper",
+   "line": "older",
+   "lockdocs": {
+    "pass": false,
+    "missing": [
+     [
+      "json("
+     ]
+    ],
+    "rejected": [],
+    "tokens": 796,
+    "ms": 98.9
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 913,
+     "ms": 8.9
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 913,
+     "ms": 42.0
+    },
+    "fetched": {
+     "pass": false,
+     "missing": [
+      [
+       "json("
+      ]
+     ],
+     "rejected": [],
+     "tokens": 796,
+     "ms": 98.9
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [
+     [
+      "json("
+     ]
+    ],
+    "rejected": [],
+    "tokens": 475,
+    "ms": 3327,
+    "library": "/websites/reactrouter",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "rr7-data",
+   "project": "rr7",
+   "package": "react-router",
+   "version": "7.1.1",
+   "question": "How do I return data with a custom HTTP status code from a loader?",
+   "why": "v7: data() helper (json() deprecated)",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 892,
+    "ms": 121.9
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "data("
+      ]
+     ],
+     "rejected": [],
+     "tokens": 889,
+     "ms": 40.2
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 928,
+     "ms": 41.8
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 892,
+     "ms": 121.9
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 513,
+    "ms": 2755,
+    "library": "/websites/reactrouter",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "rr6-defer",
+   "project": "rr6",
+   "package": "react-router",
+   "version": "6.26.2",
+   "question": "How do I stream slow data from a loader with deferred values?",
+   "why": "v6: defer() + <Await>",
+   "line": "older",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 895,
+    "ms": 46.9
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 851,
+     "ms": 3.3
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 884,
+     "ms": 38.2
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 895,
+     "ms": 46.9
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 852,
+    "ms": 1568,
+    "library": "/websites/reactrouter",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "rr6-future",
+   "project": "rr6",
+   "package": "react-router",
+   "version": "6.26.2",
+   "question": "Which future flag enables React.startTransition for state updates?",
+   "why": "v6.26: future.v7_startTransition",
+   "line": "older",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 815,
+    "ms": 51.6
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 946,
+     "ms": 3.2
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 904,
+     "ms": 39.3
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 815,
+     "ms": 51.6
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 505,
+    "ms": 1919,
+    "library": "/websites/reactrouter",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "rr7-router",
+   "project": "rr7",
+   "package": "react-router",
+   "version": "7.1.1",
+   "question": "How do I create a browser router with data loaders?",
+   "why": "v7: createBrowserRouter from react-router",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 838,
+    "ms": 51.1
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 866,
+     "ms": 7.5
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 920,
+     "ms": 46.0
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 838,
+     "ms": 51.1
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1220,
+    "ms": 1900,
+    "library": "/websites/reactrouter",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "pyd1-dict",
+   "project": "pydantic1",
+   "package": "pydantic",
+   "version": "1.10.18",
+   "question": "How do I convert a model instance to a dict?",
+   "why": "v1: .dict()",
+   "line": "older",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 948,
+    "ms": 151.1
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 953,
+     "ms": 68.2
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 915,
+     "ms": 55.9
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 948,
+     "ms": 151.1
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [
+     [
+      ".dict(",
+      "def dict("
+     ]
+    ],
+    "rejected": [
+     "model_dump"
+    ],
+    "tokens": 908,
+    "ms": 2968,
+    "library": "/pydantic/pydantic",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "pyd2-dict",
+   "project": "pydantic2",
+   "package": "pydantic",
+   "version": "2.9.2",
+   "question": "How do I convert a model instance to a dict?",
+   "why": "v2: .model_dump()",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 909,
+    "ms": 244.8
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "model_dump"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 823,
+     "ms": 129.7
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "model_dump"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 893,
+     "ms": 64.1
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 909,
+     "ms": 244.8
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 839,
+    "ms": 2943,
+    "library": "/pydantic/pydantic",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "pyd1-parse",
+   "project": "pydantic1",
+   "package": "pydantic",
+   "version": "1.10.18",
+   "question": "How do I create a model from a dict and validate it?",
+   "why": "v1: Model.parse_obj()",
+   "line": "older",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 884,
+    "ms": 63.0
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "parse_obj"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 954,
+     "ms": 18.6
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "parse_obj"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 907,
+     "ms": 58.0
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 884,
+     "ms": 63.0
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [
+     [
+      "parse_obj"
+     ]
+    ],
+    "rejected": [
+     "model_validate"
+    ],
+    "tokens": 1185,
+    "ms": 1759,
+    "library": "/pydantic/pydantic",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "pyd2-parse",
+   "project": "pydantic2",
+   "package": "pydantic",
+   "version": "2.9.2",
+   "question": "How do I create a model from a dict and validate it?",
+   "why": "v2: Model.model_validate()",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 843,
+    "ms": 72.3
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "model_validate"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 941,
+     "ms": 22.2
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "model_validate"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 950,
+     "ms": 60.0
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 843,
+     "ms": 72.3
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1185,
+    "ms": 1519,
+    "library": "/pydantic/pydantic",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "pyd1-validator",
+   "project": "pydantic1",
+   "package": "pydantic",
+   "version": "1.10.18",
+   "question": "How do I add a custom validator for a field?",
+   "why": "v1: @validator",
+   "line": "older",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 965,
+    "ms": 62.5
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "@validator",
+       "def validator("
+      ]
+     ],
+     "rejected": [],
+     "tokens": 985,
+     "ms": 18.6
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 823,
+     "ms": 54.0
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 965,
+     "ms": 62.5
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [
+     [
+      "@validator",
+      "def validator("
+     ]
+    ],
+    "rejected": [
+     "field_validator"
+    ],
+    "tokens": 1095,
+    "ms": 1590,
+    "library": "/pydantic/pydantic",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "pyd2-validator",
+   "project": "pydantic2",
+   "package": "pydantic",
+   "version": "2.9.2",
+   "question": "How do I add a custom validator for a field?",
+   "why": "v2: @field_validator",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 764,
+    "ms": 67.3
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "field_validator"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 784,
+     "ms": 22.5
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 867,
+     "ms": 63.3
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 764,
+     "ms": 67.3
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1207,
+    "ms": 1476,
+    "library": "/pydantic/pydantic",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "pyd1-schema",
+   "project": "pydantic1",
+   "package": "pydantic",
+   "version": "1.10.18",
+   "question": "How do I get the JSON schema of a model?",
+   "why": "v1: Model.schema() / schema_json()",
+   "line": "older",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 878,
+    "ms": 61.6
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 923,
+     "ms": 18.5
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 913,
+     "ms": 55.9
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 878,
+     "ms": 61.6
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [
+     [
+      "schema_json",
+      "def schema(",
+      ".schema("
+     ]
+    ],
+    "rejected": [
+     "model_json_schema"
+    ],
+    "tokens": 1866,
+    "ms": 1735,
+    "library": "/pydantic/pydantic",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "pyd2-schema",
+   "project": "pydantic2",
+   "package": "pydantic",
+   "version": "2.9.2",
+   "question": "How do I get the JSON schema of a model?",
+   "why": "v2: Model.model_json_schema()",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 817,
+    "ms": 72.3
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 884,
+     "ms": 22.3
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 858,
+     "ms": 56.3
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 817,
+     "ms": 72.3
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1742,
+    "ms": 1261,
+    "library": "/pydantic/pydantic",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "pyd1-config",
+   "project": "pydantic1",
+   "package": "pydantic",
+   "version": "1.10.18",
+   "question": "How do I allow extra fields on a model?",
+   "why": "v1: class Config: extra = Extra.allow",
+   "line": "older",
+   "lockdocs": {
+    "pass": false,
+    "missing": [],
+    "rejected": [
+     "ConfigDict"
+    ],
+    "tokens": 945,
+    "ms": 59.0
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "Extra.allow",
+       "class Config"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 952,
+     "ms": 18.3
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "Extra.allow",
+       "class Config"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 952,
+     "ms": 55.8
+    },
+    "fetched": {
+     "pass": false,
+     "missing": [],
+     "rejected": [
+      "ConfigDict"
+     ],
+     "tokens": 945,
+     "ms": 59.0
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [],
+    "rejected": [
+     "ConfigDict"
+    ],
+    "tokens": 718,
+    "ms": 1581,
+    "library": "/pydantic/pydantic",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "pyd2-config",
+   "project": "pydantic2",
+   "package": "pydantic",
+   "version": "2.9.2",
+   "question": "How do I allow extra fields on a model?",
+   "why": "v2: model_config = ConfigDict(extra='allow')",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 934,
+    "ms": 70.6
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 898,
+     "ms": 22.2
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 919,
+     "ms": 62.4
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 934,
+     "ms": 70.6
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 893,
+    "ms": 2199,
+    "library": "/pydantic/pydantic",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "axum07-path",
+   "project": "axum07",
+   "package": "axum",
+   "version": "0.7.9",
+   "question": "How do I declare a route with a path parameter?",
+   "why": "0.7: /users/:id",
+   "line": "older",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 960,
+    "ms": 88.4
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 955,
+     "ms": 51.4
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 933,
+     "ms": 45.1
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 960,
+     "ms": 88.4
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [
+     [
+      "/:"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 1159,
+    "ms": 2689,
+    "library": "/websites/rs_axum",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "axum08-path",
+   "project": "axum08",
+   "package": "axum",
+   "version": "0.8.1",
+   "question": "How do I declare a route with a path parameter?",
+   "why": "0.8: /users/{id}",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 925,
+    "ms": 93.5
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 947,
+     "ms": 52.0
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 925,
+     "ms": 45.3
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 925,
+     "ms": 93.5
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1212,
+    "ms": 2761,
+    "library": "/websites/rs_axum",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "axum07-extractor",
+   "project": "axum07",
+   "package": "axum",
+   "version": "0.7.9",
+   "question": "How do I implement a custom extractor with FromRequestParts?",
+   "why": "0.7: #[async_trait] on the impl",
+   "line": "older",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 926,
+    "ms": 46.5
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 908,
+     "ms": 7.1
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 908,
+     "ms": 40.6
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 926,
+     "ms": 46.5
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [
+     [
+      "async_trait"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 1100,
+    "ms": 1702,
+    "library": "/websites/rs_axum",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "axum08-optional",
+   "project": "axum08",
+   "package": "axum",
+   "version": "0.8.1",
+   "question": "How do I make an extractor optional with Option<T>?",
+   "why": "0.8: OptionalFromRequestParts",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 898,
+    "ms": 41.6
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 663,
+     "ms": 6.9
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 898,
+     "ms": 41.6
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 898,
+     "ms": 41.6
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 910,
+    "ms": 1697,
+    "library": "/websites/rs_axum",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "tokio-blocking",
+   "project": "axum08",
+   "package": "tokio",
+   "version": "1.43.0",
+   "question": "How do I run blocking code without blocking the async runtime?",
+   "why": "tokio::task::spawn_blocking",
+   "line": "single",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 820,
+    "ms": 316.1
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 796,
+     "ms": 249.7
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 793,
+     "ms": 57.4
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 820,
+     "ms": 316.1
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 946,
+    "ms": 2988,
+    "library": "/websites/rs_tokio_1_49_0",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "tokio-select",
+   "project": "axum08",
+   "package": "tokio",
+   "version": "1.43.0",
+   "question": "How do I wait on several futures and take whichever finishes first?",
+   "why": "tokio::select!",
+   "line": "single",
+   "lockdocs": {
+    "pass": false,
+    "missing": [
+     [
+      "select!"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 969,
+    "ms": 60.1
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "select!"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 956,
+     "ms": 20.8
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "select!"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 958,
+     "ms": 55.0
+    },
+    "fetched": {
+     "pass": false,
+     "missing": [
+      [
+       "select!"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 969,
+     "ms": 60.1
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 864,
+    "ms": 1942,
+    "library": "/websites/rs_tokio_1_49_0",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "tokio-timeout",
+   "project": "axum08",
+   "package": "tokio",
+   "version": "1.43.0",
+   "question": "How do I put a timeout on a future?",
+   "why": "tokio::time::timeout",
+   "line": "single",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 920,
+    "ms": 54.7
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 881,
+     "ms": 20.1
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 910,
+     "ms": 56.4
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 920,
+     "ms": 54.7
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1662,
+    "ms": 1427,
+    "library": "/websites/rs_tokio_1_49_0",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "tw3-css",
+   "project": "tailwind3",
+   "package": "tailwindcss",
+   "version": "3.4.19",
+   "question": "How do I add Tailwind to my main CSS file?",
+   "why": "v3: @tailwind base/components/utilities directives (tailwindcss 3.4 docs, installation)",
+   "line": "older",
+   "lockdocs": {
+    "pass": false,
+    "missing": [
+     [
+      "@tailwind base",
+      "@tailwind components",
+      "@tailwind utilities"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 959,
+    "ms": 62.4
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "@tailwind base",
+       "@tailwind components",
+       "@tailwind utilities"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 1116,
+     "ms": 10.4
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "@tailwind base",
+       "@tailwind components",
+       "@tailwind utilities"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 1080,
+     "ms": 40.6
+    },
+    "fetched": {
+     "pass": false,
+     "missing": [
+      [
+       "@tailwind base",
+       "@tailwind components",
+       "@tailwind utilities"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 959,
+     "ms": 62.4
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [
+     [
+      "@tailwind base",
+      "@tailwind components",
+      "@tailwind utilities"
+     ]
+    ],
+    "rejected": [
+     "@import \"tailwindcss\""
+    ],
+    "tokens": 388,
+    "ms": 2446,
+    "library": "/rails/tailwindcss-rails",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "tw4-css",
+   "project": "tailwind4",
+   "package": "tailwindcss",
+   "version": "4.1.18",
+   "question": "How do I add Tailwind to my main CSS file?",
+   "why": "v4: @import \"tailwindcss\" replaces @tailwind directives (v4 upgrade guide)",
+   "line": "newer",
+   "lockdocs": {
+    "pass": false,
+    "missing": [
+     [
+      "@import \"tailwindcss\"",
+      "@import 'tailwindcss'"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 849,
+    "ms": 145.9
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "@import \"tailwindcss\"",
+       "@import 'tailwindcss'"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 281,
+     "ms": 8.9
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "@import \"tailwindcss\"",
+       "@import 'tailwindcss'"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 445,
+     "ms": 39.2
+    },
+    "fetched": {
+     "pass": false,
+     "missing": [
+      [
+       "@import \"tailwindcss\"",
+       "@import 'tailwindcss'"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 849,
+     "ms": 145.9
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 370,
+    "ms": 3073,
+    "library": "/rails/tailwindcss-rails",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "tw3-theme",
+   "project": "tailwind3",
+   "package": "tailwindcss",
+   "version": "3.4.19",
+   "question": "How do I add a custom brand color to the theme?",
+   "why": "v3: theme.extend.colors in tailwind.config.js (package stubs/config.full.js; v3 docs customizing colors)",
+   "line": "older",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1035,
+    "ms": 40.9
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 988,
+     "ms": 3.1
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 1047,
+     "ms": 41.3
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 1035,
+     "ms": 40.9
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 517,
+    "ms": 1587,
+    "library": "/rails/tailwindcss-rails",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "tw4-theme",
+   "project": "tailwind4",
+   "package": "tailwindcss",
+   "version": "4.1.18",
+   "question": "How do I add a custom brand color to the theme?",
+   "why": "v4: CSS-first @theme { --color-brand: ... } (v4 docs, theme variables)",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1147,
+    "ms": 54.0
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "@theme",
+       "--color-"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 437,
+     "ms": 2.0
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "@theme",
+       "--color-"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 531,
+     "ms": 36.8
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 1147,
+     "ms": 54.0
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 545,
+    "ms": 1790,
+    "library": "/rails/tailwindcss-rails",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "eslint8-config",
+   "project": "eslint8",
+   "package": "eslint",
+   "version": "8.57.1",
+   "question": "How do I configure ESLint rules for my project?",
+   "why": "8.57: eslintrc (.eslintrc.*) is the default config system; flat config opt-in (eslint 8 docs, configuring)",
+   "line": "older",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 813,
+    "ms": 407.0
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 866,
+     "ms": 133.9
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 925,
+     "ms": 48.2
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 813,
+     "ms": 407.0
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 928,
+    "ms": 2976,
+    "library": "/eslint/eslint/v8.57.1",
+    "version_match": "exact",
+    "reused": true
+   }
+  },
+  {
+   "id": "eslint9-config",
+   "project": "eslint9",
+   "package": "eslint",
+   "version": "9.39.5",
+   "question": "How do I configure ESLint rules for my project?",
+   "why": "9.x: flat config eslint.config.js is the default (eslint 9 migration guide)",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 741,
+    "ms": 360.1
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 940,
+     "ms": 30.2
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 961,
+     "ms": 45.1
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 741,
+     "ms": 360.1
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 760,
+    "ms": 2801,
+    "library": "/eslint/eslint/v9.39.3",
+    "version_match": "same major",
+    "reused": true
+   }
+  },
+  {
+   "id": "eslint8-ignore",
+   "project": "eslint8",
+   "package": "eslint",
+   "version": "8.57.1",
+   "question": "How do I make ESLint ignore certain files?",
+   "why": "8.57: .eslintignore / ignorePatterns (lib/cli-engine/cli-engine.js mentions .eslintignore)",
+   "line": "older",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 854,
+    "ms": 83.5
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       ".eslintignore",
+       "ignorePatterns"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 901,
+     "ms": 7.5
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       ".eslintignore",
+       "ignorePatterns"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 836,
+     "ms": 43.6
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 854,
+     "ms": 83.5
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 624,
+    "ms": 1908,
+    "library": "/eslint/eslint/v8.57.1",
+    "version_match": "exact",
+    "reused": true
+   }
+  },
+  {
+   "id": "eslint9-ignore",
+   "project": "eslint9",
+   "package": "eslint",
+   "version": "9.39.5",
+   "question": "How do I make ESLint ignore certain files?",
+   "why": "9.x: `ignores` in flat config / globalIgnores() from eslint/config (lib/types/config-api.d.ts); .eslintignore only warns",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 825,
+    "ms": 82.8
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "ignores:",
+       "\"ignores\"",
+       "globalIgnores("
+      ]
+     ],
+     "rejected": [],
+     "tokens": 909,
+     "ms": 6.4
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "ignores:",
+       "\"ignores\"",
+       "globalIgnores("
+      ]
+     ],
+     "rejected": [],
+     "tokens": 996,
+     "ms": 45.8
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 825,
+     "ms": 82.8
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 549,
+    "ms": 1752,
+    "library": "/eslint/eslint/v9.39.3",
+    "version_match": "same major",
+    "reused": true
+   }
+  },
+  {
+   "id": "prisma5-bytes",
+   "project": "prisma5",
+   "package": "@prisma/client",
+   "version": "5.22.0",
+   "question": "Which JavaScript type does Prisma Client use for Bytes fields?",
+   "why": "5.x: Bytes map to Buffer (Prisma 6 upgrade guide: 'Buffer replaced by Uint8Array')",
+   "line": "older",
+   "lockdocs": {
+    "pass": false,
+    "missing": [
+     [
+      "Buffer"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 878,
+    "ms": 78.1
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "Buffer"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 894,
+     "ms": 32.9
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "Buffer"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 971,
+     "ms": 42.7
+    },
+    "fetched": {
+     "pass": false,
+     "missing": [
+      [
+       "Buffer"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 878,
+     "ms": 78.1
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [
+     [
+      "Buffer"
+     ]
+    ],
+    "rejected": [
+     "Uint8Array"
+    ],
+    "tokens": 105,
+    "ms": 2340,
+    "library": "/websites/prisma_io",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "prisma6-bytes",
+   "project": "prisma6",
+   "package": "@prisma/client",
+   "version": "6.19.3",
+   "question": "Which JavaScript type does Prisma Client use for Bytes fields?",
+   "why": "6.x: Bytes = Uint8Array (@prisma/client 6.19.3 runtime/library.d.ts:167)",
+   "line": "newer",
+   "lockdocs": {
+    "pass": false,
+    "missing": [
+     [
+      "Uint8Array"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 878,
+    "ms": 95.0
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 967,
+     "ms": 49.6
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 853,
+     "ms": 45.0
+    },
+    "fetched": {
+     "pass": false,
+     "missing": [
+      [
+       "Uint8Array"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 878,
+     "ms": 95.0
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 631,
+    "ms": 3320,
+    "library": "/prisma/web",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "prisma5-fts",
+   "project": "prisma5",
+   "package": "prisma",
+   "version": "5.22.0",
+   "question": "Which preview feature enables full-text search on PostgreSQL?",
+   "why": "5.x: previewFeatures = [\"fullTextSearch\"] (Prisma 5 docs, full-text search)",
+   "line": "older",
+   "lockdocs": {
+    "pass": false,
+    "missing": [
+     [
+      "fullTextSearch"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 915,
+    "ms": 70.5
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "fullTextSearch"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 829,
+     "ms": 31.9
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "fullTextSearch"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 949,
+     "ms": 43.7
+    },
+    "fetched": {
+     "pass": false,
+     "missing": [
+      [
+       "fullTextSearch"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 915,
+     "ms": 70.5
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [],
+    "rejected": [
+     "fullTextSearchPostgres"
+    ],
+    "tokens": 661,
+    "ms": 3171,
+    "library": "/prisma/web",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "prisma6-fts",
+   "project": "prisma6",
+   "package": "prisma",
+   "version": "6.19.3",
+   "question": "Which preview feature enables full-text search on PostgreSQL?",
+   "why": "6.0: renamed to fullTextSearchPostgres (Prisma 6 upgrade guide)",
+   "line": "newer",
+   "lockdocs": {
+    "pass": false,
+    "missing": [
+     [
+      "fullTextSearchPostgres"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 850,
+    "ms": 89.6
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "fullTextSearchPostgres"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 836,
+     "ms": 49.5
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "fullTextSearchPostgres"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 921,
+     "ms": 43.5
+    },
+    "fetched": {
+     "pass": false,
+     "missing": [
+      [
+       "fullTextSearchPostgres"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 850,
+     "ms": 89.6
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 661,
+    "ms": 2843,
+    "library": "/prisma/web",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "react18-action",
+   "project": "react18",
+   "package": "react",
+   "version": "18.3.1",
+   "question": "Which hook updates state based on the result of a form action?",
+   "why": "18.3: no action hook; useActionState absent from @types/react 18.3.31 (0 matches), use useState/useReducer",
+   "line": "older",
+   "lockdocs": {
+    "pass": false,
+    "missing": [],
+    "rejected": [
+     "useActionState"
+    ],
+    "tokens": 951,
+    "ms": 128.8
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 956,
+     "ms": 58.5
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 921,
+     "ms": 45.0
+    },
+    "fetched": {
+     "pass": false,
+     "missing": [],
+     "rejected": [
+      "useActionState"
+     ],
+     "tokens": 951,
+     "ms": 128.8
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [
+     [
+      "useReducer",
+      "useState"
+     ]
+    ],
+    "rejected": [
+     "useActionState"
+    ],
+    "tokens": 1629,
+    "ms": 3434,
+    "library": "/reactjs/react.dev",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "react19-action",
+   "project": "react19",
+   "package": "react",
+   "version": "19.2.8",
+   "question": "Which hook updates state based on the result of a form action?",
+   "why": "19: useActionState (@types/react 19.2.18 index.d.ts)",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 869,
+    "ms": 416.7
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "useActionState"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 891,
+     "ms": 53.6
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 961,
+     "ms": 44.1
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 869,
+     "ms": 416.7
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 2160,
+    "ms": 2270,
+    "library": "/reactjs/react.dev",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "react18-use",
+   "project": "react18",
+   "package": "react",
+   "version": "18.3.1",
+   "question": "How do I read the value of a promise during render, suspending until it resolves?",
+   "why": "18.3: no `use` API (absent from @types/react 18.3.31); Suspense-enabled data library or useEffect",
+   "line": "older",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 804,
+    "ms": 47.8
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "Suspense",
+       "useEffect"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 687,
+     "ms": 6.9
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "Suspense",
+       "useEffect"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 891,
+     "ms": 42.3
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 804,
+     "ms": 47.8
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [],
+    "rejected": [
+     "use(promise"
+    ],
+    "tokens": 943,
+    "ms": 2011,
+    "library": "/reactjs/react.dev",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "react19-use",
+   "project": "react19",
+   "package": "react",
+   "version": "19.2.8",
+   "question": "How do I read the value of a promise during render, suspending until it resolves?",
+   "why": "19: use(promise) (@types/react 19.2.18 index.d.ts:1973 `function use<T>(usable: Usable<T>): T`)",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 859,
+    "ms": 93.9
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "use(",
+       "function use<"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 664,
+     "ms": 6.7
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "use(",
+       "function use<"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 896,
+     "ms": 48.9
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 859,
+     "ms": 93.9
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 942,
+    "ms": 1899,
+    "library": "/reactjs/react.dev",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "vite5-env",
+   "project": "vite5",
+   "package": "vite",
+   "version": "5.4.21",
+   "question": "How do I configure options separately for the client and SSR environments in the Vite config?",
+   "why": "5.4: `ssr` options / build.ssr; no `environments` in UserConfig (dist/node/index.d.ts, 0 matches)",
+   "line": "older",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 907,
+    "ms": 164.4
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 915,
+     "ms": 43.8
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 963,
+     "ms": 45.6
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 907,
+     "ms": 164.4
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [],
+    "rejected": [
+     "environments:"
+    ],
+    "tokens": 880,
+    "ms": 3010,
+    "library": "/vitejs/vite/v5.4.21",
+    "version_match": "exact",
+    "reused": true
+   }
+  },
+  {
+   "id": "vite6-env",
+   "project": "vite6",
+   "package": "vite",
+   "version": "6.4.3",
+   "question": "How do I configure options separately for the client and SSR environments in the Vite config?",
+   "why": "6.x: Environment API, `environments?: Record<string, EnvironmentOptions>` (vite 6.4.3 dist/node/index.d.ts:3901)",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 803,
+    "ms": 142.2
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 902,
+     "ms": 48.2
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 874,
+     "ms": 44.7
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 803,
+     "ms": 142.2
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 757,
+    "ms": 2809,
+    "library": "/vitejs/vite",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "express4-wildcard",
+   "project": "express4",
+   "package": "express",
+   "version": "4.21.2",
+   "question": "How do I define a route that matches every remaining path segment with a wildcard?",
+   "why": "4.x: app.get('*') / '/files/*' (path-to-regexp 0.1; express 4 routing guide)",
+   "line": "older",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 730,
+    "ms": 85.8
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "'*'",
+       "\"*\"",
+       "/*'",
+       "/*\""
+      ]
+     ],
+     "rejected": [],
+     "tokens": 1113,
+     "ms": 18.1
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "'*'",
+       "\"*\"",
+       "/*'",
+       "/*\""
+      ]
+     ],
+     "rejected": [],
+     "tokens": 1019,
+     "ms": 42.8
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 730,
+     "ms": 85.8
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [],
+    "rejected": [
+     "*splat"
+    ],
+    "tokens": 606,
+    "ms": 3398,
+    "library": "/expressjs/express",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "express5-wildcard",
+   "project": "express5",
+   "package": "express",
+   "version": "5.2.1",
+   "question": "How do I define a route that matches every remaining path segment with a wildcard?",
+   "why": "5.x: wildcards must be named, '/*splat' (express 5 migration guide, path-to-regexp v8)",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 944,
+    "ms": 87.2
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "*splat",
+       "/*name",
+       "{*",
+       "named wildcard"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 603,
+     "ms": 8.5
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "*splat",
+       "/*name",
+       "{*",
+       "named wildcard"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 968,
+     "ms": 37.8
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 944,
+     "ms": 87.2
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 955,
+    "ms": 3042,
+    "library": "/expressjs/express/v5.2.0",
+    "version_match": "same major",
+    "reused": true
+   }
+  },
+  {
+   "id": "sa14-column",
+   "project": "sqlalchemy14",
+   "package": "sqlalchemy",
+   "version": "1.4.54",
+   "question": "How do I declare a model column with Python type annotations?",
+   "why": "1.4: Column(...) on declarative classes; mapped_column absent in 1.4.54 orm/ (verified)",
+   "line": "older",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 869,
+    "ms": 854.9
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 857,
+     "ms": 397.4
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 860,
+     "ms": 89.3
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 869,
+     "ms": 854.9
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [],
+    "rejected": [
+     "mapped_column"
+    ],
+    "tokens": 1070,
+    "ms": 3137,
+    "library": "/websites/sqlalchemy_en_20",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "sa20-column",
+   "project": "sqlalchemy20",
+   "package": "sqlalchemy",
+   "version": "2.0.54",
+   "question": "How do I declare a model column with Python type annotations?",
+   "why": "2.0: Mapped[...] = mapped_column() (sqlalchemy 2.0.54 orm/_orm_constructors.py)",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 841,
+    "ms": 1036.5
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "mapped_column",
+       "Mapped["
+      ]
+     ],
+     "rejected": [],
+     "tokens": 913,
+     "ms": 518.7
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 805,
+     "ms": 102.4
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 841,
+     "ms": 1036.5
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 920,
+    "ms": 3287,
+    "library": "/websites/sqlalchemy_en_20",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "sa14-base",
+   "project": "sqlalchemy14",
+   "package": "sqlalchemy",
+   "version": "1.4.54",
+   "question": "How do I create the declarative base class for my models?",
+   "why": "1.4: Base = declarative_base(); DeclarativeBase class absent in 1.4.54 (verified)",
+   "line": "older",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 831,
+    "ms": 152.1
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 917,
+     "ms": 47.2
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 919,
+     "ms": 85.9
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 831,
+     "ms": 152.1
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [],
+    "rejected": [
+     "(DeclarativeBase)"
+    ],
+    "tokens": 1103,
+    "ms": 1572,
+    "library": "/websites/sqlalchemy_en_20",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "sa20-base",
+   "project": "sqlalchemy20",
+   "package": "sqlalchemy",
+   "version": "2.0.54",
+   "question": "How do I create the declarative base class for my models?",
+   "why": "2.0: class Base(DeclarativeBase) (sqlalchemy 2.0.54 orm/decl_api.py)",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 860,
+    "ms": 167.2
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 956,
+     "ms": 56.8
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 920,
+     "ms": 94.3
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 860,
+     "ms": 167.2
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 697,
+    "ms": 1803,
+    "library": "/websites/sqlalchemy_en_20",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "dj42-dbdefault",
+   "project": "django42",
+   "package": "django",
+   "version": "4.2.30",
+   "question": "How do I set a database-computed default value for a model field?",
+   "why": "4.2: only Python-side default=; db_default absent in 4.2.30 fields/__init__.py (0 matches)",
+   "line": "older",
+   "lockdocs": {
+    "pass": false,
+    "missing": [
+     [
+      "default="
+     ]
+    ],
+    "rejected": [],
+    "tokens": 852,
+    "ms": 482.8
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "default="
+      ]
+     ],
+     "rejected": [],
+     "tokens": 848,
+     "ms": 396.2
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "default="
+      ]
+     ],
+     "rejected": [],
+     "tokens": 835,
+     "ms": 87.7
+    },
+    "fetched": {
+     "pass": false,
+     "missing": [
+      [
+       "default="
+      ]
+     ],
+     "rejected": [],
+     "tokens": 852,
+     "ms": 482.8
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1739,
+    "ms": 2852,
+    "library": "/django/django/4.2.21",
+    "version_match": "same major",
+    "reused": true
+   }
+  },
+  {
+   "id": "dj51-dbdefault",
+   "project": "django51",
+   "package": "django",
+   "version": "5.1.15",
+   "question": "How do I set a database-computed default value for a model field?",
+   "why": "5.0+: Field.db_default (django 5.1.15 fields/__init__.py, 19 matches)",
+   "line": "newer",
+   "lockdocs": {
+    "pass": false,
+    "missing": [
+     [
+      "db_default"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 858,
+    "ms": 490.7
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "db_default"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 847,
+     "ms": 420.8
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "db_default"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 841,
+     "ms": 93.9
+    },
+    "fetched": {
+     "pass": false,
+     "missing": [
+      [
+       "db_default"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 858,
+     "ms": 490.7
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 856,
+    "ms": 4390,
+    "library": "/django/django",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "dj42-login",
+   "project": "django42",
+   "package": "django",
+   "version": "4.2.30",
+   "question": "How do I require login for all views by default?",
+   "why": "4.2: @login_required / LoginRequiredMixin per view; LoginRequiredMiddleware absent in 4.2.30",
+   "line": "older",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 816,
+    "ms": 86.6
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 862,
+     "ms": 46.2
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 846,
+     "ms": 89.2
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 816,
+     "ms": 86.6
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 616,
+    "ms": 1679,
+    "library": "/django/django/4.2.21",
+    "version_match": "same major",
+    "reused": true
+   }
+  },
+  {
+   "id": "dj51-login",
+   "project": "django51",
+   "package": "django",
+   "version": "5.1.15",
+   "question": "How do I require login for all views by default?",
+   "why": "5.1: django.contrib.auth.middleware.LoginRequiredMiddleware (django 5.1.15)",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 855,
+    "ms": 91.7
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 520,
+     "ms": 46.3
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 835,
+     "ms": 94.5
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 855,
+     "ms": 91.7
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 904,
+    "ms": 2310,
+    "library": "/django/django",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "fa088-lifespan",
+   "project": "fastapi088",
+   "package": "fastapi",
+   "version": "0.88.0",
+   "question": "How do I run code when the application starts up and shuts down?",
+   "why": "0.88: @app.on_event('startup'/'shutdown'); FastAPI(lifespan=) absent (0.88.0 applications.py, 0 matches; added 0.93)",
+   "line": "older",
+   "lockdocs": {
+    "pass": false,
+    "missing": [
+     [
+      "on_event"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 833,
+    "ms": 180.9
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "on_event"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 576,
+     "ms": 34.8
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "on_event"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 555,
+     "ms": 47.9
+    },
+    "fetched": {
+     "pass": false,
+     "missing": [
+      [
+       "on_event"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 833,
+     "ms": 180.9
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [
+     [
+      "on_event"
+     ]
+    ],
+    "rejected": [
+     "lifespan="
+    ],
+    "tokens": 836,
+    "ms": 2771,
+    "library": "/websites/fastapi_tiangolo",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "fa0115-lifespan",
+   "project": "fastapi0115",
+   "package": "fastapi",
+   "version": "0.115.14",
+   "question": "How do I run code when the application starts up and shuts down?",
+   "why": "0.115: FastAPI(lifespan=...) with asynccontextmanager (0.115.14 applications.py)",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 867,
+    "ms": 231.3
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "lifespan"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 900,
+     "ms": 47.7
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "lifespan"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 936,
+     "ms": 53.4
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 867,
+     "ms": 231.3
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 836,
+    "ms": 2575,
+    "library": "/websites/fastapi_tiangolo",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "fa088-annotated",
+   "project": "fastapi088",
+   "package": "fastapi",
+   "version": "0.88.0",
+   "question": "How do I declare a query parameter with validation metadata?",
+   "why": "0.88: q: str = Query(default=None, max_length=50); Annotated support added in 0.95 (0.88.0 dependencies/utils.py, 0 matches)",
+   "line": "older",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 875,
+    "ms": 69.3
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "Query("
+      ]
+     ],
+     "rejected": [],
+     "tokens": 884,
+     "ms": 15.1
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "Query("
+      ]
+     ],
+     "rejected": [],
+     "tokens": 975,
+     "ms": 49.6
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 875,
+     "ms": 69.3
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [],
+    "rejected": [
+     "Annotated["
+    ],
+    "tokens": 1934,
+    "ms": 1472,
+    "library": "/websites/fastapi_tiangolo",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "fa0115-annotated",
+   "project": "fastapi0115",
+   "package": "fastapi",
+   "version": "0.115.14",
+   "question": "How do I declare a query parameter with validation metadata?",
+   "why": "0.115: q: Annotated[str | None, Query(max_length=50)] recommended (0.115.14 dependencies/utils.py)",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 838,
+    "ms": 70.1
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 926,
+     "ms": 15.5
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 926,
+     "ms": 54.0
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 838,
+     "ms": 70.1
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1934,
+    "ms": 1691,
+    "library": "/websites/fastapi_tiangolo",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "next15-proxy",
+   "project": "next15",
+   "package": "next",
+   "version": "15.1.0",
+   "question": "How do I run code before a request is completed, for example to redirect or rewrite?",
+   "why": "15.1: middleware.ts / NextMiddleware; Proxy does not exist before 16",
+   "line": "older",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 831,
+    "ms": 90.1
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 363,
+     "ms": 19.7
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 936,
+     "ms": 61.2
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 831,
+     "ms": 90.1
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [],
+    "rejected": [
+     "NextProxy"
+    ],
+    "tokens": 1388,
+    "ms": 1576,
+    "library": "/vercel/next.js/v15.1.11",
+    "version_match": "same major",
+    "reused": true
+   }
+  },
+  {
+   "id": "next16-proxy",
+   "project": "next16",
+   "package": "next",
+   "version": "16.3.6",
+   "question": "How do I run code before a request is completed, for example to redirect or rewrite?",
+   "why": "16: middleware renamed to proxy (next 16.3.6 dist/server/web/types.d.ts: '@deprecated Use NextProxy instead. Middleware has been renamed to Proxy.')",
+   "line": "newer",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 869,
+    "ms": 629.5
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 837,
+     "ms": 431.7
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 789,
+     "ms": 119.9
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 869,
+     "ms": 629.5
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 757,
+    "ms": 2785,
+    "library": "/vercel/next.js/v16.2.9",
+    "version_match": "same major",
+    "reused": true
+   }
+  }
+ ],
+ "summary": {
+  "keyword": {
+   "answered": 70,
+   "passed": 41,
+   "total": 70,
+   "median_tokens": 898,
+   "median_ms": 22.2,
+   "p95_ms": 397.4
+  },
+  "hybrid": {
+   "answered": 70,
+   "passed": 46,
+   "total": 70,
+   "median_tokens": 915,
+   "median_ms": 48.6,
+   "p95_ms": 94.3
+  },
+  "fetched": {
+   "answered": 70,
+   "passed": 55,
+   "total": 70,
+   "median_tokens": 875,
+   "median_ms": 86.6,
+   "p95_ms": 490.7
+  },
+  "context7": {
+   "answered": 70,
+   "passed": 49,
+   "total": 70,
+   "median_tokens": 908,
+   "median_ms": 2011,
+   "p95_ms": 3327
+  }
+ },
+ "variants": [
+  [
+   "keyword",
+   "lockdocs, keyword only (BM25), package files"
+  ],
+  [
+   "hybrid",
+   "lockdocs, hybrid (BM25 + embeddings), package files"
+  ],
+  [
+   "fetched",
+   "lockdocs, hybrid + upstream docs (after `lockdocs fetch`)"
+  ]
+ ],
+ "context7_calls": {
+  "calls": 4,
+  "rate_limited": 0,
+  "errors": 0,
+  "stopped": false,
+  "limit": "200",
+  "remaining": "196",
+  "reused": 67
+ },
+ "runner": {
+  "os": "Linux",
+  "machine": "x86_64"
+ }
+}

@@ -316,10 +316,14 @@ pub fn cargo_lock(text: &str) -> anyhow::Result<Vec<Dep>> {
             continue;
         };
         let Some(src) = p.get("source").and_then(|s| s.as_str()) else { continue };
-        if !src.starts_with("registry+") && !src.starts_with("sparse+") {
+        let from = if src.starts_with("registry+") || src.starts_with("sparse+") {
+            "Cargo.lock"
+        } else if src.starts_with("git+") {
+            "Cargo.lock (git)"
+        } else {
             continue;
-        }
-        out.push(dep(Eco::Cargo, name, ver, direct.contains(name), "Cargo.lock"));
+        };
+        out.push(dep(Eco::Cargo, name, ver, direct.contains(name), from));
     }
     Ok(out)
 }
@@ -590,6 +594,11 @@ mod tests {
         assert_eq!(d.len(), 3);
         assert!(d.iter().any(|d| d.name == "axum" && d.direct));
         assert!(d.iter().any(|d| d.name == "bytes" && !d.direct));
+        let g = "version = 4\n[[package]]\nname = \"app\"\nversion = \"0.1.0\"\ndependencies = [\"mygit\"]\n\n[[package]]\nname = \"mygit\"\nversion = \"0.2.0\"\nsource = \"git+https://github.com/o/r?branch=main#0123456789abcdef\"\n\n[[package]]\nname = \"local\"\nversion = \"0.1.0\"\nsource = \"path+file:///x\"\n";
+        let d = cargo_lock(g).unwrap();
+        assert_eq!(d.len(), 1);
+        assert_eq!(d[0].from, "Cargo.lock (git)");
+        assert!(d[0].direct);
 
         let uv = "version = 1\n[[package]]\nname = \"app\"\nversion = \"0.1.0\"\nsource = { editable = \".\" }\ndependencies = [{ name = \"pydantic\" }]\n\n[[package]]\nname = \"pydantic\"\nversion = \"2.9.2\"\nsource = { registry = \"https://pypi.org/simple\" }\n\n[[package]]\nname = \"annotated-types\"\nversion = \"0.7.0\"\nsource = { registry = \"https://pypi.org/simple\" }\n";
         let d = uv_lock(uv).unwrap();

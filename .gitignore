@@ -12,3 +12,8 @@ docs/.vitepress/dist/
 bench/work/
 bench/results/*.tmp.json
 __pycache__/
+bench/projects/*/node_modules/
+bench/projects/*/.venv/
+bench/projects/*/target/
+bench/projects/*/package-lock.json
+bench/projects/*/Cargo.lock

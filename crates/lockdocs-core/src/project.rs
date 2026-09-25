@@ -85,6 +85,16 @@ impl Spec {
     }
 }
 
+/// Does `dir` declare dependencies of `eco` (a manifest without its lockfile)?
+fn declares(dir: &Path, eco: Eco) -> bool {
+    match eco {
+        Eco::Npm => dir.join("package.json").is_file(),
+        Eco::Cargo => dir.join("Cargo.toml").is_file(),
+        Eco::Go => dir.join("go.mod").is_file(),
+        Eco::PyPI => ["pyproject.toml", "setup.py", "setup.cfg", "Pipfile"].iter().any(|f| dir.join(f).is_file()),
+    }
+}
+
 impl Project {
     pub fn load(root: &Path) -> Project {
         let root = root.canonicalize().unwrap_or_else(|_| root.to_path_buf());
@@ -101,6 +111,18 @@ impl Project {
         for (depth, dir) in root.ancestors().take(6).enumerate() {
             if depth > 0 && Some(dir.to_path_buf()) == home {
                 break;
+            }
+            if depth == 1 {
+                // Above the project, only look for the lockfile of an ecosystem the
+                // project declares (a workspace member's package.json, Cargo.toml...).
+                for eco in Eco::all() {
+                    if !declares(&root, eco) {
+                        have.insert(eco);
+                    }
+                }
+                if have.len() == 4 {
+                    break;
+                }
             }
             p.read_dir(dir, &mut have);
             if depth == 0 {
@@ -137,7 +159,7 @@ impl Project {
                 Some(Ok(mut deps)) => {
                     let rel = self.rel(&path);
                     for d in &mut deps {
-                        d.from = rel.clone();
+                        d.from = if d.from.ends_with("(git)") { format!("{rel} (git)") } else { rel.clone() };
                     }
                     self.deps.extend(deps);
                     self.lockfiles.push(rel);

@@ -4,6 +4,7 @@
 
 pub mod bm25;
 pub mod cache;
+pub mod embed;
 pub mod extract;
 pub mod fetch;
 pub mod index;
@@ -13,6 +14,7 @@ pub mod markdown;
 pub mod project;
 pub mod query;
 pub mod tokenize;
+pub mod upstream;
 
 use serde::{Deserialize, Serialize};
 use std::fmt;

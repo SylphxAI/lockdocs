@@ -1,29 +1,36 @@
-# Fetching (opt-in)
+# Fetching and upstream docs
 
-By default lockdocs makes no network calls. When a pinned package is not on disk, the answer says what to install:
+lockdocs answers from what is on your machine. Two optional downloads make answers better; both happen once and are cached.
 
-```text
-missing-pkg@2.0.0 is pinned in package-lock.json but its files are not on this machine:
-run your package manager's install, or enable fetching (--fetch or LOCKDOCS_FETCH=1)
-to download exactly this version.
+## The embedding model (automatic, once)
+
+On the first query, lockdocs downloads the embedding model it uses next to BM25 (model2vec `potion-retrieval-32M`, 129 MB, MIT) from huggingface.co at a pinned revision, checks its SHA-256, and stores it int8-quantized (32 MB) in the cache. It prints one line when it does. The MCP server downloads it in the background and answers keyword-only until it lands. `LOCKDOCS_EMBED=0` or `--offline` skips it; any failure falls back to keyword search.
+
+## `lockdocs fetch`: upstream docs at the exact tag
+
+Many packages ship no documentation: Next.js, Django, FastAPI, React Router's guides and zod 4's docs live only in their repositories. `lockdocs fetch` finds each direct dependency's GitHub repository from its own metadata (`package.json` `repository`, PyPI `Project-URL`, `Cargo.toml` `repository`, the Go module path), finds the git tag of the pinned version (`v1.2.3`, `1.2.3`, `name@1.2.3`, `name-v1.2.3`, `rel_1_2_3`, ...), and downloads only the docs folders at that tag (Markdown, MDX, reStructuredText and docs example files):
+
+```bash
+lockdocs fetch              # every direct dependency
+lockdocs fetch next zod     # just these
 ```
 
-With fetching enabled (`--fetch`, `LOCKDOCS_FETCH=1`, or `lockdocs setup --fetch` for the MCP server), lockdocs downloads exactly the pinned version once and caches it:
+```text
+Fetched for 3 packages in 10016 ms (cached; later queries stay offline):
+  model   potion-retrieval-32M ready
+  next@15.1.0      upstream docs github.com/vercel/next.js@v15.1.0: 365 files (2.0 MB)
+```
 
-| Ecosystem | Source |
-|---|---|
-| npm | the version's tarball from `registry.npmjs.org` |
-| PyPI | a pure-Python wheel, else any wheel, else the sdist, from `pypi.org` |
-| crates.io | the `.crate` from `static.crates.io` |
-| Go | the module zip from `proxy.golang.org` |
+Answers then cite `next@15.1.0 upstream:docs/01-app/.../cookies.mdx:12` and name the repository and tag in the header. Set `GITHUB_TOKEN` to raise GitHub's API limit (60 requests an hour without it; a package takes 2 to 12).
 
-Only docs and source files are unpacked (no binaries, nothing outside the target directory, 64 MB download cap). Answers from fetched packages are labelled `fetched from <registry>`.
+To have it happen automatically on first query instead, enable fetching: `--fetch`, `LOCKDOCS_FETCH=1`, or register the MCP server with `lockdocs setup --fetch`.
 
-Fetching also lets you ask about a version you do not use, which is handy when planning an upgrade:
+## Packages that are not installed
+
+With fetching enabled, a pinned package that is not on disk is downloaded at exactly that version (npm tarball, PyPI wheel or sdist, crates.io `.crate`, Go module zip), and you can ask about a version you do not use:
 
 ```bash
 lockdocs npm:zod@4.1.5 "reject unknown keys" --fetch
-lockdocs pypi:pydantic@2.9.2 "model config extra fields" --fetch
 ```
 
-A fetched copy is used offline afterwards, even without `--fetch`.
+Only docs and source files are unpacked (no binaries, nothing outside the target directory, 64 MB download cap). Git dependencies are never fetched from a registry.

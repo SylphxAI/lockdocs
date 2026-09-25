@@ -93,8 +93,80 @@ fn npm(dep: &Dep, root: &Path) -> Option<Source> {
             }
         }
     }
+    if let Some(s) = pnp(dep, root) {
+        return Some(s);
+    }
     let (d, a, v) = fallback?;
     Some(src(d, &a, v))
+}
+
+// ---------------------------------------------------------------- yarn pnp
+
+/// Yarn Berry cache zip name prefix: `zod-npm-3.23.8-`, `@types-node-npm-20.1.0-`.
+pub fn pnp_zip_prefix(name: &str, version: &str) -> String {
+    format!("{}-npm-{}-", name.replace('/', "-"), version)
+}
+
+/// Yarn caches to look in: project (and ancestors) `.yarn/cache`, then the global cache.
+fn yarn_caches(root: &Path) -> Vec<(PathBuf, Option<PathBuf>)> {
+    let mut out: Vec<(PathBuf, Option<PathBuf>)> = ancestors(root).into_iter().map(|a| (a.join(".yarn").join("cache"), Some(a))).collect();
+    let global = std::env::var_os("YARN_CACHE_FOLDER")
+        .filter(|p| !p.is_empty())
+        .map(PathBuf::from)
+        .or_else(|| dirs::home_dir().map(|h| h.join(".yarn").join("berry").join("cache")));
+    if let Some(g) = global {
+        out.push((g, None));
+    }
+    out
+}
+
+/// A package from a Yarn Plug'n'Play zip cache, unpacked (docs and sources
+/// only) into the lockdocs cache once.
+fn pnp(dep: &Dep, root: &Path) -> Option<Source> {
+    let prefix = pnp_zip_prefix(&dep.name, &dep.version);
+    for (cache, base) in yarn_caches(root) {
+        let Ok(rd) = std::fs::read_dir(&cache) else { continue };
+        let mut zips: Vec<PathBuf> = rd
+            .flatten()
+            .map(|e| e.path())
+            .filter(|p| {
+                p.file_name().is_some_and(|f| {
+                    let f = f.to_string_lossy();
+                    f.starts_with(&prefix) && f.ends_with(".zip")
+                })
+            })
+            .collect();
+        zips.sort();
+        let Some(zip) = zips.into_iter().next() else { continue };
+        let safe = format!("{}@{}-pnp", dep.name, dep.version).replace(['/', '\\', ':'], "+");
+        let dir = crate::cache::dir().join("src").join("npm").join(safe);
+        let marker = dir.join(".lockdocs-complete");
+        if !marker.is_file() {
+            let bytes = std::fs::read(&zip).ok()?;
+            let _ = std::fs::remove_dir_all(&dir);
+            std::fs::create_dir_all(&dir).ok()?;
+            let inner = format!("node_modules/{}/", dep.name);
+            if crate::fetch::unzip(&bytes, &dir, false, Some(&inner)).is_err() {
+                let _ = std::fs::remove_dir_all(&dir);
+                continue;
+            }
+            std::fs::write(&marker, b"").ok()?;
+        }
+        let version = npm_version(&dir).unwrap_or_else(|| dep.version.clone());
+        let label = match base.as_ref().and_then(|b| zip.strip_prefix(b).ok()) {
+            Some(r) => r.display().to_string().replace('\\', "/"),
+            None => tilde(&zip),
+        };
+        return Some(Source {
+            dir,
+            files: None,
+            metadata: None,
+            version,
+            label,
+            fetched: false,
+        });
+    }
+    None
 }
 
 fn src(dir: PathBuf, base: &Path, version: String) -> Source {
@@ -261,6 +333,9 @@ fn cargo(dep: &Dep, root: &Path) -> Option<Source> {
             }
         }
     }
+    if dep.from.ends_with("(git)") {
+        return cargo_git(dep);
+    }
     let reg = cargo_home()?.join("registry").join("src");
     for e in std::fs::read_dir(&reg).ok()?.flatten() {
         let d = e.path().join(&dirname);
@@ -276,6 +351,54 @@ fn cargo(dep: &Dep, root: &Path) -> Option<Source> {
         }
     }
     None
+}
+
+/// A git dependency checked out by Cargo under `$CARGO_HOME/git/checkouts`.
+fn cargo_git(dep: &Dep) -> Option<Source> {
+    let root = cargo_home()?.join("git").join("checkouts");
+    let mut found = None;
+    find_crate(&root, &dep.name, &dep.version, 0, &mut found);
+    let d = found?;
+    Some(Source {
+        label: tilde(&d),
+        dir: d,
+        files: None,
+        metadata: None,
+        version: dep.version.clone(),
+        fetched: false,
+    })
+}
+
+fn find_crate(dir: &Path, name: &str, version: &str, depth: usize, found: &mut Option<PathBuf>) {
+    if depth > 4 || found.is_some() {
+        return;
+    }
+    if let Ok(t) = std::fs::read_to_string(dir.join("Cargo.toml")) {
+        if let Ok(v) = toml::from_str::<toml::Table>(&t) {
+            let pkg = v.get("package");
+            let n = pkg.and_then(|p| p.get("name")).and_then(|n| n.as_str());
+            let ver = pkg.and_then(|p| p.get("version")).and_then(|n| n.as_str());
+            if n == Some(name) && ver == Some(version) {
+                *found = Some(dir.to_path_buf());
+                return;
+            }
+        }
+    }
+    let Ok(rd) = std::fs::read_dir(dir) else { return };
+    let mut subs: Vec<PathBuf> = rd
+        .flatten()
+        .filter(|e| e.file_type().is_ok_and(|t| t.is_dir()))
+        .filter(|e| {
+            let f = e.file_name();
+            let f = f.to_string_lossy();
+            f != "target" && !f.starts_with('.')
+        })
+        .map(|e| e.path())
+        .collect();
+    subs.sort();
+    for s in subs {
+        find_crate(&s, name, version, depth + 1, found);
+    }
 }
 
 // ---------------------------------------------------------------- go
@@ -328,6 +451,13 @@ fn go(dep: &Dep, root: &Path) -> Option<Source> {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn pnp_names() {
+        assert_eq!(super::pnp_zip_prefix("zod", "3.23.8"), "zod-npm-3.23.8-");
+        assert_eq!(super::pnp_zip_prefix("@types/node", "20.1.0"), "@types-node-npm-20.1.0-");
+        assert!(!"zod-npm-3.23.80-abc-def.zip".starts_with(&super::pnp_zip_prefix("zod", "3.23.8")));
+    }
+
     #[test]
     fn go_escaping() {
         assert_eq!(super::go_escape("github.com/BurntSushi/toml"), "github.com/!burnt!sushi/toml");

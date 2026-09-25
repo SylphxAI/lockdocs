@@ -50,6 +50,7 @@ jobs:
       - name: Smoke (CLI, MCP over stdio, npm launcher)
         env:
           LOCKDOCS_NO_SYSTEM_PYTHON: '1'
+          LOCKDOCS_OFFLINE: '1'
         run: |
           set -euo pipefail
           B=$PWD/target/release/lockdocs
@@ -75,5 +76,14 @@ jobs:
           HOME=$(mktemp -d) $B setup --client cursor,codex | tee /tmp/setup.out
           grep -q 'Cursor' /tmp/setup.out
           LOCKDOCS_BIN=$B node packages/lockdocs/bin/lockdocs.js version
+      - name: Embedding model download, verification and hybrid query
+        env:
+          LOCKDOCS_NO_SYSTEM_PYTHON: '1'
+        run: |
+          set -euo pipefail
+          B=$PWD/target/release/lockdocs
+          mkdir -p /tmp/empty && $B fetch -C /tmp/empty | tee /tmp/fetch.out
+          grep -q 'potion-retrieval-32M ready' /tmp/fetch.out
+          $B tinymodel "turn a model into a dict" -C crates/lockdocs-core/tests/fixture | grep -q to_dict
       - name: Docs build
         run: bun run docs:build

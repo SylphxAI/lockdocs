@@ -137,6 +137,16 @@ def main():
     binary, projects, out = sys.argv[1], sys.argv[2], sys.argv[3]
     with_c7 = "--context7" in sys.argv
     do_fetch = "--fetch" in sys.argv
+    # Reuse Context7 answers from a previous run for identical questions on the
+    # same pinned version (Context7 does not depend on lockdocs changes; this
+    # saves its anonymous quota). Reused rows are counted in the output.
+    c7_cache = {}
+    if "--context7-cache" in sys.argv:
+        prev = json.load(open(sys.argv[sys.argv.index("--context7-cache") + 1]))
+        for r in prev.get("rows", []):
+            if "pass" in r.get("context7", {}):
+                c7_cache[(r["id"], r["question"], r["package"], r["version"])] = r["context7"]
+    reused = 0
     only = None
     if "--only" in sys.argv:
         only = set(sys.argv[sys.argv.index("--only") + 1].split(","))
@@ -174,7 +184,12 @@ def main():
         row = {"id": q["id"], "project": q["project"], "package": q["package"], "version": version, "question": q["question"], "why": q["why"], "line": q.get("line", ""),
                "lockdocs": main_res, "variants": {n: results[(n, q["id"])][0] for n, _, _ in variants}}
         if with_c7:
-            row["context7"] = run_context7(q, version or "0")
+            hit = c7_cache.get((q["id"], q["question"], q["package"], version))
+            if hit is not None:
+                row["context7"] = dict(hit, reused=True)
+                reused += 1
+            else:
+                row["context7"] = run_context7(q, version or "0")
         rows.append(row)
         print(f"{q['id']:<20} " + " ".join(f"{n}:{'P' if row['variants'][n]['pass'] else 'f'}" for n, _, _ in variants)
               + (f" | context7 {('PASS' if row['context7'].get('pass') else row['context7'].get('error') or 'fail')}" if with_c7 else ""), file=sys.stderr)
@@ -182,7 +197,7 @@ def main():
     if with_c7:
         summary["context7"] = agg([r["context7"] for r in rows if "pass" in r.get("context7", {})], len(rows))
     res = {"tokenizer": TOKENIZER, "index": index, "fetch": fetch, "rows": rows, "summary": summary, "variants": [[n, label] for n, label, _ in variants],
-           "context7_calls": c7_state if with_c7 else None, "runner": {"os": os.uname().sysname, "machine": os.uname().machine}}
+           "context7_calls": dict(c7_state, reused=reused) if with_c7 else None, "runner": {"os": os.uname().sysname, "machine": os.uname().machine}}
     json.dump(res, open(out, "w"), indent=1)
     print(markdown(res, with_c7))
 
@@ -221,7 +236,8 @@ def markdown(res, with_c7):
         out.append(f"| {label} | {a['passed']}/{a['total']} | " + " | ".join(subs) + f" | {a['median_tokens']} | {a['median_ms']:.0f} ms | {a['p95_ms']:.0f} ms |")
     if with_c7 and res["context7_calls"]:
         c = res["context7_calls"]
-        out += ["", f"Context7 (anonymous): {c['calls']} HTTP calls, {c['rate_limited']} rate-limited (429), {c['errors']} other errors; ratelimit-limit header {c['limit']}, remaining {c['remaining']}."]
+        out += ["", f"Context7 (anonymous): {c['calls']} HTTP calls, {c['rate_limited']} rate-limited (429), {c['errors']} other errors; ratelimit-limit header {c['limit']}, remaining {c['remaining']}."
+                + (f" {c['reused']} answers reused from the previous run's identical question and version (see bench/run.py --context7-cache)." if c.get("reused") else "")]
     head = "| question | version | " + " | ".join(n for n, _ in cols) + " | tokens (last lockdocs) | ms |" + (" Context7 library |" if with_c7 else "")
     out += ["", head, "|---|---|" + "---|" * len(cols) + "---|---|" + ("---|" if with_c7 else "")]
     for r in res["rows"]:

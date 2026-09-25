@@ -82,7 +82,7 @@ jobs:
         if: matrix.key != 'linux-arm64-gnu' && matrix.key != 'darwin-x64'
         shell: bash
         run: ./out/${{ matrix.bin }} version
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: native-${{ matrix.key }}
           path: out/${{ matrix.bin }}

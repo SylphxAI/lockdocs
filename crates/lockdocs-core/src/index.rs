@@ -134,7 +134,7 @@ pub fn embed_text(e: &Entry) -> String {
 }
 
 fn cache_path(dep: &Dep, src: &Source, types: Option<&Path>, up: Option<&(PathBuf, Manifest)>, embed: &str) -> PathBuf {
-    let up_key = up.map(|(_, m)| format!("{}@{:?}:{}", m.repo, m.tag, m.files)).unwrap_or_default();
+    let up_key = up.map(|(_, m)| format!("{}@{:?}:{}:{:?}", m.repo, m.tag, m.files, m.site)).unwrap_or_default();
     let key = cache::hash(&[
         embed,
         &up_key,

@@ -16,7 +16,7 @@ use std::sync::{Arc, Mutex};
 
 pub const DEFAULT_TOKENS: usize = 1200;
 /// Results scoring below this fraction of the best are left out (after 3).
-const RELEVANCE_FLOOR: f32 = 0.35;
+const RELEVANCE_FLOOR: f32 = 0.3;
 /// Share of the fused score from the embedding similarity.
 const DENSE_WEIGHT: f32 = 0.45;
 /// Cross-dependency searches index at most this many direct dependencies.
@@ -278,7 +278,12 @@ impl Engine {
                     },
                 };
                 let line = match (&status.tag, status.files) {
-                    (Some(tag), n) if n > 0 => format!("upstream docs {}@{tag}: {n} files ({:.1} MB)", status.repo, status.bytes as f64 / 1e6),
+                    (_, n) if n > 0 => format!(
+                        "upstream docs {}{}: {n} files ({:.1} MB)",
+                        status.tag.as_ref().map(|t| format!("{}@{t}", status.repo)).unwrap_or_default(),
+                        status.site.as_ref().map(|s| format!(" + docs site {s}")).unwrap_or_default(),
+                        status.bytes as f64 / 1e6
+                    ),
                     _ => format!("no upstream docs ({}: {})", status.repo, status.note.clone().unwrap_or_default()),
                 };
                 (
@@ -1046,6 +1051,11 @@ fn name_hit(e: &Entry, qterms: &[String]) -> f32 {
 
 fn boost(e: &Entry, idents: &[String], changes: bool) -> f32 {
     let mut b = 1.0;
+    // Curated guides from the project's own docs folder answer "how do I" better
+    // than internal symbols do.
+    if e.kind == Kind::Prose && e.file.starts_with("upstream:") {
+        b *= std::env::var("LOCKDOCS_UPSTREAM_BOOST").ok().and_then(|v| v.parse().ok()).unwrap_or(1.35);
+    }
     if e.kind == Kind::Prose {
         if is_changelog(e) {
             b *= if changes { 1.5 } else { 0.5 };

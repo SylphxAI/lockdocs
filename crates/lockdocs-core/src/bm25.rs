@@ -8,8 +8,8 @@ const B: f32 = 0.75;
 
 const STOP: &[&str] = &[
     "a", "an", "and", "are", "as", "at", "be", "by", "can", "do", "does", "for", "from", "get", "how", "i", "if", "in", "is", "it", "me", "my", "of", "on",
-    "or", "should", "that", "the", "this", "to", "use", "using", "what", "when", "where", "which", "with", "you", "your", "we", "our", "way", "want", "need",
-    "there", "their", "into", "vs", "versus", "about", "example", "show",
+    "or", "should", "that", "the", "this", "to", "using", "what", "when", "where", "which", "with", "you", "your", "we", "our", "way", "want", "need", "there",
+    "their", "into", "vs", "versus", "about", "example", "show",
 ];
 
 /// Conservative suffix stripping: plural, -ing, -ed, final -e.

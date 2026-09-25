@@ -34,6 +34,149 @@ pub struct Manifest {
     pub bytes: u64,
     /// Why nothing was downloaded, when files == 0.
     pub note: Option<String>,
+    /// A separate docs-site repository also included (see `DOCS_SITES`).
+    #[serde(default)]
+    pub site: Option<String>,
+}
+
+/// Packages whose docs live in a separate website repository. Paths with
+/// `{major}` are versioned and used for any major; the others track the
+/// current release and are used only when the pinned major is the latest.
+struct DocsSite {
+    names: &'static [&'static str],
+    repo: (&'static str, &'static str),
+    branch: &'static str,
+    versioned: &'static [&'static str],
+    latest_only: &'static [&'static str],
+}
+
+const DOCS_SITES: &[DocsSite] = &[
+    DocsSite {
+        names: &["react", "react-dom", "@types/react"],
+        repo: ("reactjs", "react.dev"),
+        branch: "main",
+        versioned: &[],
+        latest_only: &["src/content/reference", "src/content/learn"],
+    },
+    DocsSite {
+        names: &["express", "@types/express"],
+        repo: ("expressjs", "expressjs.com"),
+        branch: "main",
+        versioned: &["src/content/api/{major}x"],
+        latest_only: &["src/content/docs/en"],
+    },
+    DocsSite {
+        names: &["tailwindcss"],
+        repo: ("tailwindlabs", "tailwindcss.com"),
+        branch: "main",
+        versioned: &[],
+        latest_only: &["src/docs"],
+    },
+    DocsSite {
+        names: &["prisma", "@prisma/client"],
+        repo: ("prisma", "docs"),
+        branch: "main",
+        versioned: &[],
+        latest_only: &["apps/docs/content/docs/orm"],
+    },
+];
+
+fn npm_latest_major(agent: &ureq::Agent, name: &str) -> Option<u64> {
+    let mut res = agent
+        .get(&format!("https://registry.npmjs.org/{}/latest", name.replace('/', "%2F")))
+        .call()
+        .ok()?;
+    let mut body = String::new();
+    res.body_mut().as_reader().take(1 << 20).read_to_string(&mut body).ok()?;
+    let v: Value = serde_json::from_str(&body).ok()?;
+    v.get("version")?.as_str()?.split('.').next()?.parse().ok()
+}
+
+/// Files to take from a docs-site repository for this version, with a label.
+fn site_files(agent: &ureq::Agent, dep: &Dep) -> Result<Option<(Repo, String, String, Vec<(String, u64)>)>> {
+    if dep.eco != Eco::Npm {
+        return Ok(None);
+    }
+    let Some(site) = DOCS_SITES.iter().find(|s| s.names.contains(&dep.name.as_str())) else {
+        return Ok(None);
+    };
+    let major: u64 = dep.version.split('.').next().and_then(|m| m.parse().ok()).unwrap_or(0);
+    let lookup = dep.name.strip_prefix("@types/").unwrap_or(&dep.name);
+    let latest = npm_latest_major(agent, lookup);
+    let mut dirs: Vec<String> = site.versioned.iter().map(|d| d.replace("{major}", &major.to_string())).collect();
+    let is_latest = latest == Some(major);
+    if is_latest {
+        dirs.extend(site.latest_only.iter().map(|d| d.to_string()));
+    }
+    if dirs.is_empty() {
+        return Ok(None);
+    }
+    let repo = Repo {
+        owner: site.repo.0.into(),
+        name: site.repo.1.into(),
+        subdir: None,
+    };
+    let Some(v) = api(agent, &format!("/repos/{}/{}/git/trees/{}?recursive=1", repo.owner, repo.name, site.branch))? else {
+        return Ok(None);
+    };
+    let sha = v.get("sha").and_then(|s| s.as_str()).unwrap_or("").chars().take(7).collect::<String>();
+    let mut files = Vec::new();
+    for i in v.get("tree").and_then(|t| t.as_array()).into_iter().flatten() {
+        let (Some(p), Some("blob")) = (i.get("path").and_then(|p| p.as_str()), i.get("type").and_then(|t| t.as_str())) else {
+            continue;
+        };
+        let size = i.get("size").and_then(|s| s.as_u64()).unwrap_or(0);
+        if size <= MAX_FILE && doc_file(p) && !p.ends_with(".txt") && dirs.iter().any(|d| p.starts_with(&format!("{d}/"))) {
+            files.push((p.to_string(), size));
+        }
+    }
+    let label = format!(
+        "github.com/{}/{}@{} ({}{})",
+        repo.owner,
+        repo.name,
+        site.branch,
+        sha,
+        if is_latest {
+            ", current docs; your major is the latest"
+        } else {
+            ", versioned API pages"
+        }
+    );
+    Ok(Some((repo, site.branch.to_string(), label, files)))
+}
+
+fn download(agent: &ureq::Agent, repo: &Repo, reference: &str, files: &[(String, u64)], out: &Path) -> Result<Vec<u64>> {
+    let pool = rayon::ThreadPoolBuilder::new().num_threads(16).build()?;
+    let results: Vec<Result<u64>> = pool.install(|| {
+        files
+            .par_iter()
+            .map(|(p, _)| {
+                let url = format!(
+                    "https://raw.githubusercontent.com/{}/{}/{}/{}",
+                    repo.owner,
+                    repo.name,
+                    enc(reference),
+                    enc_path(p)
+                );
+                let mut res = agent.get(&url).call()?;
+                if res.status().as_u16() != 200 {
+                    bail!("HTTP {} for {p}", res.status());
+                }
+                let mut buf = Vec::new();
+                res.body_mut().as_reader().take(MAX_FILE + 1).read_to_end(&mut buf)?;
+                let Some(rel) = crate::fetch::safe_rel(Path::new(p), false) else {
+                    bail!("unsafe path {p}")
+                };
+                let dst = out.join(rel);
+                if let Some(d) = dst.parent() {
+                    std::fs::create_dir_all(d)?;
+                }
+                std::fs::write(dst, &buf)?;
+                Ok(buf.len() as u64)
+            })
+            .collect()
+    });
+    Ok(results.into_iter().filter_map(|r| r.ok()).collect())
 }
 
 /// Parse a GitHub URL or shorthand into owner/name.
@@ -246,7 +389,8 @@ fn doc_file(p: &str) -> bool {
     let l = p.to_ascii_lowercase();
     let example = (l.contains("example") || l.contains("snippet") || l.starts_with("docs_src/"))
         && [".py", ".ts", ".tsx", ".js", ".jsx", ".rs", ".go"].iter().any(|e| l.ends_with(e));
-    let ext_ok = example || [".md", ".mdx", ".rst", ".markdown", ".mdoc"].iter().any(|e| l.ends_with(e));
+    // Django and others write reStructuredText in .txt files under docs/.
+    let ext_ok = example || [".md", ".mdx", ".rst", ".markdown", ".mdoc", ".txt"].iter().any(|e| l.ends_with(e));
     let skip = [
         "/blog/",
         "/node_modules/",
@@ -285,13 +429,23 @@ pub fn fetch(dep: &Dep, src: &Source) -> Result<Manifest> {
         }
     }
     let (Some(tag), Some(root)) = (tag, root) else {
-        let m = Manifest {
+        let mut m = Manifest {
             repo: label,
             tag: None,
             files: 0,
             bytes: 0,
             note: Some(format!("no git tag found for {}", dep.version)),
+            site: None,
         };
+        if let Ok(Some((srepo, branch, slabel, sfiles))) = site_files(&agent, dep) {
+            let got = download(&agent, &srepo, &branch, &sfiles, &out.join(&srepo.name))?;
+            if !got.is_empty() {
+                m.files = got.len();
+                m.bytes = got.iter().sum();
+                m.site = Some(slabel);
+                m.note = None;
+            }
+        }
         std::fs::write(out.join(".lockdocs-upstream.json"), serde_json::to_string(&m)?)?;
         return Ok(m);
     };
@@ -373,44 +527,33 @@ pub fn fetch(dep: &Dep, src: &Source) -> Result<Manifest> {
         total <= MAX_BYTES
     });
     files.truncate(MAX_FILES);
-    let pool = rayon::ThreadPoolBuilder::new().num_threads(16).build()?;
-    let results: Vec<Result<u64>> = pool.install(|| {
-        files
-            .par_iter()
-            .map(|(p, _)| {
-                let url = format!("https://raw.githubusercontent.com/{}/{}/{}/{}", repo.owner, repo.name, enc(&tag), enc_path(p));
-                let mut res = agent.get(&url).call()?;
-                if res.status().as_u16() != 200 {
-                    bail!("HTTP {} for {p}", res.status());
-                }
-                let mut buf = Vec::new();
-                res.body_mut().as_reader().take(MAX_FILE + 1).read_to_end(&mut buf)?;
-                let Some(rel) = crate::fetch::safe_rel(Path::new(p), false) else {
-                    bail!("unsafe path {p}")
-                };
-                let dst = out.join(rel);
-                if let Some(d) = dst.parent() {
-                    std::fs::create_dir_all(d)?;
-                }
-                std::fs::write(dst, &buf)?;
-                Ok(buf.len() as u64)
-            })
-            .collect()
-    });
-    let ok: Vec<u64> = results.iter().filter_map(|r| r.as_ref().ok().copied()).collect();
-    let failed = results.len() - ok.len();
+    let ok = download(&agent, &repo, &tag, &files, &out)?;
+    let failed = files.len() - ok.len();
+    // A separate docs-site repository, when the package keeps its docs there.
+    let mut site = None;
+    let mut site_n = 0usize;
+    let mut site_bytes = 0u64;
+    if let Ok(Some((srepo, branch, slabel, sfiles))) = site_files(&agent, dep) {
+        let got = download(&agent, &srepo, &branch, &sfiles, &out.join(&srepo.name))?;
+        site_n = got.len();
+        site_bytes = got.iter().sum();
+        if site_n > 0 {
+            site = Some(slabel);
+        }
+    }
     let m = Manifest {
         repo: label,
         tag: Some(tag),
-        files: ok.len(),
-        bytes: ok.iter().sum(),
-        note: if ok.is_empty() {
+        files: ok.len() + site_n,
+        bytes: ok.iter().sum::<u64>() + site_bytes,
+        note: if ok.is_empty() && site_n == 0 {
             Some("no docs folder at that tag".into())
         } else if failed > 0 {
             Some(format!("{failed} files failed to download"))
         } else {
             None
         },
+        site,
     };
     std::fs::write(out.join(".lockdocs-upstream.json"), serde_json::to_string(&m)?)?;
     Ok(m)

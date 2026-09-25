@@ -1,0 +1,10 @@
+{
+  "name": "bench-next16",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "next": "16.3.6",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  }
+}

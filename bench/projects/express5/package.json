@@ -1,0 +1,9 @@
+{
+  "name": "bench-express5",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "express": "5.2.1",
+    "@types/express": "5.0.6"
+  }
+}

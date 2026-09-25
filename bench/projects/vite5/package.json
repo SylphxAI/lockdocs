@@ -1,0 +1,8 @@
+{
+  "name": "bench-vite5",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "vite": "5.4.21"
+  }
+}

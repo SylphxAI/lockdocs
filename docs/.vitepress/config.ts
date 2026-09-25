@@ -36,7 +36,7 @@ export default defineConfig({
         { text: 'Quickstart', link: '/guide/quickstart' },
         { text: 'Editors and agents', link: '/guide/setup' },
         { text: 'Ecosystems', link: '/guide/ecosystems' },
-        { text: 'Fetching (opt-in)', link: '/guide/fetch' },
+        { text: 'Upstream docs and fetching', link: '/guide/fetch' },
         { text: 'How it works', link: '/guide/how-it-works' },
       ] },
       { text: 'Reference', items: [

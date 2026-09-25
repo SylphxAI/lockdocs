@@ -8,8 +8,14 @@ Do not open public issues for sensitive reports.
 
 ## Boundary
 
-- lockdocs reads lockfiles and installed package files. It makes no network
-  calls unless fetching is enabled (`--fetch`, `LOCKDOCS_FETCH=1`).
+- lockdocs reads lockfiles and installed package files. Its network use is:
+  the embedding model, downloaded once from huggingface.co at a pinned
+  revision and checked against a pinned SHA-256 (disable with
+  `LOCKDOCS_EMBED=0` or `--offline`); and, only with `lockdocs fetch`,
+  `--fetch` or `LOCKDOCS_FETCH=1`, package archives from the registries below
+  and docs files from api.github.com / raw.githubusercontent.com (a
+  `GITHUB_TOKEN` in the environment is sent to api.github.com only). No
+  project data is ever sent: requests name public packages and versions.
 - With fetching enabled it downloads only the exact package versions requested,
   from registry.npmjs.org, pypi.org / files.pythonhosted.org, static.crates.io
   and proxy.golang.org, over HTTPS. Archives are unpacked with path checks (no

@@ -82,6 +82,9 @@ pub fn fetch(dep: &Dep) -> Result<Source> {
     if let Some(s) = cached(dep) {
         return Ok(s);
     }
+    if dep.from.ends_with("(git)") {
+        bail!("{} is a git dependency; run `cargo fetch` to check it out", dep.id());
+    }
     let dir = fetched_dir(dep);
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir)?;

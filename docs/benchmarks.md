@@ -2,13 +2,13 @@
 
 ## Method
 
-- **Questions:** 36 questions whose correct answer depends on the version, in [`bench/questions.json`](https://github.com/SylphxAI/lockdocs/blob/main/bench/questions.json): zod 3.23.8 vs 4.1.5, Next.js 14.2.15 vs 15.1.0, React Router 6.26.2 vs 7.1.1, pydantic 1.10.18 vs 2.9.2, axum 0.7.9 vs 0.8.1, and tokio.
-- **Projects:** one project per version in [`bench/projects`](https://github.com/SylphxAI/lockdocs/tree/main/bench/projects), installed at those pins by [`bench/setup.sh`](https://github.com/SylphxAI/lockdocs/blob/main/bench/setup.sh) (`npm install`, a Python 3.12 virtualenv, `cargo fetch`).
-- **Grading:** an answer passes when it contains at least one string from every `expect` group (the version-correct API, e.g. `model_dump` for pydantic 2, `.dict(` for pydantic 1) and none of the `reject` strings (the other version's API). Matching is case-insensitive. The same grader runs on every tool.
-- **lockdocs:** `lockdocs docs "<question>" --pkg <package>` in the project, default 2,000-token budget, cache cleared before the run (index time is reported separately).
+- **Questions:** 70 questions whose correct answer depends on the version, in [`bench/questions.json`](https://github.com/SylphxAI/lockdocs/blob/main/bench/questions.json), over zod 3/4, Next.js 14/15/16, React Router 6/7, pydantic 1/2, axum 0.7/0.8, tokio, Tailwind CSS 3/4, ESLint 8/9, Prisma 5/6, React 18/19, Vite 5/6, Express 4/5, SQLAlchemy 1.4/2.0, Django 4.2/5.1 and FastAPI 0.88/0.115. Twin questions are worded identically for both versions; each records its source of truth.
+- **Projects:** one project per version in [`bench/projects`](https://github.com/SylphxAI/lockdocs/tree/main/bench/projects), installed at those pins by [`bench/setup.sh`](https://github.com/SylphxAI/lockdocs/blob/main/bench/setup.sh).
+- **Grading:** an answer passes when it contains at least one string from every `expect` group (the version-correct API, in code or prose form) and none of the `reject` strings (the other version's API). Case-insensitive; the same grader for every tool.
+- **lockdocs**, default settings (1,200-token budget), in three configurations: keyword only (`LOCKDOCS_EMBED=0`) on package files; hybrid on package files (the offline default once the model is downloaded); hybrid after `lockdocs fetch` added upstream docs at each version's tag. Index and fetch times are reported separately.
 - **Context7:** the anonymous API as its MCP server uses it: search the library, pick the top result and its listed version with the same major (exact when listed), then fetch context for the question. Rate-limit responses are recorded, not retried.
-- **Tokens:** tiktoken `o200k_base`. **Latency:** wall time per call, from the same GitHub-hosted runner.
-- **Runner:** [`bench/run.py`](https://github.com/SylphxAI/lockdocs/blob/main/bench/run.py) via the [`bench` workflow](https://github.com/SylphxAI/lockdocs/actions/workflows/bench.yml). Run it yourself: `bash bench/setup.sh && python3 bench/run.py target/release/lockdocs bench/projects out.json --context7`.
+- **Tokens:** tiktoken `o200k_base`. **Latency:** wall time per call from the same GitHub-hosted runner (for lockdocs: a fresh CLI process per question, including loading the model).
+- **Runner:** [`bench/run.py`](https://github.com/SylphxAI/lockdocs/blob/main/bench/run.py) via the [`bench` workflow](https://github.com/SylphxAI/lockdocs/actions/workflows/bench.yml). Reproduce: `bash bench/setup.sh && python3 bench/run.py target/release/lockdocs bench/projects out.json --fetch --context7`.
 
 ## Results
 

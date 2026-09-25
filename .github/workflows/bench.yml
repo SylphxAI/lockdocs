@@ -34,13 +34,15 @@ jobs:
       - run: cargo build --release --locked -p lockdocs
       - name: Install benchmark projects at pinned versions
         run: bash bench/setup.sh bench/projects
-      - name: Run
+      - name: Download the embedding model (once, like a first run)
+        run: rm -rf ~/.cache/lockdocs && mkdir -p /tmp/empty && target/release/lockdocs fetch -C /tmp/empty
+      - name: Run (package files, then `lockdocs fetch` + upstream docs)
         env:
           C7: ${{ (github.event_name != 'workflow_dispatch' || inputs.context7) && '--context7' || '' }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          rm -rf ~/.cache/lockdocs
-          python3 bench/run.py target/release/lockdocs bench/projects bench.json $C7 | tee -a "$GITHUB_STEP_SUMMARY"
+          python3 bench/run.py target/release/lockdocs bench/projects bench.json --fetch $C7 | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:
           name: bench

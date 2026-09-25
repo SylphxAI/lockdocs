@@ -34,6 +34,7 @@ From a terminal, inside any project:
 npx -y @sylphx/lockdocs zod "reject unknown keys"          # docs for the zod version in your lockfile
 npx -y @sylphx/lockdocs api axum::Router::route            # exact signature + doc comment
 npx -y @sylphx/lockdocs resolve                            # every pinned version, and whether its docs are here
+npx -y @sylphx/lockdocs fetch                              # once: add upstream docs at each version's git tag
 ```
 
 <details>
@@ -68,7 +69,9 @@ lockdocs takes the version question off the table:
 - **Exact version, zero config.** It reads `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `bun.lock`, `Cargo.lock`, `uv.lock`, `poetry.lock`, `Pipfile.lock`, `requirements*.txt` and `go.mod`. No library IDs, no "use v14" in the prompt.
 - **Docs that ship with the code.** READMEs, changelogs and `docs/` folders, plus the API reference in the package itself: `.d.ts` declarations with JSDoc, Python docstrings and stubs, rustdoc comments, Go doc comments. If it is installed, it is documented, including your private and internal packages.
 - **Offline and unlimited.** Everything is read from `node_modules`, your virtualenv, `~/.cargo/registry` and the Go module cache. No network, no account, no rate limit, and nothing about your dependencies leaves your machine.
-- **Small, cited answers.** BM25 over symbols and doc sections, packed into a token budget (2,000 by default), every section cited as `package@version path:line`.
+- **Upstream docs at the exact tag, when you want them.** Packages like Next.js, Django and FastAPI ship no docs. `lockdocs fetch` pulls their docs folders from GitHub at the git tag of your pinned version, once, then stays offline.
+- **Meaning, not just words.** Hybrid retrieval: BM25 fused with a small local embedding model (downloaded once, 32 MB on disk), plus API redirects from deprecation notes ("use `model_validate` instead").
+- **Small, cited answers.** Packed into a token budget (1,200 by default), every section cited as `package@version path:line`.
 
 ## What your agent gets
 
@@ -106,9 +109,13 @@ The same call in a pydantic 1 project answers that pydantic 1.10.18 has no `mode
 
 Legacy copies bundled inside a package (`zod/v3` inside zod 4, `pydantic/v1` inside pydantic 2) rank below the current API.
 
+### Upstream docs and missing packages (opt-in)
+
+`lockdocs fetch` adds, once, each direct dependency's upstream docs: it finds the GitHub repository in the package's own metadata and the git tag of your pinned version, and downloads only the docs folders at that tag (Markdown, MDX, reStructuredText, docs examples). Answers then cite `next@15.1.0 upstream:docs/01-app/.../cookies.mdx:12`. See [Upstream docs and fetching](https://sylphxai.github.io/lockdocs/guide/fetch).
+
 ### Not installed? Fetch the exact version (opt-in)
 
-Out of the box lockdocs never touches the network. If a pinned package is not installed (a fresh clone, CI, a lockfile you are reviewing), it says so and tells you how to install it. Pass `--fetch` (or set `LOCKDOCS_FETCH=1`, or `lockdocs setup --fetch`) to let it download exactly that version from the registry (npm tarball, PyPI wheel or sdist, crates.io `.crate`, Go module proxy zip) into its cache. Fetched answers say `fetched from registry.npmjs.org`. You can also ask for a version you do not use: `lockdocs npm:zod@4.1.5 "strict object" --fetch`.
+Out of the box lockdocs reads only your disk (plus the one-time embedding model download). If a pinned package is not installed (a fresh clone, CI, a lockfile you are reviewing), it says so and tells you how to install it. Pass `--fetch` (or set `LOCKDOCS_FETCH=1`, or `lockdocs setup --fetch`) to let it download exactly that version from the registry (npm tarball, PyPI wheel or sdist, crates.io `.crate`, Go module proxy zip) into its cache. Fetched answers say `fetched from registry.npmjs.org`. You can also ask for a version you do not use: `lockdocs npm:zod@4.1.5 "strict object" --fetch`.
 
 ## Benchmarks
 
@@ -146,8 +153,8 @@ Context7 knows many sites and guides that never ship inside a package, so for a 
 1. **Resolve.** Parse every lockfile in the project (and monorepo roots above it) into exact `(ecosystem, name, version)` triples, marking direct dependencies.
 2. **Locate.** Find each package's files on disk and check the installed version against the lockfile. Drift is reported, never hidden.
 3. **Extract.** Split READMEs, changelogs and doc folders into heading-scoped sections; parse `.d.ts`, Python, Rust and Go sources with tree-sitter into symbols with signatures, doc comments and qualified paths (`z.object`, `tokio::task::spawn`, `pydantic.main.BaseModel.model_dump`).
-4. **Index and cache.** BM25 (identifier-aware tokenizer, light stemming, a small programming synonym table) per package, cached on disk by package, version and source, so each version is indexed once, ever.
-5. **Answer.** Rank, then pack results into the token budget with citations.
+4. **Index and cache.** BM25 (identifier-aware tokenizer, light stemming, a small programming synonym table) plus one embedding per entry from a static model2vec model, cached on disk by package, version and source, so each version is indexed once, ever.
+5. **Answer.** Fuse keyword and embedding scores, apply docs signals and deprecation redirects, then pack results into the token budget with citations.
 
 Typical costs on a GitHub-hosted runner: indexing every declaration in Next.js 15 (7,700 symbols) takes about 0.4 s, zod 4 about 0.05 s, once per version; a query then takes 5-20 ms.
 
@@ -158,19 +165,20 @@ lockdocs <package> [question]   Docs for the version this project pins (no quest
 lockdocs resolve [filter]       Pinned versions and where their docs are
 lockdocs docs <question>        Search all direct dependencies (--pkg to focus)
 lockdocs api <symbol>           Exact signature + doc comment
+lockdocs fetch [package...]     Once: upstream docs at each version's tag, missing packages, the model
 lockdocs index [package]        Build indexes ahead of time
 lockdocs cache [clean]          Show or delete the cache
 lockdocs setup                  Configure MCP clients (--client a,b --dry-run --remove --fetch)
 lockdocs mcp                    MCP server on stdio
 
-Options: -C/--root <dir>, --pkg <package>, --tokens <n>, --fetch, --json
+Options: -C/--root <dir>, --pkg <package>, --tokens <n>, --fetch, --offline, --json
 ```
 
 Prebuilt binaries for macOS (arm64, x64), Linux glibc (x64, arm64) and Windows x64 ship through npm; each [GitHub release](https://github.com/SylphxAI/lockdocs/releases) has them too. From source: `cargo install --git https://github.com/SylphxAI/lockdocs lockdocs`.
 
 ## Privacy
 
-lockdocs reads files on your machine and answers over stdio. It makes no network calls unless you enable fetching, and then only to the public registries named above, for the exact package versions requested. The cache lives in your OS cache directory (`LOCKDOCS_CACHE` overrides it).
+lockdocs reads files on your machine and answers over stdio. Network use: the embedding model once from huggingface.co (pinned revision, SHA-256 checked; `LOCKDOCS_EMBED=0` or `--offline` skips it), and, only when you run `lockdocs fetch` or enable fetching, public registries and GitHub for the exact package versions requested. Nothing about your project is sent. The cache lives in your OS cache directory (`LOCKDOCS_CACHE` overrides it).
 
 ## Also from Sylphx
 

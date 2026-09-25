@@ -26,7 +26,10 @@ features:
     details: Everything comes from node_modules, your virtualenv, the Cargo registry and the Go module cache. No network, no account, no rate limit.
   - icon: 🎯
     title: Small, cited answers
-    details: BM25 over symbols and sections, packed into a 2,000-token budget by default, every section cited as package@version path:line.
+    details: Hybrid search (BM25 + a small local embedding model) over symbols and sections, packed into a 1,200-token budget by default, every section cited as package@version path:line.
+  - icon: 🏷️
+    title: Upstream docs at the exact tag
+    details: Next.js, Django or FastAPI ship no docs? `lockdocs fetch` pulls their docs folders from GitHub at your version's git tag, once.
   - icon: 🧰
     title: Three obvious tools
     details: resolve (which versions), docs (a question, optionally scoped to a package), api (the exact signature of z.object or tokio::spawn).

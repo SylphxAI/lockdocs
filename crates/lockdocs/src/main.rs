@@ -22,6 +22,8 @@ Commands:
   resolve [filter]      Pinned versions and where their docs are (filter searches transitive deps)
   docs <question>       Search the docs of all direct dependencies (--pkg to focus)
   api <symbol>          Exact signature + doc: z.object, tokio::spawn, BaseModel.model_dump
+  fetch [package...]    Download, once, what makes answers complete: upstream docs at each
+                        version's git tag, missing packages, and the embedding model
   index [package]       Build the indexes ahead of time and show what they hold
   cache [clean]         Show or delete the cache (indexes and fetched packages)
   mcp                   Run the MCP server on stdio (default when stdin is not a terminal)
@@ -30,9 +32,11 @@ Commands:
 Options:
   -C, --root <dir>      Project directory (default: current directory)
   --pkg <package>       Package for docs/api: zod, npm:zod, pydantic@2.9.2, tokio
-  --tokens <n>          Answer budget in tokens (default 2000)
-  --fetch               Allow downloading exact versions that are not installed
-                        (npm, PyPI, crates.io, Go proxy; cached). Also LOCKDOCS_FETCH=1
+  --tokens <n>          Answer budget in tokens (default 1200)
+  --fetch               Allow downloads during queries: missing packages and upstream docs
+                        (cached; also LOCKDOCS_FETCH=1). Without it, only `lockdocs fetch`
+                        and the one-time model download use the network
+  --offline             Never download (not even the embedding model)
   --json                Machine-readable output
 
 Examples:
@@ -129,6 +133,7 @@ fn run() -> Result<()> {
             println!("{HELP}");
             return Ok(());
         }
+        std::thread::spawn(|| ensure_model(false));
         return mcp::serve(None, Options::default());
     }
     if raw[0].starts_with('-') && !matches!(raw[0].as_str(), "-h" | "--help" | "-V" | "--version") {
@@ -137,10 +142,22 @@ fn run() -> Result<()> {
     }
     let cmd = raw.remove(0);
     let args = Args::parse(raw);
+    // Query commands fetch the embedding model once (BM25-only if that fails).
+    if !matches!(
+        cmd.as_str(),
+        "mcp" | "serve" | "help" | "--help" | "-h" | "version" | "--version" | "-V" | "setup" | "cache" | "resolve" | "versions" | "deps" | "fetch" | "pull"
+    ) {
+        ensure_model(args.on("offline"));
+    }
     let json = args.on("json");
     let engine = || Engine::new(&args.root(), args.opts());
     match cmd.as_str() {
-        "mcp" | "serve" => mcp::serve(args.flag("root").or_else(|| args.flag("C")).map(PathBuf::from), args.opts()),
+        "mcp" | "serve" => {
+            let offline = args.on("offline");
+            // Fetch the model in the background; queries are keyword-only until it lands.
+            std::thread::spawn(move || ensure_model(offline));
+            mcp::serve(args.flag("root").or_else(|| args.flag("C")).map(PathBuf::from), args.opts())
+        }
         "help" | "--help" | "-h" => {
             println!("{HELP}");
             Ok(())
@@ -170,6 +187,10 @@ fn run() -> Result<()> {
             print(engine().warm(p.as_deref().or(args.pkg())).map_err(anyhow::Error::msg)?, json)
         }
         "cache" => cache(&args),
+        "fetch" | "pull" => {
+            let p = if args.positional.is_empty() { None } else { Some(args.positional.join(",")) };
+            print(engine().fetch_all(p.as_deref().or(args.pkg())).map_err(anyhow::Error::msg)?, json)
+        }
         _ => {
             // `lockdocs <package> [question...]`
             let q = args.positional.join(" ");
@@ -186,6 +207,16 @@ fn run() -> Result<()> {
                 Err(err) => bail!("{err}"),
             }
         }
+    }
+}
+
+fn ensure_model(offline: bool) {
+    use lockdocs_core::embed;
+    if offline || std::env::var("LOCKDOCS_OFFLINE").is_ok_and(|v| v != "0") || !embed::enabled() || embed::installed() {
+        return;
+    }
+    if let Err(e) = embed::ensure() {
+        eprintln!("lockdocs: embedding model unavailable ({e:#}); using keyword search only.");
     }
 }
 

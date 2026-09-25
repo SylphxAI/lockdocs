@@ -164,6 +164,28 @@ fn walk(dir: &Path, rel: &Path, depth: usize, out: &mut Vec<PathBuf>) {
     }
 }
 
+/// Every file under `dir` (docs trees keep folders like `examples/` we want).
+fn walk_all(dir: &Path, rel: &Path, depth: usize, out: &mut Vec<PathBuf>) {
+    if depth > 16 || out.len() >= MAX_FILES {
+        return;
+    }
+    let Ok(rd) = std::fs::read_dir(dir) else { return };
+    let mut entries: Vec<_> = rd.flatten().collect();
+    entries.sort_by_key(|e| e.file_name());
+    for e in entries {
+        let name = e.file_name().to_string_lossy().to_string();
+        if name.starts_with('.') {
+            continue;
+        }
+        let r = rel.join(&name);
+        match e.file_type() {
+            Ok(t) if t.is_dir() => walk_all(&e.path(), &r, depth + 1, out),
+            Ok(_) => out.push(r),
+            _ => {}
+        }
+    }
+}
+
 fn ext_of(p: &Path) -> String {
     let s = p.file_name().map(|f| f.to_string_lossy().to_ascii_lowercase()).unwrap_or_default();
     for e in [".d.ts", ".d.mts", ".d.cts"] {
@@ -193,6 +215,7 @@ struct Job {
 #[derive(Clone, Copy, PartialEq)]
 enum How {
     Prose,
+    Example,
     Metadata,
     Ts,
     Python,
@@ -201,7 +224,7 @@ enum How {
 }
 
 /// Plan which files to read for a package.
-fn plan(eco: Eco, src: &Source, extra_types: Option<&Path>) -> Vec<Job> {
+fn plan(eco: Eco, src: &Source, extra_types: Option<&Path>, upstream: Option<&Path>) -> Vec<Job> {
     let mut rels = Vec::new();
     match &src.files {
         Some(list) => rels.extend(list.iter().cloned()),
@@ -268,6 +291,29 @@ fn plan(eco: Eco, src: &Source, extra_types: Option<&Path>) -> Vec<Job> {
             jobs.push(Job { abs, rel, how });
         }
     }
+    // Upstream docs fetched from the repository at this version's tag.
+    if let Some(up) = upstream {
+        let mut rels = Vec::new();
+        walk_all(up, Path::new(""), 0, &mut rels);
+        for r in rels {
+            let e = ext_of(&r);
+            let rel = format!("upstream:{}", r.to_string_lossy().replace('\\', "/"));
+            if doc_ext(&e) || e == "mdoc" {
+                jobs.push(Job {
+                    abs: up.join(&r),
+                    rel,
+                    how: How::Prose,
+                });
+            } else if EXAMPLE_EXTS.contains(&e.as_str()) {
+                // Docs examples (`docs/examples/validators_simple.py`) carry the code the pages include.
+                jobs.push(Job {
+                    abs: up.join(&r),
+                    rel,
+                    how: How::Example,
+                });
+            }
+        }
+    }
     if let Some(meta) = &src.metadata {
         jobs.push(Job {
             abs: meta.clone(),
@@ -304,14 +350,15 @@ fn plan(eco: Eco, src: &Source, extra_types: Option<&Path>) -> Vec<Job> {
 }
 
 /// Extract every entry for a package.
-pub fn extract(eco: Eco, pkg_name: &str, src: &Source, extra_types: Option<&Path>) -> Vec<Entry> {
+pub fn extract(eco: Eco, pkg_name: &str, src: &Source, extra_types: Option<&Path>, upstream: Option<&Path>) -> Vec<Entry> {
     let major: u64 = src.version.trim_start_matches('v').split('.').next().and_then(|m| m.parse().ok()).unwrap_or(0);
-    let jobs = plan(eco, src, extra_types);
+    let jobs = plan(eco, src, extra_types, upstream);
     let crate_name = if eco == Eco::Cargo {
         rust_crate_name(&src.dir).unwrap_or_else(|| pkg_name.replace('-', "_"))
     } else {
         String::new()
     };
+    let includes = upstream.map(Includes::scan).unwrap_or_default();
     let mut all: Vec<Entry> = jobs
         .par_iter()
         .flat_map_iter(|job| {
@@ -323,7 +370,15 @@ pub fn extract(eco: Eco, pkg_name: &str, src: &Source, extra_types: Option<&Path
             let text = String::from_utf8_lossy(&bytes);
             let mut out = Vec::new();
             match job.how {
-                How::Prose => prose(&text, &job.rel, 0, &mut out),
+                How::Prose => {
+                    prose(&text, &job.rel, 0, &mut out);
+                    if job.rel.starts_with("upstream:") && !includes.files.is_empty() {
+                        for e in &mut out {
+                            e.doc = includes.expand(&e.doc);
+                        }
+                    }
+                }
+                How::Example => example(&text, &job.rel, &mut out),
                 How::Metadata => {
                     let (body, line) = markdown::metadata_body(&text);
                     prose(&body, &job.rel, line - 1, &mut out)
@@ -353,10 +408,114 @@ fn rust_crate_name(dir: &Path) -> Option<String> {
     lib.or(pkg).map(|n| n.replace('-', "_"))
 }
 
+/// Docs sites include example files by reference (`{!.tmp_examples/x.md!}`,
+/// `{* ../../docs_src/a/tutorial001.py *}`, `--8<-- "x.py"`). Inline them so
+/// the section carries its code.
+#[derive(Default)]
+struct Includes {
+    /// (lowercase path without extension, absolute path)
+    files: Vec<(String, PathBuf)>,
+}
+
+impl Includes {
+    fn scan(dir: &Path) -> Includes {
+        let mut rels = Vec::new();
+        walk_all(dir, Path::new(""), 0, &mut rels);
+        let files = rels
+            .into_iter()
+            .filter(|r| EXAMPLE_EXTS.contains(&ext_of(r).as_str()))
+            .map(|r| {
+                let s = r.to_string_lossy().replace('\\', "/").to_ascii_lowercase();
+                let stem = s.rsplit_once('.').map_or(s.clone(), |x| x.0.to_string());
+                (stem, dir.join(&r))
+            })
+            .collect();
+        Includes { files }
+    }
+
+    fn find(&self, reference: &str) -> Option<&PathBuf> {
+        let r = reference.trim().trim_matches(['"', '\'']).to_ascii_lowercase();
+        let r = r.split_whitespace().next().unwrap_or("");
+        let r = r.rsplit_once('.').map_or(r, |x| x.0);
+        let segs: Vec<&str> = r
+            .split('/')
+            .filter(|s| !s.is_empty() && *s != ".." && *s != "." && *s != ".tmp_examples")
+            .collect();
+        for take in (1..=segs.len().min(3)).rev() {
+            let suffix = segs[segs.len() - take..].join("/");
+            let hits: Vec<&(String, PathBuf)> = self.files.iter().filter(|(k, _)| *k == suffix || k.ends_with(&format!("/{suffix}"))).collect();
+            if hits.len() == 1 {
+                return Some(&hits[0].1);
+            }
+        }
+        None
+    }
+
+    fn expand(&self, text: &str) -> String {
+        if !(text.contains("{!") || text.contains("{*") || text.contains("--8<--")) {
+            return text.to_string();
+        }
+        let mut out = String::with_capacity(text.len());
+        for line in text.lines() {
+            let t = line.trim();
+            let reference = t
+                .strip_prefix("{!")
+                .and_then(|x| x.strip_suffix("!}"))
+                .or_else(|| t.strip_prefix("{*").and_then(|x| x.strip_suffix("*}")))
+                .or_else(|| t.strip_prefix("--8<--"));
+            match reference
+                .and_then(|r| self.find(r))
+                .and_then(|p| std::fs::read_to_string(p).ok().map(|c| (p, c)))
+            {
+                Some((p, code)) => {
+                    let lang = p.extension().map(|e| e.to_string_lossy().to_string()).unwrap_or_default();
+                    let code: String = code.chars().take(3000).collect();
+                    out.push_str(&format!("```{lang}\n{}\n```\n", code.trim_end()));
+                }
+                None => {
+                    out.push_str(line);
+                    out.push('\n');
+                }
+            }
+        }
+        out
+    }
+}
+
+const EXAMPLE_EXTS: &[&str] = &["py", "ts", "tsx", "js", "jsx", "mjs", "rs", "go"];
+
+/// A docs example file as one code section titled by its file name.
+fn example(text: &str, rel: &str, out: &mut Vec<Entry>) {
+    if text.len() > 12_000 || text.trim().is_empty() {
+        return;
+    }
+    let name = rel.rsplit('/').next().unwrap_or(rel);
+    let lang = name.rsplit('.').next().unwrap_or("");
+    let title = name.rsplit_once('.').map_or(name, |x| x.0).replace(['_', '-'], " ");
+    out.push(Entry {
+        kind: Kind::Prose,
+        name: format!("example › {title}"),
+        path: format!("example › {title}"),
+        file: rel.to_string(),
+        line: 1,
+        sig: String::new(),
+        doc: format!("```{lang}\n{}\n```", text.trim_end()),
+        alias_of: None,
+        legacy: false,
+    });
+}
+
 fn prose(text: &str, rel: &str, line_off: u32, out: &mut Vec<Entry>) {
-    let title = rel.rsplit('/').next().unwrap_or(rel);
-    let title = if rel.contains("package metadata") { "README" } else { title };
-    for s in markdown::split(text, title) {
+    let (text, fm_title) = markdown::clean_mdx(text, rel.ends_with(".mdx"));
+    let file_title = rel.rsplit('/').next().unwrap_or(rel);
+    let title = if rel.contains("package metadata") {
+        "README".to_string()
+    } else if let Some(t) = fm_title {
+        t
+    } else {
+        file_title.to_string()
+    };
+    for s in markdown::split(&text, &title) {
         out.push(Entry {
             kind: Kind::Prose,
             name: s.heading.clone(),

@@ -180,6 +180,11 @@ impl Bm25 {
         self.lens.is_empty()
     }
 
+    /// Number of documents containing `term`.
+    pub fn df(&self, term: &str) -> usize {
+        self.postings.get(term).map_or(0, |p| p.len())
+    }
+
     pub fn contains(&self, term: &str) -> bool {
         self.postings.contains_key(term)
     }

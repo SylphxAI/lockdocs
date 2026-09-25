@@ -7,13 +7,13 @@
     "url": "https://github.com/SylphxAI/lockdocs",
     "source": "github"
   },
-  "version": "0.1.0",
+  "version": "0.2.0",
   "websiteUrl": "https://sylphxai.github.io/lockdocs/",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@sylphx/lockdocs",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "transport": {
         "type": "stdio"
       },

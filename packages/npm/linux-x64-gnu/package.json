@@ -1,6 +1,6 @@
 {
   "name": "@sylphx/lockdocs-linux-x64-gnu",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "lockdocs native binary for linux-x64-gnu",
   "os": [
     "linux"

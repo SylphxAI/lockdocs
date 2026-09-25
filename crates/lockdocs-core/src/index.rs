@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 /// Bump when extraction or the on-disk format changes.
-pub const FORMAT: u32 = 4;
+pub const FORMAT: u32 = 5;
 
 #[derive(Serialize, Deserialize)]
 pub struct PackageIndex {

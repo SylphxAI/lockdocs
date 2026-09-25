@@ -36,7 +36,7 @@ jobs:
         run: bash bench/setup.sh bench/projects
       - name: Run
         env:
-          C7: ${{ github.event_name == 'workflow_dispatch' && inputs.context7 && '--context7' || '' }}
+          C7: ${{ (github.event_name != 'workflow_dispatch' || inputs.context7) && '--context7' || '' }}
         run: |
           set -euo pipefail
           rm -rf ~/.cache/lockdocs

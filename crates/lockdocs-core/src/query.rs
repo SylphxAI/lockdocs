@@ -577,7 +577,7 @@ impl Engine {
             },
         };
         let segs: Vec<String> = split_symbol(&rest);
-        let Some(last) = segs.last().cloned() else {
+        let Some(last) = segs.last().map(|l| l.trim_end_matches('!').to_string()) else {
             // Only a package name: give the overview.
             return self.docs(
                 Some(&deps.iter().map(|d| format!("{}:{}@{}", d.eco, d.name, d.version)).collect::<Vec<_>>().join(",")),

@@ -8,7 +8,7 @@ use crate::Eco;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use tree_sitter::{Node, Parser};
 
@@ -964,10 +964,14 @@ fn rs_module(rel: &str, crate_name: &str) -> String {
 
 fn rs_file(text: &str, rel: &str, crate_name: &str, out: &mut Vec<Entry>) {
     let module = rs_module(rel, crate_name);
-    rs_parse(text, rel, &module, 0, 0, out);
+    rs_parse(text, rel, &module, 0, 0, None, out);
 }
 
-fn rs_parse(text: &str, rel: &str, module: &str, line_off: u32, depth: u32, out: &mut Vec<Entry>) {
+/// Docs and `#[macro_export]` a wrapper macro applies to the items it wraps
+/// (tokio's `doc! { macro_rules! select { .. } }` pattern).
+type Inherit = Option<(String, bool)>;
+
+fn rs_parse(text: &str, rel: &str, module: &str, line_off: u32, depth: u32, inherit: Inherit, out: &mut Vec<Entry>) {
     parse_with("rs", text, |root, src| {
         let mut inner_doc = Vec::new();
         let mut w = RsWalker {
@@ -976,6 +980,8 @@ fn rs_parse(text: &str, rel: &str, module: &str, line_off: u32, depth: u32, out:
             line_off,
             depth,
             out: Vec::new(),
+            wrappers: HashMap::new(),
+            inherit,
         };
         w.block(root, module, None, &mut inner_doc);
         if !inner_doc.is_empty() {
@@ -1004,6 +1010,24 @@ struct RsWalker<'a> {
     line_off: u32,
     depth: u32,
     out: Vec<Entry>,
+    /// Local `macro_rules!` that wrap an `$item` with docs: name -> (doc, exported).
+    wrappers: HashMap<String, (String, bool)>,
+    inherit: Inherit,
+}
+
+/// A local macro like `macro_rules! doc { ($x:item) => { /// docs  #[macro_export] $x } }`.
+fn doc_wrapper(text: &str) -> Option<(String, bool)> {
+    if !text.contains(":item") {
+        return None;
+    }
+    let doc: Vec<&str> = text
+        .lines()
+        .filter_map(|l| strip_line_doc(l.trim()).filter(|(_, inner)| !inner).map(|(d, _)| d))
+        .collect();
+    if doc.is_empty() {
+        return None;
+    }
+    Some((cap_doc(doc.join("\n").trim().to_string()), text.contains("macro_export")))
 }
 
 fn is_pub(n: Node, src: &[u8]) -> bool {
@@ -1084,11 +1108,16 @@ impl RsWalker<'_> {
                 "inner_attribute_item" => continue,
                 _ => {}
             }
-            let doc = cap_doc(pending.join("\n").trim().to_string());
+            let mut doc = cap_doc(pending.join("\n").trim().to_string());
+            if doc.is_empty() {
+                if let Some((d, _)) = &self.inherit {
+                    doc = d.clone();
+                }
+            }
             let _ = first_line.take();
             pending.clear();
             let was_hidden = std::mem::take(&mut hidden);
-            let was_macro_export = std::mem::take(&mut exported_macro);
+            let was_macro_export = std::mem::take(&mut exported_macro) || self.inherit.as_ref().is_some_and(|i| i.1);
             if was_hidden {
                 continue;
             }
@@ -1174,6 +1203,10 @@ impl RsWalker<'_> {
                 }
                 "macro_definition" => {
                     let Some(name) = name else { continue };
+                    if let Some(w) = doc_wrapper(txt(c, src)) {
+                        self.wrappers.insert(name.clone(), w);
+                        continue;
+                    }
                     if !was_macro_export {
                         continue;
                     }
@@ -1188,13 +1221,25 @@ impl RsWalker<'_> {
                         continue;
                     };
                     let body = txt(tt, src);
-                    if body.len() < 4 || !(body.contains("fn ") || body.contains("struct ") || body.contains("mod ") || body.contains("trait ")) {
+                    let called = c.child_by_field_name("macro").map(|m| txt(m, src).to_string()).unwrap_or_default();
+                    let wrapper = self.wrappers.get(&called).cloned();
+                    let itemish =
+                        body.contains("fn ") || body.contains("struct ") || body.contains("mod ") || body.contains("trait ") || body.contains("macro_rules!");
+                    if body.len() < 4 || !itemish {
                         continue;
                     }
                     let inner = &body[1..body.len() - 1];
                     let off = tt.start_position().row as u32 + self.line_off;
                     let mut sub = Vec::new();
-                    rs_parse(inner, self.file, module, off, self.depth + 1, &mut sub);
+                    rs_parse(
+                        inner,
+                        self.file,
+                        module,
+                        off,
+                        self.depth + 1,
+                        wrapper.or_else(|| self.inherit.clone()),
+                        &mut sub,
+                    );
                     // Owner-less items only: prose from nested inner docs stays.
                     self.out.extend(sub);
                 }
@@ -1478,6 +1523,14 @@ export * as zz from "./external";
         assert!(e.iter().all(|x| x.name != "private" && x.name != "hidden"));
         assert_eq!(get("tokio::select!").kind, Kind::Macro);
         assert!(e.iter().any(|x| x.kind == Kind::Prose && x.path.ends_with("Usage")));
+
+        // tokio's doc-wrapper pattern
+        let src = "macro_rules! doc {\n    ($select:item) => {\n        /// Waits on multiple branches.\n        #[macro_export]\n        $select\n    };\n}\n\ndoc! {macro_rules! select {\n    () => {};\n}}\n";
+        let mut e = Vec::new();
+        rs_file(src, "src/macros/select.rs", "tokio", &mut e);
+        let sel = e.iter().find(|x| x.path == "tokio::select!").expect("select! extracted");
+        assert_eq!(sel.doc, "Waits on multiple branches.");
+        assert!(e.iter().all(|x| x.name != "doc"));
     }
 
     #[test]

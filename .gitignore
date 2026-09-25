@@ -1,0 +1,14 @@
+/target/
+/node_modules/
+dist/
+.DS_Store
+.env
+.env.*
+!.env.example
+packages/npm/*/lockdocs
+packages/npm/*/lockdocs.exe
+docs/.vitepress/cache/
+docs/.vitepress/dist/
+bench/work/
+bench/results/*.tmp.json
+__pycache__/

@@ -1,0 +1,11 @@
+version = 4
+
+[[package]]
+name = "fixture"
+version = "0.0.0"
+dependencies = ["tinyrt"]
+
+[[package]]
+name = "tinyrt"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"

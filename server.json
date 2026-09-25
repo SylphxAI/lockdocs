@@ -1,0 +1,28 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.SylphxAI/lockdocs",
+  "title": "lockdocs",
+  "description": "Exact-version library docs from your lockfile, offline. No rate limits, private packages work.",
+  "repository": {
+    "url": "https://github.com/SylphxAI/lockdocs",
+    "source": "github"
+  },
+  "version": "0.1.0",
+  "websiteUrl": "https://sylphxai.github.io/lockdocs/",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@sylphx/lockdocs",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "mcp"
+        }
+      ]
+    }
+  ]
+}

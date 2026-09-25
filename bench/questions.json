@@ -1,0 +1,551 @@
+{
+ "questions": [
+  {
+   "id": "zod3-strict",
+   "project": "zod3",
+   "package": "zod",
+   "question": "How do I reject unknown keys in an object schema?",
+   "expect": [
+    [
+     ".strict("
+    ]
+   ],
+   "reject": [],
+   "why": "v3: .strict() on ZodObject",
+   "line": "older"
+  },
+  {
+   "id": "zod4-strict",
+   "project": "zod4",
+   "package": "zod",
+   "question": "How do I reject unknown keys in an object schema?",
+   "expect": [
+    [
+     "strictObject"
+    ]
+   ],
+   "reject": [],
+   "why": "v4: z.strictObject() (.strict() is legacy)",
+   "line": "newer"
+  },
+  {
+   "id": "zod3-email",
+   "project": "zod3",
+   "package": "zod",
+   "question": "How do I validate that a string is an email address?",
+   "expect": [
+    [
+     ".email("
+    ]
+   ],
+   "reject": [
+    "z.email("
+   ],
+   "why": "v3: z.string().email(); top-level z.email() does not exist",
+   "line": "older"
+  },
+  {
+   "id": "zod4-email",
+   "project": "zod4",
+   "package": "zod",
+   "question": "How do I validate that a string is an email address?",
+   "expect": [
+    [
+     "z.email(",
+     "function email("
+    ]
+   ],
+   "reject": [],
+   "why": "v4: top-level z.email()",
+   "line": "newer"
+  },
+  {
+   "id": "zod3-error",
+   "project": "zod3",
+   "package": "zod",
+   "question": "How do I customize the error message when validation fails?",
+   "expect": [
+    [
+     "required_error",
+     "invalid_type_error",
+     "errorMap",
+     "{ message:"
+    ]
+   ],
+   "reject": [],
+   "why": "v3: message / required_error / errorMap params",
+   "line": "older"
+  },
+  {
+   "id": "zod4-error",
+   "project": "zod4",
+   "package": "zod",
+   "question": "How do I customize the error message when validation fails?",
+   "expect": [
+    [
+     "$ZodErrorMap",
+     "{ error:",
+     "error:"
+    ]
+   ],
+   "reject": [
+    "required_error"
+   ],
+   "why": "v4: unified `error` param; required_error removed",
+   "line": "newer"
+  },
+  {
+   "id": "zod4-record",
+   "project": "zod4",
+   "package": "zod",
+   "question": "How do I define a record schema with string keys and number values?",
+   "expect": [
+    [
+     "record("
+    ]
+   ],
+   "reject": [],
+   "why": "v4: z.record(keySchema, valueSchema)",
+   "line": "newer"
+  },
+  {
+   "id": "next14-cookies",
+   "project": "next14",
+   "package": "next",
+   "question": "Is cookies() from next/headers synchronous or does it return a Promise?",
+   "expect": [
+    [
+     "ReadonlyRequestCookies"
+    ]
+   ],
+   "reject": [
+    "Promise<ReadonlyRequestCookies>",
+    "await cookies()"
+   ],
+   "why": "14: cookies() returns ReadonlyRequestCookies synchronously",
+   "line": "older"
+  },
+  {
+   "id": "next15-cookies",
+   "project": "next15",
+   "package": "next",
+   "question": "Is cookies() from next/headers synchronous or does it return a Promise?",
+   "expect": [
+    [
+     "Promise<ReadonlyRequestCookies>",
+     "await cookies()"
+    ]
+   ],
+   "reject": [],
+   "why": "15: cookies() is async",
+   "line": "newer"
+  },
+  {
+   "id": "next14-headers",
+   "project": "next14",
+   "package": "next",
+   "question": "How do I read the incoming request headers in a server component?",
+   "expect": [
+    [
+     "headers()",
+     "function headers("
+    ]
+   ],
+   "reject": [
+    "Promise<ReadonlyHeaders>",
+    "await headers()"
+   ],
+   "why": "14: headers() is sync",
+   "line": "older"
+  },
+  {
+   "id": "next15-headers",
+   "project": "next15",
+   "package": "next",
+   "question": "How do I read the incoming request headers in a server component?",
+   "expect": [
+    [
+     "Promise<ReadonlyHeaders>",
+     "await headers()"
+    ]
+   ],
+   "reject": [],
+   "why": "15: headers() is async",
+   "line": "newer"
+  },
+  {
+   "id": "next14-nostore",
+   "project": "next14",
+   "package": "next",
+   "question": "How do I opt a server component out of caching so it renders dynamically?",
+   "expect": [
+    [
+     "unstable_noStore",
+     "noStore",
+     "force-dynamic"
+    ]
+   ],
+   "reject": [],
+   "why": "14: unstable_noStore()",
+   "line": "older"
+  },
+  {
+   "id": "next15-connection",
+   "project": "next15",
+   "package": "next",
+   "question": "How do I opt a server component out of caching so it renders dynamically?",
+   "expect": [
+    [
+     "connection()",
+     "function connection(",
+     "unstable_noStore",
+     "force-dynamic"
+    ]
+   ],
+   "reject": [],
+   "why": "15: connection() (unstable_noStore deprecated)",
+   "line": "newer"
+  },
+  {
+   "id": "next15-after",
+   "project": "next15",
+   "package": "next",
+   "question": "How do I run code after the response has finished streaming?",
+   "expect": [
+    [
+     "unstable_after",
+     "after(",
+     "function after"
+    ]
+   ],
+   "reject": [],
+   "why": "15.1: after() from next/server (unstable_after in 15.0)",
+   "line": "newer"
+  },
+  {
+   "id": "rr6-json",
+   "project": "rr6",
+   "package": "react-router",
+   "question": "How do I return data with a custom HTTP status code from a loader?",
+   "expect": [
+    [
+     "json("
+    ]
+   ],
+   "reject": [],
+   "why": "v6: json() helper",
+   "line": "older"
+  },
+  {
+   "id": "rr7-data",
+   "project": "rr7",
+   "package": "react-router",
+   "question": "How do I return data with a custom HTTP status code from a loader?",
+   "expect": [
+    [
+     "data("
+    ]
+   ],
+   "reject": [],
+   "why": "v7: data() helper (json() deprecated)",
+   "line": "newer"
+  },
+  {
+   "id": "rr6-defer",
+   "project": "rr6",
+   "package": "react-router",
+   "question": "How do I stream slow data from a loader with deferred values?",
+   "expect": [
+    [
+     "defer("
+    ]
+   ],
+   "reject": [],
+   "why": "v6: defer() + <Await>",
+   "line": "older"
+  },
+  {
+   "id": "rr6-future",
+   "project": "rr6",
+   "package": "react-router",
+   "question": "Which future flag enables React.startTransition for state updates?",
+   "expect": [
+    [
+     "v7_startTransition"
+    ]
+   ],
+   "reject": [],
+   "why": "v6.26: future.v7_startTransition",
+   "line": "older"
+  },
+  {
+   "id": "rr7-router",
+   "project": "rr7",
+   "package": "react-router",
+   "question": "How do I create a browser router with data loaders?",
+   "expect": [
+    [
+     "createBrowserRouter"
+    ]
+   ],
+   "reject": [],
+   "why": "v7: createBrowserRouter from react-router",
+   "line": "newer"
+  },
+  {
+   "id": "pyd1-dict",
+   "project": "pydantic1",
+   "package": "pydantic",
+   "question": "How do I convert a model instance to a dict?",
+   "expect": [
+    [
+     ".dict(",
+     "def dict("
+    ]
+   ],
+   "reject": [
+    "model_dump"
+   ],
+   "why": "v1: .dict()",
+   "line": "older"
+  },
+  {
+   "id": "pyd2-dict",
+   "project": "pydantic2",
+   "package": "pydantic",
+   "question": "How do I convert a model instance to a dict?",
+   "expect": [
+    [
+     "model_dump"
+    ]
+   ],
+   "reject": [],
+   "why": "v2: .model_dump()",
+   "line": "newer"
+  },
+  {
+   "id": "pyd1-parse",
+   "project": "pydantic1",
+   "package": "pydantic",
+   "question": "How do I create a model from a dict and validate it?",
+   "expect": [
+    [
+     "parse_obj"
+    ]
+   ],
+   "reject": [
+    "model_validate"
+   ],
+   "why": "v1: Model.parse_obj()",
+   "line": "older"
+  },
+  {
+   "id": "pyd2-parse",
+   "project": "pydantic2",
+   "package": "pydantic",
+   "question": "How do I create a model from a dict and validate it?",
+   "expect": [
+    [
+     "model_validate"
+    ]
+   ],
+   "reject": [],
+   "why": "v2: Model.model_validate()",
+   "line": "newer"
+  },
+  {
+   "id": "pyd1-validator",
+   "project": "pydantic1",
+   "package": "pydantic",
+   "question": "How do I add a custom validator for a field?",
+   "expect": [
+    [
+     "@validator",
+     "def validator("
+    ]
+   ],
+   "reject": [
+    "field_validator"
+   ],
+   "why": "v1: @validator",
+   "line": "older"
+  },
+  {
+   "id": "pyd2-validator",
+   "project": "pydantic2",
+   "package": "pydantic",
+   "question": "How do I add a custom validator for a field?",
+   "expect": [
+    [
+     "field_validator"
+    ]
+   ],
+   "reject": [],
+   "why": "v2: @field_validator",
+   "line": "newer"
+  },
+  {
+   "id": "pyd1-schema",
+   "project": "pydantic1",
+   "package": "pydantic",
+   "question": "How do I get the JSON schema of a model?",
+   "expect": [
+    [
+     "schema_json",
+     "def schema(",
+     ".schema("
+    ]
+   ],
+   "reject": [
+    "model_json_schema"
+   ],
+   "why": "v1: Model.schema() / schema_json()",
+   "line": "older"
+  },
+  {
+   "id": "pyd2-schema",
+   "project": "pydantic2",
+   "package": "pydantic",
+   "question": "How do I get the JSON schema of a model?",
+   "expect": [
+    [
+     "model_json_schema"
+    ]
+   ],
+   "reject": [],
+   "why": "v2: Model.model_json_schema()",
+   "line": "newer"
+  },
+  {
+   "id": "pyd1-config",
+   "project": "pydantic1",
+   "package": "pydantic",
+   "question": "How do I allow extra fields on a model?",
+   "expect": [
+    [
+     "Extra.allow",
+     "class Config"
+    ]
+   ],
+   "reject": [
+    "ConfigDict"
+   ],
+   "why": "v1: class Config: extra = Extra.allow",
+   "line": "older"
+  },
+  {
+   "id": "pyd2-config",
+   "project": "pydantic2",
+   "package": "pydantic",
+   "question": "How do I allow extra fields on a model?",
+   "expect": [
+    [
+     "ConfigDict",
+     "model_config"
+    ]
+   ],
+   "reject": [],
+   "why": "v2: model_config = ConfigDict(extra='allow')",
+   "line": "newer"
+  },
+  {
+   "id": "axum07-path",
+   "project": "axum07",
+   "package": "axum",
+   "question": "How do I declare a route with a path parameter?",
+   "expect": [
+    [
+     "/:"
+    ]
+   ],
+   "reject": [],
+   "why": "0.7: /users/:id",
+   "line": "older"
+  },
+  {
+   "id": "axum08-path",
+   "project": "axum08",
+   "package": "axum",
+   "question": "How do I declare a route with a path parameter?",
+   "expect": [
+    [
+     "/{"
+    ]
+   ],
+   "reject": [],
+   "why": "0.8: /users/{id}",
+   "line": "newer"
+  },
+  {
+   "id": "axum07-extractor",
+   "project": "axum07",
+   "package": "axum",
+   "question": "How do I implement a custom extractor with FromRequestParts?",
+   "expect": [
+    [
+     "async_trait"
+    ]
+   ],
+   "reject": [],
+   "why": "0.7: #[async_trait] on the impl",
+   "line": "older"
+  },
+  {
+   "id": "axum08-optional",
+   "project": "axum08",
+   "package": "axum",
+   "question": "How do I make an extractor optional with Option<T>?",
+   "expect": [
+    [
+     "OptionalFromRequestParts"
+    ]
+   ],
+   "reject": [],
+   "why": "0.8: OptionalFromRequestParts",
+   "line": "newer"
+  },
+  {
+   "id": "tokio-blocking",
+   "project": "axum08",
+   "package": "tokio",
+   "question": "How do I run blocking code without blocking the async runtime?",
+   "expect": [
+    [
+     "spawn_blocking"
+    ]
+   ],
+   "reject": [],
+   "why": "tokio::task::spawn_blocking",
+   "line": "single"
+  },
+  {
+   "id": "tokio-select",
+   "project": "axum08",
+   "package": "tokio",
+   "question": "How do I wait on several futures and take whichever finishes first?",
+   "expect": [
+    [
+     "select!"
+    ]
+   ],
+   "reject": [],
+   "why": "tokio::select!",
+   "line": "single"
+  },
+  {
+   "id": "tokio-timeout",
+   "project": "axum08",
+   "package": "tokio",
+   "question": "How do I put a timeout on a future?",
+   "expect": [
+    [
+     "timeout(",
+     "fn timeout"
+    ]
+   ],
+   "reject": [],
+   "why": "tokio::time::timeout",
+   "line": "single"
+  }
+ ]
+}

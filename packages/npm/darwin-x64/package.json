@@ -1,0 +1,24 @@
+{
+  "name": "@sylphx/lockdocs-darwin-x64",
+  "version": "0.1.0",
+  "description": "lockdocs native binary for darwin-x64",
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "files": [
+    "lockdocs"
+  ],
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://sylphxai.github.io/lockdocs/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SylphxAI/lockdocs.git",
+    "directory": "packages/npm/darwin-x64"
+  }
+}

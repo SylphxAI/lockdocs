@@ -1,0 +1,2482 @@
+{
+ "tokenizer": "tiktoken o200k_base",
+ "index": {
+  "axum07": {
+   "ms": 201,
+   "report": {
+    "missing": [
+     {
+      "error": "@vue/compiler-dom@3.5.43 is pinned in /home/runner/work/lockdocs/lockdocs/bun.lock but its files are not on this machine: run your package manager's install, or enable fetching (--fetch or LOCKDOCS_FETCH=1) to download exactly this version.",
+      "package": "@vue/compiler-dom@3.5.43"
+     },
+     {
+      "error": "@vue/server-renderer@3.5.43 is pinned in /home/runner/work/lockdocs/lockdocs/bun.lock but its files are not on this machine: run your package manager's install, or enable fetching (--fetch or LOCKDOCS_FETCH=1) to download exactly this version.",
+      "package": "@vue/server-renderer@3.5.43"
+     },
+     {
+      "error": "vitepress@1.6.4 is pinned in /home/runner/work/lockdocs/lockdocs/bun.lock but its files are not on this machine: run your package manager's install, or enable fetching (--fetch or LOCKDOCS_FETCH=1) to download exactly this version.",
+      "package": "vitepress@1.6.4"
+     },
+     {
+      "error": "vue@3.5.43 is pinned in /home/runner/work/lockdocs/lockdocs/bun.lock but its files are not on this machine: run your package manager's install, or enable fetching (--fetch or LOCKDOCS_FETCH=1) to download exactly this version.",
+      "package": "vue@3.5.43"
+     }
+    ],
+    "ms": 193,
+    "packages": [
+     {
+      "build_ms": 140,
+      "ecosystem": "cargo",
+      "package": "axum@0.7.9",
+      "sections": 262,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/axum-0.7.9",
+      "symbols": 236
+     },
+     {
+      "build_ms": 187,
+      "ecosystem": "cargo",
+      "package": "tokio@1.41.1",
+      "sections": 551,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.41.1",
+      "symbols": 1311
+     }
+    ]
+   }
+  },
+  "axum08": {
+   "ms": 205,
+   "report": {
+    "missing": [
+     {
+      "error": "@vue/compiler-dom@3.5.43 is pinned in /home/runner/work/lockdocs/lockdocs/bun.lock but its files are not on this machine: run your package manager's install, or enable fetching (--fetch or LOCKDOCS_FETCH=1) to download exactly this version.",
+      "package": "@vue/compiler-dom@3.5.43"
+     },
+     {
+      "error": "@vue/server-renderer@3.5.43 is pinned in /home/runner/work/lockdocs/lockdocs/bun.lock but its files are not on this machine: run your package manager's install, or enable fetching (--fetch or LOCKDOCS_FETCH=1) to download exactly this version.",
+      "package": "@vue/server-renderer@3.5.43"
+     },
+     {
+      "error": "vitepress@1.6.4 is pinned in /home/runner/work/lockdocs/lockdocs/bun.lock but its files are not on this machine: run your package manager's install, or enable fetching (--fetch or LOCKDOCS_FETCH=1) to download exactly this version.",
+      "package": "vitepress@1.6.4"
+     },
+     {
+      "error": "vue@3.5.43 is pinned in /home/runner/work/lockdocs/lockdocs/bun.lock but its files are not on this machine: run your package manager's install, or enable fetching (--fetch or LOCKDOCS_FETCH=1) to download exactly this version.",
+      "package": "vue@3.5.43"
+     }
+    ],
+    "ms": 199,
+    "packages": [
+     {
+      "build_ms": 146,
+      "ecosystem": "cargo",
+      "package": "axum@0.8.1",
+      "sections": 272,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/axum-0.8.1",
+      "symbols": 264
+     },
+     {
+      "build_ms": 194,
+      "ecosystem": "cargo",
+      "package": "tokio@1.43.0",
+      "sections": 561,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.43.0",
+      "symbols": 1332
+     }
+    ]
+   }
+  },
+  "next14": {
+   "ms": 403,
+   "report": {
+    "missing": [
+     {
+      "error": "tempfile@3.27.0 is pinned in /home/runner/work/lockdocs/lockdocs/Cargo.lock but its files are not on this machine: run `cargo fetch`, or enable fetching (--fetch or LOCKDOCS_FETCH=1) to download exactly this version.",
+      "package": "tempfile@3.27.0"
+     }
+    ],
+    "ms": 388,
+    "packages": [
+     {
+      "build_ms": 199,
+      "ecosystem": "npm",
+      "package": "next@14.2.15",
+      "sections": 9,
+      "source": "node_modules/next",
+      "symbols": 4890
+     },
+     {
+      "build_ms": 20,
+      "ecosystem": "npm",
+      "package": "react@18.3.1",
+      "sections": 4,
+      "source": "node_modules/react",
+      "symbols": 0
+     },
+     {
+      "build_ms": 180,
+      "ecosystem": "npm",
+      "package": "react-dom@18.3.1",
+      "sections": 7,
+      "source": "node_modules/react-dom",
+      "symbols": 0
+     },
+     {
+      "build_ms": 159,
+      "ecosystem": "cargo",
+      "package": "anyhow@1.0.104",
+      "sections": 14,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anyhow-1.0.104",
+      "symbols": 55
+     },
+     {
+      "build_ms": 4,
+      "ecosystem": "cargo",
+      "package": "dirs@6.0.0",
+      "sections": 18,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dirs-6.0.0",
+      "symbols": 95
+     },
+     {
+      "build_ms": 43,
+      "ecosystem": "cargo",
+      "package": "flate2@1.1.10",
+      "sections": 23,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/flate2-1.1.10",
+      "symbols": 333
+     },
+     {
+      "build_ms": 29,
+      "ecosystem": "cargo",
+      "package": "postcard@1.1.3",
+      "sections": 22,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postcard-1.1.3",
+      "symbols": 93
+     },
+     {
+      "build_ms": 134,
+      "ecosystem": "cargo",
+      "package": "rayon@1.12.0",
+      "sections": 134,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rayon-1.12.0",
+      "symbols": 315
+     },
+     {
+      "build_ms": 85,
+      "ecosystem": "cargo",
+      "package": "serde@1.0.229",
+      "sections": 23,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229",
+      "symbols": 216
+     },
+     {
+      "build_ms": 83,
+      "ecosystem": "cargo",
+      "package": "serde_json@1.0.151",
+      "sections": 50,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.151",
+      "symbols": 271
+     },
+     {
+      "build_ms": 28,
+      "ecosystem": "cargo",
+      "package": "tar@0.4.46",
+      "sections": 7,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.46",
+      "symbols": 223
+     },
+     {
+      "build_ms": 45,
+      "ecosystem": "cargo",
+      "package": "toml@1.1.6+spec-1.1.0",
+      "sections": 15,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml-1.1.6+spec-1.1.0",
+      "symbols": 132
+     },
+     {
+      "build_ms": 49,
+      "ecosystem": "cargo",
+      "package": "toml_edit@0.23.10+spec-1.0.0",
+      "sections": 15,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_edit-0.23.10+spec-1.0.0",
+      "symbols": 389
+     },
+     {
+      "build_ms": 1,
+      "ecosystem": "cargo",
+      "package": "tree-sitter@0.27.0",
+      "sections": 12,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-0.27.0",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-go@0.25.0",
+      "sections": 1,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-go-0.25.0",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-python@0.25.0",
+      "sections": 2,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-python-0.25.0",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-rust@0.24.2",
+      "sections": 3,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-rust-0.24.2",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-typescript@0.23.2",
+      "sections": 1,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-typescript-0.23.2",
+      "symbols": 0
+     },
+     {
+      "build_ms": 85,
+      "ecosystem": "cargo",
+      "package": "ureq@3.4.2",
+      "sections": 150,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ureq-3.4.2",
+      "symbols": 348
+     },
+     {
+      "build_ms": 28,
+      "ecosystem": "cargo",
+      "package": "yaml-rust2@0.13.0",
+      "sections": 46,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.13.0",
+      "symbols": 66
+     },
+     {
+      "build_ms": 173,
+      "ecosystem": "cargo",
+      "package": "zip@8.6.0",
+      "sections": 214,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-8.6.0",
+      "symbols": 346
+     }
+    ]
+   }
+  },
+  "next15": {
+   "ms": 391,
+   "report": {
+    "missing": [
+     {
+      "error": "tempfile@3.27.0 is pinned in /home/runner/work/lockdocs/lockdocs/Cargo.lock but its files are not on this machine: run `cargo fetch`, or enable fetching (--fetch or LOCKDOCS_FETCH=1) to download exactly this version.",
+      "package": "tempfile@3.27.0"
+     }
+    ],
+    "ms": 377,
+    "packages": [
+     {
+      "build_ms": 229,
+      "ecosystem": "npm",
+      "package": "next@15.1.0",
+      "sections": 9,
+      "source": "node_modules/next",
+      "symbols": 5585
+     },
+     {
+      "build_ms": 35,
+      "ecosystem": "npm",
+      "package": "react@19.0.0",
+      "sections": 4,
+      "source": "node_modules/react",
+      "symbols": 0
+     },
+     {
+      "build_ms": 369,
+      "ecosystem": "npm",
+      "package": "react-dom@19.0.0",
+      "sections": 7,
+      "source": "node_modules/react-dom",
+      "symbols": 0
+     },
+     {
+      "build_ms": 159,
+      "ecosystem": "cargo",
+      "package": "anyhow@1.0.104",
+      "sections": 14,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anyhow-1.0.104",
+      "symbols": 55
+     },
+     {
+      "build_ms": 4,
+      "ecosystem": "cargo",
+      "package": "dirs@6.0.0",
+      "sections": 18,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dirs-6.0.0",
+      "symbols": 95
+     },
+     {
+      "build_ms": 43,
+      "ecosystem": "cargo",
+      "package": "flate2@1.1.10",
+      "sections": 23,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/flate2-1.1.10",
+      "symbols": 333
+     },
+     {
+      "build_ms": 29,
+      "ecosystem": "cargo",
+      "package": "postcard@1.1.3",
+      "sections": 22,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postcard-1.1.3",
+      "symbols": 93
+     },
+     {
+      "build_ms": 134,
+      "ecosystem": "cargo",
+      "package": "rayon@1.12.0",
+      "sections": 134,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rayon-1.12.0",
+      "symbols": 315
+     },
+     {
+      "build_ms": 85,
+      "ecosystem": "cargo",
+      "package": "serde@1.0.229",
+      "sections": 23,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229",
+      "symbols": 216
+     },
+     {
+      "build_ms": 83,
+      "ecosystem": "cargo",
+      "package": "serde_json@1.0.151",
+      "sections": 50,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.151",
+      "symbols": 271
+     },
+     {
+      "build_ms": 28,
+      "ecosystem": "cargo",
+      "package": "tar@0.4.46",
+      "sections": 7,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.46",
+      "symbols": 223
+     },
+     {
+      "build_ms": 45,
+      "ecosystem": "cargo",
+      "package": "toml@1.1.6+spec-1.1.0",
+      "sections": 15,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml-1.1.6+spec-1.1.0",
+      "symbols": 132
+     },
+     {
+      "build_ms": 49,
+      "ecosystem": "cargo",
+      "package": "toml_edit@0.23.10+spec-1.0.0",
+      "sections": 15,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_edit-0.23.10+spec-1.0.0",
+      "symbols": 389
+     },
+     {
+      "build_ms": 1,
+      "ecosystem": "cargo",
+      "package": "tree-sitter@0.27.0",
+      "sections": 12,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-0.27.0",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-go@0.25.0",
+      "sections": 1,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-go-0.25.0",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-python@0.25.0",
+      "sections": 2,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-python-0.25.0",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-rust@0.24.2",
+      "sections": 3,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-rust-0.24.2",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-typescript@0.23.2",
+      "sections": 1,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-typescript-0.23.2",
+      "symbols": 0
+     },
+     {
+      "build_ms": 85,
+      "ecosystem": "cargo",
+      "package": "ureq@3.4.2",
+      "sections": 150,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ureq-3.4.2",
+      "symbols": 348
+     },
+     {
+      "build_ms": 28,
+      "ecosystem": "cargo",
+      "package": "yaml-rust2@0.13.0",
+      "sections": 46,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.13.0",
+      "symbols": 66
+     },
+     {
+      "build_ms": 173,
+      "ecosystem": "cargo",
+      "package": "zip@8.6.0",
+      "sections": 214,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-8.6.0",
+      "symbols": 346
+     }
+    ]
+   }
+  },
+  "pydantic1": {
+   "ms": 51,
+   "report": {
+    "missing": [
+     {
+      "error": "@vue/compiler-dom@3.5.43 is pinned in /home/runner/work/lockdocs/lockdocs/bun.lock but its files are not on this machine: run your package manager's install, or enable fetching (--fetch or LOCKDOCS_FETCH=1) to download exactly this version.",
+      "package": "@vue/compiler-dom@3.5.43"
+     },
+     {
+      "error": "@vue/server-renderer@3.5.43 is pinned in /home/runner/work/lockdocs/lockdocs/bun.lock but its files are not on this machine: run your package manager's install, or enable fetching (--fetch or LOCKDOCS_FETCH=1) to download exactly this version.",
+      "package": "@vue/server-renderer@3.5.43"
+     },
+     {
+      "error": "vitepress@1.6.4 is pinned in /home/runner/work/lockdocs/lockdocs/bun.lock but its files are not on this machine: run your package manager's install, or enable fetching (--fetch or LOCKDOCS_FETCH=1) to download exactly this version.",
+      "package": "vitepress@1.6.4"
+     },
+     {
+      "error": "vue@3.5.43 is pinned in /home/runner/work/lockdocs/lockdocs/bun.lock but its files are not on this machine: run your package manager's install, or enable fetching (--fetch or LOCKDOCS_FETCH=1) to download exactly this version.",
+      "package": "vue@3.5.43"
+     },
+     {
+      "error": "tempfile@3.27.0 is pinned in /home/runner/work/lockdocs/lockdocs/Cargo.lock but its files are not on this machine: run `cargo fetch`, or enable fetching (--fetch or LOCKDOCS_FETCH=1) to download exactly this version.",
+      "package": "tempfile@3.27.0"
+     }
+    ],
+    "ms": 45,
+    "packages": [
+     {
+      "build_ms": 31,
+      "ecosystem": "pypi",
+      "package": "pydantic@1.10.18",
+      "sections": 135,
+      "source": ".venv/lib/python3.12/site-packages",
+      "symbols": 573
+     },
+     {
+      "build_ms": 159,
+      "ecosystem": "cargo",
+      "package": "anyhow@1.0.104",
+      "sections": 14,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anyhow-1.0.104",
+      "symbols": 55
+     },
+     {
+      "build_ms": 4,
+      "ecosystem": "cargo",
+      "package": "dirs@6.0.0",
+      "sections": 18,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dirs-6.0.0",
+      "symbols": 95
+     },
+     {
+      "build_ms": 43,
+      "ecosystem": "cargo",
+      "package": "flate2@1.1.10",
+      "sections": 23,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/flate2-1.1.10",
+      "symbols": 333
+     },
+     {
+      "build_ms": 29,
+      "ecosystem": "cargo",
+      "package": "postcard@1.1.3",
+      "sections": 22,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postcard-1.1.3",
+      "symbols": 93
+     },
+     {
+      "build_ms": 134,
+      "ecosystem": "cargo",
+      "package": "rayon@1.12.0",
+      "sections": 134,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rayon-1.12.0",
+      "symbols": 315
+     },
+     {
+      "build_ms": 85,
+      "ecosystem": "cargo",
+      "package": "serde@1.0.229",
+      "sections": 23,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229",
+      "symbols": 216
+     },
+     {
+      "build_ms": 83,
+      "ecosystem": "cargo",
+      "package": "serde_json@1.0.151",
+      "sections": 50,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.151",
+      "symbols": 271
+     },
+     {
+      "build_ms": 28,
+      "ecosystem": "cargo",
+      "package": "tar@0.4.46",
+      "sections": 7,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.46",
+      "symbols": 223
+     },
+     {
+      "build_ms": 45,
+      "ecosystem": "cargo",
+      "package": "toml@1.1.6+spec-1.1.0",
+      "sections": 15,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml-1.1.6+spec-1.1.0",
+      "symbols": 132
+     },
+     {
+      "build_ms": 49,
+      "ecosystem": "cargo",
+      "package": "toml_edit@0.23.10+spec-1.0.0",
+      "sections": 15,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_edit-0.23.10+spec-1.0.0",
+      "symbols": 389
+     },
+     {
+      "build_ms": 1,
+      "ecosystem": "cargo",
+      "package": "tree-sitter@0.27.0",
+      "sections": 12,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-0.27.0",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-go@0.25.0",
+      "sections": 1,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-go-0.25.0",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-python@0.25.0",
+      "sections": 2,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-python-0.25.0",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-rust@0.24.2",
+      "sections": 3,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-rust-0.24.2",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-typescript@0.23.2",
+      "sections": 1,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-typescript-0.23.2",
+      "symbols": 0
+     },
+     {
+      "build_ms": 85,
+      "ecosystem": "cargo",
+      "package": "ureq@3.4.2",
+      "sections": 150,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ureq-3.4.2",
+      "symbols": 348
+     },
+     {
+      "build_ms": 28,
+      "ecosystem": "cargo",
+      "package": "yaml-rust2@0.13.0",
+      "sections": 46,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.13.0",
+      "symbols": 66
+     },
+     {
+      "build_ms": 173,
+      "ecosystem": "cargo",
+      "package": "zip@8.6.0",
+      "sections": 214,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-8.6.0",
+      "symbols": 346
+     }
+    ]
+   }
+  },
+  "pydantic2": {
+   "ms": 98,
+   "report": {
+    "missing": [
+     {
+      "error": "@vue/compiler-dom@3.5.43 is pinned in /home/runner/work/lockdocs/lockdocs/bun.lock but its files are not on this machine: run your package manager's install, or enable fetching (--fetch or LOCKDOCS_FETCH=1) to download exactly this version.",
+      "package": "@vue/compiler-dom@3.5.43"
+     },
+     {
+      "error": "@vue/server-renderer@3.5.43 is pinned in /home/runner/work/lockdocs/lockdocs/bun.lock but its files are not on this machine: run your package manager's install, or enable fetching (--fetch or LOCKDOCS_FETCH=1) to download exactly this version.",
+      "package": "@vue/server-renderer@3.5.43"
+     },
+     {
+      "error": "vitepress@1.6.4 is pinned in /home/runner/work/lockdocs/lockdocs/bun.lock but its files are not on this machine: run your package manager's install, or enable fetching (--fetch or LOCKDOCS_FETCH=1) to download exactly this version.",
+      "package": "vitepress@1.6.4"
+     },
+     {
+      "error": "vue@3.5.43 is pinned in /home/runner/work/lockdocs/lockdocs/bun.lock but its files are not on this machine: run your package manager's install, or enable fetching (--fetch or LOCKDOCS_FETCH=1) to download exactly this version.",
+      "package": "vue@3.5.43"
+     },
+     {
+      "error": "tempfile@3.27.0 is pinned in /home/runner/work/lockdocs/lockdocs/Cargo.lock but its files are not on this machine: run `cargo fetch`, or enable fetching (--fetch or LOCKDOCS_FETCH=1) to download exactly this version.",
+      "package": "tempfile@3.27.0"
+     }
+    ],
+    "ms": 90,
+    "packages": [
+     {
+      "build_ms": 77,
+      "ecosystem": "pypi",
+      "package": "pydantic@2.9.2",
+      "sections": 191,
+      "source": ".venv/lib/python3.12/site-packages",
+      "symbols": 1255
+     },
+     {
+      "build_ms": 159,
+      "ecosystem": "cargo",
+      "package": "anyhow@1.0.104",
+      "sections": 14,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anyhow-1.0.104",
+      "symbols": 55
+     },
+     {
+      "build_ms": 4,
+      "ecosystem": "cargo",
+      "package": "dirs@6.0.0",
+      "sections": 18,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dirs-6.0.0",
+      "symbols": 95
+     },
+     {
+      "build_ms": 43,
+      "ecosystem": "cargo",
+      "package": "flate2@1.1.10",
+      "sections": 23,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/flate2-1.1.10",
+      "symbols": 333
+     },
+     {
+      "build_ms": 29,
+      "ecosystem": "cargo",
+      "package": "postcard@1.1.3",
+      "sections": 22,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postcard-1.1.3",
+      "symbols": 93
+     },
+     {
+      "build_ms": 134,
+      "ecosystem": "cargo",
+      "package": "rayon@1.12.0",
+      "sections": 134,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rayon-1.12.0",
+      "symbols": 315
+     },
+     {
+      "build_ms": 85,
+      "ecosystem": "cargo",
+      "package": "serde@1.0.229",
+      "sections": 23,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229",
+      "symbols": 216
+     },
+     {
+      "build_ms": 83,
+      "ecosystem": "cargo",
+      "package": "serde_json@1.0.151",
+      "sections": 50,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.151",
+      "symbols": 271
+     },
+     {
+      "build_ms": 28,
+      "ecosystem": "cargo",
+      "package": "tar@0.4.46",
+      "sections": 7,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.46",
+      "symbols": 223
+     },
+     {
+      "build_ms": 45,
+      "ecosystem": "cargo",
+      "package": "toml@1.1.6+spec-1.1.0",
+      "sections": 15,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml-1.1.6+spec-1.1.0",
+      "symbols": 132
+     },
+     {
+      "build_ms": 49,
+      "ecosystem": "cargo",
+      "package": "toml_edit@0.23.10+spec-1.0.0",
+      "sections": 15,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_edit-0.23.10+spec-1.0.0",
+      "symbols": 389
+     },
+     {
+      "build_ms": 1,
+      "ecosystem": "cargo",
+      "package": "tree-sitter@0.27.0",
+      "sections": 12,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-0.27.0",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-go@0.25.0",
+      "sections": 1,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-go-0.25.0",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-python@0.25.0",
+      "sections": 2,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-python-0.25.0",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-rust@0.24.2",
+      "sections": 3,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-rust-0.24.2",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-typescript@0.23.2",
+      "sections": 1,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-typescript-0.23.2",
+      "symbols": 0
+     },
+     {
+      "build_ms": 85,
+      "ecosystem": "cargo",
+      "package": "ureq@3.4.2",
+      "sections": 150,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ureq-3.4.2",
+      "symbols": 348
+     },
+     {
+      "build_ms": 28,
+      "ecosystem": "cargo",
+      "package": "yaml-rust2@0.13.0",
+      "sections": 46,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.13.0",
+      "symbols": 66
+     },
+     {
+      "build_ms": 173,
+      "ecosystem": "cargo",
+      "package": "zip@8.6.0",
+      "sections": 214,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-8.6.0",
+      "symbols": 346
+     }
+    ]
+   }
+  },
+  "rr6": {
+   "ms": 175,
+   "report": {
+    "missing": [
+     {
+      "error": "tempfile@3.27.0 is pinned in /home/runner/work/lockdocs/lockdocs/Cargo.lock but its files are not on this machine: run `cargo fetch`, or enable fetching (--fetch or LOCKDOCS_FETCH=1) to download exactly this version.",
+      "package": "tempfile@3.27.0"
+     }
+    ],
+    "ms": 161,
+    "packages": [
+     {
+      "build_ms": 160,
+      "ecosystem": "npm",
+      "package": "react@18.3.1",
+      "sections": 4,
+      "source": "node_modules/react",
+      "symbols": 0
+     },
+     {
+      "build_ms": 150,
+      "ecosystem": "npm",
+      "package": "react-dom@18.3.1",
+      "sections": 7,
+      "source": "node_modules/react-dom",
+      "symbols": 0
+     },
+     {
+      "build_ms": 7,
+      "ecosystem": "npm",
+      "package": "react-router@6.26.2",
+      "sections": 74,
+      "source": "node_modules/react-router",
+      "symbols": 207
+     },
+     {
+      "build_ms": 7,
+      "ecosystem": "npm",
+      "package": "react-router-dom@6.26.2",
+      "sections": 80,
+      "source": "node_modules/react-router-dom",
+      "symbols": 145
+     },
+     {
+      "build_ms": 159,
+      "ecosystem": "cargo",
+      "package": "anyhow@1.0.104",
+      "sections": 14,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anyhow-1.0.104",
+      "symbols": 55
+     },
+     {
+      "build_ms": 4,
+      "ecosystem": "cargo",
+      "package": "dirs@6.0.0",
+      "sections": 18,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dirs-6.0.0",
+      "symbols": 95
+     },
+     {
+      "build_ms": 43,
+      "ecosystem": "cargo",
+      "package": "flate2@1.1.10",
+      "sections": 23,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/flate2-1.1.10",
+      "symbols": 333
+     },
+     {
+      "build_ms": 29,
+      "ecosystem": "cargo",
+      "package": "postcard@1.1.3",
+      "sections": 22,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postcard-1.1.3",
+      "symbols": 93
+     },
+     {
+      "build_ms": 134,
+      "ecosystem": "cargo",
+      "package": "rayon@1.12.0",
+      "sections": 134,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rayon-1.12.0",
+      "symbols": 315
+     },
+     {
+      "build_ms": 85,
+      "ecosystem": "cargo",
+      "package": "serde@1.0.229",
+      "sections": 23,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229",
+      "symbols": 216
+     },
+     {
+      "build_ms": 83,
+      "ecosystem": "cargo",
+      "package": "serde_json@1.0.151",
+      "sections": 50,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.151",
+      "symbols": 271
+     },
+     {
+      "build_ms": 28,
+      "ecosystem": "cargo",
+      "package": "tar@0.4.46",
+      "sections": 7,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.46",
+      "symbols": 223
+     },
+     {
+      "build_ms": 45,
+      "ecosystem": "cargo",
+      "package": "toml@1.1.6+spec-1.1.0",
+      "sections": 15,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml-1.1.6+spec-1.1.0",
+      "symbols": 132
+     },
+     {
+      "build_ms": 49,
+      "ecosystem": "cargo",
+      "package": "toml_edit@0.23.10+spec-1.0.0",
+      "sections": 15,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_edit-0.23.10+spec-1.0.0",
+      "symbols": 389
+     },
+     {
+      "build_ms": 1,
+      "ecosystem": "cargo",
+      "package": "tree-sitter@0.27.0",
+      "sections": 12,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-0.27.0",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-go@0.25.0",
+      "sections": 1,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-go-0.25.0",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-python@0.25.0",
+      "sections": 2,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-python-0.25.0",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-rust@0.24.2",
+      "sections": 3,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-rust-0.24.2",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-typescript@0.23.2",
+      "sections": 1,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-typescript-0.23.2",
+      "symbols": 0
+     },
+     {
+      "build_ms": 85,
+      "ecosystem": "cargo",
+      "package": "ureq@3.4.2",
+      "sections": 150,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ureq-3.4.2",
+      "symbols": 348
+     },
+     {
+      "build_ms": 28,
+      "ecosystem": "cargo",
+      "package": "yaml-rust2@0.13.0",
+      "sections": 46,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.13.0",
+      "symbols": 66
+     },
+     {
+      "build_ms": 173,
+      "ecosystem": "cargo",
+      "package": "zip@8.6.0",
+      "sections": 214,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-8.6.0",
+      "symbols": 346
+     }
+    ]
+   }
+  },
+  "rr7": {
+   "ms": 372,
+   "report": {
+    "missing": [
+     {
+      "error": "tempfile@3.27.0 is pinned in /home/runner/work/lockdocs/lockdocs/Cargo.lock but its files are not on this machine: run `cargo fetch`, or enable fetching (--fetch or LOCKDOCS_FETCH=1) to download exactly this version.",
+      "package": "tempfile@3.27.0"
+     }
+    ],
+    "ms": 362,
+    "packages": [
+     {
+      "build_ms": 33,
+      "ecosystem": "npm",
+      "package": "react@19.0.0",
+      "sections": 4,
+      "source": "node_modules/react",
+      "symbols": 0
+     },
+     {
+      "build_ms": 329,
+      "ecosystem": "npm",
+      "package": "react-dom@19.0.0",
+      "sections": 7,
+      "source": "node_modules/react-dom",
+      "symbols": 0
+     },
+     {
+      "build_ms": 354,
+      "ecosystem": "npm",
+      "package": "react-router@7.1.1",
+      "sections": 92,
+      "source": "node_modules/react-router",
+      "symbols": 1160
+     },
+     {
+      "build_ms": 159,
+      "ecosystem": "cargo",
+      "package": "anyhow@1.0.104",
+      "sections": 14,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anyhow-1.0.104",
+      "symbols": 55
+     },
+     {
+      "build_ms": 4,
+      "ecosystem": "cargo",
+      "package": "dirs@6.0.0",
+      "sections": 18,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dirs-6.0.0",
+      "symbols": 95
+     },
+     {
+      "build_ms": 43,
+      "ecosystem": "cargo",
+      "package": "flate2@1.1.10",
+      "sections": 23,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/flate2-1.1.10",
+      "symbols": 333
+     },
+     {
+      "build_ms": 29,
+      "ecosystem": "cargo",
+      "package": "postcard@1.1.3",
+      "sections": 22,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postcard-1.1.3",
+      "symbols": 93
+     },
+     {
+      "build_ms": 134,
+      "ecosystem": "cargo",
+      "package": "rayon@1.12.0",
+      "sections": 134,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rayon-1.12.0",
+      "symbols": 315
+     },
+     {
+      "build_ms": 85,
+      "ecosystem": "cargo",
+      "package": "serde@1.0.229",
+      "sections": 23,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229",
+      "symbols": 216
+     },
+     {
+      "build_ms": 83,
+      "ecosystem": "cargo",
+      "package": "serde_json@1.0.151",
+      "sections": 50,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.151",
+      "symbols": 271
+     },
+     {
+      "build_ms": 28,
+      "ecosystem": "cargo",
+      "package": "tar@0.4.46",
+      "sections": 7,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.46",
+      "symbols": 223
+     },
+     {
+      "build_ms": 45,
+      "ecosystem": "cargo",
+      "package": "toml@1.1.6+spec-1.1.0",
+      "sections": 15,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml-1.1.6+spec-1.1.0",
+      "symbols": 132
+     },
+     {
+      "build_ms": 49,
+      "ecosystem": "cargo",
+      "package": "toml_edit@0.23.10+spec-1.0.0",
+      "sections": 15,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_edit-0.23.10+spec-1.0.0",
+      "symbols": 389
+     },
+     {
+      "build_ms": 1,
+      "ecosystem": "cargo",
+      "package": "tree-sitter@0.27.0",
+      "sections": 12,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-0.27.0",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-go@0.25.0",
+      "sections": 1,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-go-0.25.0",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-python@0.25.0",
+      "sections": 2,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-python-0.25.0",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-rust@0.24.2",
+      "sections": 3,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-rust-0.24.2",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-typescript@0.23.2",
+      "sections": 1,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-typescript-0.23.2",
+      "symbols": 0
+     },
+     {
+      "build_ms": 85,
+      "ecosystem": "cargo",
+      "package": "ureq@3.4.2",
+      "sections": 150,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ureq-3.4.2",
+      "symbols": 348
+     },
+     {
+      "build_ms": 28,
+      "ecosystem": "cargo",
+      "package": "yaml-rust2@0.13.0",
+      "sections": 46,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.13.0",
+      "symbols": 66
+     },
+     {
+      "build_ms": 173,
+      "ecosystem": "cargo",
+      "package": "zip@8.6.0",
+      "sections": 214,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-8.6.0",
+      "symbols": 346
+     }
+    ]
+   }
+  },
+  "zod3": {
+   "ms": 30,
+   "report": {
+    "missing": [
+     {
+      "error": "tempfile@3.27.0 is pinned in /home/runner/work/lockdocs/lockdocs/Cargo.lock but its files are not on this machine: run `cargo fetch`, or enable fetching (--fetch or LOCKDOCS_FETCH=1) to download exactly this version.",
+      "package": "tempfile@3.27.0"
+     }
+    ],
+    "ms": 24,
+    "packages": [
+     {
+      "build_ms": 23,
+      "ecosystem": "npm",
+      "package": "zod@3.23.8",
+      "sections": 121,
+      "source": "node_modules/zod",
+      "symbols": 713
+     },
+     {
+      "build_ms": 159,
+      "ecosystem": "cargo",
+      "package": "anyhow@1.0.104",
+      "sections": 14,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anyhow-1.0.104",
+      "symbols": 55
+     },
+     {
+      "build_ms": 4,
+      "ecosystem": "cargo",
+      "package": "dirs@6.0.0",
+      "sections": 18,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dirs-6.0.0",
+      "symbols": 95
+     },
+     {
+      "build_ms": 43,
+      "ecosystem": "cargo",
+      "package": "flate2@1.1.10",
+      "sections": 23,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/flate2-1.1.10",
+      "symbols": 333
+     },
+     {
+      "build_ms": 29,
+      "ecosystem": "cargo",
+      "package": "postcard@1.1.3",
+      "sections": 22,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postcard-1.1.3",
+      "symbols": 93
+     },
+     {
+      "build_ms": 134,
+      "ecosystem": "cargo",
+      "package": "rayon@1.12.0",
+      "sections": 134,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rayon-1.12.0",
+      "symbols": 315
+     },
+     {
+      "build_ms": 85,
+      "ecosystem": "cargo",
+      "package": "serde@1.0.229",
+      "sections": 23,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229",
+      "symbols": 216
+     },
+     {
+      "build_ms": 83,
+      "ecosystem": "cargo",
+      "package": "serde_json@1.0.151",
+      "sections": 50,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.151",
+      "symbols": 271
+     },
+     {
+      "build_ms": 28,
+      "ecosystem": "cargo",
+      "package": "tar@0.4.46",
+      "sections": 7,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.46",
+      "symbols": 223
+     },
+     {
+      "build_ms": 45,
+      "ecosystem": "cargo",
+      "package": "toml@1.1.6+spec-1.1.0",
+      "sections": 15,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml-1.1.6+spec-1.1.0",
+      "symbols": 132
+     },
+     {
+      "build_ms": 49,
+      "ecosystem": "cargo",
+      "package": "toml_edit@0.23.10+spec-1.0.0",
+      "sections": 15,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_edit-0.23.10+spec-1.0.0",
+      "symbols": 389
+     },
+     {
+      "build_ms": 1,
+      "ecosystem": "cargo",
+      "package": "tree-sitter@0.27.0",
+      "sections": 12,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-0.27.0",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-go@0.25.0",
+      "sections": 1,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-go-0.25.0",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-python@0.25.0",
+      "sections": 2,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-python-0.25.0",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-rust@0.24.2",
+      "sections": 3,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-rust-0.24.2",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-typescript@0.23.2",
+      "sections": 1,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-typescript-0.23.2",
+      "symbols": 0
+     },
+     {
+      "build_ms": 85,
+      "ecosystem": "cargo",
+      "package": "ureq@3.4.2",
+      "sections": 150,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ureq-3.4.2",
+      "symbols": 348
+     },
+     {
+      "build_ms": 28,
+      "ecosystem": "cargo",
+      "package": "yaml-rust2@0.13.0",
+      "sections": 46,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.13.0",
+      "symbols": 66
+     },
+     {
+      "build_ms": 173,
+      "ecosystem": "cargo",
+      "package": "zip@8.6.0",
+      "sections": 214,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-8.6.0",
+      "symbols": 346
+     }
+    ]
+   }
+  },
+  "zod4": {
+   "ms": 51,
+   "report": {
+    "missing": [
+     {
+      "error": "tempfile@3.27.0 is pinned in /home/runner/work/lockdocs/lockdocs/Cargo.lock but its files are not on this machine: run `cargo fetch`, or enable fetching (--fetch or LOCKDOCS_FETCH=1) to download exactly this version.",
+      "package": "tempfile@3.27.0"
+     }
+    ],
+    "ms": 44,
+    "packages": [
+     {
+      "build_ms": 42,
+      "ecosystem": "npm",
+      "package": "zod@4.1.5",
+      "sections": 8,
+      "source": "node_modules/zod",
+      "symbols": 3164
+     },
+     {
+      "build_ms": 159,
+      "ecosystem": "cargo",
+      "package": "anyhow@1.0.104",
+      "sections": 14,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anyhow-1.0.104",
+      "symbols": 55
+     },
+     {
+      "build_ms": 4,
+      "ecosystem": "cargo",
+      "package": "dirs@6.0.0",
+      "sections": 18,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dirs-6.0.0",
+      "symbols": 95
+     },
+     {
+      "build_ms": 43,
+      "ecosystem": "cargo",
+      "package": "flate2@1.1.10",
+      "sections": 23,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/flate2-1.1.10",
+      "symbols": 333
+     },
+     {
+      "build_ms": 29,
+      "ecosystem": "cargo",
+      "package": "postcard@1.1.3",
+      "sections": 22,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/postcard-1.1.3",
+      "symbols": 93
+     },
+     {
+      "build_ms": 134,
+      "ecosystem": "cargo",
+      "package": "rayon@1.12.0",
+      "sections": 134,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rayon-1.12.0",
+      "symbols": 315
+     },
+     {
+      "build_ms": 85,
+      "ecosystem": "cargo",
+      "package": "serde@1.0.229",
+      "sections": 23,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229",
+      "symbols": 216
+     },
+     {
+      "build_ms": 83,
+      "ecosystem": "cargo",
+      "package": "serde_json@1.0.151",
+      "sections": 50,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.151",
+      "symbols": 271
+     },
+     {
+      "build_ms": 28,
+      "ecosystem": "cargo",
+      "package": "tar@0.4.46",
+      "sections": 7,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.46",
+      "symbols": 223
+     },
+     {
+      "build_ms": 45,
+      "ecosystem": "cargo",
+      "package": "toml@1.1.6+spec-1.1.0",
+      "sections": 15,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml-1.1.6+spec-1.1.0",
+      "symbols": 132
+     },
+     {
+      "build_ms": 49,
+      "ecosystem": "cargo",
+      "package": "toml_edit@0.23.10+spec-1.0.0",
+      "sections": 15,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_edit-0.23.10+spec-1.0.0",
+      "symbols": 389
+     },
+     {
+      "build_ms": 1,
+      "ecosystem": "cargo",
+      "package": "tree-sitter@0.27.0",
+      "sections": 12,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-0.27.0",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-go@0.25.0",
+      "sections": 1,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-go-0.25.0",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-python@0.25.0",
+      "sections": 2,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-python-0.25.0",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-rust@0.24.2",
+      "sections": 3,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-rust-0.24.2",
+      "symbols": 0
+     },
+     {
+      "build_ms": 0,
+      "ecosystem": "cargo",
+      "package": "tree-sitter-typescript@0.23.2",
+      "sections": 1,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-typescript-0.23.2",
+      "symbols": 0
+     },
+     {
+      "build_ms": 85,
+      "ecosystem": "cargo",
+      "package": "ureq@3.4.2",
+      "sections": 150,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ureq-3.4.2",
+      "symbols": 348
+     },
+     {
+      "build_ms": 28,
+      "ecosystem": "cargo",
+      "package": "yaml-rust2@0.13.0",
+      "sections": 46,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yaml-rust2-0.13.0",
+      "symbols": 66
+     },
+     {
+      "build_ms": 173,
+      "ecosystem": "cargo",
+      "package": "zip@8.6.0",
+      "sections": 214,
+      "source": "~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zip-8.6.0",
+      "symbols": 346
+     }
+    ]
+   }
+  }
+ },
+ "rows": [
+  {
+   "id": "zod3-strict",
+   "project": "zod3",
+   "package": "zod",
+   "version": "3.23.8",
+   "question": "How do I reject unknown keys in an object schema?",
+   "why": "v3: .strict() on ZodObject",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1719,
+    "ms": 5.0
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 685,
+    "ms": 2552,
+    "library": "/colinhacks/zod/v3.24.2",
+    "version_match": "same major"
+   }
+  },
+  {
+   "id": "zod4-strict",
+   "project": "zod4",
+   "package": "zod",
+   "version": "4.1.5",
+   "question": "How do I reject unknown keys in an object schema?",
+   "why": "v4: z.strictObject() (.strict() is legacy)",
+   "lockdocs": {
+    "pass": false,
+    "missing": [
+     [
+      "strictObject"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 1829,
+    "ms": 9.5
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 688,
+    "ms": 2620,
+    "library": "/colinhacks/zod/v4.0.1",
+    "version_match": "same major"
+   }
+  },
+  {
+   "id": "zod3-email",
+   "project": "zod3",
+   "package": "zod",
+   "version": "3.23.8",
+   "question": "How do I validate that a string is an email address?",
+   "why": "v3: z.string().email(); top-level z.email() does not exist",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1701,
+    "ms": 5.5
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1576,
+    "ms": 1324,
+    "library": "/colinhacks/zod/v3.24.2",
+    "version_match": "same major"
+   }
+  },
+  {
+   "id": "zod4-email",
+   "project": "zod4",
+   "package": "zod",
+   "version": "4.1.5",
+   "question": "How do I validate that a string is an email address?",
+   "why": "v4: top-level z.email()",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 2030,
+    "ms": 9.7
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1328,
+    "ms": 1591,
+    "library": "/colinhacks/zod/v4.0.1",
+    "version_match": "same major"
+   }
+  },
+  {
+   "id": "zod3-error",
+   "project": "zod3",
+   "package": "zod",
+   "version": "3.23.8",
+   "question": "How do I customize the error message when validation fails?",
+   "why": "v3: message / required_error / errorMap params",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1602,
+    "ms": 5.3
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 893,
+    "ms": 1723,
+    "library": "/colinhacks/zod/v3.24.2",
+    "version_match": "same major"
+   }
+  },
+  {
+   "id": "zod4-error",
+   "project": "zod4",
+   "package": "zod",
+   "version": "4.1.5",
+   "question": "How do I customize the error message when validation fails?",
+   "why": "v4: unified `error` param; required_error removed",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1842,
+    "ms": 9.4
+   },
+   "context7": {
+    "pass": false,
+    "missing": [],
+    "rejected": [
+     "required_error"
+    ],
+    "tokens": 846,
+    "ms": 1459,
+    "library": "/colinhacks/zod/v4.0.1",
+    "version_match": "same major"
+   }
+  },
+  {
+   "id": "zod4-record",
+   "project": "zod4",
+   "package": "zod",
+   "version": "4.1.5",
+   "question": "How do I define a record schema with string keys and number values?",
+   "why": "v4: z.record(keySchema, valueSchema)",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1771,
+    "ms": 9.5
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 811,
+    "ms": 1656,
+    "library": "/colinhacks/zod/v4.0.1",
+    "version_match": "same major"
+   }
+  },
+  {
+   "id": "next14-cookies",
+   "project": "next14",
+   "package": "next",
+   "version": "14.2.15",
+   "question": "Is cookies() from next/headers synchronous or does it return a Promise?",
+   "why": "14: cookies() returns ReadonlyRequestCookies synchronously",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1480,
+    "ms": 15.6
+   },
+   "context7": {
+    "pass": false,
+    "missing": [
+     [
+      "ReadonlyRequestCookies"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 987,
+    "ms": 2974,
+    "library": "/vercel/next.js/v14.3.0-canary.87",
+    "version_match": "same major"
+   }
+  },
+  {
+   "id": "next15-cookies",
+   "project": "next15",
+   "package": "next",
+   "version": "15.1.0",
+   "question": "Is cookies() from next/headers synchronous or does it return a Promise?",
+   "why": "15: cookies() is async",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1351,
+    "ms": 18.4
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 980,
+    "ms": 2950,
+    "library": "/vercel/next.js/v15.1.11",
+    "version_match": "same major"
+   }
+  },
+  {
+   "id": "next14-headers",
+   "project": "next14",
+   "package": "next",
+   "version": "14.2.15",
+   "question": "How do I read the incoming request headers in a server component?",
+   "why": "14: headers() is sync",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1405,
+    "ms": 15.3
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1119,
+    "ms": 1703,
+    "library": "/vercel/next.js/v14.3.0-canary.87",
+    "version_match": "same major"
+   }
+  },
+  {
+   "id": "next15-headers",
+   "project": "next15",
+   "package": "next",
+   "version": "15.1.0",
+   "question": "How do I read the incoming request headers in a server component?",
+   "why": "15: headers() is async",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1400,
+    "ms": 19.7
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 918,
+    "ms": 2366,
+    "library": "/vercel/next.js/v15.1.11",
+    "version_match": "same major"
+   }
+  },
+  {
+   "id": "next14-nostore",
+   "project": "next14",
+   "package": "next",
+   "version": "14.2.15",
+   "question": "How do I opt a server component out of caching so it renders dynamically?",
+   "why": "14: unstable_noStore()",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1468,
+    "ms": 15.4
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 979,
+    "ms": 1678,
+    "library": "/vercel/next.js/v14.3.0-canary.87",
+    "version_match": "same major"
+   }
+  },
+  {
+   "id": "next15-connection",
+   "project": "next15",
+   "package": "next",
+   "version": "15.1.0",
+   "question": "How do I opt a server component out of caching so it renders dynamically?",
+   "why": "15: connection() (unstable_noStore deprecated)",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1464,
+    "ms": 18.1
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1198,
+    "ms": 1489,
+    "library": "/vercel/next.js/v15.1.11",
+    "version_match": "same major"
+   }
+  },
+  {
+   "id": "next15-after",
+   "project": "next15",
+   "package": "next",
+   "version": "15.1.0",
+   "question": "How do I run code after the response has finished streaming?",
+   "why": "15.1: after() from next/server (unstable_after in 15.0)",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1446,
+    "ms": 18.3
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1951,
+    "ms": 1665,
+    "library": "/vercel/next.js/v15.1.11",
+    "version_match": "same major"
+   }
+  },
+  {
+   "id": "rr6-json",
+   "project": "rr6",
+   "package": "react-router",
+   "version": "6.26.2",
+   "question": "How do I return data with a custom HTTP status code from a loader?",
+   "why": "v6: json() helper",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1481,
+    "ms": 3.8
+   },
+   "context7": {
+    "pass": false,
+    "missing": [
+     [
+      "json("
+     ]
+    ],
+    "rejected": [],
+    "tokens": 606,
+    "ms": 2420,
+    "library": "/websites/reactrouter",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "rr7-data",
+   "project": "rr7",
+   "package": "react-router",
+   "version": "7.1.1",
+   "question": "How do I return data with a custom HTTP status code from a loader?",
+   "why": "v7: data() helper (json() deprecated)",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1586,
+    "ms": 7.2
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 572,
+    "ms": 2711,
+    "library": "/websites/reactrouter",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "rr6-defer",
+   "project": "rr6",
+   "package": "react-router",
+   "version": "6.26.2",
+   "question": "How do I stream slow data from a loader with deferred values?",
+   "why": "v6: defer() + <Await>",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1508,
+    "ms": 3.7
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 975,
+    "ms": 1515,
+    "library": "/websites/reactrouter",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "rr6-future",
+   "project": "rr6",
+   "package": "react-router",
+   "version": "6.26.2",
+   "question": "Which future flag enables React.startTransition for state updates?",
+   "why": "v6.26: future.v7_startTransition",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1559,
+    "ms": 3.8
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 420,
+    "ms": 1415,
+    "library": "/websites/reactrouter",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "rr7-router",
+   "project": "rr7",
+   "package": "react-router",
+   "version": "7.1.1",
+   "question": "How do I create a browser router with data loaders?",
+   "why": "v7: createBrowserRouter from react-router",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1490,
+    "ms": 7.1
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1220,
+    "ms": 1985,
+    "library": "/websites/reactrouter",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "pyd1-dict",
+   "project": "pydantic1",
+   "package": "pydantic",
+   "version": "1.10.18",
+   "question": "How do I convert a model instance to a dict?",
+   "why": "v1: .dict()",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1532,
+    "ms": 17.0
+   },
+   "context7": {
+    "pass": false,
+    "missing": [
+     [
+      ".dict(",
+      "def dict("
+     ]
+    ],
+    "rejected": [
+     "model_dump"
+    ],
+    "tokens": 908,
+    "ms": 2975,
+    "library": "/pydantic/pydantic",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "pyd2-dict",
+   "project": "pydantic2",
+   "package": "pydantic",
+   "version": "2.9.2",
+   "question": "How do I convert a model instance to a dict?",
+   "why": "v2: .model_dump()",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1437,
+    "ms": 20.3
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 839,
+    "ms": 3001,
+    "library": "/pydantic/pydantic",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "pyd1-parse",
+   "project": "pydantic1",
+   "package": "pydantic",
+   "version": "1.10.18",
+   "question": "How do I create a model from a dict and validate it?",
+   "why": "v1: Model.parse_obj()",
+   "lockdocs": {
+    "pass": false,
+    "missing": [
+     [
+      "parse_obj"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 1620,
+    "ms": 17.1
+   },
+   "context7": {
+    "pass": false,
+    "missing": [
+     [
+      "parse_obj"
+     ]
+    ],
+    "rejected": [
+     "model_validate"
+    ],
+    "tokens": 2146,
+    "ms": 3102,
+    "library": "/pydantic/pydantic",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "pyd2-parse",
+   "project": "pydantic2",
+   "package": "pydantic",
+   "version": "2.9.2",
+   "question": "How do I create a model from a dict and validate it?",
+   "why": "v2: Model.model_validate()",
+   "lockdocs": {
+    "pass": false,
+    "missing": [
+     [
+      "model_validate"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 1543,
+    "ms": 20.4
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 2146,
+    "ms": 1350,
+    "library": "/pydantic/pydantic",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "pyd1-validator",
+   "project": "pydantic1",
+   "package": "pydantic",
+   "version": "1.10.18",
+   "question": "How do I add a custom validator for a field?",
+   "why": "v1: @validator",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1577,
+    "ms": 17.0
+   },
+   "context7": {
+    "pass": false,
+    "missing": [
+     [
+      "@validator",
+      "def validator("
+     ]
+    ],
+    "rejected": [
+     "field_validator"
+    ],
+    "tokens": 1201,
+    "ms": 2932,
+    "library": "/pydantic/pydantic",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "pyd2-validator",
+   "project": "pydantic2",
+   "package": "pydantic",
+   "version": "2.9.2",
+   "question": "How do I add a custom validator for a field?",
+   "why": "v2: @field_validator",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1386,
+    "ms": 20.3
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1207,
+    "ms": 1608,
+    "library": "/pydantic/pydantic",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "pyd1-schema",
+   "project": "pydantic1",
+   "package": "pydantic",
+   "version": "1.10.18",
+   "question": "How do I get the JSON schema of a model?",
+   "why": "v1: Model.schema() / schema_json()",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1525,
+    "ms": 17.1
+   },
+   "context7": {
+    "pass": false,
+    "missing": [
+     [
+      "schema_json",
+      "def schema(",
+      ".schema("
+     ]
+    ],
+    "rejected": [
+     "model_json_schema"
+    ],
+    "tokens": 1742,
+    "ms": 2395,
+    "library": "/pydantic/pydantic",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "pyd2-schema",
+   "project": "pydantic2",
+   "package": "pydantic",
+   "version": "2.9.2",
+   "question": "How do I get the JSON schema of a model?",
+   "why": "v2: Model.model_json_schema()",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1449,
+    "ms": 20.1
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1618,
+    "ms": 1458,
+    "library": "/pydantic/pydantic",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "pyd1-config",
+   "project": "pydantic1",
+   "package": "pydantic",
+   "version": "1.10.18",
+   "question": "How do I allow extra fields on a model?",
+   "why": "v1: class Config: extra = Extra.allow",
+   "lockdocs": {
+    "pass": false,
+    "missing": [
+     [
+      "Extra.allow",
+      "class Config"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 1540,
+    "ms": 16.8
+   },
+   "context7": {
+    "pass": false,
+    "missing": [],
+    "rejected": [
+     "ConfigDict"
+    ],
+    "tokens": 819,
+    "ms": 1512,
+    "library": "/pydantic/pydantic",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "pyd2-config",
+   "project": "pydantic2",
+   "package": "pydantic",
+   "version": "2.9.2",
+   "question": "How do I allow extra fields on a model?",
+   "why": "v2: model_config = ConfigDict(extra='allow')",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1527,
+    "ms": 20.1
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 683,
+    "ms": 1768,
+    "library": "/pydantic/pydantic",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "axum07-path",
+   "project": "axum07",
+   "package": "axum",
+   "version": "0.7.9",
+   "question": "How do I declare a route with a path parameter?",
+   "why": "0.7: /users/:id",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1581,
+    "ms": 6.5
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1674,
+    "ms": 2514,
+    "library": "/tokio-rs/axum",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "axum08-path",
+   "project": "axum08",
+   "package": "axum",
+   "version": "0.8.1",
+   "question": "How do I declare a route with a path parameter?",
+   "why": "0.8: /users/{id}",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1573,
+    "ms": 6.8
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1465,
+    "ms": 2160,
+    "library": "/tokio-rs/axum",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "axum07-extractor",
+   "project": "axum07",
+   "package": "axum",
+   "version": "0.7.9",
+   "question": "How do I implement a custom extractor with FromRequestParts?",
+   "why": "0.7: #[async_trait] on the impl",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1512,
+    "ms": 6.5
+   },
+   "context7": {
+    "pass": false,
+    "missing": [
+     [
+      "async_trait"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 1652,
+    "ms": 1666,
+    "library": "/tokio-rs/axum",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "axum08-optional",
+   "project": "axum08",
+   "package": "axum",
+   "version": "0.8.1",
+   "question": "How do I make an extractor optional with Option<T>?",
+   "why": "0.8: OptionalFromRequestParts",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1479,
+    "ms": 6.6
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 469,
+    "ms": 1569,
+    "library": "/tokio-rs/axum",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "tokio-blocking",
+   "project": "axum08",
+   "package": "tokio",
+   "version": "1.43.0",
+   "question": "How do I run blocking code without blocking the async runtime?",
+   "why": "tokio::task::spawn_blocking",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1435,
+    "ms": 17.7
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 789,
+    "ms": 2347,
+    "library": "/websites/rs_tokio_tokio",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "tokio-select",
+   "project": "axum08",
+   "package": "tokio",
+   "version": "1.43.0",
+   "question": "How do I wait on several futures and take whichever finishes first?",
+   "why": "tokio::select!",
+   "lockdocs": {
+    "pass": false,
+    "missing": [
+     [
+      "select!"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 1574,
+    "ms": 17.9
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 498,
+    "ms": 1405,
+    "library": "/websites/rs_tokio_tokio",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "tokio-timeout",
+   "project": "axum08",
+   "package": "tokio",
+   "version": "1.43.0",
+   "question": "How do I put a timeout on a future?",
+   "why": "tokio::time::timeout",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1531,
+    "ms": 17.5
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 921,
+    "ms": 1295,
+    "library": "/websites/rs_tokio_tokio",
+    "version_match": "unversioned"
+   }
+  }
+ ],
+ "summary": {
+  "lockdocs": {
+   "answered": 36,
+   "passed": 31,
+   "total": 36,
+   "median_tokens": 1531,
+   "median_ms": 15.6,
+   "p95_ms": 20.3
+  },
+  "context7": {
+   "answered": 36,
+   "passed": 27,
+   "total": 36,
+   "median_tokens": 979,
+   "median_ms": 1723,
+   "p95_ms": 3001
+  }
+ },
+ "context7_calls": {
+  "calls": 47,
+  "rate_limited": 0,
+  "errors": 0,
+  "stopped": false,
+  "limit": "200",
+  "remaining": "147"
+ },
+ "runner": {
+  "os": "Linux",
+  "machine": "x86_64"
+ }
+}

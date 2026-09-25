@@ -1,0 +1,43 @@
+name: demo
+
+# Records the README demo GIF with VHS from real installs; download the
+# `demo` artifact and commit it as docs/public/img/demo.gif.
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths: ['docs/demo.tape', '.github/workflows/demo.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: cargo build --release --locked -p lockdocs
+      - name: Install the demo projects
+        run: |
+          set -euo pipefail
+          for p in next14 next15; do (cd bench/projects/$p && npm install --ignore-scripts --no-audit --no-fund --silent); done
+          for p in pydantic1 pydantic2; do python3 -m venv bench/projects/$p/.venv && bench/projects/$p/.venv/bin/pip install -q -r bench/projects/$p/requirements.txt; done
+          echo "$PWD/target/release" >> "$GITHUB_PATH"
+          # Warm the per-version caches so the recording shows query time, not indexing.
+          for p in next14 next15 pydantic1 pydantic2; do target/release/lockdocs index -C bench/projects/$p >/dev/null; done
+      - uses: charmbracelet/vhs-action@v2
+        with:
+          path: docs/demo.tape
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demo
+          path: docs/public/img/demo.gif
+          if-no-files-found: error

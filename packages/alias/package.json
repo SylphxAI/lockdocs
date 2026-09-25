@@ -1,0 +1,37 @@
+{
+  "name": "lockdocs",
+  "version": "0.1.0",
+  "description": "Short name for @sylphx/lockdocs: exact-version library docs for AI agents, straight from your lockfile, offline. `npx lockdocs <package> \"<question>\"`.",
+  "bin": {
+    "lockdocs": "bin/lockdocs.js"
+  },
+  "files": [
+    "bin/",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@sylphx/lockdocs": "0.1.0"
+  },
+  "keywords": [
+    "lockdocs",
+    "mcp",
+    "mcp-server",
+    "documentation",
+    "context7",
+    "lockfile",
+    "ai-agents"
+  ],
+  "license": "MIT",
+  "homepage": "https://sylphxai.github.io/lockdocs/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SylphxAI/lockdocs.git",
+    "directory": "packages/alias"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

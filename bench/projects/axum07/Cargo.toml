@@ -1,0 +1,11 @@
+[package]
+name = "bench-axum07"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+axum = "=0.7.9"
+tokio = { version = "=1.41.1", features = ["full"] }
+
+[workspace]

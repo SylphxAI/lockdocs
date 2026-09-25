@@ -2,13 +2,13 @@
  "tokenizer": "tiktoken o200k_base",
  "index": {
   "axum07": {
-   "ms": 352,
+   "ms": 345,
    "report": {
     "missing": [],
-    "ms": 340,
+    "ms": 333,
     "packages": [
      {
-      "build_ms": 208,
+      "build_ms": 209,
       "ecosystem": "cargo",
       "package": "axum@0.7.9",
       "sections": 262,
@@ -16,7 +16,7 @@
       "symbols": 236
      },
      {
-      "build_ms": 290,
+      "build_ms": 287,
       "ecosystem": "cargo",
       "package": "tokio@1.41.1",
       "sections": 551,
@@ -27,13 +27,13 @@
    }
   },
   "axum08": {
-   "ms": 349,
+   "ms": 401,
    "report": {
     "missing": [],
-    "ms": 338,
+    "ms": 390,
     "packages": [
      {
-      "build_ms": 206,
+      "build_ms": 179,
       "ecosystem": "cargo",
       "package": "axum@0.8.1",
       "sections": 272,
@@ -41,7 +41,7 @@
       "symbols": 264
      },
      {
-      "build_ms": 293,
+      "build_ms": 349,
       "ecosystem": "cargo",
       "package": "tokio@1.43.0",
       "sections": 561,
@@ -52,13 +52,13 @@
    }
   },
   "django42": {
-   "ms": 498,
+   "ms": 473,
    "report": {
     "missing": [],
-    "ms": 484,
+    "ms": 459,
     "packages": [
      {
-      "build_ms": 423,
+      "build_ms": 400,
       "ecosystem": "pypi",
       "package": "django@4.2.30",
       "sections": 159,
@@ -69,13 +69,13 @@
    }
   },
   "django51": {
-   "ms": 555,
+   "ms": 480,
    "report": {
     "missing": [],
-    "ms": 542,
+    "ms": 467,
     "packages": [
      {
-      "build_ms": 478,
+      "build_ms": 408,
       "ecosystem": "pypi",
       "package": "django@5.1.15",
       "sections": 159,
@@ -92,7 +92,7 @@
     "ms": 177,
     "packages": [
      {
-      "build_ms": 138,
+      "build_ms": 137,
       "ecosystem": "npm",
       "package": "eslint@8.57.1",
       "sections": 26,
@@ -103,13 +103,13 @@
    }
   },
   "eslint9": {
-   "ms": 75,
+   "ms": 80,
    "report": {
     "missing": [],
-    "ms": 70,
+    "ms": 75,
     "packages": [
      {
-      "build_ms": 30,
+      "build_ms": 35,
       "ecosystem": "npm",
       "package": "eslint@9.39.5",
       "sections": 27,
@@ -120,10 +120,10 @@
    }
   },
   "express4": {
-   "ms": 58,
+   "ms": 72,
    "report": {
     "missing": [],
-    "ms": 53,
+    "ms": 67,
     "packages": [
      {
       "build_ms": 2,
@@ -134,7 +134,7 @@
       "symbols": 35
      },
      {
-      "build_ms": 19,
+      "build_ms": 17,
       "ecosystem": "npm",
       "package": "express@4.21.2",
       "sections": 276,
@@ -145,13 +145,13 @@
    }
   },
   "express5": {
-   "ms": 47,
+   "ms": 48,
    "report": {
     "missing": [],
-    "ms": 43,
+    "ms": 44,
     "packages": [
      {
-      "build_ms": 2,
+      "build_ms": 1,
       "ecosystem": "npm",
       "package": "@types/express@5.0.6",
       "sections": 5,
@@ -159,7 +159,7 @@
       "symbols": 34
      },
      {
-      "build_ms": 8,
+      "build_ms": 9,
       "ecosystem": "npm",
       "package": "express@5.2.1",
       "sections": 18,
@@ -170,13 +170,13 @@
    }
   },
   "fastapi0115": {
-   "ms": 85,
+   "ms": 83,
    "report": {
     "missing": [],
-    "ms": 81,
+    "ms": 79,
     "packages": [
      {
-      "build_ms": 32,
+      "build_ms": 34,
       "ecosystem": "pypi",
       "package": "fastapi@0.115.14",
       "sections": 27,
@@ -187,13 +187,13 @@
    }
   },
   "fastapi088": {
-   "ms": 72,
+   "ms": 71,
    "report": {
     "missing": [],
-    "ms": 68,
+    "ms": 67,
     "packages": [
      {
-      "build_ms": 19,
+      "build_ms": 20,
       "ecosystem": "pypi",
       "package": "fastapi@0.88.0",
       "sections": 24,
@@ -204,21 +204,21 @@
    }
   },
   "next14": {
-   "ms": 373,
+   "ms": 378,
    "report": {
     "missing": [],
-    "ms": 362,
+    "ms": 366,
     "packages": [
      {
-      "build_ms": 316,
+      "build_ms": 322,
       "ecosystem": "npm",
-      "package": "next@14.2.15",
+      "package": "next@14.2.35",
       "sections": 9,
       "source": "node_modules/next",
-      "symbols": 4890
+      "symbols": 4904
      },
      {
-      "build_ms": 45,
+      "build_ms": 43,
       "ecosystem": "npm",
       "package": "react@18.3.1",
       "sections": 4,
@@ -237,13 +237,13 @@
    }
   },
   "next15": {
-   "ms": 628,
+   "ms": 603,
    "report": {
     "missing": [],
-    "ms": 616,
+    "ms": 591,
     "packages": [
      {
-      "build_ms": 390,
+      "build_ms": 404,
       "ecosystem": "npm",
       "package": "next@15.1.0",
       "sections": 9,
@@ -251,7 +251,7 @@
       "symbols": 5585
      },
      {
-      "build_ms": 48,
+      "build_ms": 53,
       "ecosystem": "npm",
       "package": "react@19.0.0",
       "sections": 4,
@@ -259,7 +259,7 @@
       "symbols": 0
      },
      {
-      "build_ms": 560,
+      "build_ms": 550,
       "ecosystem": "npm",
       "package": "react-dom@19.0.0",
       "sections": 7,
@@ -273,10 +273,10 @@
    "ms": 868,
    "report": {
     "missing": [],
-    "ms": 839,
+    "ms": 840,
     "packages": [
      {
-      "build_ms": 772,
+      "build_ms": 773,
       "ecosystem": "npm",
       "package": "next@16.3.6",
       "sections": 3598,
@@ -284,7 +284,7 @@
       "symbols": 8354
      },
      {
-      "build_ms": 460,
+      "build_ms": 429,
       "ecosystem": "npm",
       "package": "react@19.2.8",
       "sections": 4,
@@ -292,7 +292,7 @@
       "symbols": 0
      },
      {
-      "build_ms": 577,
+      "build_ms": 550,
       "ecosystem": "npm",
       "package": "react-dom@19.2.8",
       "sections": 7,
@@ -303,13 +303,13 @@
    }
   },
   "prisma5": {
-   "ms": 100,
+   "ms": 92,
    "report": {
     "missing": [],
-    "ms": 94,
+    "ms": 87,
     "packages": [
      {
-      "build_ms": 52,
+      "build_ms": 47,
       "ecosystem": "npm",
       "package": "@prisma/client@5.22.0",
       "sections": 4,
@@ -317,7 +317,7 @@
       "symbols": 814
      },
      {
-      "build_ms": 46,
+      "build_ms": 50,
       "ecosystem": "npm",
       "package": "prisma@5.22.0",
       "sections": 14,
@@ -328,13 +328,13 @@
    }
   },
   "prisma6": {
-   "ms": 125,
+   "ms": 123,
    "report": {
     "missing": [],
-    "ms": 120,
+    "ms": 118,
     "packages": [
      {
-      "build_ms": 75,
+      "build_ms": 82,
       "ecosystem": "npm",
       "package": "@prisma/client@6.19.3",
       "sections": 4,
@@ -342,7 +342,7 @@
       "symbols": 851
      },
      {
-      "build_ms": 84,
+      "build_ms": 77,
       "ecosystem": "npm",
       "package": "prisma@6.19.3",
       "sections": 14,
@@ -353,13 +353,13 @@
    }
   },
   "pydantic1": {
-   "ms": 103,
+   "ms": 98,
    "report": {
     "missing": [],
-    "ms": 98,
+    "ms": 94,
     "packages": [
      {
-      "build_ms": 53,
+      "build_ms": 50,
       "ecosystem": "pypi",
       "package": "pydantic@1.10.18",
       "sections": 135,
@@ -370,13 +370,13 @@
    }
   },
   "pydantic2": {
-   "ms": 174,
+   "ms": 176,
    "report": {
     "missing": [],
-    "ms": 168,
+    "ms": 170,
     "packages": [
      {
-      "build_ms": 120,
+      "build_ms": 121,
       "ecosystem": "pypi",
       "package": "pydantic@2.9.2",
       "sections": 191,
@@ -387,13 +387,13 @@
    }
   },
   "react18": {
-   "ms": 346,
+   "ms": 361,
    "report": {
     "missing": [],
-    "ms": 336,
+    "ms": 351,
     "packages": [
      {
-      "build_ms": 141,
+      "build_ms": 149,
       "ecosystem": "npm",
       "package": "@types/react@18.3.31",
       "sections": 5,
@@ -401,7 +401,7 @@
       "symbols": 1853
      },
      {
-      "build_ms": 17,
+      "build_ms": 15,
       "ecosystem": "npm",
       "package": "@types/react-dom@18.3.7",
       "sections": 5,
@@ -409,7 +409,7 @@
       "symbols": 295
      },
      {
-      "build_ms": 185,
+      "build_ms": 284,
       "ecosystem": "npm",
       "package": "react@18.3.1",
       "sections": 4,
@@ -417,7 +417,7 @@
       "symbols": 1853
      },
      {
-      "build_ms": 268,
+      "build_ms": 265,
       "ecosystem": "npm",
       "package": "react-dom@18.3.1",
       "sections": 7,
@@ -428,13 +428,13 @@
    }
   },
   "react19": {
-   "ms": 669,
+   "ms": 659,
    "report": {
     "missing": [],
-    "ms": 659,
+    "ms": 649,
     "packages": [
      {
-      "build_ms": 138,
+      "build_ms": 351,
       "ecosystem": "npm",
       "package": "@types/react@19.2.18",
       "sections": 5,
@@ -450,7 +450,7 @@
       "symbols": 206
      },
      {
-      "build_ms": 370,
+      "build_ms": 353,
       "ecosystem": "npm",
       "package": "react@19.2.8",
       "sections": 4,
@@ -458,7 +458,7 @@
       "symbols": 1829
      },
      {
-      "build_ms": 596,
+      "build_ms": 582,
       "ecosystem": "npm",
       "package": "react-dom@19.2.8",
       "sections": 7,
@@ -469,13 +469,13 @@
    }
   },
   "rr6": {
-   "ms": 274,
+   "ms": 279,
    "report": {
     "missing": [],
-    "ms": 266,
+    "ms": 271,
     "packages": [
      {
-      "build_ms": 199,
+      "build_ms": 45,
       "ecosystem": "npm",
       "package": "react@18.3.1",
       "sections": 4,
@@ -483,7 +483,7 @@
       "symbols": 0
      },
      {
-      "build_ms": 205,
+      "build_ms": 198,
       "ecosystem": "npm",
       "package": "react-dom@18.3.1",
       "sections": 7,
@@ -491,7 +491,7 @@
       "symbols": 0
      },
      {
-      "build_ms": 20,
+      "build_ms": 25,
       "ecosystem": "npm",
       "package": "react-router@6.26.2",
       "sections": 74,
@@ -499,7 +499,7 @@
       "symbols": 207
      },
      {
-      "build_ms": 22,
+      "build_ms": 204,
       "ecosystem": "npm",
       "package": "react-router-dom@6.26.2",
       "sections": 80,
@@ -510,13 +510,13 @@
    }
   },
   "rr7": {
-   "ms": 516,
+   "ms": 524,
    "report": {
     "missing": [],
-    "ms": 508,
+    "ms": 516,
     "packages": [
      {
-      "build_ms": 52,
+      "build_ms": 259,
       "ecosystem": "npm",
       "package": "react@19.0.0",
       "sections": 4,
@@ -524,7 +524,7 @@
       "symbols": 0
      },
      {
-      "build_ms": 447,
+      "build_ms": 461,
       "ecosystem": "npm",
       "package": "react-dom@19.0.0",
       "sections": 7,
@@ -532,7 +532,7 @@
       "symbols": 0
      },
      {
-      "build_ms": 305,
+      "build_ms": 281,
       "ecosystem": "npm",
       "package": "react-router@7.1.1",
       "sections": 92,
@@ -543,13 +543,13 @@
    }
   },
   "sqlalchemy14": {
-   "ms": 474,
+   "ms": 466,
    "report": {
     "missing": [],
-    "ms": 458,
+    "ms": 451,
     "packages": [
      {
-      "build_ms": 402,
+      "build_ms": 392,
       "ecosystem": "pypi",
       "package": "sqlalchemy@1.4.54",
       "sections": 8,
@@ -560,13 +560,13 @@
    }
   },
   "sqlalchemy20": {
-   "ms": 609,
+   "ms": 604,
    "report": {
     "missing": [],
-    "ms": 591,
+    "ms": 588,
     "packages": [
      {
-      "build_ms": 526,
+      "build_ms": 521,
       "ecosystem": "pypi",
       "package": "sqlalchemy@2.0.54",
       "sections": 8,
@@ -577,13 +577,13 @@
    }
   },
   "tailwind3": {
-   "ms": 43,
+   "ms": 50,
    "report": {
     "missing": [],
-    "ms": 40,
+    "ms": 46,
     "packages": [
      {
-      "build_ms": 8,
+      "build_ms": 9,
       "ecosystem": "npm",
       "package": "tailwindcss@3.4.19",
       "sections": 6,
@@ -594,10 +594,10 @@
    }
   },
   "tailwind4": {
-   "ms": 42,
+   "ms": 46,
    "report": {
     "missing": [],
-    "ms": 38,
+    "ms": 43,
     "packages": [
      {
       "build_ms": 6,
@@ -611,13 +611,13 @@
    }
   },
   "vite5": {
-   "ms": 95,
+   "ms": 91,
    "report": {
     "missing": [],
-    "ms": 90,
+    "ms": 87,
     "packages": [
      {
-      "build_ms": 50,
+      "build_ms": 46,
       "ecosystem": "npm",
       "package": "vite@5.4.21",
       "sections": 131,
@@ -628,10 +628,10 @@
    }
   },
   "vite6": {
-   "ms": 92,
+   "ms": 90,
    "report": {
     "missing": [],
-    "ms": 87,
+    "ms": 85,
     "packages": [
      {
       "build_ms": 49,
@@ -645,13 +645,13 @@
    }
   },
   "zod3": {
-   "ms": 66,
+   "ms": 65,
    "report": {
     "missing": [],
-    "ms": 62,
+    "ms": 61,
     "packages": [
      {
-      "build_ms": 29,
+      "build_ms": 28,
       "ecosystem": "npm",
       "package": "zod@3.23.8",
       "sections": 121,
@@ -662,13 +662,13 @@
    }
   },
   "zod4": {
-   "ms": 108,
+   "ms": 106,
    "report": {
     "missing": [],
-    "ms": 102,
+    "ms": 101,
     "packages": [
      {
-      "build_ms": 64,
+      "build_ms": 63,
       "ecosystem": "npm",
       "package": "zod@4.1.5",
       "sections": 8,
@@ -681,10 +681,10 @@
  },
  "fetch": {
   "axum07": {
-   "ms": 1809,
+   "ms": 1636,
    "report": {
     "model": true,
-    "ms": 1806,
+    "ms": 1632,
     "packages": [
      {
       "files": 2,
@@ -704,10 +704,10 @@
    }
   },
   "axum08": {
-   "ms": 2135,
+   "ms": 2101,
    "report": {
     "model": true,
-    "ms": 2132,
+    "ms": 2098,
     "packages": [
      {
       "files": 0,
@@ -727,10 +727,10 @@
    }
   },
   "django42": {
-   "ms": 5725,
+   "ms": 4897,
    "report": {
     "model": true,
-    "ms": 5721,
+    "ms": 4893,
     "packages": [
      {
       "files": 601,
@@ -743,10 +743,10 @@
    }
   },
   "django51": {
-   "ms": 5852,
+   "ms": 4876,
    "report": {
     "model": true,
-    "ms": 5848,
+    "ms": 4872,
     "packages": [
      {
       "files": 629,
@@ -759,10 +759,10 @@
    }
   },
   "eslint8": {
-   "ms": 3813,
+   "ms": 3197,
    "report": {
     "model": true,
-    "ms": 3809,
+    "ms": 3193,
     "packages": [
      {
       "files": 409,
@@ -775,10 +775,10 @@
    }
   },
   "eslint9": {
-   "ms": 3518,
+   "ms": 3391,
    "report": {
     "model": true,
-    "ms": 3514,
+    "ms": 3387,
     "packages": [
      {
       "files": 435,
@@ -791,10 +791,10 @@
    }
   },
   "express4": {
-   "ms": 2895,
+   "ms": 2984,
    "report": {
     "model": true,
-    "ms": 2891,
+    "ms": 2980,
     "packages": [
      {
       "files": 6,
@@ -814,10 +814,10 @@
    }
   },
   "express5": {
-   "ms": 2869,
+   "ms": 3046,
    "report": {
     "model": true,
-    "ms": 2864,
+    "ms": 3042,
     "packages": [
      {
       "files": 38,
@@ -837,10 +837,10 @@
    }
   },
   "fastapi0115": {
-   "ms": 2597,
+   "ms": 2482,
    "report": {
     "model": true,
-    "ms": 2594,
+    "ms": 2478,
     "packages": [
      {
       "files": 180,
@@ -853,10 +853,10 @@
    }
   },
   "fastapi088": {
-   "ms": 2297,
+   "ms": 2335,
    "report": {
     "model": true,
-    "ms": 2293,
+    "ms": 2331,
     "packages": [
      {
       "files": 113,
@@ -869,17 +869,17 @@
    }
   },
   "next14": {
-   "ms": 4310,
+   "ms": 4976,
    "report": {
     "model": true,
-    "ms": 4306,
+    "ms": 4972,
     "packages": [
      {
       "files": 318,
       "note": null,
-      "package": "next@14.2.15",
+      "package": "next@14.2.35",
       "repo": "github.com/vercel/next.js",
-      "tag": "v14.2.15"
+      "tag": "v14.2.35"
      },
      {
       "files": 3,
@@ -899,10 +899,10 @@
    }
   },
   "next15": {
-   "ms": 7734,
+   "ms": 3429,
    "report": {
     "model": true,
-    "ms": 7729,
+    "ms": 3424,
     "packages": [
      {
       "files": 365,
@@ -929,10 +929,10 @@
    }
   },
   "next16": {
-   "ms": 11209,
+   "ms": 4143,
    "report": {
     "model": true,
-    "ms": 11204,
+    "ms": 4137,
     "packages": [
      {
       "files": 458,
@@ -959,10 +959,10 @@
    }
   },
   "prisma5": {
-   "ms": 1977,
+   "ms": 1697,
    "report": {
     "model": true,
-    "ms": 1974,
+    "ms": 1694,
     "packages": [
      {
       "files": 2,
@@ -982,10 +982,10 @@
    }
   },
   "prisma6": {
-   "ms": 2137,
+   "ms": 1739,
    "report": {
     "model": true,
-    "ms": 2133,
+    "ms": 1736,
     "packages": [
      {
       "files": 2,
@@ -1005,10 +1005,10 @@
    }
   },
   "pydantic1": {
-   "ms": 1801,
+   "ms": 1635,
    "report": {
     "model": true,
-    "ms": 1798,
+    "ms": 1631,
     "packages": [
      {
       "files": 176,
@@ -1021,10 +1021,10 @@
    }
   },
   "pydantic2": {
-   "ms": 1123,
+   "ms": 1223,
    "report": {
     "model": true,
-    "ms": 1119,
+    "ms": 1219,
     "packages": [
      {
       "files": 80,
@@ -1037,10 +1037,10 @@
    }
   },
   "react18": {
-   "ms": 2290,
+   "ms": 2396,
    "report": {
     "model": true,
-    "ms": 2287,
+    "ms": 2394,
     "packages": [
      {
       "files": 0,
@@ -1074,10 +1074,10 @@
    }
   },
   "react19": {
-   "ms": 3017,
+   "ms": 3314,
    "report": {
     "model": true,
-    "ms": 3013,
+    "ms": 3310,
     "packages": [
      {
       "files": 180,
@@ -1111,10 +1111,10 @@
    }
   },
   "rr6": {
-   "ms": 9815,
+   "ms": 2184,
    "report": {
     "model": true,
-    "ms": 9810,
+    "ms": 2180,
     "packages": [
      {
       "files": 3,
@@ -1148,10 +1148,10 @@
    }
   },
   "rr7": {
-   "ms": 1890,
+   "ms": 2112,
    "report": {
     "model": true,
-    "ms": 1887,
+    "ms": 2109,
     "packages": [
      {
       "files": 184,
@@ -1178,10 +1178,10 @@
    }
   },
   "sqlalchemy14": {
-   "ms": 3355,
+   "ms": 3270,
    "report": {
     "model": true,
-    "ms": 3351,
+    "ms": 3266,
     "packages": [
      {
       "files": 179,
@@ -1194,10 +1194,10 @@
    }
   },
   "sqlalchemy20": {
-   "ms": 3353,
+   "ms": 3201,
    "report": {
     "model": true,
-    "ms": 3349,
+    "ms": 3197,
     "packages": [
      {
       "files": 198,
@@ -1210,10 +1210,10 @@
    }
   },
   "tailwind3": {
-   "ms": 865,
+   "ms": 725,
    "report": {
     "model": true,
-    "ms": 862,
+    "ms": 723,
     "packages": [
      {
       "files": 2,
@@ -1226,10 +1226,10 @@
    }
   },
   "tailwind4": {
-   "ms": 3340,
+   "ms": 2472,
    "report": {
     "model": true,
-    "ms": 3336,
+    "ms": 2469,
     "packages": [
      {
       "files": 200,
@@ -1242,10 +1242,10 @@
    }
   },
   "vite5": {
-   "ms": 1461,
+   "ms": 1379,
    "report": {
     "model": true,
-    "ms": 1458,
+    "ms": 1376,
     "packages": [
      {
       "files": 37,
@@ -1258,10 +1258,10 @@
    }
   },
   "vite6": {
-   "ms": 1424,
+   "ms": 1511,
    "report": {
     "model": true,
-    "ms": 1421,
+    "ms": 1508,
     "packages": [
      {
       "files": 47,
@@ -1274,10 +1274,10 @@
    }
   },
   "zod3": {
-   "ms": 603,
+   "ms": 612,
    "report": {
     "model": true,
-    "ms": 601,
+    "ms": 609,
     "packages": [
      {
       "files": 4,
@@ -1290,10 +1290,10 @@
    }
   },
   "zod4": {
-   "ms": 1291,
+   "ms": 1219,
    "report": {
     "model": true,
-    "ms": 1288,
+    "ms": 1216,
     "packages": [
      {
       "files": 18,
@@ -1320,7 +1320,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 1019,
-    "ms": 86.4
+    "ms": 84.3
    },
    "variants": {
     "keyword": {
@@ -1328,21 +1328,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 1079,
-     "ms": 29.2
+     "ms": 29.1
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 1070,
-     "ms": 41.1
+     "ms": 40.4
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 1019,
-     "ms": 86.4
+     "ms": 84.3
     }
    },
    "context7": {
@@ -1352,7 +1352,8 @@
     "tokens": 685,
     "ms": 3133,
     "library": "/colinhacks/zod/v3.24.2",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
@@ -1368,7 +1369,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 946,
-    "ms": 132.6
+    "ms": 133.8
    },
    "variants": {
     "keyword": {
@@ -1376,7 +1377,7 @@
      "missing": [],
      "rejected": [],
      "tokens": 1073,
-     "ms": 57.2
+     "ms": 55.8
     },
     "hybrid": {
      "pass": false,
@@ -1387,14 +1388,14 @@
      ],
      "rejected": [],
      "tokens": 1142,
-     "ms": 48.3
+     "ms": 48.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 946,
-     "ms": 132.6
+     "ms": 133.8
     }
    },
    "context7": {
@@ -1404,7 +1405,8 @@
     "tokens": 822,
     "ms": 3267,
     "library": "/colinhacks/zod/v4.0.1",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
@@ -1420,7 +1422,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 1167,
-    "ms": 42.1
+    "ms": 40.4
    },
    "variants": {
     "keyword": {
@@ -1428,21 +1430,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 961,
-     "ms": 5.8
+     "ms": 5.5
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 1042,
-     "ms": 38.0
+     "ms": 44.4
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 1167,
-     "ms": 42.1
+     "ms": 40.4
     }
    },
    "context7": {
@@ -1452,7 +1454,8 @@
     "tokens": 1078,
     "ms": 1785,
     "library": "/colinhacks/zod/v3.24.2",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
@@ -1468,7 +1471,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 965,
-    "ms": 57.0
+    "ms": 58.6
    },
    "variants": {
     "keyword": {
@@ -1476,21 +1479,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 1147,
-     "ms": 11.4
+     "ms": 10.6
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 1038,
-     "ms": 52.4
+     "ms": 47.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 965,
-     "ms": 57.0
+     "ms": 58.6
     }
    },
    "context7": {
@@ -1500,7 +1503,8 @@
     "tokens": 1328,
     "ms": 1886,
     "library": "/colinhacks/zod/v4.0.1",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
@@ -1516,7 +1520,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 985,
-    "ms": 46.9
+    "ms": 45.7
    },
    "variants": {
     "keyword": {
@@ -1524,21 +1528,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 868,
-     "ms": 5.7
+     "ms": 5.4
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 868,
-     "ms": 40.8
+     "ms": 45.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 985,
-     "ms": 46.9
+     "ms": 45.7
     }
    },
    "context7": {
@@ -1548,7 +1552,8 @@
     "tokens": 890,
     "ms": 1447,
     "library": "/colinhacks/zod/v3.24.2",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
@@ -1564,7 +1569,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 989,
-    "ms": 58.8
+    "ms": 51.6
    },
    "variants": {
     "keyword": {
@@ -1572,21 +1577,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 389,
-     "ms": 10.4
+     "ms": 9.5
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 646,
-     "ms": 51.5
+     "ms": 46.1
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 989,
-     "ms": 58.8
+     "ms": 51.6
     }
    },
    "context7": {
@@ -1596,7 +1601,8 @@
     "tokens": 846,
     "ms": 1938,
     "library": "/colinhacks/zod/v4.0.1",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
@@ -1612,7 +1618,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 1026,
-    "ms": 58.0
+    "ms": 57.2
    },
    "variants": {
     "keyword": {
@@ -1624,7 +1630,7 @@
      ],
      "rejected": [],
      "tokens": 1114,
-     "ms": 11.5
+     "ms": 10.5
     },
     "hybrid": {
      "pass": false,
@@ -1635,14 +1641,14 @@
      ],
      "rejected": [],
      "tokens": 1049,
-     "ms": 49.2
+     "ms": 47.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 1026,
-     "ms": 58.0
+     "ms": 57.2
     }
    },
    "context7": {
@@ -1652,14 +1658,15 @@
     "tokens": 798,
     "ms": 1815,
     "library": "/colinhacks/zod/v4.0.1",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
    "id": "next14-cookies",
    "project": "next14",
    "package": "next",
-   "version": "14.2.15",
+   "version": "14.2.35",
    "question": "Is cookies() from next/headers synchronous or does it return a Promise?",
    "why": "14: cookies() returns ReadonlyRequestCookies synchronously",
    "line": "older",
@@ -1672,7 +1679,7 @@
     ],
     "rejected": [],
     "tokens": 849,
-    "ms": 354.2
+    "ms": 342.1
    },
    "variants": {
     "keyword": {
@@ -1684,7 +1691,7 @@
      ],
      "rejected": [],
      "tokens": 302,
-     "ms": 120.5
+     "ms": 117.9
     },
     "hybrid": {
      "pass": true,
@@ -1702,7 +1709,7 @@
      ],
      "rejected": [],
      "tokens": 849,
-     "ms": 354.2
+     "ms": 342.1
     }
    },
    "context7": {
@@ -1713,8 +1720,8 @@
      ]
     ],
     "rejected": [],
-    "tokens": 405,
-    "ms": 2548,
+    "tokens": 1144,
+    "ms": 2994,
     "library": "/vercel/next.js/v14.3.0-canary.87",
     "version_match": "same major"
    }
@@ -1732,7 +1739,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 892,
-    "ms": 404.4
+    "ms": 392.2
    },
    "variants": {
     "keyword": {
@@ -1740,21 +1747,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 662,
-     "ms": 141.4
+     "ms": 137.0
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 618,
-     "ms": 68.1
+     "ms": 62.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 892,
-     "ms": 404.4
+     "ms": 392.2
     }
    },
    "context7": {
@@ -1764,14 +1771,15 @@
     "tokens": 980,
     "ms": 3167,
     "library": "/vercel/next.js/v15.1.11",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
    "id": "next14-headers",
    "project": "next14",
    "package": "next",
-   "version": "14.2.15",
+   "version": "14.2.35",
    "question": "How do I read the incoming request headers in a server component?",
    "why": "14: headers() is sync",
    "line": "older",
@@ -1780,7 +1788,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 892,
-    "ms": 82.4
+    "ms": 79.7
    },
    "variants": {
     "keyword": {
@@ -1788,29 +1796,29 @@
      "missing": [],
      "rejected": [],
      "tokens": 376,
-     "ms": 18.6
+     "ms": 17.8
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 869,
-     "ms": 64.7
+     "ms": 55.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 892,
-     "ms": 82.4
+     "ms": 79.7
     }
    },
    "context7": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 1119,
-    "ms": 1795,
+    "tokens": 1363,
+    "ms": 1612,
     "library": "/vercel/next.js/v14.3.0-canary.87",
     "version_match": "same major"
    }
@@ -1828,7 +1836,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 872,
-    "ms": 89.5
+    "ms": 84.5
    },
    "variants": {
     "keyword": {
@@ -1836,21 +1844,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 718,
-     "ms": 21.0
+     "ms": 19.6
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 897,
-     "ms": 62.6
+     "ms": 64.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 872,
-     "ms": 89.5
+     "ms": 84.5
     }
    },
    "context7": {
@@ -1860,14 +1868,15 @@
     "tokens": 1022,
     "ms": 1773,
     "library": "/vercel/next.js/v15.1.11",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
    "id": "next14-nostore",
    "project": "next14",
    "package": "next",
-   "version": "14.2.15",
+   "version": "14.2.35",
    "question": "How do I opt a server component out of caching so it renders dynamically?",
    "why": "14: unstable_noStore()",
    "line": "older",
@@ -1876,7 +1885,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 761,
-    "ms": 88.9
+    "ms": 82.1
    },
    "variants": {
     "keyword": {
@@ -1884,29 +1893,29 @@
      "missing": [],
      "rejected": [],
      "tokens": 891,
-     "ms": 18.5
+     "ms": 17.5
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 933,
-     "ms": 61.6
+     "ms": 56.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 761,
-     "ms": 88.9
+     "ms": 82.1
     }
    },
    "context7": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 979,
-    "ms": 1670,
+    "tokens": 744,
+    "ms": 1564,
     "library": "/vercel/next.js/v14.3.0-canary.87",
     "version_match": "same major"
    }
@@ -1924,7 +1933,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 798,
-    "ms": 95.7
+    "ms": 93.1
    },
    "variants": {
     "keyword": {
@@ -1932,21 +1941,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 899,
-     "ms": 20.9
+     "ms": 19.7
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 924,
-     "ms": 67.6
+     "ms": 61.4
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 798,
-     "ms": 95.7
+     "ms": 93.1
     }
    },
    "context7": {
@@ -1956,7 +1965,8 @@
     "tokens": 1281,
     "ms": 1786,
     "library": "/vercel/next.js/v15.1.11",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
@@ -1978,7 +1988,7 @@
     ],
     "rejected": [],
     "tokens": 879,
-    "ms": 89.2
+    "ms": 91.9
    },
    "variants": {
     "keyword": {
@@ -1986,14 +1996,14 @@
      "missing": [],
      "rejected": [],
      "tokens": 923,
-     "ms": 20.2
+     "ms": 19.6
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 855,
-     "ms": 66.9
+     "ms": 63.3
     },
     "fetched": {
      "pass": false,
@@ -2006,7 +2016,7 @@
      ],
      "rejected": [],
      "tokens": 879,
-     "ms": 89.2
+     "ms": 91.9
     }
    },
    "context7": {
@@ -2016,7 +2026,8 @@
     "tokens": 1951,
     "ms": 1982,
     "library": "/vercel/next.js/v15.1.11",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
@@ -2036,7 +2047,7 @@
     ],
     "rejected": [],
     "tokens": 796,
-    "ms": 107.4
+    "ms": 98.9
    },
    "variants": {
     "keyword": {
@@ -2044,14 +2055,14 @@
      "missing": [],
      "rejected": [],
      "tokens": 913,
-     "ms": 9.2
+     "ms": 8.9
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 913,
-     "ms": 42.3
+     "ms": 42.0
     },
     "fetched": {
      "pass": false,
@@ -2062,7 +2073,7 @@
      ],
      "rejected": [],
      "tokens": 796,
-     "ms": 107.4
+     "ms": 98.9
     }
    },
    "context7": {
@@ -2076,7 +2087,8 @@
     "tokens": 475,
     "ms": 3327,
     "library": "/websites/reactrouter",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -2092,7 +2104,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 892,
-    "ms": 129.8
+    "ms": 121.9
    },
    "variants": {
     "keyword": {
@@ -2104,21 +2116,21 @@
      ],
      "rejected": [],
      "tokens": 889,
-     "ms": 41.7
+     "ms": 40.2
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 928,
-     "ms": 43.4
+     "ms": 41.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 892,
-     "ms": 129.8
+     "ms": 121.9
     }
    },
    "context7": {
@@ -2128,7 +2140,8 @@
     "tokens": 513,
     "ms": 2755,
     "library": "/websites/reactrouter",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -2144,7 +2157,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 895,
-    "ms": 46.6
+    "ms": 46.9
    },
    "variants": {
     "keyword": {
@@ -2159,14 +2172,14 @@
      "missing": [],
      "rejected": [],
      "tokens": 884,
-     "ms": 38.7
+     "ms": 38.2
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 895,
-     "ms": 46.6
+     "ms": 46.9
     }
    },
    "context7": {
@@ -2176,7 +2189,8 @@
     "tokens": 852,
     "ms": 1568,
     "library": "/websites/reactrouter",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -2192,7 +2206,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 815,
-    "ms": 51.2
+    "ms": 51.6
    },
    "variants": {
     "keyword": {
@@ -2200,21 +2214,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 946,
-     "ms": 3.4
+     "ms": 3.2
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 904,
-     "ms": 35.7
+     "ms": 39.3
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 815,
-     "ms": 51.2
+     "ms": 51.6
     }
    },
    "context7": {
@@ -2224,7 +2238,8 @@
     "tokens": 505,
     "ms": 1919,
     "library": "/websites/reactrouter",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -2240,7 +2255,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 838,
-    "ms": 49.7
+    "ms": 51.1
    },
    "variants": {
     "keyword": {
@@ -2248,21 +2263,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 866,
-     "ms": 7.7
+     "ms": 7.5
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 920,
-     "ms": 47.5
+     "ms": 46.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 838,
-     "ms": 49.7
+     "ms": 51.1
     }
    },
    "context7": {
@@ -2272,7 +2287,8 @@
     "tokens": 1220,
     "ms": 1900,
     "library": "/websites/reactrouter",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -2288,7 +2304,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 948,
-    "ms": 145.7
+    "ms": 151.1
    },
    "variants": {
     "keyword": {
@@ -2296,21 +2312,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 953,
-     "ms": 64.5
+     "ms": 68.2
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 915,
-     "ms": 56.9
+     "ms": 55.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 948,
-     "ms": 145.7
+     "ms": 151.1
     }
    },
    "context7": {
@@ -2327,7 +2343,8 @@
     "tokens": 908,
     "ms": 2968,
     "library": "/pydantic/pydantic",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -2343,7 +2360,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 909,
-    "ms": 250.8
+    "ms": 244.8
    },
    "variants": {
     "keyword": {
@@ -2355,7 +2372,7 @@
      ],
      "rejected": [],
      "tokens": 823,
-     "ms": 130.4
+     "ms": 129.7
     },
     "hybrid": {
      "pass": false,
@@ -2366,14 +2383,14 @@
      ],
      "rejected": [],
      "tokens": 893,
-     "ms": 62.1
+     "ms": 64.1
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 909,
-     "ms": 250.8
+     "ms": 244.8
     }
    },
    "context7": {
@@ -2383,7 +2400,8 @@
     "tokens": 839,
     "ms": 2943,
     "library": "/pydantic/pydantic",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -2399,7 +2417,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 884,
-    "ms": 58.3
+    "ms": 63.0
    },
    "variants": {
     "keyword": {
@@ -2411,7 +2429,7 @@
      ],
      "rejected": [],
      "tokens": 954,
-     "ms": 18.9
+     "ms": 18.6
     },
     "hybrid": {
      "pass": false,
@@ -2422,14 +2440,14 @@
      ],
      "rejected": [],
      "tokens": 907,
-     "ms": 55.5
+     "ms": 58.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 884,
-     "ms": 58.3
+     "ms": 63.0
     }
    },
    "context7": {
@@ -2445,7 +2463,8 @@
     "tokens": 1185,
     "ms": 1759,
     "library": "/pydantic/pydantic",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -2461,7 +2480,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 843,
-    "ms": 75.4
+    "ms": 72.3
    },
    "variants": {
     "keyword": {
@@ -2473,7 +2492,7 @@
      ],
      "rejected": [],
      "tokens": 941,
-     "ms": 23.3
+     "ms": 22.2
     },
     "hybrid": {
      "pass": false,
@@ -2484,14 +2503,14 @@
      ],
      "rejected": [],
      "tokens": 950,
-     "ms": 61.9
+     "ms": 60.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 843,
-     "ms": 75.4
+     "ms": 72.3
     }
    },
    "context7": {
@@ -2501,7 +2520,8 @@
     "tokens": 1185,
     "ms": 1519,
     "library": "/pydantic/pydantic",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -2517,7 +2537,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 965,
-    "ms": 58.7
+    "ms": 62.5
    },
    "variants": {
     "keyword": {
@@ -2530,21 +2550,21 @@
      ],
      "rejected": [],
      "tokens": 985,
-     "ms": 19.1
+     "ms": 18.6
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 823,
-     "ms": 58.2
+     "ms": 54.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 965,
-     "ms": 58.7
+     "ms": 62.5
     }
    },
    "context7": {
@@ -2561,7 +2581,8 @@
     "tokens": 1095,
     "ms": 1590,
     "library": "/pydantic/pydantic",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -2577,7 +2598,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 764,
-    "ms": 75.2
+    "ms": 67.3
    },
    "variants": {
     "keyword": {
@@ -2589,21 +2610,21 @@
      ],
      "rejected": [],
      "tokens": 784,
-     "ms": 22.6
+     "ms": 22.5
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 867,
-     "ms": 62.1
+     "ms": 63.3
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 764,
-     "ms": 75.2
+     "ms": 67.3
     }
    },
    "context7": {
@@ -2613,7 +2634,8 @@
     "tokens": 1207,
     "ms": 1476,
     "library": "/pydantic/pydantic",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -2629,7 +2651,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 878,
-    "ms": 65.3
+    "ms": 61.6
    },
    "variants": {
     "keyword": {
@@ -2637,7 +2659,7 @@
      "missing": [],
      "rejected": [],
      "tokens": 923,
-     "ms": 18.3
+     "ms": 18.5
     },
     "hybrid": {
      "pass": true,
@@ -2651,7 +2673,7 @@
      "missing": [],
      "rejected": [],
      "tokens": 878,
-     "ms": 65.3
+     "ms": 61.6
     }
    },
    "context7": {
@@ -2669,7 +2691,8 @@
     "tokens": 1866,
     "ms": 1735,
     "library": "/pydantic/pydantic",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -2685,7 +2708,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 817,
-    "ms": 69.3
+    "ms": 72.3
    },
    "variants": {
     "keyword": {
@@ -2693,21 +2716,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 884,
-     "ms": 22.6
+     "ms": 22.3
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 858,
-     "ms": 58.6
+     "ms": 56.3
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 817,
-     "ms": 69.3
+     "ms": 72.3
     }
    },
    "context7": {
@@ -2717,7 +2740,8 @@
     "tokens": 1742,
     "ms": 1261,
     "library": "/pydantic/pydantic",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -2735,7 +2759,7 @@
      "ConfigDict"
     ],
     "tokens": 945,
-    "ms": 58.2
+    "ms": 59.0
    },
    "variants": {
     "keyword": {
@@ -2748,7 +2772,7 @@
      ],
      "rejected": [],
      "tokens": 952,
-     "ms": 18.8
+     "ms": 18.3
     },
     "hybrid": {
      "pass": false,
@@ -2760,7 +2784,7 @@
      ],
      "rejected": [],
      "tokens": 952,
-     "ms": 56.4
+     "ms": 55.8
     },
     "fetched": {
      "pass": false,
@@ -2769,7 +2793,7 @@
       "ConfigDict"
      ],
      "tokens": 945,
-     "ms": 58.2
+     "ms": 59.0
     }
    },
    "context7": {
@@ -2781,7 +2805,8 @@
     "tokens": 718,
     "ms": 1581,
     "library": "/pydantic/pydantic",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -2797,7 +2822,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 934,
-    "ms": 69.3
+    "ms": 70.6
    },
    "variants": {
     "keyword": {
@@ -2805,21 +2830,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 898,
-     "ms": 23.5
+     "ms": 22.2
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 919,
-     "ms": 58.2
+     "ms": 62.4
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 934,
-     "ms": 69.3
+     "ms": 70.6
     }
    },
    "context7": {
@@ -2829,7 +2854,8 @@
     "tokens": 893,
     "ms": 2199,
     "library": "/pydantic/pydantic",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -2845,7 +2871,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 960,
-    "ms": 95.8
+    "ms": 88.4
    },
    "variants": {
     "keyword": {
@@ -2853,21 +2879,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 955,
-     "ms": 52.4
+     "ms": 51.4
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 933,
-     "ms": 46.1
+     "ms": 45.1
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 960,
-     "ms": 95.8
+     "ms": 88.4
     }
    },
    "context7": {
@@ -2881,7 +2907,8 @@
     "tokens": 1159,
     "ms": 2689,
     "library": "/websites/rs_axum",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -2897,7 +2924,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 925,
-    "ms": 93.4
+    "ms": 93.5
    },
    "variants": {
     "keyword": {
@@ -2905,21 +2932,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 947,
-     "ms": 55.8
+     "ms": 52.0
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 925,
-     "ms": 46.9
+     "ms": 45.3
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 925,
-     "ms": 93.4
+     "ms": 93.5
     }
    },
    "context7": {
@@ -2929,7 +2956,8 @@
     "tokens": 1212,
     "ms": 2761,
     "library": "/websites/rs_axum",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -2945,7 +2973,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 926,
-    "ms": 46.0
+    "ms": 46.5
    },
    "variants": {
     "keyword": {
@@ -2953,21 +2981,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 908,
-     "ms": 7.3
+     "ms": 7.1
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 908,
-     "ms": 44.3
+     "ms": 40.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 926,
-     "ms": 46.0
+     "ms": 46.5
     }
    },
    "context7": {
@@ -2981,7 +3009,8 @@
     "tokens": 1100,
     "ms": 1702,
     "library": "/websites/rs_axum",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -2997,7 +3026,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 898,
-    "ms": 40.6
+    "ms": 41.6
    },
    "variants": {
     "keyword": {
@@ -3005,21 +3034,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 663,
-     "ms": 7.2
+     "ms": 6.9
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 898,
-     "ms": 46.8
+     "ms": 41.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 898,
-     "ms": 40.6
+     "ms": 41.6
     }
    },
    "context7": {
@@ -3029,7 +3058,8 @@
     "tokens": 910,
     "ms": 1697,
     "library": "/websites/rs_axum",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -3045,7 +3075,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 820,
-    "ms": 323.1
+    "ms": 316.1
    },
    "variants": {
     "keyword": {
@@ -3053,21 +3083,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 796,
-     "ms": 258.3
+     "ms": 249.7
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 793,
-     "ms": 55.4
+     "ms": 57.4
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 820,
-     "ms": 323.1
+     "ms": 316.1
     }
    },
    "context7": {
@@ -3077,7 +3107,8 @@
     "tokens": 946,
     "ms": 2988,
     "library": "/websites/rs_tokio_1_49_0",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -3097,7 +3128,7 @@
     ],
     "rejected": [],
     "tokens": 969,
-    "ms": 56.3
+    "ms": 60.1
    },
    "variants": {
     "keyword": {
@@ -3109,7 +3140,7 @@
      ],
      "rejected": [],
      "tokens": 956,
-     "ms": 22.5
+     "ms": 20.8
     },
     "hybrid": {
      "pass": false,
@@ -3120,7 +3151,7 @@
      ],
      "rejected": [],
      "tokens": 958,
-     "ms": 62.1
+     "ms": 55.0
     },
     "fetched": {
      "pass": false,
@@ -3131,7 +3162,7 @@
      ],
      "rejected": [],
      "tokens": 969,
-     "ms": 56.3
+     "ms": 60.1
     }
    },
    "context7": {
@@ -3141,7 +3172,8 @@
     "tokens": 864,
     "ms": 1942,
     "library": "/websites/rs_tokio_1_49_0",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -3157,7 +3189,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 920,
-    "ms": 59.3
+    "ms": 54.7
    },
    "variants": {
     "keyword": {
@@ -3165,21 +3197,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 881,
-     "ms": 22.1
+     "ms": 20.1
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 910,
-     "ms": 56.5
+     "ms": 56.4
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 920,
-     "ms": 59.3
+     "ms": 54.7
     }
    },
    "context7": {
@@ -3189,7 +3221,8 @@
     "tokens": 1662,
     "ms": 1427,
     "library": "/websites/rs_tokio_1_49_0",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -3211,7 +3244,7 @@
     ],
     "rejected": [],
     "tokens": 959,
-    "ms": 67.9
+    "ms": 62.4
    },
    "variants": {
     "keyword": {
@@ -3224,8 +3257,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 1120,
-     "ms": 10.8
+     "tokens": 1116,
+     "ms": 10.4
     },
     "hybrid": {
      "pass": false,
@@ -3238,7 +3271,7 @@
      ],
      "rejected": [],
      "tokens": 1080,
-     "ms": 36.6
+     "ms": 40.6
     },
     "fetched": {
      "pass": false,
@@ -3251,7 +3284,7 @@
      ],
      "rejected": [],
      "tokens": 959,
-     "ms": 67.9
+     "ms": 62.4
     }
    },
    "context7": {
@@ -3269,7 +3302,8 @@
     "tokens": 388,
     "ms": 2446,
     "library": "/rails/tailwindcss-rails",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -3290,7 +3324,7 @@
     ],
     "rejected": [],
     "tokens": 849,
-    "ms": 149.9
+    "ms": 145.9
    },
    "variants": {
     "keyword": {
@@ -3303,7 +3337,7 @@
      ],
      "rejected": [],
      "tokens": 281,
-     "ms": 9.2
+     "ms": 8.9
     },
     "hybrid": {
      "pass": false,
@@ -3315,7 +3349,7 @@
      ],
      "rejected": [],
      "tokens": 445,
-     "ms": 39.3
+     "ms": 39.2
     },
     "fetched": {
      "pass": false,
@@ -3327,7 +3361,7 @@
      ],
      "rejected": [],
      "tokens": 849,
-     "ms": 149.9
+     "ms": 145.9
     }
    },
    "context7": {
@@ -3337,7 +3371,8 @@
     "tokens": 370,
     "ms": 3073,
     "library": "/rails/tailwindcss-rails",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -3353,7 +3388,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 1035,
-    "ms": 43.6
+    "ms": 40.9
    },
    "variants": {
     "keyword": {
@@ -3361,21 +3396,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 988,
-     "ms": 3.3
+     "ms": 3.1
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 1047,
-     "ms": 45.6
+     "ms": 41.3
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 1035,
-     "ms": 43.6
+     "ms": 40.9
     }
    },
    "context7": {
@@ -3385,7 +3420,8 @@
     "tokens": 517,
     "ms": 1587,
     "library": "/rails/tailwindcss-rails",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -3401,7 +3437,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 1147,
-    "ms": 56.9
+    "ms": 54.0
    },
    "variants": {
     "keyword": {
@@ -3414,7 +3450,7 @@
      ],
      "rejected": [],
      "tokens": 437,
-     "ms": 2.1
+     "ms": 2.0
     },
     "hybrid": {
      "pass": false,
@@ -3426,14 +3462,14 @@
      ],
      "rejected": [],
      "tokens": 531,
-     "ms": 40.6
+     "ms": 36.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 1147,
-     "ms": 56.9
+     "ms": 54.0
     }
    },
    "context7": {
@@ -3443,7 +3479,8 @@
     "tokens": 545,
     "ms": 1790,
     "library": "/rails/tailwindcss-rails",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -3459,7 +3496,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 813,
-    "ms": 412.1
+    "ms": 407.0
    },
    "variants": {
     "keyword": {
@@ -3467,21 +3504,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 866,
-     "ms": 146.9
+     "ms": 133.9
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 925,
-     "ms": 46.2
+     "ms": 48.2
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 813,
-     "ms": 412.1
+     "ms": 407.0
     }
    },
    "context7": {
@@ -3491,7 +3528,8 @@
     "tokens": 928,
     "ms": 2976,
     "library": "/eslint/eslint/v8.57.1",
-    "version_match": "exact"
+    "version_match": "exact",
+    "reused": true
    }
   },
   {
@@ -3507,7 +3545,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 741,
-    "ms": 359.8
+    "ms": 360.1
    },
    "variants": {
     "keyword": {
@@ -3515,21 +3553,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 940,
-     "ms": 29.4
+     "ms": 30.2
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 961,
-     "ms": 44.7
+     "ms": 45.1
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 741,
-     "ms": 359.8
+     "ms": 360.1
     }
    },
    "context7": {
@@ -3539,7 +3577,8 @@
     "tokens": 760,
     "ms": 2801,
     "library": "/eslint/eslint/v9.39.3",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
@@ -3555,7 +3594,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 854,
-    "ms": 83.9
+    "ms": 83.5
    },
    "variants": {
     "keyword": {
@@ -3568,7 +3607,7 @@
      ],
      "rejected": [],
      "tokens": 901,
-     "ms": 7.6
+     "ms": 7.5
     },
     "hybrid": {
      "pass": false,
@@ -3580,14 +3619,14 @@
      ],
      "rejected": [],
      "tokens": 836,
-     "ms": 47.2
+     "ms": 43.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 854,
-     "ms": 83.9
+     "ms": 83.5
     }
    },
    "context7": {
@@ -3597,7 +3636,8 @@
     "tokens": 624,
     "ms": 1908,
     "library": "/eslint/eslint/v8.57.1",
-    "version_match": "exact"
+    "version_match": "exact",
+    "reused": true
    }
   },
   {
@@ -3613,7 +3653,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 825,
-    "ms": 90.3
+    "ms": 82.8
    },
    "variants": {
     "keyword": {
@@ -3627,7 +3667,7 @@
      ],
      "rejected": [],
      "tokens": 909,
-     "ms": 6.6
+     "ms": 6.4
     },
     "hybrid": {
      "pass": false,
@@ -3640,14 +3680,14 @@
      ],
      "rejected": [],
      "tokens": 996,
-     "ms": 41.4
+     "ms": 45.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 825,
-     "ms": 90.3
+     "ms": 82.8
     }
    },
    "context7": {
@@ -3657,7 +3697,8 @@
     "tokens": 549,
     "ms": 1752,
     "library": "/eslint/eslint/v9.39.3",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
@@ -3677,7 +3718,7 @@
     ],
     "rejected": [],
     "tokens": 878,
-    "ms": 70.7
+    "ms": 78.1
    },
    "variants": {
     "keyword": {
@@ -3689,7 +3730,7 @@
      ],
      "rejected": [],
      "tokens": 894,
-     "ms": 32.8
+     "ms": 32.9
     },
     "hybrid": {
      "pass": false,
@@ -3700,7 +3741,7 @@
      ],
      "rejected": [],
      "tokens": 971,
-     "ms": 44.8
+     "ms": 42.7
     },
     "fetched": {
      "pass": false,
@@ -3711,7 +3752,7 @@
      ],
      "rejected": [],
      "tokens": 878,
-     "ms": 70.7
+     "ms": 78.1
     }
    },
    "context7": {
@@ -3727,7 +3768,8 @@
     "tokens": 105,
     "ms": 2340,
     "library": "/websites/prisma_io",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -3747,7 +3789,7 @@
     ],
     "rejected": [],
     "tokens": 878,
-    "ms": 90.3
+    "ms": 95.0
    },
    "variants": {
     "keyword": {
@@ -3755,14 +3797,14 @@
      "missing": [],
      "rejected": [],
      "tokens": 967,
-     "ms": 50.5
+     "ms": 49.6
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 853,
-     "ms": 38.6
+     "ms": 45.0
     },
     "fetched": {
      "pass": false,
@@ -3773,7 +3815,7 @@
      ],
      "rejected": [],
      "tokens": 878,
-     "ms": 90.3
+     "ms": 95.0
     }
    },
    "context7": {
@@ -3783,7 +3825,8 @@
     "tokens": 631,
     "ms": 3320,
     "library": "/prisma/web",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -3803,7 +3846,7 @@
     ],
     "rejected": [],
     "tokens": 915,
-    "ms": 80.4
+    "ms": 70.5
    },
    "variants": {
     "keyword": {
@@ -3815,7 +3858,7 @@
      ],
      "rejected": [],
      "tokens": 829,
-     "ms": 32.8
+     "ms": 31.9
     },
     "hybrid": {
      "pass": false,
@@ -3826,7 +3869,7 @@
      ],
      "rejected": [],
      "tokens": 949,
-     "ms": 43.6
+     "ms": 43.7
     },
     "fetched": {
      "pass": false,
@@ -3837,7 +3880,7 @@
      ],
      "rejected": [],
      "tokens": 915,
-     "ms": 80.4
+     "ms": 70.5
     }
    },
    "context7": {
@@ -3849,7 +3892,8 @@
     "tokens": 661,
     "ms": 3171,
     "library": "/prisma/web",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -3869,7 +3913,7 @@
     ],
     "rejected": [],
     "tokens": 850,
-    "ms": 90.1
+    "ms": 89.6
    },
    "variants": {
     "keyword": {
@@ -3881,7 +3925,7 @@
      ],
      "rejected": [],
      "tokens": 836,
-     "ms": 50.6
+     "ms": 49.5
     },
     "hybrid": {
      "pass": false,
@@ -3892,7 +3936,7 @@
      ],
      "rejected": [],
      "tokens": 921,
-     "ms": 43.0
+     "ms": 43.5
     },
     "fetched": {
      "pass": false,
@@ -3903,7 +3947,7 @@
      ],
      "rejected": [],
      "tokens": 850,
-     "ms": 90.1
+     "ms": 89.6
     }
    },
    "context7": {
@@ -3913,7 +3957,8 @@
     "tokens": 661,
     "ms": 2843,
     "library": "/prisma/web",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -3931,7 +3976,7 @@
      "useActionState"
     ],
     "tokens": 951,
-    "ms": 136.9
+    "ms": 128.8
    },
    "variants": {
     "keyword": {
@@ -3939,14 +3984,14 @@
      "missing": [],
      "rejected": [],
      "tokens": 956,
-     "ms": 59.3
+     "ms": 58.5
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 921,
-     "ms": 42.8
+     "ms": 45.0
     },
     "fetched": {
      "pass": false,
@@ -3955,7 +4000,7 @@
       "useActionState"
      ],
      "tokens": 951,
-     "ms": 136.9
+     "ms": 128.8
     }
    },
    "context7": {
@@ -3972,7 +4017,8 @@
     "tokens": 1629,
     "ms": 3434,
     "library": "/reactjs/react.dev",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -3988,7 +4034,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 869,
-    "ms": 419.7
+    "ms": 416.7
    },
    "variants": {
     "keyword": {
@@ -4000,21 +4046,21 @@
      ],
      "rejected": [],
      "tokens": 891,
-     "ms": 55.2
+     "ms": 53.6
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 961,
-     "ms": 41.0
+     "ms": 44.1
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 869,
-     "ms": 419.7
+     "ms": 416.7
     }
    },
    "context7": {
@@ -4024,7 +4070,8 @@
     "tokens": 2160,
     "ms": 2270,
     "library": "/reactjs/react.dev",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -4040,7 +4087,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 804,
-    "ms": 53.3
+    "ms": 47.8
    },
    "variants": {
     "keyword": {
@@ -4053,7 +4100,7 @@
      ],
      "rejected": [],
      "tokens": 687,
-     "ms": 7.3
+     "ms": 6.9
     },
     "hybrid": {
      "pass": false,
@@ -4065,14 +4112,14 @@
      ],
      "rejected": [],
      "tokens": 891,
-     "ms": 46.4
+     "ms": 42.3
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 804,
-     "ms": 53.3
+     "ms": 47.8
     }
    },
    "context7": {
@@ -4084,7 +4131,8 @@
     "tokens": 943,
     "ms": 2011,
     "library": "/reactjs/react.dev",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -4100,7 +4148,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 859,
-    "ms": 93.6
+    "ms": 93.9
    },
    "variants": {
     "keyword": {
@@ -4113,7 +4161,7 @@
      ],
      "rejected": [],
      "tokens": 664,
-     "ms": 7.1
+     "ms": 6.7
     },
     "hybrid": {
      "pass": false,
@@ -4125,14 +4173,14 @@
      ],
      "rejected": [],
      "tokens": 896,
-     "ms": 48.3
+     "ms": 48.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 859,
-     "ms": 93.6
+     "ms": 93.9
     }
    },
    "context7": {
@@ -4142,7 +4190,8 @@
     "tokens": 942,
     "ms": 1899,
     "library": "/reactjs/react.dev",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -4158,7 +4207,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 907,
-    "ms": 164.1
+    "ms": 164.4
    },
    "variants": {
     "keyword": {
@@ -4166,21 +4215,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 915,
-     "ms": 45.4
+     "ms": 43.8
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 963,
-     "ms": 43.7
+     "ms": 45.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 907,
-     "ms": 164.1
+     "ms": 164.4
     }
    },
    "context7": {
@@ -4192,7 +4241,8 @@
     "tokens": 880,
     "ms": 3010,
     "library": "/vitejs/vite/v5.4.21",
-    "version_match": "exact"
+    "version_match": "exact",
+    "reused": true
    }
   },
   {
@@ -4208,7 +4258,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 803,
-    "ms": 144.3
+    "ms": 142.2
    },
    "variants": {
     "keyword": {
@@ -4216,21 +4266,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 902,
-     "ms": 50.4
+     "ms": 48.2
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 874,
-     "ms": 50.4
+     "ms": 44.7
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 803,
-     "ms": 144.3
+     "ms": 142.2
     }
    },
    "context7": {
@@ -4240,7 +4290,8 @@
     "tokens": 757,
     "ms": 2809,
     "library": "/vitejs/vite",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -4256,7 +4307,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 730,
-    "ms": 86.8
+    "ms": 85.8
    },
    "variants": {
     "keyword": {
@@ -4271,7 +4322,7 @@
      ],
      "rejected": [],
      "tokens": 1113,
-     "ms": 18.3
+     "ms": 18.1
     },
     "hybrid": {
      "pass": false,
@@ -4285,14 +4336,14 @@
      ],
      "rejected": [],
      "tokens": 1019,
-     "ms": 43.1
+     "ms": 42.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 730,
-     "ms": 86.8
+     "ms": 85.8
     }
    },
    "context7": {
@@ -4304,7 +4355,8 @@
     "tokens": 606,
     "ms": 3398,
     "library": "/expressjs/express",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -4320,7 +4372,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 944,
-    "ms": 87.3
+    "ms": 87.2
    },
    "variants": {
     "keyword": {
@@ -4335,7 +4387,7 @@
      ],
      "rejected": [],
      "tokens": 603,
-     "ms": 8.2
+     "ms": 8.5
     },
     "hybrid": {
      "pass": false,
@@ -4349,14 +4401,14 @@
      ],
      "rejected": [],
      "tokens": 968,
-     "ms": 35.3
+     "ms": 37.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 944,
-     "ms": 87.3
+     "ms": 87.2
     }
    },
    "context7": {
@@ -4366,7 +4418,8 @@
     "tokens": 955,
     "ms": 3042,
     "library": "/expressjs/express/v5.2.0",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
@@ -4382,7 +4435,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 869,
-    "ms": 874.1
+    "ms": 854.9
    },
    "variants": {
     "keyword": {
@@ -4390,21 +4443,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 857,
-     "ms": 398.6
+     "ms": 397.4
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 860,
-     "ms": 88.0
+     "ms": 89.3
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 869,
-     "ms": 874.1
+     "ms": 854.9
     }
    },
    "context7": {
@@ -4416,7 +4469,8 @@
     "tokens": 1070,
     "ms": 3137,
     "library": "/websites/sqlalchemy_en_20",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -4432,7 +4486,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 841,
-    "ms": 1067.8
+    "ms": 1036.5
    },
    "variants": {
     "keyword": {
@@ -4445,21 +4499,21 @@
      ],
      "rejected": [],
      "tokens": 913,
-     "ms": 527.8
+     "ms": 518.7
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 805,
-     "ms": 99.9
+     "ms": 102.4
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 841,
-     "ms": 1067.8
+     "ms": 1036.5
     }
    },
    "context7": {
@@ -4469,7 +4523,8 @@
     "tokens": 920,
     "ms": 3287,
     "library": "/websites/sqlalchemy_en_20",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -4485,7 +4540,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 831,
-    "ms": 153.5
+    "ms": 152.1
    },
    "variants": {
     "keyword": {
@@ -4493,21 +4548,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 917,
-     "ms": 45.4
+     "ms": 47.2
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 919,
-     "ms": 90.0
+     "ms": 85.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 831,
-     "ms": 153.5
+     "ms": 152.1
     }
    },
    "context7": {
@@ -4519,7 +4574,8 @@
     "tokens": 1103,
     "ms": 1572,
     "library": "/websites/sqlalchemy_en_20",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -4535,7 +4591,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 860,
-    "ms": 170.5
+    "ms": 167.2
    },
    "variants": {
     "keyword": {
@@ -4543,21 +4599,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 956,
-     "ms": 55.0
+     "ms": 56.8
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 920,
-     "ms": 96.4
+     "ms": 94.3
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 860,
-     "ms": 170.5
+     "ms": 167.2
     }
    },
    "context7": {
@@ -4567,7 +4623,8 @@
     "tokens": 697,
     "ms": 1803,
     "library": "/websites/sqlalchemy_en_20",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -4587,7 +4644,7 @@
     ],
     "rejected": [],
     "tokens": 852,
-    "ms": 495.9
+    "ms": 482.8
    },
    "variants": {
     "keyword": {
@@ -4599,7 +4656,7 @@
      ],
      "rejected": [],
      "tokens": 848,
-     "ms": 402.1
+     "ms": 396.2
     },
     "hybrid": {
      "pass": false,
@@ -4610,7 +4667,7 @@
      ],
      "rejected": [],
      "tokens": 835,
-     "ms": 90.7
+     "ms": 87.7
     },
     "fetched": {
      "pass": false,
@@ -4621,7 +4678,7 @@
      ],
      "rejected": [],
      "tokens": 852,
-     "ms": 495.9
+     "ms": 482.8
     }
    },
    "context7": {
@@ -4631,7 +4688,8 @@
     "tokens": 1739,
     "ms": 2852,
     "library": "/django/django/4.2.21",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
@@ -4651,7 +4709,7 @@
     ],
     "rejected": [],
     "tokens": 858,
-    "ms": 501.7
+    "ms": 490.7
    },
    "variants": {
     "keyword": {
@@ -4663,7 +4721,7 @@
      ],
      "rejected": [],
      "tokens": 847,
-     "ms": 438.5
+     "ms": 420.8
     },
     "hybrid": {
      "pass": false,
@@ -4674,7 +4732,7 @@
      ],
      "rejected": [],
      "tokens": 841,
-     "ms": 88.7
+     "ms": 93.9
     },
     "fetched": {
      "pass": false,
@@ -4685,7 +4743,7 @@
      ],
      "rejected": [],
      "tokens": 858,
-     "ms": 501.7
+     "ms": 490.7
     }
    },
    "context7": {
@@ -4695,7 +4753,8 @@
     "tokens": 856,
     "ms": 4390,
     "library": "/django/django",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -4711,7 +4770,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 816,
-    "ms": 90.2
+    "ms": 86.6
    },
    "variants": {
     "keyword": {
@@ -4719,21 +4778,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 862,
-     "ms": 45.8
+     "ms": 46.2
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 846,
-     "ms": 87.7
+     "ms": 89.2
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 816,
-     "ms": 90.2
+     "ms": 86.6
     }
    },
    "context7": {
@@ -4743,7 +4802,8 @@
     "tokens": 616,
     "ms": 1679,
     "library": "/django/django/4.2.21",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
@@ -4759,7 +4819,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 855,
-    "ms": 100.6
+    "ms": 91.7
    },
    "variants": {
     "keyword": {
@@ -4767,21 +4827,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 520,
-     "ms": 46.8
+     "ms": 46.3
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 835,
-     "ms": 88.8
+     "ms": 94.5
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 855,
-     "ms": 100.6
+     "ms": 91.7
     }
    },
    "context7": {
@@ -4791,7 +4851,8 @@
     "tokens": 904,
     "ms": 2310,
     "library": "/django/django",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -4811,7 +4872,7 @@
     ],
     "rejected": [],
     "tokens": 833,
-    "ms": 182.7
+    "ms": 180.9
    },
    "variants": {
     "keyword": {
@@ -4823,7 +4884,7 @@
      ],
      "rejected": [],
      "tokens": 576,
-     "ms": 35.0
+     "ms": 34.8
     },
     "hybrid": {
      "pass": false,
@@ -4834,7 +4895,7 @@
      ],
      "rejected": [],
      "tokens": 555,
-     "ms": 52.2
+     "ms": 47.9
     },
     "fetched": {
      "pass": false,
@@ -4845,7 +4906,7 @@
      ],
      "rejected": [],
      "tokens": 833,
-     "ms": 182.7
+     "ms": 180.9
     }
    },
    "context7": {
@@ -4861,7 +4922,8 @@
     "tokens": 836,
     "ms": 2771,
     "library": "/websites/fastapi_tiangolo",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -4877,7 +4939,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 867,
-    "ms": 234.6
+    "ms": 231.3
    },
    "variants": {
     "keyword": {
@@ -4889,7 +4951,7 @@
      ],
      "rejected": [],
      "tokens": 900,
-     "ms": 48.6
+     "ms": 47.7
     },
     "hybrid": {
      "pass": false,
@@ -4900,14 +4962,14 @@
      ],
      "rejected": [],
      "tokens": 936,
-     "ms": 49.8
+     "ms": 53.4
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 867,
-     "ms": 234.6
+     "ms": 231.3
     }
    },
    "context7": {
@@ -4917,7 +4979,8 @@
     "tokens": 836,
     "ms": 2575,
     "library": "/websites/fastapi_tiangolo",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -4933,7 +4996,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 875,
-    "ms": 66.7
+    "ms": 69.3
    },
    "variants": {
     "keyword": {
@@ -4945,7 +5008,7 @@
      ],
      "rejected": [],
      "tokens": 884,
-     "ms": 15.4
+     "ms": 15.1
     },
     "hybrid": {
      "pass": false,
@@ -4956,14 +5019,14 @@
      ],
      "rejected": [],
      "tokens": 975,
-     "ms": 49.4
+     "ms": 49.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 875,
-     "ms": 66.7
+     "ms": 69.3
     }
    },
    "context7": {
@@ -4975,7 +5038,8 @@
     "tokens": 1934,
     "ms": 1472,
     "library": "/websites/fastapi_tiangolo",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -4991,7 +5055,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 838,
-    "ms": 74.1
+    "ms": 70.1
    },
    "variants": {
     "keyword": {
@@ -4999,21 +5063,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 926,
-     "ms": 15.7
+     "ms": 15.5
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 926,
-     "ms": 48.3
+     "ms": 54.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 838,
-     "ms": 74.1
+     "ms": 70.1
     }
    },
    "context7": {
@@ -5023,7 +5087,8 @@
     "tokens": 1934,
     "ms": 1691,
     "library": "/websites/fastapi_tiangolo",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -5039,7 +5104,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 831,
-    "ms": 94.6
+    "ms": 90.1
    },
    "variants": {
     "keyword": {
@@ -5047,21 +5112,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 363,
-     "ms": 20.3
+     "ms": 19.7
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 936,
-     "ms": 68.0
+     "ms": 61.2
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 831,
-     "ms": 94.6
+     "ms": 90.1
     }
    },
    "context7": {
@@ -5073,7 +5138,8 @@
     "tokens": 1388,
     "ms": 1576,
     "library": "/vercel/next.js/v15.1.11",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
@@ -5089,7 +5155,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 869,
-    "ms": 648.7
+    "ms": 629.5
    },
    "variants": {
     "keyword": {
@@ -5097,21 +5163,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 837,
-     "ms": 441.0
+     "ms": 431.7
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 789,
-     "ms": 119.3
+     "ms": 119.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 869,
-     "ms": 648.7
+     "ms": 629.5
     }
    },
    "context7": {
@@ -5121,7 +5187,8 @@
     "tokens": 757,
     "ms": 2785,
     "library": "/vercel/next.js/v16.2.9",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   }
  ],
@@ -5131,24 +5198,24 @@
    "passed": 41,
    "total": 70,
    "median_tokens": 898,
-   "median_ms": 22.6,
-   "p95_ms": 402.1
+   "median_ms": 22.2,
+   "p95_ms": 397.4
   },
   "hybrid": {
    "answered": 70,
    "passed": 46,
    "total": 70,
    "median_tokens": 915,
-   "median_ms": 49.8,
-   "p95_ms": 90.7
+   "median_ms": 48.6,
+   "p95_ms": 94.3
   },
   "fetched": {
    "answered": 70,
    "passed": 55,
    "total": 70,
    "median_tokens": 875,
-   "median_ms": 89.5,
-   "p95_ms": 501.7
+   "median_ms": 86.6,
+   "p95_ms": 490.7
   },
   "context7": {
    "answered": 70,
@@ -5174,12 +5241,13 @@
   ]
  ],
  "context7_calls": {
-  "calls": 102,
+  "calls": 4,
   "rate_limited": 0,
   "errors": 0,
   "stopped": false,
   "limit": "200",
-  "remaining": "95"
+  "remaining": "196",
+  "reused": 67
  },
  "runner": {
   "os": "Linux",

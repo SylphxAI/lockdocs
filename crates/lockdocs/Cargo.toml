@@ -1,6 +1,6 @@
 [package]
 name = "lockdocs"
-description = "Exact-version library docs for AI agents, straight from your lockfile, offline. MCP server + CLI."
+description = "Exact-version library docs from your lockfile — local, offline, no rate limits."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -15,5 +15,5 @@ path = "src/main.rs"
 anyhow = "1"
 lockdocs-core = { path = "../lockdocs-core" }
 serde_json = "1"
-toml_edit = "0.23"
-dirs = "6"
+toml_edit = "0.25"
+dirs = "7"

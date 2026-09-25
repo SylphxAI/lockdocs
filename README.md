@@ -2,10 +2,10 @@
 
 # lockdocs
 
-**Context7 without rate limits: exact-version library docs for AI agents, straight from your lockfile, offline.**
+**Exact-version library docs from your lockfile — local, offline, no rate limits.**
 
 Reads your lockfile. Answers from the docs and type declarations of the exact version you installed.<br>
-npm · PyPI · crates.io · Go. One Rust binary. No account, no API key, no rate limit. MIT.
+npm · PyPI · crates.io · Go. MCP server + CLI in one Rust binary. No account, no API key. MIT.
 
 [![npm](https://img.shields.io/npm/v/@sylphx/lockdocs?color=7c9cff&label=npm)](https://www.npmjs.com/package/@sylphx/lockdocs)
 [![CI](https://github.com/SylphxAI/lockdocs/actions/workflows/ci.yml/badge.svg)](https://github.com/SylphxAI/lockdocs/actions/workflows/ci.yml)
@@ -68,7 +68,7 @@ lockdocs takes the version question off the table:
 
 - **Exact version, zero config.** It reads `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `bun.lock`, `Cargo.lock`, `uv.lock`, `poetry.lock`, `Pipfile.lock`, `requirements*.txt` and `go.mod`. No library IDs, no "use v14" in the prompt.
 - **Docs that ship with the code.** READMEs, changelogs and `docs/` folders, plus the API reference in the package itself: `.d.ts` declarations with JSDoc, Python docstrings and stubs, rustdoc comments, Go doc comments. If it is installed, it is documented, including your private and internal packages.
-- **Offline and unlimited.** Everything is read from `node_modules`, your virtualenv, `~/.cargo/registry` and the Go module cache. No network, no account, no rate limit, and nothing about your dependencies leaves your machine.
+- **Offline and unlimited.** Everything is read from `node_modules`, your virtualenv, `~/.cargo/registry` and the Go module cache. Offline after a one-time model download (129 MB, kept as 32 MB); keyword-only mode (`LOCKDOCS_EMBED=0`) needs no network at all. No account, no rate limit, and nothing about your dependencies leaves your machine.
 - **Upstream docs at the exact tag, when you want them.** Packages like Next.js, Django and FastAPI ship no docs. `lockdocs fetch` pulls their docs folders from GitHub at the git tag of your pinned version, once, then stays offline.
 - **Meaning, not just words.** Hybrid retrieval: BM25 fused with a small local embedding model (downloaded once, 32 MB on disk), plus API redirects from deprecation notes ("use `model_validate` instead").
 - **Small, cited answers.** Packed into a token budget (1,200 by default), every section cited as `package@version path:line`.
@@ -119,16 +119,18 @@ Out of the box lockdocs reads only your disk (plus the one-time embedding model 
 
 ## Benchmarks
 
-70 questions whose correct answer depends on the version, over 14 libraries (zod, Next.js, React Router, pydantic, axum, tokio, Tailwind CSS, ESLint, Prisma, React, Vite, Express, SQLAlchemy, Django, FastAPI), each asked in a real project with that version installed. An answer passes when it contains the version-correct API and none of the other version's. Same questions and grader against Context7's anonymous API, on a GitHub-hosted runner ([run](https://github.com/SylphxAI/lockdocs/actions/runs/36125903106)):
+<!-- bench:start -->
+70 questions whose correct answer depends on the version, over 15 libraries (zod, Next.js, React Router, pydantic, axum, tokio, Tailwind CSS, ESLint, Prisma, React, Vite, Express, SQLAlchemy, Django, FastAPI), each asked in a real project with that version installed. An answer passes when it contains the version-correct API and none of the other version's. Same questions and grader against Context7's anonymous API, on a GitHub-hosted runner ([run](https://github.com/SylphxAI/lockdocs/actions/runs/36125903106)):
 
 | | correct | older majors | newer majors | tokio | median tokens | median latency |
 |---|---|---|---|---|---|---|
-| **lockdocs + `lockdocs fetch`** | **55/70** | **24/33** | 29/34 | 2/3 | **875** | **87 ms** |
+| lockdocs + `lockdocs fetch` | 55/70 | 24/33 | 29/34 | 2/3 | 875 | 87 ms |
 | lockdocs, package files only | 46/70 | 22/33 | 22/34 | 2/3 | 915 | 49 ms |
-| Context7 (anonymous) | 49/70 | 12/33 | **34/34** | **3/3** | 908 | 2,011 ms |
+| Context7 (anonymous) | 49/70 | 12/33 | 34/34 | 3/3 | 908 | 2,011 ms |
+<!-- bench:end -->
 
 - **Where versions matter most, lockdocs wins by 2x.** On older majors Context7 often answers with the newest API (all five pydantic 1 questions got pydantic 2 answers).
-- **Context7 still leads on the newest majors and on tokio.** Its index covers docs websites that no package or tag ships (Prisma's docs now describe a later major), and lockdocs has a few ranking misses. The benchmark page lists every question and answer.
+- **Context7 is ahead on the newest majors (34/34 vs 29/34) and on tokio (3/3 vs 2/3)**, and we are working to close that. Its index covers docs websites that no package or tag ships (Prisma's docs now describe a later major), and lockdocs has a few ranking misses. The benchmark page lists every question and answer.
 - **~23x faster, no quota.** lockdocs latency is a fresh CLI process per question; `lockdocs fetch` is a one-time 0.6-5 s per project (median 2.4 s).
 
 Method, questions, per-question results and scripts: [benchmark page](https://sylphxai.github.io/lockdocs/benchmarks) and [`bench/`](bench/).
@@ -185,8 +187,7 @@ lockdocs reads files on your machine and answers over stdio. Network use: the em
 
 - [**repomap**](https://github.com/SylphxAI/repomap): a map of your codebase for AI agents: code graph, search, call paths and change impact, with an interactive graph UI.
 - [**anymd**](https://github.com/SylphxAI/anymd): any file to clean Markdown for your AI agent: PDF, Word, PowerPoint, Excel, EPUB, HTML, images, audio and video.
-
-All three run locally, need no API key, and are MIT licensed.
+- [**readme-mark**](https://github.com/SylphxAI/readme-mark): beautiful README images from one URL.
 
 ## Star history
 

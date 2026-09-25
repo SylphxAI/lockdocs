@@ -28,3 +28,7 @@ Bump with `bun scripts/set-version.ts X.Y.Z && cargo update -w`, add a
 the npm version is new: 5 native targets on GitHub-hosted runners, the natives
 and `@sylphx/lockdocs`, an `npx` smoke on a real project, the GitHub release,
 and the MCP Registry entry.
+
+npm publishing uses trusted publishing (OIDC): every package
+(`@sylphx/lockdocs` and the five `@sylphx/lockdocs-*` natives) trusts
+`SylphxAI/lockdocs` `.github/workflows/release.yml`; there is no npm token.

@@ -137,7 +137,7 @@ impl Project {
                 Some(Ok(mut deps)) => {
                     let rel = self.rel(&path);
                     for d in &mut deps {
-                        d.from = rel.clone();
+                        d.from = if d.from.ends_with("(git)") { format!("{rel} (git)") } else { rel.clone() };
                     }
                     self.deps.extend(deps);
                     self.lockfiles.push(rel);

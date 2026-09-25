@@ -1,0 +1,11 @@
+version = 4
+
+[[package]]
+name = "fixture-git"
+version = "0.0.0"
+dependencies = ["tinygit"]
+
+[[package]]
+name = "tinygit"
+version = "0.2.0"
+source = "git+https://github.com/example/tinygit?branch=main#0123456789abcdef0123456789abcdef01234567"

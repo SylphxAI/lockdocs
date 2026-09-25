@@ -1,2 +1,4 @@
 crates/lockdocs-core/tests/fixture/** text eol=lf
 *.gif binary
+*.zip binary
+crates/lockdocs-core/tests/fixture-*/** text eol=lf

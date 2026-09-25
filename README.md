@@ -99,9 +99,9 @@ The same call in a pydantic 1 project answers that pydantic 1.10.18 has no `mode
 
 | Ecosystem | Versions from | Docs read from | API reference |
 |---|---|---|---|
-| npm | `package-lock.json`, `npm-shrinkwrap.json`, `pnpm-lock.yaml` (v5-v9), `yarn.lock` (v1 and Berry), `bun.lock`; else `package.json` + `node_modules` | `node_modules` (including pnpm's `.pnpm` store and monorepo roots) | `.d.ts`/`.d.mts`/`.d.cts` with JSDoc; `@types/*` when the package ships none; JSDoc'd JS otherwise |
+| npm | `package-lock.json`, `npm-shrinkwrap.json`, `pnpm-lock.yaml` (v5-v9), `yarn.lock` (v1 and Berry), `bun.lock`; else `package.json` + `node_modules` | `node_modules` (including pnpm's `.pnpm` store and monorepo roots), Yarn PnP zip cache (`.yarn/cache`, global Berry cache) | `.d.ts`/`.d.mts`/`.d.cts` with JSDoc; `@types/*` when the package ships none; JSDoc'd JS otherwise |
 | PyPI | `uv.lock`, `poetry.lock`, `pdm.lock`, `Pipfile.lock`, `requirements*.txt`; else the virtualenv | `.venv`, `venv`, `$VIRTUAL_ENV`, `$CONDA_PREFIX`, then the system interpreter | Docstrings and signatures from `.py`, `.pyi` stubs; README from the wheel's METADATA |
-| crates.io | `Cargo.lock` | `~/.cargo/registry/src` (or `$CARGO_HOME`), `vendor/` | Public items with rustdoc (`///`, `//!`), including items declared inside macros such as tokio's `cfg_rt!` |
+| crates.io | `Cargo.lock` | `~/.cargo/registry/src` (or `$CARGO_HOME`), git dependencies from `~/.cargo/git/checkouts`, `vendor/` | Public items with rustdoc (`///`, `//!`), including items declared inside macros such as tokio's `cfg_rt!` |
 | Go | `go.mod` (with `replace`) | `$GOMODCACHE`/`~/go/pkg/mod`, `vendor/` | Exported funcs, methods, types, interface methods with doc comments; package docs |
 
 Legacy copies bundled inside a package (`zod/v3` inside zod 4, `pydantic/v1` inside pydantic 2) rank below the current API.

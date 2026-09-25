@@ -136,7 +136,7 @@ pub fn fetch(dep: &Dep) -> Result<Source> {
 
 /// Keep only paths that stay inside the target; drop the first component
 /// (`package/`, `name-1.0/`) of tarballs.
-fn safe_rel(p: &Path, strip_first: bool) -> Option<PathBuf> {
+pub(crate) fn safe_rel(p: &Path, strip_first: bool) -> Option<PathBuf> {
     let mut out = PathBuf::new();
     for (i, c) in p.components().enumerate() {
         match c {
@@ -157,7 +157,7 @@ fn safe_rel(p: &Path, strip_first: bool) -> Option<PathBuf> {
     }
 }
 
-fn wanted(p: &Path) -> bool {
+pub(crate) fn wanted(p: &Path) -> bool {
     let s = p.to_string_lossy().to_ascii_lowercase();
     if s.contains("node_modules/") || s.contains("/test/") || s.contains("/tests/") {
         return false;
@@ -193,7 +193,7 @@ fn untar_gz(bytes: &[u8], dir: &Path) -> Result<()> {
     Ok(())
 }
 
-fn unzip(bytes: &[u8], dir: &Path, strip_first: bool, prefix: Option<&str>) -> Result<()> {
+pub(crate) fn unzip(bytes: &[u8], dir: &Path, strip_first: bool, prefix: Option<&str>) -> Result<()> {
     let mut z = zip::ZipArchive::new(std::io::Cursor::new(bytes))?;
     for i in 0..z.len() {
         let mut f = z.by_index(i)?;

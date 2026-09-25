@@ -25,7 +25,7 @@ jobs:
       version: ${{ steps.v.outputs.version }}
       publish: ${{ steps.v.outputs.publish }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - id: v
         env:
           GH_TOKEN: ${{ github.token }}
@@ -53,7 +53,7 @@ jobs:
           - { key: linux-arm64-gnu, os: ubuntu-latest, target: aarch64-unknown-linux-gnu, zig: '2.17', bin: lockdocs }
           - { key: win32-x64-msvc, os: windows-latest, target: x86_64-pc-windows-msvc, bin: lockdocs.exe }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
@@ -98,7 +98,7 @@ jobs:
     env:
       V: ${{ needs.check.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: '22'

@@ -126,7 +126,67 @@ pub fn split(text: &str, title: &str) -> Vec<Section> {
     out
 }
 
+/// Headings that name a part of a page, not a topic (`Parameters`,
+/// `Returns`, `Examples`): the topic is the heading above them.
+pub fn generic_heading(h: &str) -> bool {
+    let h = h.trim().trim_end_matches(':').to_ascii_lowercase();
+    [
+        "parameters",
+        "parameter",
+        "params",
+        "arguments",
+        "args",
+        "returns",
+        "return value",
+        "return type",
+        "props",
+        "options",
+        "examples",
+        "example",
+        "usage",
+        "reference",
+        "overview",
+        "notes",
+        "caveats",
+        "good to know",
+        "type",
+        "types",
+        "description",
+        "syntax",
+        "signature",
+        "see also",
+        "troubleshooting",
+        "introduction",
+        "summary",
+        "details",
+    ]
+    .contains(&h.as_str())
+}
+
+/// The heading an entry is about: its last heading, or the one above it
+/// when the last is generic (`generateMetadata › Parameters` -> `generateMetadata`).
+pub fn topic_heading(name: &str) -> &str {
+    let mut it = name.rsplit(" › ");
+    let last = it.next().unwrap_or("");
+    if generic_heading(last) {
+        it.next().unwrap_or(last)
+    } else {
+        last
+    }
+}
+
 fn clean_heading(h: &str) -> String {
+    // MDX heading ids: `Usage {/*usage*/}`, `Usage {#usage}`.
+    let mut h = h.to_string();
+    for (open, close) in [("{/*", "*/}"), ("{#", "}")] {
+        while let Some(i) = h.find(open) {
+            match h[i..].find(close) {
+                Some(j) => h.replace_range(i..i + j + close.len(), ""),
+                None => break,
+            }
+        }
+    }
+    let h = h.as_str();
     // `[text](url)` -> text, drop inline code ticks and HTML tags.
     let mut s = String::new();
     let mut in_tag = false;
@@ -356,6 +416,14 @@ mod tests {
         );
         assert!(s[0].text.contains("Custom directives."));
         assert_eq!(s[2].line, 10);
+    }
+
+    #[test]
+    fn heading_ids_and_generic_headings() {
+        let s = split("# forwardRef\n\n## Usage {/*usage*/}\n\nText.\n\n### Props {#props}\n\nMore.\n", "doc");
+        assert_eq!(s[0].heading, "doc › forwardRef › Usage");
+        assert_eq!(topic_heading(&s[1].heading), "Usage");
+        assert_eq!(topic_heading("generateMetadata › Parameters"), "generateMetadata");
     }
 
     #[test]

@@ -102,8 +102,7 @@ pub fn head_tf(e: &Entry) -> (Vec<(String, u16)>, u32) {
     let (prose, _) = split_code(&e.doc);
     let first = summary(&prose);
     if e.kind == Kind::Prose {
-        let last = e.name.rsplit(" › ").next().unwrap_or("");
-        bm25::tf(&[(last, 2), (first, 1)])
+        bm25::tf(&[(crate::markdown::topic_heading(&e.name), 2), (first, 1)])
     } else {
         bm25::tf(&[(&e.name, 2), (first, 1)])
     }

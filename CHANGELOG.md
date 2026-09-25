@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0
+
+- **Docs sites follow your major.** For packages whose docs live in a separate website repository, `lockdocs fetch` takes the docs for the pinned major: the default branch when your major is the latest, a `vN` / `N.x` branch when the site keeps one (Tailwind CSS v3, Prisma v6), or the last commit before the next major was released. Pages about a later major are skipped. React keeps the latest-only rule (react.dev documents APIs before they ship). tokio's website (tutorial and topics) is added, and docs sites now work for crates and PyPI packages too.
+- **More of the docs are read.** Django's docs (reStructuredText in `.txt` files) were downloaded but not indexed; they are now. Docs pages written as React components (Tailwind's installation guides) are indexed. HTML headings in MDX split sections, and `export const title` names the page.
+- **Ranking.** A second BM25 over just the heading (or name) and first sentence keeps a long body from burying what an entry says it is. Question words that name a documented top-level API of the package ("run code *after* the response" in Next.js, which exports `after`) count as identifiers.
+- **Fetch.** GitHub API redirects (renamed repositories) keep the token, docs-site errors appear in the fetch note, and `lockdocs fetch` refreshes copies made by older versions.
+- **Benchmark:** 17 held-out questions (not used for tuning) in their own column; Context7 answers are reused only when the question and its grading are unchanged; the `pyd1-config` grader no longer rejects `ConfigDict`, which pydantic 1.10 also ships.
+
 ## 0.2.1
 
 - **MCP server** now runs on [mcp-kit](https://github.com/SylphxAI/mcp-kit), which uses rmcp, the official Rust MCP SDK, instead of lockdocs' own JSON-RPC loop. Tools and answers are unchanged. The server now also handles protocol negotiation across every spec version, cancellation, progress and pagination.

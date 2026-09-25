@@ -17,9 +17,17 @@ pub fn is_stop(w: &str) -> bool {
     STOP.contains(&w)
 }
 
-/// Conservative suffix stripping: plural, -ing, -ed, final -e.
+/// Conservative suffix stripping: plural, -ing, -ed, final -e, and the
+/// noun forms -ation / -ability that pair with -ate / -able
+/// (validation ~ validate, immutability ~ immutable).
 pub fn stem(t: &str) -> String {
     let mut s = stem0(t);
+    let n = s.len();
+    if s.is_ascii() && n > 8 && (s.ends_with("ability") || s.ends_with("ibility")) {
+        s.replace_range(n - 5.., "l");
+    } else if s.is_ascii() && n > 7 && s.ends_with("ation") {
+        s.truncate(n - 3);
+    }
     if s.len() > 4 && s.ends_with('e') && s.is_ascii() {
         s.pop();
     }
@@ -97,6 +105,12 @@ const SYNONYMS: &[(&str, &[&str])] = &[
     ("middleware", &["layer"]),
     ("layer", &["middleware"]),
     ("state", &["extension"]),
+    ("javascript", &["js"]),
+    ("js", &["javascript"]),
+    ("typescript", &["ts"]),
+    ("ts", &["typescript"]),
+    ("databas", &["db"]),
+    ("db", &["databas"]),
     ("unknown", &["extra", "strict"]),
     ("extra", &["unknown"]),
 ];
@@ -242,6 +256,9 @@ mod tests {
         assert_eq!(stem("validate"), "validat");
         assert_eq!(stem("parses"), stem("parse"));
         assert_eq!(stem("class"), "class");
+        assert_eq!(stem("immutability"), stem("immutable"));
+        assert_eq!(stem("validation"), stem("validate"));
+        assert_eq!(stem("validations"), stem("validated"));
         let a = tf(&[("object schema strict", 1)]);
         let b = tf(&[("string schema", 1)]);
         let idx = Bm25::build([(a.0.as_slice(), a.1), (b.0.as_slice(), b.1)].into_iter());

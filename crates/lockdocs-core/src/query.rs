@@ -607,7 +607,18 @@ impl Engine {
                 continue;
             }
             let e = resolve_alias(idx, e);
-            let block = render_entry(idx, e, if out.blocks == 0 { 2000 } else { 800 });
+            // The top result also carries the lead of its page and parent
+            // section, within the same budget.
+            let ctx = if out.blocks == 0 { section_context(idx, e) } else { None };
+            let max_doc = if out.blocks == 0 {
+                2000 - ctx.as_ref().map_or(0, |c| c.len().min(800))
+            } else {
+                800
+            };
+            let mut block = render_entry(idx, e, max_doc);
+            if let (Some(ctx), Some(nl)) = (ctx, block.find('\n')) {
+                block.insert_str(nl + 1, &ctx);
+            }
             if !out.push_block(&block) {
                 break;
             }
@@ -994,11 +1005,12 @@ fn hybrid_rank(
             let (pi, ei) = refs[i];
             let e = &ready[pi].0.entries[ei];
             let lexical = (1.0 - head_w) * b + head_w * h;
-            let s = ((1.0 - w) * lexical + w * d) * boost(e, idents, changes) * name_hit(e, &rare);
+            let major = major_of(&ready[pi].0.version);
+            let s = ((1.0 - w) * lexical + w * d) * boost(e, idents, changes, major) * name_hit(e, &rare);
             if debug && s > 0.3 {
                 eprintln!(
                     "{s:.3} bm={b:.3} head={h:.3} dense={d:.3} boost={:.2} name={:.2} {}",
-                    boost(e, idents, changes),
+                    boost(e, idents, changes, major),
                     name_hit(e, &rare),
                     e.path
                 );
@@ -1074,14 +1086,33 @@ pub fn redirects(text: &str) -> Vec<String> {
     out
 }
 
+/// Terms of a prose heading. Capitalized words are names (`TypeScript`,
+/// `JavaScript`) and stay whole; identifiers (`useActionState`,
+/// `model_dump`) are also split into their parts.
+fn heading_terms(h: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    for w in h.split(|c: char| !(c.is_ascii_alphanumeric() || c == '_')).filter(|w| !w.is_empty()) {
+        if w.starts_with(|c: char| c.is_ascii_uppercase()) && !w.contains('_') {
+            out.push(bm25::stem(&w.to_ascii_lowercase()));
+        } else {
+            out.extend(bm25::terms(w));
+        }
+    }
+    out
+}
+
 /// Entries whose name (or section heading) carries a query word are about it.
 fn name_hit(e: &Entry, qterms: &[String]) -> f32 {
-    let label = if e.kind == Kind::Prose {
-        e.name.rsplit(" › ").next().unwrap_or("")
+    let words = if e.kind == Kind::Prose {
+        let last = e.name.rsplit(" › ").next().unwrap_or("");
+        if crate::markdown::generic_heading(last) {
+            Vec::new()
+        } else {
+            heading_terms(last)
+        }
     } else {
-        e.name.as_str()
+        bm25::terms(&e.name)
     };
-    let words = bm25::terms(label);
     let n = qterms.iter().filter(|q| words.contains(q)).count();
     match n {
         0 => 1.0,
@@ -1090,7 +1121,32 @@ fn name_hit(e: &Entry, qterms: &[String]) -> f32 {
     }
 }
 
-fn boost(e: &Entry, idents: &[String], changes: bool) -> f32 {
+fn major_of(version: &str) -> u64 {
+    version.trim_start_matches('v').split('.').next().and_then(|m| m.parse().ok()).unwrap_or(0)
+}
+
+/// A migration or upgrade guide to a major older than the pinned one
+/// ("Migrating to v6.0.0" in ESLint 9, "Upgrade to Prisma ORM 4" in Prisma 6):
+/// history, not how things work now.
+fn old_upgrade_guide(e: &Entry, major: u64) -> bool {
+    let title = e.name.split(" › ").next().unwrap_or("");
+    let stem = e.file.rsplit('/').next().unwrap_or("");
+    [title, stem].iter().any(|t| {
+        let l = t.to_ascii_lowercase();
+        (l.contains("migrat") || l.contains("upgrad"))
+            && l.split(|c: char| !c.is_ascii_digit())
+                .find(|d| !d.is_empty() && d.len() <= 3)
+                .and_then(|d| d.parse::<u64>().ok())
+                .is_some_and(|v| v < major)
+    })
+}
+
+/// A page its own title marks as deprecated ("Configure Language Options (Deprecated)").
+fn deprecated_page(e: &Entry) -> bool {
+    e.name.split(" › ").next().unwrap_or("").to_ascii_lowercase().contains("(deprecated)")
+}
+
+fn boost(e: &Entry, idents: &[String], changes: bool, major: u64) -> f32 {
     let mut b = 1.0;
     // Curated guides from the project's own docs folder answer "how do I" better
     // than internal symbols do.
@@ -1110,6 +1166,12 @@ fn boost(e: &Entry, idents: &[String], changes: bool) -> f32 {
             .to_ascii_lowercase();
         if !last.is_empty() && idents.contains(&last) {
             b *= 1.4;
+        }
+        if !changes && old_upgrade_guide(e, major) {
+            b *= 0.5;
+        }
+        if deprecated_page(e) {
+            b *= 0.6;
         }
         if is_changelog(e) {
             b *= if changes { 1.5 } else { 0.5 };
@@ -1216,6 +1278,84 @@ pub fn render_entry(idx: &PackageIndex, e: &Entry, max_doc: usize) -> String {
         s.push('\n');
     }
     s
+}
+
+/// The first paragraph of text (and a short code block right after it) of a
+/// section. Tag-only lines (`<Deprecated>`) are skipped.
+fn lead(doc: &str) -> String {
+    let tag_only = |l: &str| l.starts_with('<') && l.ends_with('>');
+    let mut lines = doc.lines().map(str::trim_end).peekable();
+    let mut para: Vec<&str> = Vec::new();
+    for l in lines.by_ref() {
+        let t = l.trim();
+        if t.starts_with("```") || t.starts_with("~~~") {
+            return String::new();
+        }
+        if t.is_empty() || tag_only(t) {
+            if para.is_empty() {
+                continue;
+            }
+            break;
+        }
+        para.push(t);
+    }
+    let mut out = truncate(&para.join(" "), 320);
+    while lines.peek().is_some_and(|l| l.trim().is_empty()) {
+        lines.next();
+    }
+    if lines.peek().is_some_and(|l| l.trim_start().starts_with("```")) {
+        let mut code = vec![lines.next().unwrap_or_default()];
+        for l in lines.by_ref() {
+            code.push(l);
+            if l.trim_start().starts_with("```") {
+                break;
+            }
+        }
+        let code = code.join("\n");
+        if code.len() <= 300 && code.matches("```").count() == 2 {
+            out.push('\n');
+            out.push_str(&code);
+        }
+    }
+    out
+}
+
+/// Leads of a prose section's page and parent section, quoted, when they
+/// say something the section does not (a deprecation notice on the page,
+/// the setup a subsection builds on).
+fn section_context(idx: &PackageIndex, e: &Entry) -> Option<String> {
+    if e.kind != Kind::Prose {
+        return None;
+    }
+    let parts: Vec<&str> = e.name.split(" › ").collect();
+    if parts.len() < 2 {
+        return None;
+    }
+    let mut wanted = vec![parts[0].to_string()];
+    if parts.len() > 2 {
+        wanted.push(parts[..parts.len() - 1].join(" › "));
+    }
+    let mut out = String::new();
+    for name in wanted {
+        let Some(p) = idx
+            .entries
+            .iter()
+            .filter(|x| x.kind == Kind::Prose && x.file == e.file && x.name == name)
+            .min_by_key(|x| x.line)
+        else {
+            continue;
+        };
+        let l = lead(&p.doc);
+        if l.len() < 20 || e.doc.contains(&l) || out.contains(&l) {
+            continue;
+        }
+        for line in format!("{}: {l}", p.name.rsplit(" › ").next().unwrap_or("")).lines() {
+            out.push_str("> ");
+            out.push_str(line);
+            out.push('\n');
+        }
+    }
+    (!out.is_empty()).then(|| out + "\n")
 }
 
 /// Token-budgeted output.
@@ -1333,7 +1473,41 @@ pub fn dep_key(d: &Dep) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::redirects;
+    use super::*;
+
+    #[test]
+    fn old_upgrade_guides_and_deprecated_pages() {
+        let e = |name: &str, file: &str| Entry {
+            kind: Kind::Prose,
+            name: name.into(),
+            path: name.into(),
+            file: file.into(),
+            line: 1,
+            sig: String::new(),
+            doc: String::new(),
+            alias_of: None,
+            legacy: false,
+        };
+        assert!(old_upgrade_guide(
+            &e("Migrating to v6.0.0 › x", "upstream:docs/src/use/migrating-to-6.0.0.md"),
+            9
+        ));
+        assert!(old_upgrade_guide(
+            &e("Upgrade to Prisma ORM 4 › x", "upstream:docs/700-upgrading-to-prisma-4.mdx"),
+            6
+        ));
+        assert!(!old_upgrade_guide(
+            &e("Upgrade to Prisma ORM 6 › x", "upstream:docs/500-upgrading-to-prisma-6.mdx"),
+            6
+        ));
+        assert!(!old_upgrade_guide(&e("Migration Guide › x", "upstream:docs/migration.md"), 2));
+        assert!(deprecated_page(&e("Configure Language Options (Deprecated) › Globals", "x.md")));
+        assert!(!heading_terms("Seeding with TypeScript or JavaScript").contains(&"type".to_string()));
+        assert!(heading_terms("useActionState reference").contains(&"action".to_string()));
+        let l = lead("Intro line.\n\n```css\n@import \"tailwindcss\";\n\n@custom-variant dark (&:where(.dark, .dark *));\n```\n\nMore.");
+        assert!(l.contains("@custom-variant") && l.ends_with("```"), "{l}");
+        assert!(lead("<Deprecated>\n\nIn React 19, it is no longer necessary.\n\n</Deprecated>").starts_with("In React 19"));
+    }
 
     #[test]
     fn deprecation_redirects() {

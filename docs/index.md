@@ -3,7 +3,7 @@ layout: home
 hero:
   name: lockdocs
   text: The docs for the version you actually installed.
-  tagline: Context7 without rate limits. lockdocs reads your lockfile and answers your AI agent from the installed packages' own docs and type declarations. npm, PyPI, crates.io, Go. Offline. No API key. MIT.
+  tagline: Exact-version library docs from your lockfile — local, offline, no rate limits.
   actions:
     - theme: brand
       text: npx -y @sylphx/lockdocs setup
@@ -23,7 +23,7 @@ features:
     details: READMEs, changelogs and docs folders, plus API reference from .d.ts + JSDoc, Python docstrings, rustdoc and Go doc comments. Private packages included.
   - icon: ✈️
     title: Offline and unlimited
-    details: Everything comes from node_modules, your virtualenv, the Cargo registry and the Go module cache. No network, no account, no rate limit.
+    details: Everything comes from node_modules, your virtualenv, the Cargo registry and the Go module cache. Offline after a one-time model download; keyword-only needs no network. No account, no rate limit.
   - icon: 🎯
     title: Small, cited answers
     details: Hybrid search (BM25 + a small local embedding model) over symbols and sections, packed into a 1,200-token budget by default, every section cited as package@version path:line.

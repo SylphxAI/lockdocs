@@ -2,7 +2,7 @@
   "name": "@sylphx/lockdocs",
   "version": "0.2.0",
   "mcpName": "io.github.SylphxAI/lockdocs",
-  "description": "Context7 without rate limits: exact-version library docs for AI agents, straight from your lockfile, offline. MCP server + CLI (Rust). npm, PyPI, crates.io, Go.",
+  "description": "Exact-version library docs from your lockfile — local, offline, no rate limits.",
   "bin": {
     "lockdocs": "bin/lockdocs.js"
   },

@@ -127,7 +127,7 @@ pub fn ensure() -> Result<()> {
         total += n as u64;
     }
     drop(file);
-    let got = format!("{:x}", hasher.finalize());
+    let got: String = hasher.finalize().iter().map(|b| format!("{b:02x}")).collect();
     if got != WEIGHTS_SHA256 || total != WEIGHTS_BYTES {
         let _ = std::fs::remove_file(&tmp);
         bail!("model download failed verification (sha256 {got}, {total} bytes)");

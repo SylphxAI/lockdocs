@@ -23,7 +23,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: cargo test --workspace --locked
@@ -32,7 +32,7 @@ jobs:
     name: manifests, smoke, docs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.0'
@@ -41,8 +41,12 @@ jobs:
           components: clippy, rustfmt
       - uses: Swatinem/rust-cache@v2
       - run: bun install --frozen-lockfile
-      - name: Manifests agree on one version
-        run: bun scripts/check-version.ts
+      - name: Manifests agree on one version and one tagline
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          bun scripts/check-version.ts
+          bun scripts/check-tagline.ts "$(gh api "repos/$GITHUB_REPOSITORY" --jq .description)"
       - name: Format and lints
         run: cargo fmt --all --check && cargo clippy --workspace --locked -- -D warnings
       - name: Build release binary

@@ -49,6 +49,7 @@ npx -y @sylphx/lockdocs fetch                              # once: add upstream 
 ```
 
 Claude Code: `claude mcp add lockdocs -- npx -y @sylphx/lockdocs mcp`
+Claude Code plugin: `/plugin marketplace add SylphxAI/lockdocs`, then `/plugin install lockdocs@lockdocs`
 Codex (`~/.codex/config.toml`):
 
 ```toml

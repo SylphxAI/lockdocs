@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "lockdocs",
+  "description": "lockdocs for Claude Code: library docs for the exact versions in your lockfile.",
+  "owner": {
+    "name": "Sylphx",
+    "url": "https://github.com/SylphxAI"
+  },
+  "plugins": [
+    {
+      "name": "lockdocs",
+      "source": "./",
+      "description": "Exact-version library docs from your lockfile, read locally and offline.",
+      "category": "development"
+    }
+  ]
+}

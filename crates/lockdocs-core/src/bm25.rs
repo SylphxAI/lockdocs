@@ -12,6 +12,11 @@ const STOP: &[&str] = &[
     "their", "into", "vs", "versus", "about", "example", "show",
 ];
 
+/// A stopword (lowercase)?
+pub fn is_stop(w: &str) -> bool {
+    STOP.contains(&w)
+}
+
 /// Conservative suffix stripping: plural, -ing, -ed, final -e.
 pub fn stem(t: &str) -> String {
     let mut s = stem0(t);

@@ -26,8 +26,15 @@ pub struct Repo {
     pub subdir: Option<String>,
 }
 
+/// Bump when what `fetch` downloads changes, so `lockdocs fetch` refreshes
+/// older copies (a stale copy is still used until then).
+pub const FORMAT: u32 = 2;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Manifest {
+    /// `FORMAT` when downloaded (0 before it existed).
+    #[serde(default)]
+    pub format: u32,
     pub repo: String,
     pub tag: Option<String>,
     pub files: usize,
@@ -37,115 +44,236 @@ pub struct Manifest {
     /// A separate docs-site repository also included (see `DOCS_SITES`).
     #[serde(default)]
     pub site: Option<String>,
+    /// Docs pages written as JS/TSX components, relative to the cache folder.
+    #[serde(default)]
+    pub pages: Vec<String>,
 }
 
 /// Packages whose docs live in a separate website repository. Paths with
-/// `{major}` are versioned and used for any major; the others track the
-/// current release and are used only when the pinned major is the latest.
+/// `{major}` are versioned and used for any major. The `current` folders
+/// describe one major: the latest one on `branch`, an older one on a
+/// `v{major}` / `{major}.x` branch or, when `before_next_major` is set, at the
+/// last commit before the next major was released.
 struct DocsSite {
+    eco: Eco,
     names: &'static [&'static str],
     repo: (&'static str, &'static str),
     branch: &'static str,
     versioned: &'static [&'static str],
-    latest_only: &'static [&'static str],
+    /// Docs folders; layouts move between majors, so every one that exists is used.
+    current: &'static [&'static str],
+    /// Folders of docs pages written as JS/TSX components (installation steps).
+    pages: &'static [&'static str],
+    /// Older majors may use the commit before the next major's release.
+    /// Off for sites that document APIs before they ship (react.dev).
+    before_next_major: bool,
 }
 
 const DOCS_SITES: &[DocsSite] = &[
     DocsSite {
+        eco: Eco::Npm,
         names: &["react", "react-dom", "@types/react"],
         repo: ("reactjs", "react.dev"),
         branch: "main",
         versioned: &[],
-        latest_only: &["src/content/reference", "src/content/learn"],
+        current: &["src/content/reference", "src/content/learn"],
+        pages: &[],
+        before_next_major: false,
     },
     DocsSite {
+        eco: Eco::Npm,
         names: &["express", "@types/express"],
         repo: ("expressjs", "expressjs.com"),
         branch: "main",
         versioned: &["src/content/api/{major}x"],
-        latest_only: &["src/content/docs/en"],
+        current: &["src/content/docs/en"],
+        pages: &[],
+        before_next_major: false,
     },
     DocsSite {
+        eco: Eco::Npm,
         names: &["tailwindcss"],
         repo: ("tailwindlabs", "tailwindcss.com"),
         branch: "main",
         versioned: &[],
-        latest_only: &["src/docs"],
+        current: &["src/docs", "src/pages/docs"],
+        pages: &["src/app/(docs)/docs/installation", "src/pages/docs/installation"],
+        before_next_major: true,
     },
     DocsSite {
+        eco: Eco::Npm,
         names: &["prisma", "@prisma/client"],
         repo: ("prisma", "docs"),
         branch: "main",
         versioned: &[],
-        latest_only: &["apps/docs/content/docs/orm"],
+        current: &["apps/docs/content/docs/orm", "content/200-orm"],
+        pages: &[],
+        before_next_major: true,
+    },
+    DocsSite {
+        eco: Eco::Cargo,
+        names: &["tokio"],
+        repo: ("tokio-rs", "website"),
+        branch: "master",
+        versioned: &[],
+        current: &["content/tokio/tutorial", "content/tokio/topics"],
+        pages: &[],
+        before_next_major: false,
     },
 ];
 
-fn npm_latest_major(agent: &ureq::Agent, name: &str) -> Option<u64> {
-    let mut res = agent
-        .get(&format!("https://registry.npmjs.org/{}/latest", name.replace('/', "%2F")))
-        .call()
-        .ok()?;
+/// The latest stable major of a package, from its registry.
+fn latest_major(agent: &ureq::Agent, dep: &Dep) -> Option<u64> {
+    let name = dep.name.strip_prefix("@types/").unwrap_or(&dep.name);
+    let (url, pointer) = match dep.eco {
+        Eco::Npm => (format!("https://registry.npmjs.org/{}/latest", name.replace('/', "%2F")), "/version"),
+        Eco::Cargo => (format!("https://crates.io/api/v1/crates/{name}"), "/crate/max_stable_version"),
+        Eco::PyPI => (format!("https://pypi.org/pypi/{name}/json"), "/info/version"),
+        Eco::Go => return None,
+    };
+    let mut res = agent.get(&url).call().ok()?;
     let mut body = String::new();
-    res.body_mut().as_reader().take(1 << 20).read_to_string(&mut body).ok()?;
+    res.body_mut().as_reader().take(16 << 20).read_to_string(&mut body).ok()?;
     let v: Value = serde_json::from_str(&body).ok()?;
-    v.get("version")?.as_str()?.split('.').next()?.parse().ok()
+    v.pointer(pointer)?.as_str()?.split('.').next()?.parse().ok()
 }
 
-/// Files to take from a docs-site repository for this version, with a label.
-/// Repository, branch, label and files of a docs site.
-type SiteFiles = (Repo, String, String, Vec<(String, u64)>);
-
-fn site_files(agent: &ureq::Agent, dep: &Dep) -> Result<Option<SiteFiles>> {
-    if dep.eco != Eco::Npm {
-        return Ok(None);
+/// When the package's next major was released: the commit date of its
+/// `{major+1}.0.0` tag in the package repository.
+fn next_major_date(agent: &ureq::Agent, dep: &Dep, repo: &Repo, major: u64) -> Result<Option<String>> {
+    let next = Dep {
+        version: format!("{}.0.0", major + 1),
+        ..dep.clone()
+    };
+    for t in tag_candidates(&next) {
+        if let Some(v) = api(agent, &format!("/repos/{}/{}/commits/{}", repo.owner, repo.name, enc(&t)))? {
+            if let Some(d) = v.pointer("/commit/committer/date").and_then(|d| d.as_str()) {
+                return Ok(Some(d.to_string()));
+            }
+        }
     }
-    let Some(site) = DOCS_SITES.iter().find(|s| s.names.contains(&dep.name.as_str())) else {
+    Ok(None)
+}
+
+/// Repository, git ref (branch or commit), label, docs files and page files of a docs site.
+struct SiteFiles {
+    repo: Repo,
+    reference: String,
+    label: String,
+    files: Vec<(String, u64)>,
+    pages: Vec<(String, u64)>,
+}
+
+/// Which files of the docs site describe `dep`'s major, if any.
+fn site_files(agent: &ureq::Agent, dep: &Dep, pkg_repo: Option<&Repo>) -> Result<Option<SiteFiles>> {
+    let Some(site) = DOCS_SITES.iter().find(|s| s.eco == dep.eco && s.names.contains(&dep.name.as_str())) else {
         return Ok(None);
     };
     let major: u64 = dep.version.split('.').next().and_then(|m| m.parse().ok()).unwrap_or(0);
-    let lookup = dep.name.strip_prefix("@types/").unwrap_or(&dep.name);
-    let latest = npm_latest_major(agent, lookup);
-    let mut dirs: Vec<String> = site.versioned.iter().map(|d| d.replace("{major}", &major.to_string())).collect();
-    let is_latest = latest == Some(major);
-    if is_latest {
-        dirs.extend(site.latest_only.iter().map(|d| d.to_string()));
-    }
-    if dirs.is_empty() {
-        return Ok(None);
-    }
+    let latest = latest_major(agent, dep);
     let repo = Repo {
         owner: site.repo.0.into(),
         name: site.repo.1.into(),
         subdir: None,
     };
-    let Some(v) = api(agent, &format!("/repos/{}/{}/git/trees/{}?recursive=1", repo.owner, repo.name, site.branch))? else {
-        return Ok(None);
-    };
-    let sha = v.get("sha").and_then(|s| s.as_str()).unwrap_or("").chars().take(7).collect::<String>();
-    let mut files = Vec::new();
-    for i in v.get("tree").and_then(|t| t.as_array()).into_iter().flatten() {
-        let (Some(p), Some("blob")) = (i.get("path").and_then(|p| p.as_str()), i.get("type").and_then(|t| t.as_str())) else {
-            continue;
-        };
-        let size = i.get("size").and_then(|s| s.as_u64()).unwrap_or(0);
-        if size <= MAX_FILE && doc_file(p) && !p.ends_with(".txt") && dirs.iter().any(|d| p.starts_with(&format!("{d}/"))) {
-            files.push((p.to_string(), size));
+    let versioned: Vec<String> = site.versioned.iter().map(|d| d.replace("{major}", &major.to_string())).collect();
+    let is_latest = latest.is_some_and(|l| major >= l);
+    // Where the current-major folders come from for this version.
+    let mut reference = site.branch.to_string();
+    let mut how = String::from("current docs; your major is the latest");
+    let mut current = is_latest;
+    let mut items = None;
+    if !is_latest && latest.is_some() && (!site.current.is_empty() || !site.pages.is_empty()) {
+        for b in [format!("v{major}"), format!("{major}.x")] {
+            if let Some(t) = tree(agent, &repo, &b, true)? {
+                reference = b.clone();
+                how = format!("branch {b} for major {major}");
+                items = Some(t);
+                current = true;
+                break;
+            }
+        }
+        if items.is_none() && site.before_next_major {
+            if let Some(date) = pkg_repo.map(|r| next_major_date(agent, dep, r, major)).transpose()?.flatten() {
+                let path = format!(
+                    "/repos/{}/{}/commits?sha={}&until={}&per_page=1",
+                    repo.owner,
+                    repo.name,
+                    enc(site.branch),
+                    enc(&date)
+                );
+                if let Some(sha) = api(agent, &path)?.and_then(|v| v.pointer("/0/sha").and_then(|s| s.as_str()).map(String::from)) {
+                    reference = sha;
+                    how = format!("as of {}, before {} was released", &date[..10.min(date.len())], major + 1);
+                    current = true;
+                }
+            }
         }
     }
+    if versioned.is_empty() && !current {
+        return Ok(None);
+    }
+    let items = match items {
+        Some(i) => i,
+        None => match tree(agent, &repo, &reference, true)? {
+            Some(i) => i,
+            None => return Ok(None),
+        },
+    };
+    let under = |p: &str, dirs: &[String]| dirs.iter().any(|d| p.starts_with(&format!("{d}/")));
+    let docs_dirs: Vec<String> = if current {
+        site.current.iter().map(|d| d.to_string()).collect()
+    } else {
+        Vec::new()
+    };
+    let page_dirs: Vec<String> = if current {
+        site.pages.iter().map(|d| d.to_string()).collect()
+    } else {
+        Vec::new()
+    };
+    let (mut files, mut pages) = (Vec::new(), Vec::new());
+    for i in items.iter().filter(|i| i.kind == "blob" && i.size <= MAX_FILE) {
+        let p = i.path.as_str();
+        // Versioned API pages always come from the default branch.
+        let versioned_ok = reference == site.branch && under(p, &versioned);
+        if doc_file(p) && !p.ends_with(".txt") && !later_major_file(p, major) && (versioned_ok || under(p, &docs_dirs)) {
+            files.push((p.to_string(), i.size));
+        } else if page_file(p) && under(p, &page_dirs) {
+            pages.push((p.to_string(), i.size));
+        }
+    }
+    let short: String = reference.chars().take(if reference.len() == 40 { 7 } else { 40 }).collect();
     let label = format!(
-        "github.com/{}/{}@{} ({}{})",
+        "github.com/{}/{}@{short} ({})",
         repo.owner,
         repo.name,
-        site.branch,
-        sha,
-        if is_latest {
-            ", current docs; your major is the latest"
-        } else {
-            ", versioned API pages"
-        }
+        if current { how.as_str() } else { "versioned API pages" }
     );
-    Ok(Some((repo, site.branch.to_string(), label, files)))
+    Ok(Some(SiteFiles {
+        repo,
+        reference,
+        label,
+        files,
+        pages,
+    }))
+}
+
+/// A page about a later major than the pinned one (`v4-beta.mdx` on the v3
+/// branch): it would answer with APIs this version does not have.
+fn later_major_file(p: &str, major: u64) -> bool {
+    let name = p.rsplit('/').next().unwrap_or(p).to_ascii_lowercase();
+    name.split(|c: char| !c.is_ascii_alphanumeric())
+        .any(|w| w.strip_prefix('v').and_then(|n| n.parse::<u64>().ok()).is_some_and(|n| n > major))
+}
+
+/// A docs page written as a JS/TSX component (not layouts or helpers).
+fn page_file(p: &str) -> bool {
+    let name = p.rsplit('/').next().unwrap_or(p);
+    [".tsx", ".jsx", ".js"].iter().any(|e| name.ends_with(e))
+        && !name.starts_with("layout.")
+        && !name.starts_with("index.ts")
+        && !p.contains("/@")
+        && !p.contains("[")
 }
 
 fn download(agent: &ureq::Agent, repo: &Repo, reference: &str, files: &[(String, u64)], out: &Path) -> Result<Vec<u64>> {
@@ -273,6 +401,11 @@ pub fn dir(dep: &Dep) -> PathBuf {
     cache::dir().join("upstream").join(dep.eco.as_str()).join(safe)
 }
 
+/// Was this copy made by an older lockdocs that downloaded less?
+pub fn stale(m: &Manifest) -> bool {
+    m.format < FORMAT
+}
+
 /// A previous fetch (with or without files). Never touches the network.
 pub fn cached(dep: &Dep) -> Option<(PathBuf, Manifest)> {
     let d = dir(dep);
@@ -290,6 +423,8 @@ fn agent() -> ureq::Agent {
     ureq::Agent::config_builder()
         .timeout_global(Some(std::time::Duration::from_secs(60)))
         .http_status_as_error(false)
+        // Renamed repositories answer with a redirect; keep the token for it.
+        .redirect_auth_headers(ureq::config::RedirectAuthHeaders::SameHost)
         .user_agent(concat!("lockdocs/", env!("CARGO_PKG_VERSION"), " (+https://github.com/SylphxAI/lockdocs)"))
         .build()
         .into()
@@ -433,21 +568,28 @@ pub fn fetch(dep: &Dep, src: &Source) -> Result<Manifest> {
     }
     let (Some(tag), Some(root)) = (tag, root) else {
         let mut m = Manifest {
+            format: FORMAT,
             repo: label,
             tag: None,
             files: 0,
             bytes: 0,
             note: Some(format!("no git tag found for {}", dep.version)),
             site: None,
+            pages: Vec::new(),
         };
-        if let Ok(Some((srepo, branch, slabel, sfiles))) = site_files(&agent, dep) {
-            let got = download(&agent, &srepo, &branch, &sfiles, &out.join(&srepo.name))?;
-            if !got.is_empty() {
-                m.files = got.len();
-                m.bytes = got.iter().sum();
-                m.site = Some(slabel);
-                m.note = None;
+        match site_files(&agent, dep, Some(&repo)) {
+            Ok(Some(site)) => {
+                let (n, bytes, pages) = download_site(&agent, &site, &out)?;
+                if n > 0 {
+                    m.files = n;
+                    m.bytes = bytes;
+                    m.site = Some(site.label);
+                    m.pages = pages;
+                    m.note = None;
+                }
             }
+            Ok(None) => {}
+            Err(e) => m.note = Some(format!("{}; docs site skipped: {e:#}", m.note.unwrap_or_default())),
         }
         std::fs::write(out.join(".lockdocs-upstream.json"), serde_json::to_string(&m)?)?;
         return Ok(m);
@@ -536,15 +678,20 @@ pub fn fetch(dep: &Dep, src: &Source) -> Result<Manifest> {
     let mut site = None;
     let mut site_n = 0usize;
     let mut site_bytes = 0u64;
-    if let Ok(Some((srepo, branch, slabel, sfiles))) = site_files(&agent, dep) {
-        let got = download(&agent, &srepo, &branch, &sfiles, &out.join(&srepo.name))?;
-        site_n = got.len();
-        site_bytes = got.iter().sum();
-        if site_n > 0 {
-            site = Some(slabel);
+    let mut pages = Vec::new();
+    let mut site_err = None;
+    match site_files(&agent, dep, Some(&repo)) {
+        Ok(Some(s)) => {
+            (site_n, site_bytes, pages) = download_site(&agent, &s, &out)?;
+            if site_n > 0 {
+                site = Some(s.label);
+            }
         }
+        Ok(None) => {}
+        Err(e) => site_err = Some(format!("docs site skipped: {e:#}")),
     }
     let m = Manifest {
+        format: FORMAT,
         repo: label,
         tag: Some(tag),
         files: ok.len() + site_n,
@@ -554,12 +701,31 @@ pub fn fetch(dep: &Dep, src: &Source) -> Result<Manifest> {
         } else if failed > 0 {
             Some(format!("{failed} files failed to download"))
         } else {
-            None
+            site_err
         },
         site,
+        pages,
     };
     std::fs::write(out.join(".lockdocs-upstream.json"), serde_json::to_string(&m)?)?;
     Ok(m)
+}
+
+/// Download a docs site's files into `<out>/<site repo name>/`: (files, bytes, page paths).
+fn download_site(agent: &ureq::Agent, site: &SiteFiles, out: &Path) -> Result<(usize, u64, Vec<String>)> {
+    let dst = out.join(&site.repo.name);
+    let docs = download(agent, &site.repo, &site.reference, &site.files, &dst)?;
+    let got = download(agent, &site.repo, &site.reference, &site.pages, &dst)?;
+    let pages = if got.len() == site.pages.len() {
+        site.pages.iter().map(|(p, _)| format!("{}/{p}", site.repo.name)).collect()
+    } else {
+        // Some failed: keep only the pages on disk.
+        site.pages
+            .iter()
+            .map(|(p, _)| format!("{}/{p}", site.repo.name))
+            .filter(|p| out.join(p).is_file())
+            .collect()
+    };
+    Ok((docs.len() + got.len(), docs.iter().chain(&got).sum(), pages))
 }
 
 #[cfg(test)]
@@ -585,5 +751,8 @@ mod tests {
         assert_eq!(t[0], "v2.0.36");
         assert!(t.contains(&"rel_2_0_36".to_string()));
         assert!(doc_file("docs/01-app/page.mdx") && !doc_file("docs/blog/x.md") && !doc_file("docs/img.png"));
+        assert!(later_major_file("src/pages/docs/v4-beta.mdx", 3) && !later_major_file("src/pages/docs/v3-upgrade.mdx", 3));
+        assert!(!later_major_file("docs/300-upgrade-guides/upgrading-to-v6.mdx", 6));
+        assert!(page_file("src/app/(docs)/docs/installation/(tabs)/using-vite/page.tsx") && !page_file("src/app/(docs)/docs/installation/(tabs)/layout.tsx"));
     }
 }

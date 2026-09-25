@@ -426,9 +426,9 @@
     ]
    ],
    "reject": [
-    "ConfigDict"
+    "model_config"
    ],
-   "why": "v1: class Config: extra = Extra.allow",
+   "why": "v1: class Config: extra = Extra.allow. model_config is v2-only (0 matches in pydantic 1.10.18). The reject was ConfigDict until 0.3, but pydantic 1.10 ships a ConfigDict TypedDict (config.py), so quoting v1 source was wrongly failed",
    "line": "older"
   },
   {
@@ -1081,6 +1081,280 @@
    "reject": [],
    "why": "16: middleware renamed to proxy (next 16.3.6 dist/server/web/types.d.ts: '@deprecated Use NextProxy instead. Middleware has been renamed to Proxy.')",
    "line": "newer"
+  },
+  {
+   "id": "next14-params",
+   "project": "next14",
+   "package": "next",
+   "question": "How do I read the dynamic route parameters in a page component?",
+   "expect": [
+    [
+     "params"
+    ]
+   ],
+   "reject": [
+    "await params",
+    "Promise<{"
+   ],
+   "why": "14: params is a plain object prop (no 'await params' in v14.2.35 docs/02-app/02-api-reference/02-file-conventions/page.mdx)",
+   "line": "older",
+   "set": "held-out"
+  },
+  {
+   "id": "next15-params",
+   "project": "next15",
+   "package": "next",
+   "question": "How do I read the dynamic route parameters in a page component?",
+   "expect": [
+    [
+     "await params",
+     "Promise<{"
+    ]
+   ],
+   "reject": [],
+   "why": "15: params is a Promise (v15.1.0 page.mdx, 18 matches)",
+   "line": "newer",
+   "set": "held-out"
+  },
+  {
+   "id": "tw3-dark",
+   "project": "tailwind3",
+   "package": "tailwindcss",
+   "question": "How do I switch dark mode to a class instead of the operating system setting?",
+   "expect": [
+    [
+     "darkMode"
+    ]
+   ],
+   "reject": [
+    "@custom-variant"
+   ],
+   "why": "v3: darkMode: 'selector' / 'class' in tailwind.config.js (v3 site dark-mode.mdx)",
+   "line": "older",
+   "set": "held-out"
+  },
+  {
+   "id": "tw4-dark",
+   "project": "tailwind4",
+   "package": "tailwindcss",
+   "question": "How do I switch dark mode to a class instead of the operating system setting?",
+   "expect": [
+    [
+     "@custom-variant"
+    ]
+   ],
+   "reject": [],
+   "why": "v4: @custom-variant dark (&:where(.dark, .dark *)) in CSS (v4 site dark-mode.mdx)",
+   "line": "newer",
+   "set": "held-out"
+  },
+  {
+   "id": "react18-ref",
+   "project": "react18",
+   "package": "react",
+   "question": "How do I pass a ref through to a child component?",
+   "expect": [
+    [
+     "forwardRef"
+    ]
+   ],
+   "reject": [],
+   "why": "18: forwardRef (@types/react 18.3.31)",
+   "line": "older",
+   "set": "held-out"
+  },
+  {
+   "id": "react19-ref",
+   "project": "react19",
+   "package": "react",
+   "question": "How do I pass a ref through to a child component?",
+   "expect": [
+    [
+     "as a prop",
+     "no longer necessary"
+    ]
+   ],
+   "reject": [],
+   "why": "19: ref is a regular prop; forwardRef is no longer necessary (react.dev forwardRef.md)",
+   "line": "newer",
+   "set": "held-out"
+  },
+  {
+   "id": "rr6-types",
+   "project": "rr6",
+   "package": "react-router",
+   "question": "How do I get typed loader data in my route component?",
+   "expect": [
+    [
+     "useLoaderData"
+    ]
+   ],
+   "reject": [
+    "Route.ComponentProps",
+    "+types"
+   ],
+   "why": "v6: useLoaderData() (docs/hooks/use-loader-data.md); generated route types arrived in v7",
+   "line": "older",
+   "set": "held-out"
+  },
+  {
+   "id": "rr7-types",
+   "project": "rr7",
+   "package": "react-router",
+   "question": "How do I get typed loader data in my route component?",
+   "expect": [
+    [
+     "Route.ComponentProps",
+     "+types"
+    ]
+   ],
+   "reject": [],
+   "why": "v7: generated ./+types/<route> and Route.ComponentProps (react-router@7.1.1 docs/start/framework/data-loading.md)",
+   "line": "newer",
+   "set": "held-out"
+  },
+  {
+   "id": "eslint8-globals",
+   "project": "eslint8",
+   "package": "eslint",
+   "question": "How do I tell ESLint about browser global variables?",
+   "expect": [
+    [
+     "\"browser\": true",
+     "browser: true"
+    ]
+   ],
+   "reject": [],
+   "why": "8: env: { browser: true } in .eslintrc (v8.57.1 language-options.md)",
+   "line": "older",
+   "set": "held-out"
+  },
+  {
+   "id": "eslint9-globals",
+   "project": "eslint9",
+   "package": "eslint",
+   "question": "How do I tell ESLint about browser global variables?",
+   "expect": [
+    [
+     "globals.browser"
+    ]
+   ],
+   "reject": [],
+   "why": "9: languageOptions: { globals: globals.browser } (v9.39.5 language-options.md)",
+   "line": "newer",
+   "set": "held-out"
+  },
+  {
+   "id": "dj51-generated",
+   "project": "django51",
+   "package": "django",
+   "question": "How do I add a model field whose value the database computes from other columns?",
+   "expect": [
+    [
+     "GeneratedField"
+    ]
+   ],
+   "reject": [],
+   "why": "5.0+: models.GeneratedField (5.1.15 docs/ref/models/fields.txt)",
+   "line": "newer",
+   "set": "held-out"
+  },
+  {
+   "id": "fa0115-querymodel",
+   "project": "fastapi0115",
+   "package": "fastapi",
+   "question": "How do I declare a group of query parameters with a Pydantic model?",
+   "expect": [
+    [
+     "Query Parameter Models",
+     "FilterParams",
+     "query parameter model"
+    ]
+   ],
+   "reject": [],
+   "why": "0.115.0+: query parameter models (docs/en/docs/tutorial/query-param-models.md)",
+   "line": "newer",
+   "set": "held-out"
+  },
+  {
+   "id": "tokio-channel",
+   "project": "axum08",
+   "package": "tokio",
+   "question": "How do I send messages from many tasks to a single consumer task?",
+   "expect": [
+    [
+     "mpsc"
+    ]
+   ],
+   "reject": [],
+   "why": "tokio::sync::mpsc",
+   "line": "single",
+   "set": "held-out"
+  },
+  {
+   "id": "zod3-datetime",
+   "project": "zod3",
+   "package": "zod",
+   "question": "How do I validate an ISO 8601 datetime string?",
+   "expect": [
+    [
+     ".datetime("
+    ]
+   ],
+   "reject": [
+    "z.iso."
+   ],
+   "why": "3.23: z.string().datetime(); z.iso arrived in zod 4 (0 matches in v3.23.8 README)",
+   "line": "older",
+   "set": "held-out"
+  },
+  {
+   "id": "zod4-datetime",
+   "project": "zod4",
+   "package": "zod",
+   "question": "How do I validate an ISO 8601 datetime string?",
+   "expect": [
+    [
+     "z.iso.datetime",
+     "iso.datetime("
+    ]
+   ],
+   "reject": [],
+   "why": "4: z.iso.datetime() (v4.1.5 packages/docs/content/api.mdx)",
+   "line": "newer",
+   "set": "held-out"
+  },
+  {
+   "id": "pyd1-frozen",
+   "project": "pydantic1",
+   "package": "pydantic",
+   "question": "How do I make model instances immutable?",
+   "expect": [
+    [
+     "allow_mutation"
+    ]
+   ],
+   "reject": [
+    "model_config"
+   ],
+   "why": "v1: class Config: allow_mutation = False / frozen = True (v1.10.18 docs/usage/model_config.md)",
+   "line": "older",
+   "set": "held-out"
+  },
+  {
+   "id": "pyd2-frozen",
+   "project": "pydantic2",
+   "package": "pydantic",
+   "question": "How do I make model instances immutable?",
+   "expect": [
+    [
+     "frozen=True"
+    ]
+   ],
+   "reject": [],
+   "why": "v2: model_config = ConfigDict(frozen=True) (v2.9.2 docs/concepts/models.md)",
+   "line": "newer",
+   "set": "held-out"
   }
  ]
 }

@@ -1354,7 +1354,8 @@
     "library": "/colinhacks/zod/v3.24.2",
     "version_match": "same major",
     "reused": true
-   }
+   },
+   "grading": "[[[\".strict(\"]], []]"
   },
   {
    "id": "zod4-strict",
@@ -1407,7 +1408,8 @@
     "library": "/colinhacks/zod/v4.0.1",
     "version_match": "same major",
     "reused": true
-   }
+   },
+   "grading": "[[[\"strictObject\"]], []]"
   },
   {
    "id": "zod3-email",
@@ -1456,7 +1458,8 @@
     "library": "/colinhacks/zod/v3.24.2",
     "version_match": "same major",
     "reused": true
-   }
+   },
+   "grading": "[[[\".email(\"]], [\"z.email(\"]]"
   },
   {
    "id": "zod4-email",
@@ -1505,7 +1508,8 @@
     "library": "/colinhacks/zod/v4.0.1",
     "version_match": "same major",
     "reused": true
-   }
+   },
+   "grading": "[[[\"z.email(\", \"function email(\"]], []]"
   },
   {
    "id": "zod3-error",
@@ -1554,7 +1558,8 @@
     "library": "/colinhacks/zod/v3.24.2",
     "version_match": "same major",
     "reused": true
-   }
+   },
+   "grading": "[[[\"required_error\", \"invalid_type_error\", \"errorMap\", \"{ message:\"]], []]"
   },
   {
    "id": "zod4-error",
@@ -1603,7 +1608,8 @@
     "library": "/colinhacks/zod/v4.0.1",
     "version_match": "same major",
     "reused": true
-   }
+   },
+   "grading": "[[[\"$ZodErrorMap\", \"{ error:\", \"error:\"]], []]"
   },
   {
    "id": "zod4-record",
@@ -1660,7 +1666,8 @@
     "library": "/colinhacks/zod/v4.0.1",
     "version_match": "same major",
     "reused": true
-   }
+   },
+   "grading": "[[[\"record(\"]], []]"
   },
   {
    "id": "next14-cookies",
@@ -1724,7 +1731,8 @@
     "ms": 2994,
     "library": "/vercel/next.js/v14.3.0-canary.87",
     "version_match": "same major"
-   }
+   },
+   "grading": "[[[\"ReadonlyRequestCookies\"]], [\"Promise<ReadonlyRequestCookies>\", \"await cookies()\"]]"
   },
   {
    "id": "next15-cookies",
@@ -1773,7 +1781,8 @@
     "library": "/vercel/next.js/v15.1.11",
     "version_match": "same major",
     "reused": true
-   }
+   },
+   "grading": "[[[\"Promise<ReadonlyRequestCookies>\", \"await cookies()\"]], []]"
   },
   {
    "id": "next14-headers",
@@ -1821,7 +1830,8 @@
     "ms": 1612,
     "library": "/vercel/next.js/v14.3.0-canary.87",
     "version_match": "same major"
-   }
+   },
+   "grading": "[[[\"headers()\", \"function headers(\"]], [\"Promise<ReadonlyHeaders>\", \"await headers()\"]]"
   },
   {
    "id": "next15-headers",
@@ -1870,7 +1880,8 @@
     "library": "/vercel/next.js/v15.1.11",
     "version_match": "same major",
     "reused": true
-   }
+   },
+   "grading": "[[[\"Promise<ReadonlyHeaders>\", \"await headers()\"]], []]"
   },
   {
    "id": "next14-nostore",
@@ -1918,7 +1929,8 @@
     "ms": 1564,
     "library": "/vercel/next.js/v14.3.0-canary.87",
     "version_match": "same major"
-   }
+   },
+   "grading": "[[[\"unstable_noStore\", \"noStore\", \"force-dynamic\"]], []]"
   },
   {
    "id": "next15-connection",
@@ -1967,7 +1979,8 @@
     "library": "/vercel/next.js/v15.1.11",
     "version_match": "same major",
     "reused": true
-   }
+   },
+   "grading": "[[[\"connection()\", \"function connection(\", \"unstable_noStore\", \"force-dynamic\"]], []]"
   },
   {
    "id": "next15-after",
@@ -2028,7 +2041,8 @@
     "library": "/vercel/next.js/v15.1.11",
     "version_match": "same major",
     "reused": true
-   }
+   },
+   "grading": "[[[\"unstable_after\", \"after(\", \"function after\"]], []]"
   },
   {
    "id": "rr6-json",
@@ -2089,7 +2103,8 @@
     "library": "/websites/reactrouter",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"json(\"]], []]"
   },
   {
    "id": "rr7-data",
@@ -2142,7 +2157,8 @@
     "library": "/websites/reactrouter",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"data(\"]], []]"
   },
   {
    "id": "rr6-defer",
@@ -2191,7 +2207,8 @@
     "library": "/websites/reactrouter",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"defer(\"]], []]"
   },
   {
    "id": "rr6-future",
@@ -2240,7 +2257,8 @@
     "library": "/websites/reactrouter",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"v7_startTransition\"]], []]"
   },
   {
    "id": "rr7-router",
@@ -2289,7 +2307,8 @@
     "library": "/websites/reactrouter",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"createBrowserRouter\"]], []]"
   },
   {
    "id": "pyd1-dict",
@@ -2345,7 +2364,8 @@
     "library": "/pydantic/pydantic",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\".dict(\", \"def dict(\"]], [\"model_dump\"]]"
   },
   {
    "id": "pyd2-dict",
@@ -2402,7 +2422,8 @@
     "library": "/pydantic/pydantic",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"model_dump\"]], []]"
   },
   {
    "id": "pyd1-parse",
@@ -2465,7 +2486,8 @@
     "library": "/pydantic/pydantic",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"parse_obj\"]], [\"model_validate\"]]"
   },
   {
    "id": "pyd2-parse",
@@ -2522,7 +2544,8 @@
     "library": "/pydantic/pydantic",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"model_validate\"]], []]"
   },
   {
    "id": "pyd1-validator",
@@ -2583,7 +2606,8 @@
     "library": "/pydantic/pydantic",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"@validator\", \"def validator(\"]], [\"field_validator\"]]"
   },
   {
    "id": "pyd2-validator",
@@ -2636,7 +2660,8 @@
     "library": "/pydantic/pydantic",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"field_validator\"]], []]"
   },
   {
    "id": "pyd1-schema",
@@ -2693,7 +2718,8 @@
     "library": "/pydantic/pydantic",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"schema_json\", \"def schema(\", \".schema(\"]], [\"model_json_schema\"]]"
   },
   {
    "id": "pyd2-schema",
@@ -2742,7 +2768,8 @@
     "library": "/pydantic/pydantic",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"model_json_schema\"]], []]"
   },
   {
    "id": "pyd1-config",
@@ -2807,7 +2834,8 @@
     "library": "/pydantic/pydantic",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"Extra.allow\", \"class Config\"]], [\"ConfigDict\"]]"
   },
   {
    "id": "pyd2-config",
@@ -2856,7 +2884,8 @@
     "library": "/pydantic/pydantic",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"ConfigDict\", \"model_config\"]], []]"
   },
   {
    "id": "axum07-path",
@@ -2909,7 +2938,8 @@
     "library": "/websites/rs_axum",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"/:\"]], []]"
   },
   {
    "id": "axum08-path",
@@ -2958,7 +2988,8 @@
     "library": "/websites/rs_axum",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"/{\"]], []]"
   },
   {
    "id": "axum07-extractor",
@@ -3011,7 +3042,8 @@
     "library": "/websites/rs_axum",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"async_trait\"]], []]"
   },
   {
    "id": "axum08-optional",
@@ -3060,7 +3092,8 @@
     "library": "/websites/rs_axum",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"OptionalFromRequestParts\"]], []]"
   },
   {
    "id": "tokio-blocking",
@@ -3109,7 +3142,8 @@
     "library": "/websites/rs_tokio_1_49_0",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"spawn_blocking\"]], []]"
   },
   {
    "id": "tokio-select",
@@ -3174,7 +3208,8 @@
     "library": "/websites/rs_tokio_1_49_0",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"select!\"]], []]"
   },
   {
    "id": "tokio-timeout",
@@ -3223,7 +3258,8 @@
     "library": "/websites/rs_tokio_1_49_0",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"timeout(\", \"fn timeout\"]], []]"
   },
   {
    "id": "tw3-css",
@@ -3304,7 +3340,8 @@
     "library": "/rails/tailwindcss-rails",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"@tailwind base\", \"@tailwind components\", \"@tailwind utilities\"]], [\"@import \\\"tailwindcss\\\"\"]]"
   },
   {
    "id": "tw4-css",
@@ -3373,7 +3410,8 @@
     "library": "/rails/tailwindcss-rails",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"@import \\\"tailwindcss\\\"\", \"@import 'tailwindcss'\"]], []]"
   },
   {
    "id": "tw3-theme",
@@ -3422,7 +3460,8 @@
     "library": "/rails/tailwindcss-rails",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"extend:\", \"theme.extend\", \"tailwind.config\"]], []]"
   },
   {
    "id": "tw4-theme",
@@ -3481,7 +3520,8 @@
     "library": "/rails/tailwindcss-rails",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"@theme\", \"--color-\"]], []]"
   },
   {
    "id": "eslint8-config",
@@ -3530,7 +3570,8 @@
     "library": "/eslint/eslint/v8.57.1",
     "version_match": "exact",
     "reused": true
-   }
+   },
+   "grading": "[[[\".eslintrc\", \"eslintrc\"]], []]"
   },
   {
    "id": "eslint9-config",
@@ -3579,7 +3620,8 @@
     "library": "/eslint/eslint/v9.39.3",
     "version_match": "same major",
     "reused": true
-   }
+   },
+   "grading": "[[[\"eslint.config.js\", \"eslint.config.mjs\", \"eslint.config\", \"flat config\"]], []]"
   },
   {
    "id": "eslint8-ignore",
@@ -3638,7 +3680,8 @@
     "library": "/eslint/eslint/v8.57.1",
     "version_match": "exact",
     "reused": true
-   }
+   },
+   "grading": "[[[\".eslintignore\", \"ignorePatterns\"]], []]"
   },
   {
    "id": "eslint9-ignore",
@@ -3699,7 +3742,8 @@
     "library": "/eslint/eslint/v9.39.3",
     "version_match": "same major",
     "reused": true
-   }
+   },
+   "grading": "[[[\"ignores:\", \"\\\"ignores\\\"\", \"globalIgnores(\"]], []]"
   },
   {
    "id": "prisma5-bytes",
@@ -3770,7 +3814,8 @@
     "library": "/websites/prisma_io",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"Buffer\"]], [\"Uint8Array\"]]"
   },
   {
    "id": "prisma6-bytes",
@@ -3827,7 +3872,8 @@
     "library": "/prisma/web",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"Uint8Array\"]], []]"
   },
   {
    "id": "prisma5-fts",
@@ -3894,7 +3940,8 @@
     "library": "/prisma/web",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"fullTextSearch\"]], [\"fullTextSearchPostgres\"]]"
   },
   {
    "id": "prisma6-fts",
@@ -3959,7 +4006,8 @@
     "library": "/prisma/web",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"fullTextSearchPostgres\"]], []]"
   },
   {
    "id": "react18-action",
@@ -4019,7 +4067,8 @@
     "library": "/reactjs/react.dev",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"useReducer\", \"useState\"]], [\"useActionState\"]]"
   },
   {
    "id": "react19-action",
@@ -4072,7 +4121,8 @@
     "library": "/reactjs/react.dev",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"useActionState\"]], []]"
   },
   {
    "id": "react18-use",
@@ -4133,7 +4183,8 @@
     "library": "/reactjs/react.dev",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"Suspense\", \"useEffect\"]], [\"function use<\", \"use(promise\"]]"
   },
   {
    "id": "react19-use",
@@ -4192,7 +4243,8 @@
     "library": "/reactjs/react.dev",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"use(\", \"function use<\"]], []]"
   },
   {
    "id": "vite5-env",
@@ -4243,7 +4295,8 @@
     "library": "/vitejs/vite/v5.4.21",
     "version_match": "exact",
     "reused": true
-   }
+   },
+   "grading": "[[[\"ssr:\", \"ssr?:\", \"SSROptions\", \"build.ssr\"]], [\"environments:\"]]"
   },
   {
    "id": "vite6-env",
@@ -4292,7 +4345,8 @@
     "library": "/vitejs/vite",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"environments\"]], []]"
   },
   {
    "id": "express4-wildcard",
@@ -4357,7 +4411,8 @@
     "library": "/expressjs/express",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"'*'\", \"\\\"*\\\"\", \"/*'\", \"/*\\\"\"]], [\"*splat\"]]"
   },
   {
    "id": "express5-wildcard",
@@ -4420,7 +4475,8 @@
     "library": "/expressjs/express/v5.2.0",
     "version_match": "same major",
     "reused": true
-   }
+   },
+   "grading": "[[[\"*splat\", \"/*name\", \"{*\", \"named wildcard\"]], []]"
   },
   {
    "id": "sa14-column",
@@ -4471,7 +4527,8 @@
     "library": "/websites/sqlalchemy_en_20",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"Column(\"]], [\"mapped_column\"]]"
   },
   {
    "id": "sa20-column",
@@ -4525,7 +4582,8 @@
     "library": "/websites/sqlalchemy_en_20",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"mapped_column\", \"Mapped[\"]], []]"
   },
   {
    "id": "sa14-base",
@@ -4576,7 +4634,8 @@
     "library": "/websites/sqlalchemy_en_20",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"declarative_base(\"]], [\"(DeclarativeBase)\"]]"
   },
   {
    "id": "sa20-base",
@@ -4625,7 +4684,8 @@
     "library": "/websites/sqlalchemy_en_20",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"DeclarativeBase\"]], []]"
   },
   {
    "id": "dj42-dbdefault",
@@ -4690,7 +4750,8 @@
     "library": "/django/django/4.2.21",
     "version_match": "same major",
     "reused": true
-   }
+   },
+   "grading": "[[[\"default=\"]], [\"db_default\"]]"
   },
   {
    "id": "dj51-dbdefault",
@@ -4755,7 +4816,8 @@
     "library": "/django/django",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"db_default\"]], []]"
   },
   {
    "id": "dj42-login",
@@ -4804,7 +4866,8 @@
     "library": "/django/django/4.2.21",
     "version_match": "same major",
     "reused": true
-   }
+   },
+   "grading": "[[[\"login_required\", \"LoginRequiredMixin\"]], [\"LoginRequiredMiddleware\"]]"
   },
   {
    "id": "dj51-login",
@@ -4853,7 +4916,8 @@
     "library": "/django/django",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"LoginRequiredMiddleware\"]], []]"
   },
   {
    "id": "fa088-lifespan",
@@ -4924,7 +4988,8 @@
     "library": "/websites/fastapi_tiangolo",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"on_event\"]], [\"lifespan=\"]]"
   },
   {
    "id": "fa0115-lifespan",
@@ -4981,7 +5046,8 @@
     "library": "/websites/fastapi_tiangolo",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"lifespan\"]], []]"
   },
   {
    "id": "fa088-annotated",
@@ -5040,7 +5106,8 @@
     "library": "/websites/fastapi_tiangolo",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"Query(\"]], [\"Annotated[\"]]"
   },
   {
    "id": "fa0115-annotated",
@@ -5089,7 +5156,8 @@
     "library": "/websites/fastapi_tiangolo",
     "version_match": "unversioned",
     "reused": true
-   }
+   },
+   "grading": "[[[\"Annotated[\"]], []]"
   },
   {
    "id": "next15-proxy",
@@ -5140,7 +5208,8 @@
     "library": "/vercel/next.js/v15.1.11",
     "version_match": "same major",
     "reused": true
-   }
+   },
+   "grading": "[[[\"middleware\"]], [\"NextProxy\", \"proxy.ts\"]]"
   },
   {
    "id": "next16-proxy",
@@ -5189,7 +5258,8 @@
     "library": "/vercel/next.js/v16.2.9",
     "version_match": "same major",
     "reused": true
-   }
+   },
+   "grading": "[[[\"proxy.ts\", \"proxy.js\", \"NextProxy\", \"export function proxy\", \"Proxy allows\"]], []]"
   }
  ],
  "summary": {

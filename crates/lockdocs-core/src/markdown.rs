@@ -199,7 +199,10 @@ fn push_sized(out: &mut Vec<Section>, head: &str, line: u32, body: &str) {
 }
 
 /// Blank out front matter (keeping its `title`), and for MDX the `import` /
-/// `export` lines and JSX-only lines. Line numbers are preserved.
+/// `export` lines and JSX-only lines. `export const title = "..."` names the
+/// page and `export const description` keeps its text. HTML headings
+/// (`<h3 id="x"><a href="#x">@import</a></h3>`, one or more lines) become
+/// Markdown headings so sections split at them. Line numbers are preserved.
 pub fn clean_mdx(text: &str, mdx: bool) -> (String, Option<String>) {
     let lines: Vec<&str> = text.lines().collect();
     let mut out: Vec<String> = Vec::with_capacity(lines.len());
@@ -225,10 +228,33 @@ pub fn clean_mdx(text: &str, mdx: bool) -> (String, Option<String>) {
         }
     }
     let mut fence = false;
-    for l in &lines[i.min(lines.len())..] {
+    let mut j = i.min(lines.len());
+    while j < lines.len() {
+        let l = lines[j];
         let t = l.trim();
         if t.starts_with("```") || t.starts_with("~~~") {
             fence = !fence;
+        }
+        if !fence {
+            if let Some((level, text, used)) = html_heading(&lines[j..]) {
+                out.push(format!("{} {text}", "#".repeat(level)));
+                out.extend(std::iter::repeat_n(String::new(), used - 1));
+                j += used;
+                continue;
+            }
+        }
+        if mdx && !fence {
+            if let Some(v) = export_const(t, "title") {
+                title = title.or(Some(v));
+                out.push(String::new());
+                j += 1;
+                continue;
+            }
+            if let Some(v) = export_const(t, "description") {
+                out.push(v);
+                j += 1;
+                continue;
+            }
         }
         let drop = mdx
             && !fence
@@ -236,8 +262,40 @@ pub fn clean_mdx(text: &str, mdx: bool) -> (String, Option<String>) {
                 || t.starts_with("export ")
                 || (t.starts_with('<') && t.ends_with('>') && !t.starts_with("<!--") && !t.contains("</code>")));
         out.push(if drop { String::new() } else { l.to_string() });
+        j += 1;
     }
     (out.join("\n"), title)
+}
+
+/// `export const <name> = "value";` -> value.
+fn export_const(line: &str, name: &str) -> Option<String> {
+    let rest = line.strip_prefix("export const ")?.strip_prefix(name)?.trim_start().strip_prefix('=')?.trim();
+    let rest = rest.trim_end_matches(';').trim();
+    let q = rest.chars().next().filter(|c| matches!(c, '"' | '\'' | '`'))?;
+    let v = rest.strip_prefix(q)?.strip_suffix(q)?;
+    (!v.is_empty()).then(|| v.to_string())
+}
+
+/// An HTML heading starting at `lines[0]`, spanning up to 4 lines:
+/// (level, plain text, lines used).
+fn html_heading(lines: &[&str]) -> Option<(usize, String, usize)> {
+    let t = lines.first()?.trim_start();
+    let b = t.as_bytes();
+    if b.len() < 4 || b[0] != b'<' || !matches!(b[1], b'h' | b'H') || !(b'1'..=b'6').contains(&b[2]) || !matches!(b[3], b'>' | b' ') {
+        return None;
+    }
+    let level = (b[2] - b'0') as usize;
+    let close = format!("</h{level}>");
+    let mut joined = String::new();
+    for (n, l) in lines.iter().take(4).enumerate() {
+        joined.push_str(l.trim());
+        joined.push(' ');
+        if l.to_ascii_lowercase().contains(&close) {
+            let text = clean_heading(&joined);
+            return (!text.is_empty()).then_some((level, text, n + 1));
+        }
+    }
+    None
 }
 
 /// The body of a Python METADATA file (after the RFC 822 headers), which is
@@ -277,6 +335,27 @@ mod tests {
         );
         assert!(s[1].text.contains("# not a heading"));
         assert_eq!(s[1].line, 5);
+    }
+
+    #[test]
+    fn mdx_exports_and_html_headings() {
+        let mdx = "import { X } from \"x\";\n\nexport const title = \"Functions and directives\";\nexport const description = \"Custom directives.\";\n\n## Directives\n\nIntro.\n\n<h3 id=\"import-directive\">\n  <a href=\"#import-directive\">@import</a>\n</h3>\n\nUse `@import`.\n\n<h3 id=\"theme\"><a href=\"#theme\">@theme</a></h3>\n\nTokens.\n";
+        let (text, title) = clean_mdx(mdx, true);
+        assert_eq!(title.as_deref(), Some("Functions and directives"));
+        assert_eq!(text.lines().count(), mdx.lines().count());
+        let s = split(&text, title.as_deref().unwrap());
+        let heads: Vec<&str> = s.iter().map(|x| x.heading.as_str()).collect();
+        assert_eq!(
+            heads,
+            vec![
+                "Functions and directives",
+                "Functions and directives › Directives",
+                "Functions and directives › Directives › @import",
+                "Functions and directives › Directives › @theme"
+            ]
+        );
+        assert!(s[0].text.contains("Custom directives."));
+        assert_eq!(s[2].line, 10);
     }
 
     #[test]

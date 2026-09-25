@@ -11,6 +11,10 @@ on:
         description: Also query Context7 (anonymous tier)
         type: boolean
         default: true
+      variants:
+        description: 'Extra configurations, space-separated name:KEY=VALUE,KEY=VALUE (e.g. head0:LOCKDOCS_HEAD_WEIGHT=0)'
+        type: string
+        default: ''
   pull_request:
     paths: ['bench/**', '.github/workflows/bench.yml']
 
@@ -44,10 +48,13 @@ jobs:
       - name: Run (package files, then `lockdocs fetch` + upstream docs)
         env:
           C7: ${{ (github.event_name != 'workflow_dispatch' || inputs.context7) && '--context7' || '' }}
+          VARIANTS: ${{ inputs.variants }}
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          python3 bench/run.py target/release/lockdocs bench/projects bench.json --fetch $C7 --context7-cache docs/public/bench-results.json | tee -a "$GITHUB_STEP_SUMMARY"
+          extra=()
+          for v in $VARIANTS; do extra+=(--variant "$v"); done
+          python3 bench/run.py target/release/lockdocs bench/projects bench.json --fetch $C7 --context7-cache docs/public/bench-results.json "${extra[@]}" | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v7
         with:
           name: bench

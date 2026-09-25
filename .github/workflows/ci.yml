@@ -50,12 +50,13 @@ jobs:
           components: clippy, rustfmt
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
       - run: bun install --frozen-lockfile
-      - name: Manifests agree on one version and one tagline
+      - name: Manifests agree on one version and one tagline; capability paths exist
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           bun scripts/check-version.ts
           bun scripts/check-tagline.ts "$(gh api "repos/$GITHUB_REPOSITORY" --jq .description)"
+          bun scripts/check-capabilities.ts
       - name: Format and lints
         run: cargo fmt --all --check && cargo clippy --workspace --locked -- -D warnings
       - name: Build release binary

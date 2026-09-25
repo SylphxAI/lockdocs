@@ -10,6 +10,8 @@ export default defineConfig({
   description: desc,
   appearance: 'force-dark',
   cleanUrls: true,
+  // Product vision and capability table are for maintainers, not site pages.
+  srcExclude: ['vision.md', 'capabilities.md'],
   lastUpdated: true,
   sitemap: { hostname: url },
   head: [

@@ -21,7 +21,15 @@ Fetched for 3 packages in 10016 ms (cached; later queries stay offline):
   next@15.1.0      upstream docs github.com/vercel/next.js@v15.1.0: 365 files (2.0 MB)
 ```
 
-Answers then cite `next@15.1.0 upstream:docs/01-app/.../cookies.mdx:12` and name the repository and tag in the header. Set `GITHUB_TOKEN` to raise GitHub's API limit (60 requests an hour without it; a package takes 2 to 12).
+Answers then cite `next@15.1.0 upstream:docs/01-app/.../cookies.mdx:12` and name the repository and tag in the header.
+
+Some projects keep their docs in a separate website repository: React (react.dev), Express (expressjs.com), Tailwind CSS (tailwindcss.com), Prisma (prisma/docs) and tokio (tokio-rs/website). For these, `fetch` also takes the docs that describe your major:
+
+- your major is the latest: the site's default branch;
+- an older major: the site's `vN` or `N.x` branch when it has one (Tailwind CSS `v3`, Prisma `v6`), otherwise the last commit before the next major was released (the date of its `N+1.0.0` tag). React is excluded from the second rule because react.dev documents APIs before they ship;
+- pages about a later major (`v4-beta.mdx` on the v3 branch) are skipped.
+
+The header says which: `github.com/prisma/docs@v6 (branch v6 for major 6)`. After upgrading lockdocs, run `lockdocs fetch` again to refresh copies made by an older version. Set `GITHUB_TOKEN` to raise GitHub's API limit (60 requests an hour without it; a package takes 2 to 20).
 
 To have it happen automatically on first query instead, enable fetching: `--fetch`, `LOCKDOCS_FETCH=1`, or register the MCP server with `lockdocs setup --fetch`.
 

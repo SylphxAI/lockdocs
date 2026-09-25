@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 /// Bump when extraction or the on-disk format changes.
-pub const FORMAT: u32 = 8;
+pub const FORMAT: u32 = 9;
 
 #[derive(Serialize, Deserialize)]
 pub struct PackageIndex {
@@ -26,6 +26,10 @@ pub struct PackageIndex {
     pub entries: Vec<Entry>,
     pub terms: Vec<Vec<(String, u16)>>,
     pub lens: Vec<u32>,
+    /// Terms of the heading or name plus the first sentence only, ranked on
+    /// their own so a long body does not bury what the entry says it is.
+    pub head: Vec<Vec<(String, u16)>>,
+    pub head_lens: Vec<u32>,
     pub build_ms: u64,
     /// `github.com/o/r@tag (N files)` when upstream docs are included.
     pub upstream: Option<String>,
@@ -90,6 +94,18 @@ pub fn entry_tf(e: &Entry) -> (Vec<(String, u16)>, u32) {
         // The first sentence says what the symbol is for: weigh it like a heading.
         let summary = summary(&prose);
         bm25::tf(&[(&e.name, 8), (&e.path, 2), (&e.sig, 1), (summary, 4), (&prose, 2), (&code, 1)])
+    }
+}
+
+/// Heading (or name) and first sentence: what an entry says it is about.
+pub fn head_tf(e: &Entry) -> (Vec<(String, u16)>, u32) {
+    let (prose, _) = split_code(&e.doc);
+    let first = summary(&prose);
+    if e.kind == Kind::Prose {
+        let last = e.name.rsplit(" › ").next().unwrap_or("");
+        bm25::tf(&[(last, 2), (first, 1)])
+    } else {
+        bm25::tf(&[(&e.name, 2), (first, 1)])
     }
 }
 
@@ -168,6 +184,7 @@ pub fn build(dep: &Dep, src: &Source, root: &Path, up: Option<&(PathBuf, Manifes
     let up_dir = up.filter(|(_, m)| m.files > 0).map(|(d, _)| d.as_path());
     let entries = extract::extract(dep.eco, &dep.name, src, types.as_deref(), up_dir);
     let (terms, lens): (Vec<_>, Vec<_>) = entries.iter().map(entry_tf).unzip();
+    let (head, head_lens): (Vec<_>, Vec<_>) = entries.iter().map(head_tf).unzip();
     let model = embed::get();
     let vecs: Vec<Vec8> = match &model {
         Some(m) => {
@@ -186,6 +203,8 @@ pub fn build(dep: &Dep, src: &Source, root: &Path, up: Option<&(PathBuf, Manifes
         entries,
         terms,
         lens,
+        head,
+        head_lens,
         build_ms: t.elapsed().as_millis() as u64,
         upstream: up
             .filter(|(_, m)| m.files > 0)

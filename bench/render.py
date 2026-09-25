@@ -34,7 +34,7 @@ single = sorted({NAMES.get(r["package"], r["package"]) for r in rows if r.get("l
 
 
 def sub(key, line):
-    rs = [r for r in rows if r.get("line") == line]
+    rs = [r for r in rows if (r.get("set") == "held-out" if line == "held-out" else r.get("line") == line)]
     got = sum(1 for r in rs if (r.get("context7", {}) if key == "context7" else r["variants"].get(key, {})).get("pass"))
     return f"{got}/{len(rs)}"
 
@@ -48,13 +48,13 @@ table = [
     "An answer passes when it contains the version-correct API and none of the other version's. Same questions and grader against Context7's anonymous API, "
     f"on a GitHub-hosted runner" + (f" ([run]({url}))" if url else "") + ":",
     "",
-    f"| | correct | older majors | newer majors | {', '.join(single) or 'single version'} | median tokens | median latency |",
-    "|---|---|---|---|---|---|---|",
+    f"| | correct | older majors | newer majors | {', '.join(single) or 'single version'} | held-out | median tokens | median latency |",
+    "|---|---|---|---|---|---|---|---|",
 ]
 for key, label in [("fetched", "lockdocs + `lockdocs fetch`"), ("hybrid", "lockdocs, package files only"), ("context7", "Context7 (anonymous)")]:
     a = res["summary"].get(key)
     if a:
-        table.append(f"| {label} | {a['passed']}/{a['total']} | {sub(key, 'older')} | {sub(key, 'newer')} | {sub(key, 'single')} | {a['median_tokens']:,} | {fmt_ms(a['median_ms'])} |")
+        table.append(f"| {label} | {a['passed']}/{a['total']} | {sub(key, 'older')} | {sub(key, 'newer')} | {sub(key, 'single')} | {sub(key, 'held-out')} | {a['median_tokens']:,} | {fmt_ms(a['median_ms'])} |")
 rp = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "README.md")
 readme = open(rp).read()
 readme = re.sub(r"<!-- bench:start -->.*?<!-- bench:end -->", "<!-- bench:start -->\n" + "\n".join(table) + "\n<!-- bench:end -->", readme, flags=re.S)

@@ -19,6 +19,8 @@ pub const DEFAULT_TOKENS: usize = 1200;
 const RELEVANCE_FLOOR: f32 = 0.3;
 /// Share of the fused score from the embedding similarity.
 const DENSE_WEIGHT: f32 = 0.45;
+/// Share of the keyword score from headings and first sentences.
+const HEAD_WEIGHT: f32 = 0.25;
 /// Cross-dependency searches index at most this many direct dependencies.
 const MAX_PACKAGES: usize = 80;
 
@@ -211,8 +213,9 @@ impl Engine {
         if src.version != dep.version || std::env::var("LOCKDOCS_NO_UPSTREAM").is_ok() {
             return None;
         }
-        if let Some(c) = upstream::cached(dep) {
-            return Some(c);
+        let cached = upstream::cached(dep);
+        if let Some(c) = cached.as_ref().filter(|(_, m)| !(self.opts.fetch && upstream::stale(m))) {
+            return Some(c.clone());
         }
         if self.opts.fetch && upstream::repo_of(dep, src).is_some() {
             let _ = upstream::fetch(dep, src);
@@ -264,7 +267,7 @@ impl Engine {
                         json!({"package": d.id(), "status": "missing"}),
                     );
                 };
-                let status = match upstream::cached(d) {
+                let status = match upstream::cached(d).filter(|(_, m)| !upstream::stale(m)) {
                     Some((_, m)) => m,
                     None => match upstream::fetch(d, &src) {
                         Ok(m) => m,
@@ -554,9 +557,11 @@ impl Engine {
             }
         }
         let bm = Bm25::build(refs.iter().map(|&(pi, ei)| (ready[pi].0.terms[ei].as_slice(), ready[pi].0.lens[ei])));
-        let raw_idents = identifiers(q);
+        let hb = Bm25::build(refs.iter().map(|&(pi, ei)| (ready[pi].0.head[ei].as_slice(), ready[pi].0.head_lens[ei])));
+        let mut raw_idents = identifiers(q);
+        raw_idents.extend(api_words(&ready, q));
         let changes = change_intent(q);
-        let scored = hybrid_rank(&ready, &refs, &bm, &qterms, q, &raw_idents, changes);
+        let scored = hybrid_rank(&ready, &refs, (&bm, &hb), &qterms, q, &raw_idents, changes);
         let mut out = Pack::new(tokens);
         let mut header = String::new();
         for (idx, dep, note) in &ready {
@@ -896,23 +901,58 @@ fn identifiers(q: &str) -> Vec<String> {
         .collect()
 }
 
+/// Plain words in the question that name a documented top-level API of the
+/// searched packages ("run code *after* the response" in Next.js, which
+/// exports `after`). They count as identifiers.
+fn api_words(ready: &[ReadyPkg], q: &str) -> Vec<String> {
+    let words: HashSet<String> = q
+        .split(|c: char| !(c.is_ascii_alphanumeric() || c == '_'))
+        .filter(|w| w.len() >= 4)
+        .map(|w| w.to_ascii_lowercase())
+        .filter(|w| !bm25::is_stop(w))
+        .collect();
+    let mut out = Vec::new();
+    for (idx, _, _) in ready {
+        for e in &idx.entries {
+            let top = matches!(e.kind, Kind::Function | Kind::Macro | Kind::Class)
+                && !e.doc.is_empty()
+                && !private_path(e)
+                && !e.legacy
+                && e.path.matches(['.', ':']).count() <= 2;
+            let n = e.name.trim_end_matches('!').to_ascii_lowercase();
+            if top && words.contains(&n) && !out.contains(&n) {
+                out.push(n);
+            }
+        }
+    }
+    out
+}
+
 /// BM25 and embedding similarity fused (each normalized to its best hit),
 /// then docs-specific boosts, then deprecation redirects ("use X instead")
 /// lift the API they point to. Returns (score, package, entry), best first.
 fn hybrid_rank(
     ready: &[ReadyPkg],
     refs: &[(usize, usize)],
-    bm: &Bm25,
+    (bm, hb): (&Bm25, &Bm25),
     qterms: &[String],
     q: &str,
     idents: &[String],
     changes: bool,
 ) -> Vec<(f32, usize, usize)> {
-    let mut fused: HashMap<usize, (f32, f32)> = HashMap::new();
-    let bm_hits = bm.search_weighted(&bm25::expand(qterms));
+    // (full-text BM25, heading BM25, dense), each normalized to its best hit.
+    let mut fused: HashMap<usize, (f32, f32, f32)> = HashMap::new();
+    let expanded = bm25::expand(qterms);
+    let bm_hits = bm.search_weighted(&expanded);
     let bmax = bm_hits.first().map_or(1.0, |h| h.score).max(1e-6);
     for h in bm_hits.iter().take(1500) {
         fused.entry(h.doc as usize).or_default().0 = h.score / bmax;
+    }
+    let head_w = std::env::var("LOCKDOCS_HEAD_WEIGHT").ok().and_then(|v| v.parse().ok()).unwrap_or(HEAD_WEIGHT);
+    let h_hits = hb.search_weighted(&expanded);
+    let hmax = h_hits.first().map_or(1.0, |h| h.score).max(1e-6);
+    for h in h_hits.iter().take(1500) {
+        fused.entry(h.doc as usize).or_default().1 = h.score / hmax;
     }
     let dense_w = std::env::var("LOCKDOCS_DENSE_WEIGHT").ok().and_then(|v| v.parse().ok()).unwrap_or(DENSE_WEIGHT);
     let qv = if ready.iter().all(|r| !r.0.vecs.is_empty()) {
@@ -939,7 +979,7 @@ fn hybrid_rank(
             }
         }
         for (i, c) in sims.iter().take(300) {
-            fused.entry(*i).or_default().1 = ((c - floor) / (cmax - floor).max(1e-6)).max(0.0);
+            fused.entry(*i).or_default().2 = ((c - floor) / (cmax - floor).max(1e-6)).max(0.0);
         }
     }
     let w = if qv.is_some() { dense_w } else { 0.0 };
@@ -950,13 +990,14 @@ fn hybrid_rank(
     let debug = std::env::var("LOCKDOCS_DEBUG").is_ok();
     let mut scored: Vec<(f32, usize, usize)> = fused
         .into_iter()
-        .map(|(i, (b, d))| {
+        .map(|(i, (b, h, d))| {
             let (pi, ei) = refs[i];
             let e = &ready[pi].0.entries[ei];
-            let s = ((1.0 - w) * b + w * d) * boost(e, idents, changes) * name_hit(e, &rare);
+            let lexical = (1.0 - head_w) * b + head_w * h;
+            let s = ((1.0 - w) * lexical + w * d) * boost(e, idents, changes) * name_hit(e, &rare);
             if debug && s > 0.3 {
                 eprintln!(
-                    "{s:.3} bm={b:.3} dense={d:.3} boost={:.2} name={:.2} {}",
+                    "{s:.3} bm={b:.3} head={h:.3} dense={d:.3} boost={:.2} name={:.2} {}",
                     boost(e, idents, changes),
                     name_hit(e, &rare),
                     e.path
@@ -1057,13 +1098,26 @@ fn boost(e: &Entry, idents: &[String], changes: bool) -> f32 {
         b *= std::env::var("LOCKDOCS_UPSTREAM_BOOST").ok().and_then(|v| v.parse().ok()).unwrap_or(1.35);
     }
     if e.kind == Kind::Prose {
+        // A section headed by the API the question names (`after`, `select!`).
+        let last = e
+            .name
+            .rsplit(" › ")
+            .next()
+            .unwrap_or("")
+            .trim()
+            .trim_end_matches("()")
+            .trim_end_matches('!')
+            .to_ascii_lowercase();
+        if !last.is_empty() && idents.contains(&last) {
+            b *= 1.4;
+        }
         if is_changelog(e) {
             b *= if changes { 1.5 } else { 0.5 };
         } else if e.file.to_ascii_uppercase().starts_with("README") {
             b *= 1.15;
         }
     } else {
-        let n = e.name.to_ascii_lowercase();
+        let n = e.name.trim_end_matches('!').to_ascii_lowercase();
         let p = e.path.to_ascii_lowercase();
         if idents.contains(&n) {
             b *= 1.8;

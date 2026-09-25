@@ -172,6 +172,19 @@ def markdown(res, with_c7):
         a = s.get(k)
         if a:
             out.append(f"| {k} | {a['passed']}/{a['total']} | {a['median_tokens']} | {a['median_ms']:.0f} ms | {a['p95_ms']:.0f} ms |")
+    lines = {q["id"]: q.get("line", "") for q in json.load(open(os.path.join(HERE, "questions.json")))["questions"]}
+    groups = [("older", "Older major (zod 3, Next 14, React Router 6, pydantic 1, axum 0.7)"), ("newer", "Newer major (zod 4, Next 15, React Router 7, pydantic 2, axum 0.8)"), ("single", "tokio")]
+    out += ["", "| subset | questions | lockdocs |" + (" Context7 |" if with_c7 else ""), "|---|---|---|" + ("---|" if with_c7 else "")]
+    for g, label in groups:
+        rs = [r for r in res["rows"] if lines.get(r["id"]) == g]
+        if not rs:
+            continue
+        l = sum(1 for r in rs if r["lockdocs"]["pass"])
+        line = f"| {label} | {len(rs)} | {l}/{len(rs)} |"
+        if with_c7:
+            c = sum(1 for r in rs if r.get("context7", {}).get("pass"))
+            line += f" {c}/{len(rs)} |"
+        out.append(line)
     if with_c7 and res["context7_calls"]:
         c = res["context7_calls"]
         out += ["", f"Context7 (anonymous): {c['calls']} HTTP calls, {c['rate_limited']} rate-limited (429), {c['errors']} other errors; ratelimit-limit header {c['limit']}, remaining {c['remaining']}."]

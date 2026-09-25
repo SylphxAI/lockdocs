@@ -114,9 +114,18 @@ Out of the box lockdocs never touches the network. If a pinned package is not in
 
 ## Benchmarks
 
-36 questions whose correct answer depends on the version: zod 3 vs 4, Next.js 14 vs 15, React Router 6 vs 7, pydantic 1 vs 2, axum 0.7 vs 0.8, tokio. Each runs in a real project with that version installed; an answer passes when it contains the version-correct API and none of the other version's. Same questions, same grading, against Context7's anonymous tier. Method, questions and scripts are in [`bench/`](bench/), and CI runs it on a GitHub-hosted runner.
+36 questions whose correct answer depends on the version (zod 3 vs 4, Next.js 14 vs 15, React Router 6 vs 7, pydantic 1 vs 2, axum 0.7 vs 0.8, and tokio), each asked in a real project with that version installed. An answer passes when it contains the version-correct API and none of the other version's. Same questions, same grader, against Context7's anonymous API on the same GitHub-hosted runner ([run](https://github.com/SylphxAI/lockdocs/actions/runs/36118537122)):
 
-See the [benchmark page](https://sylphxai.github.io/lockdocs/benchmarks) for the full per-question table.
+| | correct | older major | newer major | median tokens | median latency |
+|---|---|---|---|---|---|
+| **lockdocs** | **31/36** | **14/16** | 15/17 | 1,531 | **16 ms** |
+| Context7 (anonymous) | 27/36 | 8/16 | **16/17** | **979** | 1,723 ms |
+
+- **Older versions are where agents go wrong, and where lockdocs wins.** All five of Context7's pydantic 1 answers contained pydantic 2 APIs (it serves one unversioned pydantic library), and its Next.js 14 `cookies()` and React Router 6 loader answers lacked that version's API (`ReadonlyRequestCookies`, `json()`).
+- **On the newest versions Context7 is slightly ahead** (16/17 vs 15/17) and returns fewer tokens: its snippets come from docs websites, while lockdocs only knows what ships in the package. lockdocs missed zod 4's `z.strictObject` for "reject unknown keys", pydantic's `model_validate`/`parse_obj` for "create a model from a dict", and ranked `join!` above `select!`.
+- **About 100x lower latency, no quota.** lockdocs latency is per query after a one-time index per version (reported on the benchmark page). One benchmark run used 47 of Context7's 200 anonymous calls (`ratelimit-limit: 200`); lockdocs makes no network calls.
+
+Method, questions, per-question results and scripts: [benchmark page](https://sylphxai.github.io/lockdocs/benchmarks) and [`bench/`](bench/). Reproduce with `bash bench/setup.sh && python3 bench/run.py target/release/lockdocs bench/projects out.json --context7`.
 
 ## How it compares
 
@@ -142,7 +151,7 @@ Context7 knows many sites and guides that never ship inside a package, so for a 
 4. **Index and cache.** BM25 (identifier-aware tokenizer, light stemming, a small programming synonym table) per package, cached on disk by package, version and source, so each version is indexed once, ever.
 5. **Answer.** Rank, then pack results into the token budget with citations.
 
-Typical costs: indexing zod 4 (3,000+ symbols) takes about 0.15 s once; a warm query takes tens of milliseconds.
+Typical costs on a GitHub-hosted runner: indexing every declaration in Next.js 15 (7,700 symbols) takes about 0.4 s, zod 4 about 0.05 s, once per version; a query then takes 5-20 ms.
 
 ## CLI
 

@@ -11,7 +11,8 @@
     ]
    ],
    "reject": [],
-   "why": "v3: .strict() on ZodObject"
+   "why": "v3: .strict() on ZodObject",
+   "line": "older"
   },
   {
    "id": "zod4-strict",
@@ -24,7 +25,8 @@
     ]
    ],
    "reject": [],
-   "why": "v4: z.strictObject() (.strict() is legacy)"
+   "why": "v4: z.strictObject() (.strict() is legacy)",
+   "line": "newer"
   },
   {
    "id": "zod3-email",
@@ -39,7 +41,8 @@
    "reject": [
     "z.email("
    ],
-   "why": "v3: z.string().email(); top-level z.email() does not exist"
+   "why": "v3: z.string().email(); top-level z.email() does not exist",
+   "line": "older"
   },
   {
    "id": "zod4-email",
@@ -53,7 +56,8 @@
     ]
    ],
    "reject": [],
-   "why": "v4: top-level z.email()"
+   "why": "v4: top-level z.email()",
+   "line": "newer"
   },
   {
    "id": "zod3-error",
@@ -69,7 +73,8 @@
     ]
    ],
    "reject": [],
-   "why": "v3: message / required_error / errorMap params"
+   "why": "v3: message / required_error / errorMap params",
+   "line": "older"
   },
   {
    "id": "zod4-error",
@@ -86,7 +91,8 @@
    "reject": [
     "required_error"
    ],
-   "why": "v4: unified `error` param; required_error removed"
+   "why": "v4: unified `error` param; required_error removed",
+   "line": "newer"
   },
   {
    "id": "zod4-record",
@@ -99,7 +105,8 @@
     ]
    ],
    "reject": [],
-   "why": "v4: z.record(keySchema, valueSchema)"
+   "why": "v4: z.record(keySchema, valueSchema)",
+   "line": "newer"
   },
   {
    "id": "next14-cookies",
@@ -115,7 +122,8 @@
     "Promise<ReadonlyRequestCookies>",
     "await cookies()"
    ],
-   "why": "14: cookies() returns ReadonlyRequestCookies synchronously"
+   "why": "14: cookies() returns ReadonlyRequestCookies synchronously",
+   "line": "older"
   },
   {
    "id": "next15-cookies",
@@ -129,7 +137,8 @@
     ]
    ],
    "reject": [],
-   "why": "15: cookies() is async"
+   "why": "15: cookies() is async",
+   "line": "newer"
   },
   {
    "id": "next14-headers",
@@ -146,7 +155,8 @@
     "Promise<ReadonlyHeaders>",
     "await headers()"
    ],
-   "why": "14: headers() is sync"
+   "why": "14: headers() is sync",
+   "line": "older"
   },
   {
    "id": "next15-headers",
@@ -160,7 +170,8 @@
     ]
    ],
    "reject": [],
-   "why": "15: headers() is async"
+   "why": "15: headers() is async",
+   "line": "newer"
   },
   {
    "id": "next14-nostore",
@@ -175,7 +186,8 @@
     ]
    ],
    "reject": [],
-   "why": "14: unstable_noStore()"
+   "why": "14: unstable_noStore()",
+   "line": "older"
   },
   {
    "id": "next15-connection",
@@ -191,7 +203,8 @@
     ]
    ],
    "reject": [],
-   "why": "15: connection() (unstable_noStore deprecated)"
+   "why": "15: connection() (unstable_noStore deprecated)",
+   "line": "newer"
   },
   {
    "id": "next15-after",
@@ -206,7 +219,8 @@
     ]
    ],
    "reject": [],
-   "why": "15.1: after() from next/server (unstable_after in 15.0)"
+   "why": "15.1: after() from next/server (unstable_after in 15.0)",
+   "line": "newer"
   },
   {
    "id": "rr6-json",
@@ -219,7 +233,8 @@
     ]
    ],
    "reject": [],
-   "why": "v6: json() helper"
+   "why": "v6: json() helper",
+   "line": "older"
   },
   {
    "id": "rr7-data",
@@ -232,7 +247,8 @@
     ]
    ],
    "reject": [],
-   "why": "v7: data() helper (json() deprecated)"
+   "why": "v7: data() helper (json() deprecated)",
+   "line": "newer"
   },
   {
    "id": "rr6-defer",
@@ -245,7 +261,8 @@
     ]
    ],
    "reject": [],
-   "why": "v6: defer() + <Await>"
+   "why": "v6: defer() + <Await>",
+   "line": "older"
   },
   {
    "id": "rr6-future",
@@ -258,7 +275,8 @@
     ]
    ],
    "reject": [],
-   "why": "v6.26: future.v7_startTransition"
+   "why": "v6.26: future.v7_startTransition",
+   "line": "older"
   },
   {
    "id": "rr7-router",
@@ -271,7 +289,8 @@
     ]
    ],
    "reject": [],
-   "why": "v7: createBrowserRouter from react-router"
+   "why": "v7: createBrowserRouter from react-router",
+   "line": "newer"
   },
   {
    "id": "pyd1-dict",
@@ -287,7 +306,8 @@
    "reject": [
     "model_dump"
    ],
-   "why": "v1: .dict()"
+   "why": "v1: .dict()",
+   "line": "older"
   },
   {
    "id": "pyd2-dict",
@@ -300,7 +320,8 @@
     ]
    ],
    "reject": [],
-   "why": "v2: .model_dump()"
+   "why": "v2: .model_dump()",
+   "line": "newer"
   },
   {
    "id": "pyd1-parse",
@@ -315,7 +336,8 @@
    "reject": [
     "model_validate"
    ],
-   "why": "v1: Model.parse_obj()"
+   "why": "v1: Model.parse_obj()",
+   "line": "older"
   },
   {
    "id": "pyd2-parse",
@@ -328,7 +350,8 @@
     ]
    ],
    "reject": [],
-   "why": "v2: Model.model_validate()"
+   "why": "v2: Model.model_validate()",
+   "line": "newer"
   },
   {
    "id": "pyd1-validator",
@@ -344,7 +367,8 @@
    "reject": [
     "field_validator"
    ],
-   "why": "v1: @validator"
+   "why": "v1: @validator",
+   "line": "older"
   },
   {
    "id": "pyd2-validator",
@@ -357,7 +381,8 @@
     ]
    ],
    "reject": [],
-   "why": "v2: @field_validator"
+   "why": "v2: @field_validator",
+   "line": "newer"
   },
   {
    "id": "pyd1-schema",
@@ -374,7 +399,8 @@
    "reject": [
     "model_json_schema"
    ],
-   "why": "v1: Model.schema() / schema_json()"
+   "why": "v1: Model.schema() / schema_json()",
+   "line": "older"
   },
   {
    "id": "pyd2-schema",
@@ -387,7 +413,8 @@
     ]
    ],
    "reject": [],
-   "why": "v2: Model.model_json_schema()"
+   "why": "v2: Model.model_json_schema()",
+   "line": "newer"
   },
   {
    "id": "pyd1-config",
@@ -403,7 +430,8 @@
    "reject": [
     "ConfigDict"
    ],
-   "why": "v1: class Config: extra = Extra.allow"
+   "why": "v1: class Config: extra = Extra.allow",
+   "line": "older"
   },
   {
    "id": "pyd2-config",
@@ -417,7 +445,8 @@
     ]
    ],
    "reject": [],
-   "why": "v2: model_config = ConfigDict(extra='allow')"
+   "why": "v2: model_config = ConfigDict(extra='allow')",
+   "line": "newer"
   },
   {
    "id": "axum07-path",
@@ -430,7 +459,8 @@
     ]
    ],
    "reject": [],
-   "why": "0.7: /users/:id"
+   "why": "0.7: /users/:id",
+   "line": "older"
   },
   {
    "id": "axum08-path",
@@ -443,7 +473,8 @@
     ]
    ],
    "reject": [],
-   "why": "0.8: /users/{id}"
+   "why": "0.8: /users/{id}",
+   "line": "newer"
   },
   {
    "id": "axum07-extractor",
@@ -456,7 +487,8 @@
     ]
    ],
    "reject": [],
-   "why": "0.7: #[async_trait] on the impl"
+   "why": "0.7: #[async_trait] on the impl",
+   "line": "older"
   },
   {
    "id": "axum08-optional",
@@ -469,7 +501,8 @@
     ]
    ],
    "reject": [],
-   "why": "0.8: OptionalFromRequestParts"
+   "why": "0.8: OptionalFromRequestParts",
+   "line": "newer"
   },
   {
    "id": "tokio-blocking",
@@ -482,7 +515,8 @@
     ]
    ],
    "reject": [],
-   "why": "tokio::task::spawn_blocking"
+   "why": "tokio::task::spawn_blocking",
+   "line": "single"
   },
   {
    "id": "tokio-select",
@@ -495,7 +529,8 @@
     ]
    ],
    "reject": [],
-   "why": "tokio::select!"
+   "why": "tokio::select!",
+   "line": "single"
   },
   {
    "id": "tokio-timeout",
@@ -509,7 +544,8 @@
     ]
    ],
    "reject": [],
-   "why": "tokio::time::timeout"
+   "why": "tokio::time::timeout",
+   "line": "single"
   }
  ]
 }

@@ -17,8 +17,16 @@ struct Lockdocs {
 
 impl Lockdocs {
     fn root(&self, args: &Value, call: &Call) -> Result<PathBuf, String> {
-        let explicit = ["root", "repo_root"].iter().find_map(|k| args.get(*k).and_then(|v| v.as_str())).map(PathBuf::from);
-        roots::pick(&Sources { explicit, env: &["LOCKDOCS_ROOT"], default: self.default_root.clone(), client: &call.client_roots })
+        let explicit = ["root", "repo_root"]
+            .iter()
+            .find_map(|k| args.get(*k).and_then(|v| v.as_str()))
+            .map(PathBuf::from);
+        roots::pick(&Sources {
+            explicit,
+            env: &["LOCKDOCS_ROOT"],
+            default: self.default_root.clone(),
+            client: &call.client_roots,
+        })
     }
 }
 
@@ -55,5 +63,9 @@ impl App for Lockdocs {
 }
 
 pub fn serve(default_root: Option<PathBuf>, opts: Options) -> anyhow::Result<()> {
-    run_stdio(Lockdocs { ws: Workspace::default(), opts, default_root })
+    run_stdio(Lockdocs {
+        ws: Workspace::default(),
+        opts,
+        default_root,
+    })
 }

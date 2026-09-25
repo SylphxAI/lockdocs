@@ -15,7 +15,11 @@ pub fn run(flags: &HashMap<String, String>) -> Result<()> {
     if flags.contains_key("fetch") {
         args.push("--fetch".into());
     }
-    let server = Server { name: "lockdocs".into(), package: "@sylphx/lockdocs".into(), args };
+    let server = Server {
+        name: "lockdocs".into(),
+        package: "@sylphx/lockdocs".into(),
+        args,
+    };
     if setup::run(&server, &opts)? > 0 && !opts.dry_run {
         println!("\nDone. Restart your editor or agent, then ask it: \"Use lockdocs: which version of <library> do we use, and how do I ...?\"");
     }

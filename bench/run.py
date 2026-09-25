@@ -173,7 +173,14 @@ def markdown(res, with_c7):
         if a:
             out.append(f"| {k} | {a['passed']}/{a['total']} | {a['median_tokens']} | {a['median_ms']:.0f} ms | {a['p95_ms']:.0f} ms |")
     lines = {q["id"]: q.get("line", "") for q in json.load(open(os.path.join(HERE, "questions.json")))["questions"]}
-    groups = [("older", "Older major (zod 3, Next 14, React Router 6, pydantic 1, axum 0.7)"), ("newer", "Newer major (zod 4, Next 15, React Router 7, pydantic 2, axum 0.8)"), ("single", "tokio")]
+
+    def label(g, title):
+        # e.g. "Older major: django 4, express 4, zod 3" from the rows themselves.
+        libs = sorted({f"{r['package']} {r['version'].lstrip('v').split('.')[0] if not r['version'].lstrip('v').startswith('0.') else '.'.join(r['version'].lstrip('v').split('.')[:2])}"
+                       for r in res["rows"] if lines.get(r["id"]) == g and r["version"]})
+        return f"{title}: {', '.join(libs)}" if libs else title
+
+    groups = [("older", label("older", "Older major")), ("newer", label("newer", "Newer major")), ("single", label("single", "Single version"))]
     out += ["", "| subset | questions | lockdocs |" + (" Context7 |" if with_c7 else ""), "|---|---|---|" + ("---|" if with_c7 else "")]
     for g, label in groups:
         rs = [r for r in res["rows"] if lines.get(r["id"]) == g]

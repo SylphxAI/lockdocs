@@ -93,7 +93,10 @@ fn npm_latest_major(agent: &ureq::Agent, name: &str) -> Option<u64> {
 }
 
 /// Files to take from a docs-site repository for this version, with a label.
-fn site_files(agent: &ureq::Agent, dep: &Dep) -> Result<Option<(Repo, String, String, Vec<(String, u64)>)>> {
+/// Repository, branch, label and files of a docs site.
+type SiteFiles = (Repo, String, String, Vec<(String, u64)>);
+
+fn site_files(agent: &ureq::Agent, dep: &Dep) -> Result<Option<SiteFiles>> {
     if dep.eco != Eco::Npm {
         return Ok(None);
     }

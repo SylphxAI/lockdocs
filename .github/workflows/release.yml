@@ -1,0 +1,171 @@
+name: release
+
+# Publishes when packages/lockdocs/package.json carries a version that is not
+# on npm yet: native binaries -> @sylphx/lockdocs -> GitHub release -> MCP
+# Registry. Bump with `bun scripts/set-version.ts X.Y.Z && cargo update -w` in a PR.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      publish: ${{ steps.v.outputs.publish }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        run: |
+          V=$(node -p "require('./packages/lockdocs/package.json').version")
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          if npm view "@sylphx/lockdocs@$V" version >/dev/null 2>&1; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"; echo "@sylphx/lockdocs@$V already published"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"; echo "will publish $V"
+          fi
+
+  build:
+    needs: check
+    if: needs.check.outputs.publish == 'true'
+    name: build ${{ matrix.key }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - { key: darwin-arm64, os: macos-latest, target: aarch64-apple-darwin, bin: lockdocs }
+          - { key: darwin-x64, os: macos-latest, target: x86_64-apple-darwin, bin: lockdocs }
+          - { key: linux-x64-gnu, os: ubuntu-latest, target: x86_64-unknown-linux-gnu, zig: '2.17', bin: lockdocs }
+          - { key: linux-arm64-gnu, os: ubuntu-latest, target: aarch64-unknown-linux-gnu, zig: '2.17', bin: lockdocs }
+          - { key: win32-x64-msvc, os: windows-latest, target: x86_64-pc-windows-msvc, bin: lockdocs.exe }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+      - if: matrix.zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.14.1
+      - if: matrix.zig
+        run: cargo install cargo-zigbuild --version 0.23.0 --locked
+      - name: Build
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -n "${{ matrix.zig }}" ]; then
+            cargo zigbuild --release --locked -p lockdocs --target ${{ matrix.target }}.${{ matrix.zig }}
+          else
+            cargo build --release --locked -p lockdocs --target ${{ matrix.target }}
+          fi
+          mkdir -p out
+          cp target/${{ matrix.target }}/release/${{ matrix.bin }} out/
+          ls -la out
+      - name: Run it (native targets)
+        if: matrix.key != 'linux-arm64-gnu' && matrix.key != 'darwin-x64'
+        shell: bash
+        run: ./out/${{ matrix.bin }} version
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.key }}
+          path: out/${{ matrix.bin }}
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    needs: [check, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      V: ${{ needs.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.0'
+      - run: bun scripts/check-version.ts
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Stage natives
+        run: |
+          set -euo pipefail
+          for key in darwin-arm64 darwin-x64 linux-x64-gnu linux-arm64-gnu win32-x64-msvc; do
+            src=$(find artifacts/native-$key -type f | head -1)
+            test -s "$src"
+            cp "$src" packages/npm/$key/
+            chmod +x packages/npm/$key/*
+          done
+          cp README.md LICENSE packages/lockdocs/
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          pub() {
+            local dir=$1 name
+            name=$(node -p "require('./$dir/package.json').name")
+            if npm view "$name@$V" version >/dev/null 2>&1; then echo "= $name@$V already live"; return; fi
+            (cd "$dir" && npm publish --access public)
+            echo "+ $name@$V published"
+          }
+          for key in darwin-arm64 darwin-x64 linux-x64-gnu linux-arm64-gnu win32-x64-msvc; do pub packages/npm/$key; done
+          pub packages/lockdocs
+          # The registry can take minutes to serve new versions; wait once for all.
+          for dir in packages/npm/* packages/lockdocs; do
+            name=$(node -p "require('./$dir/package.json').name")
+            for i in $(seq 1 120); do npm view "$name@$V" version >/dev/null 2>&1 && break; sleep 5; done
+            npm view "$name@$V" version >/dev/null 2>&1 || { echo "::error::$name@$V not visible after 10 minutes"; exit 1; }
+            echo "readback $name@$V"
+          done
+      - name: Smoke the published package on a real project
+        run: |
+          set -euo pipefail
+          cd "$(mktemp -d)"
+          npm init -y >/dev/null
+          npm install --silent zod@3.23.8
+          npx -y "@sylphx/lockdocs@$V" version
+          npx -y "@sylphx/lockdocs@$V" resolve | tee resolve.out
+          grep -q 'zod@3.23.8' resolve.out
+          npx -y "@sylphx/lockdocs@$V" zod "reject unknown keys" | tee docs.out
+          grep -q 'zod@3.23.8 README.md' docs.out
+          npx -y "@sylphx/lockdocs@$V" api z.object | grep -q 'ZodObject'
+      - name: GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if gh release view "v$V" >/dev/null 2>&1; then echo "release v$V exists"; exit 0; fi
+          mkdir -p assets
+          for key in darwin-arm64 darwin-x64 linux-x64-gnu linux-arm64-gnu; do
+            tar -C packages/npm/$key -czf assets/lockdocs-$key.tar.gz lockdocs
+          done
+          (cd packages/npm/win32-x64-msvc && zip -q ../../../assets/lockdocs-win32-x64-msvc.zip lockdocs.exe)
+          notes=$(awk -v v="## $V" '$0==v{f=1;next} /^## /{f=0} f' CHANGELOG.md)
+          gh release create "v$V" assets/* --target "$GITHUB_SHA" --title "lockdocs $V" --notes "${notes:-lockdocs $V}"
+      - name: Publish to the MCP Registry
+        run: |
+          set -euo pipefail
+          curl -sL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" | tar xz mcp-publisher
+          ./mcp-publisher validate
+          ./mcp-publisher login github-oidc
+          ./mcp-publisher publish

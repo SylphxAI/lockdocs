@@ -1,0 +1,61 @@
+{
+  "name": "@sylphx/lockdocs",
+  "version": "0.1.0",
+  "mcpName": "io.github.SylphxAI/lockdocs",
+  "description": "Context7 without rate limits: exact-version library docs for AI agents, straight from your lockfile, offline. MCP server + CLI (Rust). npm, PyPI, crates.io, Go.",
+  "bin": {
+    "lockdocs": "bin/lockdocs.js"
+  },
+  "files": [
+    "bin/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "optionalDependencies": {
+    "@sylphx/lockdocs-darwin-arm64": "0.1.0",
+    "@sylphx/lockdocs-darwin-x64": "0.1.0",
+    "@sylphx/lockdocs-linux-x64-gnu": "0.1.0",
+    "@sylphx/lockdocs-linux-arm64-gnu": "0.1.0",
+    "@sylphx/lockdocs-win32-x64-msvc": "0.1.0"
+  },
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "documentation",
+    "docs",
+    "context7",
+    "context7-alternative",
+    "lockfile",
+    "version",
+    "offline",
+    "local-first",
+    "llm",
+    "ai-agents",
+    "claude-code",
+    "cursor",
+    "codex",
+    "developer-tools",
+    "rust",
+    "typescript",
+    "python",
+    "rust-docs",
+    "go"
+  ],
+  "license": "MIT",
+  "homepage": "https://sylphxai.github.io/lockdocs/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SylphxAI/lockdocs.git",
+    "directory": "packages/lockdocs"
+  },
+  "bugs": {
+    "url": "https://github.com/SylphxAI/lockdocs/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

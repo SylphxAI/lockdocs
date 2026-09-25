@@ -1,0 +1,27 @@
+{
+  "name": "@sylphx/lockdocs-linux-x64-gnu",
+  "version": "0.1.0",
+  "description": "lockdocs native binary for linux-x64-gnu",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "libc": [
+    "glibc"
+  ],
+  "files": [
+    "lockdocs"
+  ],
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://sylphxai.github.io/lockdocs/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SylphxAI/lockdocs.git",
+    "directory": "packages/npm/linux-x64-gnu"
+  }
+}

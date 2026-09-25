@@ -1,0 +1,24 @@
+{
+  "name": "@sylphx/lockdocs-win32-x64-msvc",
+  "version": "0.1.0",
+  "description": "lockdocs native binary for win32-x64-msvc",
+  "os": [
+    "win32"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "files": [
+    "lockdocs.exe"
+  ],
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://sylphxai.github.io/lockdocs/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SylphxAI/lockdocs.git",
+    "directory": "packages/npm/win32-x64-msvc"
+  }
+}

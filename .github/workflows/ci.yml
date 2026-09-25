@@ -1,0 +1,79 @@
+name: ci
+
+on:
+  pull_request:
+  merge_group:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.event.merge_group.head_sha || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --workspace --locked
+
+  checks:
+    name: manifests, smoke, docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.0'
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - run: bun install --frozen-lockfile
+      - name: Manifests agree on one version
+        run: bun scripts/check-version.ts
+      - name: Format and lints
+        run: cargo fmt --all --check && cargo clippy --workspace --locked -- -D warnings
+      - name: Build release binary
+        run: cargo build --release --locked -p lockdocs
+      - name: Smoke (CLI, MCP over stdio, npm launcher)
+        env:
+          LOCKDOCS_NO_SYSTEM_PYTHON: '1'
+        run: |
+          set -euo pipefail
+          B=$PWD/target/release/lockdocs
+          F=crates/lockdocs-core/tests/fixture
+          $B version
+          $B resolve -C $F | tee /tmp/resolve.out
+          grep -q 'tinyrt@0.3.0' /tmp/resolve.out
+          $B tiny-schema "reject unknown keys" -C $F | tee /tmp/docs.out
+          grep -q 'tiny-schema@1.2.0 README.md:9' /tmp/docs.out
+          $B api tinyrt::spawn -C $F | grep -q 'Spawns a future'
+          $B api serde_json::from_str | grep -q 'serde_json@'
+          $B index -C $F
+          printf '%s\n' \
+            '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ci","version":"1"}}}' \
+            '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
+            '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
+            '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"docs","arguments":{"query":"turn a model into a dict","package":"tinymodel"}}}' \
+            '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"api","arguments":{"symbol":"tinyweb.Context.JSON"}}}' \
+            | (cat; sleep 2) | $B mcp -C $F > /tmp/mcp.out
+          grep -q '"name":"resolve"' /tmp/mcp.out
+          grep -q 'to_dict' /tmp/mcp.out
+          grep -q 'JSON writes obj as JSON' /tmp/mcp.out
+          HOME=$(mktemp -d) $B setup --client cursor,codex | tee /tmp/setup.out
+          grep -q 'Cursor' /tmp/setup.out
+          LOCKDOCS_BIN=$B node packages/lockdocs/bin/lockdocs.js version
+      - name: Docs build
+        run: bun run docs:build

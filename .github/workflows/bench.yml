@@ -1,0 +1,47 @@
+name: bench
+
+# Version-specific questions against real installs of popular libraries, on a
+# GitHub-hosted runner, with Context7's anonymous tier for comparison.
+# Results land in the job summary and the `bench` artifact.
+
+on:
+  workflow_dispatch:
+    inputs:
+      context7:
+        description: Also query Context7 (anonymous tier)
+        type: boolean
+        default: true
+  pull_request:
+    paths: ['bench/**', '.github/workflows/bench.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install tiktoken
+      - run: cargo build --release --locked -p lockdocs
+      - name: Install benchmark projects at pinned versions
+        run: bash bench/setup.sh bench/projects
+      - name: Run
+        env:
+          C7: ${{ github.event_name == 'workflow_dispatch' && inputs.context7 && '--context7' || '' }}
+        run: |
+          set -euo pipefail
+          rm -rf ~/.cache/lockdocs
+          python3 bench/run.py target/release/lockdocs bench/projects bench.json $C7 | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bench
+          path: bench.json

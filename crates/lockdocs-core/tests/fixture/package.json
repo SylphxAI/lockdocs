@@ -1,0 +1,1 @@
+{ "name": "fixture", "version": "0.0.0", "private": true, "dependencies": { "tiny-schema": "^1.2.0", "missing-pkg": "^2.0.0" } }

@@ -10,6 +10,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      build-only:
+        description: Build and check the binaries only; publish nothing.
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -20,12 +25,13 @@ concurrency:
 
 jobs:
   release:
-    uses: SylphxAI/mcp-kit/.github/workflows/release.yml@v0
+    uses: SylphxAI/mcp-kit/.github/workflows/release.yml@ci/own-runners
     permissions:
       contents: write
       id-token: write
       packages: write
     with:
+      build-only: ${{ inputs.build-only == true }}
       name: lockdocs
       npm-package: '@sylphx/lockdocs'
       mcp-name: io.github.SylphxAI/lockdocs

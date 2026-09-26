@@ -7,10 +7,11 @@
 Reads your lockfile. Answers from the docs and type declarations of the exact version you installed.<br>
 npm · PyPI · crates.io · Go. MCP server + CLI in one Rust binary. No account, no API key. MIT.
 
-[![npm](https://img.shields.io/npm/v/@sylphx/lockdocs?color=7c9cff&label=npm)](https://www.npmjs.com/package/@sylphx/lockdocs)
+[![npm](https://mark.sylphx.com/npm/v/@sylphx/lockdocs?color=7c9cff&label=npm)](https://www.npmjs.com/package/@sylphx/lockdocs)
 [![CI](https://github.com/SylphxAI/lockdocs/actions/workflows/ci.yml/badge.svg)](https://github.com/SylphxAI/lockdocs/actions/workflows/ci.yml)
-[![MCP Registry](https://img.shields.io/badge/MCP%20Registry-io.github.SylphxAI%2Flockdocs-42d6a4)](https://registry.modelcontextprotocol.io/)
-[![License: MIT](https://img.shields.io/badge/license-MIT-ffb454)](LICENSE)
+[![MCP Registry](https://mark.sylphx.com/badge/MCP%20Registry-io.github.SylphxAI%2Flockdocs-42d6a4)](https://registry.modelcontextprotocol.io/)
+[![License: MIT](https://mark.sylphx.com/badge/license-MIT-ffb454)](LICENSE)
+<!-- repomap:agent-ready -->[![agent-ready 94/100](https://mark.sylphx.com/badge/agent--ready-94%2F100-brightgreen)](https://github.com/SylphxAI/repomap#agent-readiness-score)<!-- /repomap:agent-ready -->
 
 [Docs](https://sylphxai.github.io/lockdocs/) · [Quickstart](#quickstart) · [Tools](#what-your-agent-gets) · [Benchmarks](#benchmarks) · [Compare](#how-it-compares) · [How it works](#how-it-works)
 

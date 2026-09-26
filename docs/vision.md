@@ -38,7 +38,7 @@ newest one. That is the one job.
 - On the version-sensitive benchmark (`bench/`), lockdocs is correct at least
   as often as the best hosted alternative on every column: older majors, newer
   majors, single-version libraries and the held-out questions. Results are
-  measured on GitHub-hosted runners and published as they come out.
+  measured on our own Linux CI runners and published as they come out.
 - A question costs tens of milliseconds and about a thousand tokens.
 - Every answer cites `package@version path:line`, so an agent or a person can
   check it.

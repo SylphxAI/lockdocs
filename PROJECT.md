@@ -25,7 +25,7 @@ MIT licensed.
 
 Bump with `bun scripts/set-version.ts X.Y.Z && cargo update -w`, add a
 `## X.Y.Z` section to CHANGELOG.md, then merge. `release.yml` publishes when
-the npm version is new: 5 native targets on GitHub-hosted runners, the natives
+the npm version is new: 5 native targets cross-compiled on our Linux runners, the natives
 and `@sylphx/lockdocs`, an `npx` smoke on a real project, the GitHub release,
 and the MCP Registry entry.
 

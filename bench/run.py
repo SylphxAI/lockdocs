@@ -270,7 +270,7 @@ def markdown(res, with_c7):
     if with_c7 and res["context7_calls"]:
         c = res["context7_calls"]
         out += ["", f"Context7 (anonymous): {c['calls']} HTTP calls, {c['rate_limited']} rate-limited (429), {c['errors']} other errors; ratelimit-limit header {c['limit']}, remaining {c['remaining']}."
-                + (f" {c['reused']} answers reused from the previous run's identical question and version (see bench/run.py --context7-cache)." if c.get("reused") else "")]
+                + (f" {c['reused']} answers reused from the previous run's identical question, grading and version (see bench/run.py --context7-cache)." if c.get("reused") else "")]
     head = "| question | version | " + " | ".join(n for n, _ in cols) + " | tokens (last lockdocs) | ms |" + (" Context7 library |" if with_c7 else "")
     out += ["", head, "|---|---|" + "---|" * len(cols) + "---|---|" + ("---|" if with_c7 else "")]
     for r in res["rows"]:

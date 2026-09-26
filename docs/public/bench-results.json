@@ -2,13 +2,13 @@
  "tokenizer": "tiktoken o200k_base",
  "index": {
   "axum07": {
-   "ms": 271,
+   "ms": 391,
    "report": {
     "missing": [],
-    "ms": 259,
+    "ms": 378,
     "packages": [
      {
-      "build_ms": 149,
+      "build_ms": 164,
       "ecosystem": "cargo",
       "package": "axum@0.7.9",
       "sections": 262,
@@ -16,7 +16,7 @@
       "symbols": 236
      },
      {
-      "build_ms": 218,
+      "build_ms": 319,
       "ecosystem": "cargo",
       "package": "tokio@1.41.1",
       "sections": 551,
@@ -27,13 +27,13 @@
    }
   },
   "axum08": {
-   "ms": 285,
+   "ms": 382,
    "report": {
     "missing": [],
-    "ms": 274,
+    "ms": 370,
     "packages": [
      {
-      "build_ms": 137,
+      "build_ms": 170,
       "ecosystem": "cargo",
       "package": "axum@0.8.1",
       "sections": 272,
@@ -41,7 +41,7 @@
       "symbols": 264
      },
      {
-      "build_ms": 236,
+      "build_ms": 324,
       "ecosystem": "cargo",
       "package": "tokio@1.43.0",
       "sections": 561,
@@ -52,13 +52,13 @@
    }
   },
   "django42": {
-   "ms": 375,
+   "ms": 532,
    "report": {
     "missing": [],
-    "ms": 359,
+    "ms": 516,
     "packages": [
      {
-      "build_ms": 309,
+      "build_ms": 451,
       "ecosystem": "pypi",
       "package": "django@4.2.30",
       "sections": 159,
@@ -69,13 +69,13 @@
    }
   },
   "django51": {
-   "ms": 371,
+   "ms": 534,
    "report": {
     "missing": [],
-    "ms": 353,
+    "ms": 517,
     "packages": [
      {
-      "build_ms": 303,
+      "build_ms": 453,
       "ecosystem": "pypi",
       "package": "django@5.1.15",
       "sections": 159,
@@ -86,13 +86,13 @@
    }
   },
   "eslint8": {
-   "ms": 130,
+   "ms": 185,
    "report": {
     "missing": [],
-    "ms": 126,
+    "ms": 179,
     "packages": [
      {
-      "build_ms": 97,
+      "build_ms": 144,
       "ecosystem": "npm",
       "package": "eslint@8.57.1",
       "sections": 27,
@@ -103,13 +103,13 @@
    }
   },
   "eslint9": {
-   "ms": 59,
+   "ms": 78,
    "report": {
     "missing": [],
-    "ms": 55,
+    "ms": 73,
     "packages": [
      {
-      "build_ms": 24,
+      "build_ms": 39,
       "ecosystem": "npm",
       "package": "eslint@9.39.5",
       "sections": 28,
@@ -120,13 +120,13 @@
    }
   },
   "express4": {
-   "ms": 53,
+   "ms": 81,
    "report": {
     "missing": [],
-    "ms": 49,
+    "ms": 77,
     "packages": [
      {
-      "build_ms": 4,
+      "build_ms": 2,
       "ecosystem": "npm",
       "package": "@types/express@4.17.25",
       "sections": 5,
@@ -134,7 +134,7 @@
       "symbols": 35
      },
      {
-      "build_ms": 16,
+      "build_ms": 22,
       "ecosystem": "npm",
       "package": "express@4.21.2",
       "sections": 276,
@@ -145,10 +145,10 @@
    }
   },
   "express5": {
-   "ms": 41,
+   "ms": 48,
    "report": {
     "missing": [],
-    "ms": 37,
+    "ms": 44,
     "packages": [
      {
       "build_ms": 4,
@@ -159,7 +159,7 @@
       "symbols": 34
      },
      {
-      "build_ms": 5,
+      "build_ms": 7,
       "ecosystem": "npm",
       "package": "express@5.2.1",
       "sections": 18,
@@ -170,13 +170,13 @@
    }
   },
   "fastapi0115": {
-   "ms": 65,
+   "ms": 89,
    "report": {
     "missing": [],
-    "ms": 61,
+    "ms": 85,
     "packages": [
      {
-      "build_ms": 24,
+      "build_ms": 36,
       "ecosystem": "pypi",
       "package": "fastapi@0.115.14",
       "sections": 27,
@@ -187,13 +187,13 @@
    }
   },
   "fastapi088": {
-   "ms": 54,
+   "ms": 69,
    "report": {
     "missing": [],
-    "ms": 52,
+    "ms": 66,
     "packages": [
      {
-      "build_ms": 14,
+      "build_ms": 20,
       "ecosystem": "pypi",
       "package": "fastapi@0.88.0",
       "sections": 24,
@@ -204,13 +204,13 @@
    }
   },
   "next14": {
-   "ms": 293,
+   "ms": 391,
    "report": {
     "missing": [],
-    "ms": 283,
+    "ms": 379,
     "packages": [
      {
-      "build_ms": 246,
+      "build_ms": 331,
       "ecosystem": "npm",
       "package": "next@14.2.35",
       "sections": 10,
@@ -218,7 +218,7 @@
       "symbols": 4904
      },
      {
-      "build_ms": 29,
+      "build_ms": 43,
       "ecosystem": "npm",
       "package": "react@18.3.1",
       "sections": 4,
@@ -226,7 +226,7 @@
       "symbols": 0
      },
      {
-      "build_ms": 169,
+      "build_ms": 235,
       "ecosystem": "npm",
       "package": "react-dom@18.3.1",
       "sections": 7,
@@ -237,13 +237,13 @@
    }
   },
   "next15": {
-   "ms": 429,
+   "ms": 576,
    "report": {
     "missing": [],
-    "ms": 417,
+    "ms": 563,
     "packages": [
      {
-      "build_ms": 314,
+      "build_ms": 426,
       "ecosystem": "npm",
       "package": "next@15.1.0",
       "sections": 9,
@@ -251,7 +251,7 @@
       "symbols": 5585
      },
      {
-      "build_ms": 35,
+      "build_ms": 337,
       "ecosystem": "npm",
       "package": "react@19.0.0",
       "sections": 4,
@@ -259,7 +259,7 @@
       "symbols": 0
      },
      {
-      "build_ms": 369,
+      "build_ms": 506,
       "ecosystem": "npm",
       "package": "react-dom@19.0.0",
       "sections": 7,
@@ -270,13 +270,13 @@
    }
   },
   "next16": {
-   "ms": 713,
+   "ms": 1070,
    "report": {
     "missing": [],
-    "ms": 681,
+    "ms": 1038,
     "packages": [
      {
-      "build_ms": 605,
+      "build_ms": 965,
       "ecosystem": "npm",
       "package": "next@16.3.6",
       "sections": 3598,
@@ -284,7 +284,7 @@
       "symbols": 8354
      },
      {
-      "build_ms": 25,
+      "build_ms": 455,
       "ecosystem": "npm",
       "package": "react@19.2.8",
       "sections": 4,
@@ -292,7 +292,7 @@
       "symbols": 0
      },
      {
-      "build_ms": 424,
+      "build_ms": 711,
       "ecosystem": "npm",
       "package": "react-dom@19.2.8",
       "sections": 7,
@@ -303,13 +303,13 @@
    }
   },
   "prisma5": {
-   "ms": 73,
+   "ms": 97,
    "report": {
     "missing": [],
-    "ms": 69,
+    "ms": 92,
     "packages": [
      {
-      "build_ms": 39,
+      "build_ms": 54,
       "ecosystem": "npm",
       "package": "@prisma/client@5.22.0",
       "sections": 4,
@@ -317,7 +317,7 @@
       "symbols": 814
      },
      {
-      "build_ms": 34,
+      "build_ms": 51,
       "ecosystem": "npm",
       "package": "prisma@5.22.0",
       "sections": 14,
@@ -328,13 +328,13 @@
    }
   },
   "prisma6": {
-   "ms": 94,
+   "ms": 125,
    "report": {
     "missing": [],
-    "ms": 89,
+    "ms": 119,
     "packages": [
      {
-      "build_ms": 55,
+      "build_ms": 84,
       "ecosystem": "npm",
       "package": "@prisma/client@6.19.3",
       "sections": 4,
@@ -342,7 +342,7 @@
       "symbols": 851
      },
      {
-      "build_ms": 59,
+      "build_ms": 79,
       "ecosystem": "npm",
       "package": "prisma@6.19.3",
       "sections": 14,
@@ -353,13 +353,13 @@
    }
   },
   "pydantic1": {
-   "ms": 80,
+   "ms": 106,
    "report": {
     "missing": [],
-    "ms": 76,
+    "ms": 101,
     "packages": [
      {
-      "build_ms": 38,
+      "build_ms": 56,
       "ecosystem": "pypi",
       "package": "pydantic@1.10.18",
       "sections": 135,
@@ -370,13 +370,13 @@
    }
   },
   "pydantic2": {
-   "ms": 135,
+   "ms": 184,
    "report": {
     "missing": [],
-    "ms": 129,
+    "ms": 177,
     "packages": [
      {
-      "build_ms": 89,
+      "build_ms": 129,
       "ecosystem": "pypi",
       "package": "pydantic@2.9.2",
       "sections": 191,
@@ -387,13 +387,13 @@
    }
   },
   "react18": {
-   "ms": 266,
+   "ms": 370,
    "report": {
     "missing": [],
-    "ms": 257,
+    "ms": 359,
     "packages": [
      {
-      "build_ms": 101,
+      "build_ms": 287,
       "ecosystem": "npm",
       "package": "@types/react@18.3.31",
       "sections": 5,
@@ -401,7 +401,7 @@
       "symbols": 1853
      },
      {
-      "build_ms": 14,
+      "build_ms": 18,
       "ecosystem": "npm",
       "package": "@types/react-dom@18.3.7",
       "sections": 5,
@@ -409,7 +409,7 @@
       "symbols": 295
      },
      {
-      "build_ms": 118,
+      "build_ms": 182,
       "ecosystem": "npm",
       "package": "react@18.3.1",
       "sections": 4,
@@ -417,7 +417,7 @@
       "symbols": 1853
      },
      {
-      "build_ms": 211,
+      "build_ms": 272,
       "ecosystem": "npm",
       "package": "react-dom@18.3.1",
       "sections": 7,
@@ -428,13 +428,13 @@
    }
   },
   "react19": {
-   "ms": 514,
+   "ms": 662,
    "report": {
     "missing": [],
-    "ms": 506,
+    "ms": 651,
     "packages": [
      {
-      "build_ms": 96,
+      "build_ms": 145,
       "ecosystem": "npm",
       "package": "@types/react@19.2.18",
       "sections": 5,
@@ -442,7 +442,7 @@
       "symbols": 1829
      },
      {
-      "build_ms": 9,
+      "build_ms": 15,
       "ecosystem": "npm",
       "package": "@types/react-dom@19.2.7",
       "sections": 5,
@@ -450,7 +450,7 @@
       "symbols": 206
      },
      {
-      "build_ms": 278,
+      "build_ms": 216,
       "ecosystem": "npm",
       "package": "react@19.2.8",
       "sections": 4,
@@ -458,7 +458,7 @@
       "symbols": 1829
      },
      {
-      "build_ms": 451,
+      "build_ms": 589,
       "ecosystem": "npm",
       "package": "react-dom@19.2.8",
       "sections": 7,
@@ -469,13 +469,13 @@
    }
   },
   "rr6": {
-   "ms": 204,
+   "ms": 290,
    "report": {
     "missing": [],
-    "ms": 198,
+    "ms": 282,
     "packages": [
      {
-      "build_ms": 31,
+      "build_ms": 47,
       "ecosystem": "npm",
       "package": "react@18.3.1",
       "sections": 4,
@@ -483,7 +483,7 @@
       "symbols": 0
      },
      {
-      "build_ms": 149,
+      "build_ms": 216,
       "ecosystem": "npm",
       "package": "react-dom@18.3.1",
       "sections": 7,
@@ -491,7 +491,7 @@
       "symbols": 0
      },
      {
-      "build_ms": 16,
+      "build_ms": 24,
       "ecosystem": "npm",
       "package": "react-router@6.26.2",
       "sections": 74,
@@ -499,7 +499,7 @@
       "symbols": 207
      },
      {
-      "build_ms": 15,
+      "build_ms": 218,
       "ecosystem": "npm",
       "package": "react-router-dom@6.26.2",
       "sections": 80,
@@ -510,13 +510,13 @@
    }
   },
   "rr7": {
-   "ms": 399,
+   "ms": 515,
    "report": {
     "missing": [],
-    "ms": 393,
+    "ms": 507,
     "packages": [
      {
-      "build_ms": 32,
+      "build_ms": 258,
       "ecosystem": "npm",
       "package": "react@19.0.0",
       "sections": 4,
@@ -524,7 +524,7 @@
       "symbols": 0
      },
      {
-      "build_ms": 346,
+      "build_ms": 450,
       "ecosystem": "npm",
       "package": "react-dom@19.0.0",
       "sections": 7,
@@ -532,7 +532,7 @@
       "symbols": 0
      },
      {
-      "build_ms": 227,
+      "build_ms": 296,
       "ecosystem": "npm",
       "package": "react-router@7.1.1",
       "sections": 92,
@@ -543,13 +543,13 @@
    }
   },
   "sqlalchemy14": {
-   "ms": 354,
+   "ms": 500,
    "report": {
     "missing": [],
-    "ms": 338,
+    "ms": 483,
     "packages": [
      {
-      "build_ms": 291,
+      "build_ms": 417,
       "ecosystem": "pypi",
       "package": "sqlalchemy@1.4.54",
       "sections": 8,
@@ -560,13 +560,13 @@
    }
   },
   "sqlalchemy20": {
-   "ms": 460,
+   "ms": 650,
    "report": {
     "missing": [],
-    "ms": 440,
+    "ms": 631,
     "packages": [
      {
-      "build_ms": 389,
+      "build_ms": 568,
       "ecosystem": "pypi",
       "package": "sqlalchemy@2.0.54",
       "sections": 8,
@@ -577,13 +577,13 @@
    }
   },
   "tailwind3": {
-   "ms": 38,
+   "ms": 46,
    "report": {
     "missing": [],
-    "ms": 35,
+    "ms": 42,
     "packages": [
      {
-      "build_ms": 6,
+      "build_ms": 9,
       "ecosystem": "npm",
       "package": "tailwindcss@3.4.19",
       "sections": 6,
@@ -594,13 +594,13 @@
    }
   },
   "tailwind4": {
-   "ms": 35,
+   "ms": 44,
    "report": {
     "missing": [],
-    "ms": 33,
+    "ms": 40,
     "packages": [
      {
-      "build_ms": 4,
+      "build_ms": 7,
       "ecosystem": "npm",
       "package": "tailwindcss@4.1.18",
       "sections": 4,
@@ -611,13 +611,13 @@
    }
   },
   "vite5": {
-   "ms": 72,
+   "ms": 93,
    "report": {
     "missing": [],
-    "ms": 68,
+    "ms": 88,
     "packages": [
      {
-      "build_ms": 38,
+      "build_ms": 51,
       "ecosystem": "npm",
       "package": "vite@5.4.21",
       "sections": 131,
@@ -628,13 +628,13 @@
    }
   },
   "vite6": {
-   "ms": 78,
+   "ms": 100,
    "report": {
     "missing": [],
-    "ms": 73,
+    "ms": 94,
     "packages": [
      {
-      "build_ms": 42,
+      "build_ms": 55,
       "ecosystem": "npm",
       "package": "vite@6.4.3",
       "sections": 91,
@@ -645,13 +645,13 @@
    }
   },
   "zod3": {
-   "ms": 57,
+   "ms": 73,
    "report": {
     "missing": [],
-    "ms": 54,
+    "ms": 69,
     "packages": [
      {
-      "build_ms": 24,
+      "build_ms": 31,
       "ecosystem": "npm",
       "package": "zod@3.23.8",
       "sections": 121,
@@ -662,13 +662,13 @@
    }
   },
   "zod4": {
-   "ms": 84,
+   "ms": 115,
    "report": {
     "missing": [],
-    "ms": 79,
+    "ms": 109,
     "packages": [
      {
-      "build_ms": 47,
+      "build_ms": 68,
       "ecosystem": "npm",
       "package": "zod@4.1.5",
       "sections": 9,
@@ -681,10 +681,10 @@
  },
  "fetch": {
   "axum07": {
-   "ms": 2051,
+   "ms": 2469,
    "report": {
     "model": true,
-    "ms": 2048,
+    "ms": 2465,
     "packages": [
      {
       "files": 2,
@@ -704,10 +704,10 @@
    }
   },
   "axum08": {
-   "ms": 2992,
+   "ms": 2192,
    "report": {
     "model": true,
-    "ms": 2988,
+    "ms": 2187,
     "packages": [
      {
       "files": 0,
@@ -727,10 +727,10 @@
    }
   },
   "django42": {
-   "ms": 3471,
+   "ms": 4160,
    "report": {
     "model": true,
-    "ms": 3468,
+    "ms": 4156,
     "packages": [
      {
       "files": 601,
@@ -743,10 +743,10 @@
    }
   },
   "django51": {
-   "ms": 3698,
+   "ms": 4787,
    "report": {
     "model": true,
-    "ms": 3694,
+    "ms": 4783,
     "packages": [
      {
       "files": 629,
@@ -759,10 +759,10 @@
    }
   },
   "eslint8": {
-   "ms": 1530,
+   "ms": 3476,
    "report": {
     "model": true,
-    "ms": 1527,
+    "ms": 3471,
     "packages": [
      {
       "files": 409,
@@ -775,10 +775,10 @@
    }
   },
   "eslint9": {
-   "ms": 5287,
+   "ms": 3330,
    "report": {
     "model": true,
-    "ms": 5284,
+    "ms": 3325,
     "packages": [
      {
       "files": 435,
@@ -791,10 +791,10 @@
    }
   },
   "express4": {
-   "ms": 3302,
+   "ms": 3582,
    "report": {
     "model": true,
-    "ms": 3299,
+    "ms": 3578,
     "packages": [
      {
       "files": 6,
@@ -814,10 +814,10 @@
    }
   },
   "express5": {
-   "ms": 2617,
+   "ms": 2913,
    "report": {
     "model": true,
-    "ms": 2614,
+    "ms": 2909,
     "packages": [
      {
       "files": 38,
@@ -837,10 +837,10 @@
    }
   },
   "fastapi0115": {
-   "ms": 2637,
+   "ms": 2264,
    "report": {
     "model": true,
-    "ms": 2633,
+    "ms": 2260,
     "packages": [
      {
       "files": 180,
@@ -853,10 +853,10 @@
    }
   },
   "fastapi088": {
-   "ms": 1892,
+   "ms": 2594,
    "report": {
     "model": true,
-    "ms": 1888,
+    "ms": 2590,
     "packages": [
      {
       "files": 113,
@@ -869,10 +869,10 @@
    }
   },
   "next14": {
-   "ms": 1903,
+   "ms": 3699,
    "report": {
     "model": true,
-    "ms": 1899,
+    "ms": 3694,
     "packages": [
      {
       "files": 318,
@@ -899,10 +899,10 @@
    }
   },
   "next15": {
-   "ms": 2112,
+   "ms": 4137,
    "report": {
     "model": true,
-    "ms": 2108,
+    "ms": 4131,
     "packages": [
      {
       "files": 365,
@@ -929,10 +929,10 @@
    }
   },
   "next16": {
-   "ms": 2083,
+   "ms": 3730,
    "report": {
     "model": true,
-    "ms": 2078,
+    "ms": 3724,
     "packages": [
      {
       "files": 458,
@@ -959,10 +959,10 @@
    }
   },
   "prisma5": {
-   "ms": 5175,
+   "ms": 6014,
    "report": {
     "model": true,
-    "ms": 5170,
+    "ms": 6009,
     "packages": [
      {
       "files": 236,
@@ -982,10 +982,10 @@
    }
   },
   "prisma6": {
-   "ms": 3127,
+   "ms": 3632,
    "report": {
     "model": true,
-    "ms": 3123,
+    "ms": 3626,
     "packages": [
      {
       "files": 247,
@@ -1005,10 +1005,10 @@
    }
   },
   "pydantic1": {
-   "ms": 810,
+   "ms": 1757,
    "report": {
     "model": true,
-    "ms": 808,
+    "ms": 1754,
     "packages": [
      {
       "files": 176,
@@ -1021,10 +1021,10 @@
    }
   },
   "pydantic2": {
-   "ms": 668,
+   "ms": 1177,
    "report": {
     "model": true,
-    "ms": 665,
+    "ms": 1173,
     "packages": [
      {
       "files": 80,
@@ -1037,10 +1037,10 @@
    }
   },
   "react18": {
-   "ms": 2670,
+   "ms": 2923,
    "report": {
     "model": true,
-    "ms": 2667,
+    "ms": 2919,
     "packages": [
      {
       "files": 137,
@@ -1074,10 +1074,10 @@
    }
   },
   "react19": {
-   "ms": 3657,
+   "ms": 2912,
    "report": {
     "model": true,
-    "ms": 3654,
+    "ms": 2908,
     "packages": [
      {
       "files": 180,
@@ -1111,10 +1111,10 @@
    }
   },
   "rr6": {
-   "ms": 1667,
+   "ms": 2148,
    "report": {
     "model": true,
-    "ms": 1664,
+    "ms": 2144,
     "packages": [
      {
       "files": 140,
@@ -1148,10 +1148,10 @@
    }
   },
   "rr7": {
-   "ms": 1544,
+   "ms": 2033,
    "report": {
     "model": true,
-    "ms": 1541,
+    "ms": 2029,
     "packages": [
      {
       "files": 184,
@@ -1178,10 +1178,10 @@
    }
   },
   "sqlalchemy14": {
-   "ms": 2206,
+   "ms": 2995,
    "report": {
     "model": true,
-    "ms": 2203,
+    "ms": 2991,
     "packages": [
      {
       "files": 179,
@@ -1194,10 +1194,10 @@
    }
   },
   "sqlalchemy20": {
-   "ms": 2165,
+   "ms": 3057,
    "report": {
     "model": true,
-    "ms": 2162,
+    "ms": 3053,
     "packages": [
      {
       "files": 198,
@@ -1210,10 +1210,10 @@
    }
   },
   "tailwind3": {
-   "ms": 1582,
+   "ms": 3464,
    "report": {
     "model": true,
-    "ms": 1579,
+    "ms": 3460,
     "packages": [
      {
       "files": 192,
@@ -1226,10 +1226,10 @@
    }
   },
   "tailwind4": {
-   "ms": 1981,
+   "ms": 7799,
    "report": {
     "model": true,
-    "ms": 1977,
+    "ms": 7795,
     "packages": [
      {
       "files": 224,
@@ -1242,10 +1242,10 @@
    }
   },
   "vite5": {
-   "ms": 1001,
+   "ms": 1136,
    "report": {
     "model": true,
-    "ms": 999,
+    "ms": 1133,
     "packages": [
      {
       "files": 37,
@@ -1258,10 +1258,10 @@
    }
   },
   "vite6": {
-   "ms": 923,
+   "ms": 1367,
    "report": {
     "model": true,
-    "ms": 920,
+    "ms": 1364,
     "packages": [
      {
       "files": 47,
@@ -1274,10 +1274,10 @@
    }
   },
   "zod3": {
-   "ms": 644,
+   "ms": 630,
    "report": {
     "model": true,
-    "ms": 642,
+    "ms": 628,
     "packages": [
      {
       "files": 4,
@@ -1290,10 +1290,10 @@
    }
   },
   "zod4": {
-   "ms": 1134,
+   "ms": 1337,
    "report": {
     "model": true,
-    "ms": 1131,
+    "ms": 1334,
     "packages": [
      {
       "files": 18,
@@ -1321,8 +1321,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 1072,
-    "ms": 68.9
+    "tokens": 1075,
+    "ms": 86.7
    },
    "variants": {
     "keyword": {
@@ -1330,21 +1330,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 1091,
-     "ms": 23.8
+     "ms": 32.0
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 1091,
-     "ms": 33.4
+     "ms": 41.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 1072,
-     "ms": 68.9
+     "tokens": 1075,
+     "ms": 86.7
     }
    },
    "context7": {
@@ -1373,7 +1373,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 1015,
-    "ms": 107.7
+    "ms": 141.6
    },
    "variants": {
     "keyword": {
@@ -1381,7 +1381,7 @@
      "missing": [],
      "rejected": [],
      "tokens": 1103,
-     "ms": 43.7
+     "ms": 61.9
     },
     "hybrid": {
      "pass": false,
@@ -1392,14 +1392,14 @@
      ],
      "rejected": [],
      "tokens": 1144,
-     "ms": 39.4
+     "ms": 57.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 1015,
-     "ms": 107.7
+     "ms": 141.6
     }
    },
    "context7": {
@@ -1427,8 +1427,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 1122,
-    "ms": 35.7
+    "tokens": 1119,
+    "ms": 47.1
    },
    "variants": {
     "keyword": {
@@ -1436,21 +1436,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 1018,
-     "ms": 5.2
+     "ms": 6.7
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 1019,
-     "ms": 32.9
+     "ms": 40.2
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 1122,
-     "ms": 35.7
+     "tokens": 1119,
+     "ms": 47.1
     }
    },
    "context7": {
@@ -1478,8 +1478,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 998,
-    "ms": 46.2
+    "tokens": 903,
+    "ms": 60.2
    },
    "variants": {
     "keyword": {
@@ -1487,21 +1487,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 616,
-     "ms": 10.0
+     "ms": 13.2
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 389,
-     "ms": 41.5
+     "ms": 56.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 998,
-     "ms": 46.2
+     "tokens": 903,
+     "ms": 60.2
     }
    },
    "context7": {
@@ -1529,8 +1529,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 995,
-    "ms": 36.6
+    "tokens": 991,
+    "ms": 47.3
    },
    "variants": {
     "keyword": {
@@ -1538,21 +1538,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 979,
-     "ms": 5.0
+     "ms": 6.4
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 920,
-     "ms": 33.3
+     "ms": 46.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 995,
-     "ms": 36.6
+     "tokens": 991,
+     "ms": 47.3
     }
    },
    "context7": {
@@ -1581,7 +1581,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 991,
-    "ms": 44.6
+    "ms": 59.9
    },
    "variants": {
     "keyword": {
@@ -1589,21 +1589,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 392,
-     "ms": 9.7
+     "ms": 12.6
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 608,
-     "ms": 39.0
+     "ms": 55.5
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 991,
-     "ms": 44.6
+     "ms": 59.9
     }
    },
    "context7": {
@@ -1632,7 +1632,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 946,
-    "ms": 45.9
+    "ms": 55.2
    },
    "variants": {
     "keyword": {
@@ -1644,7 +1644,7 @@
      ],
      "rejected": [],
      "tokens": 1117,
-     "ms": 10.0
+     "ms": 13.5
     },
     "hybrid": {
      "pass": false,
@@ -1655,14 +1655,14 @@
      ],
      "rejected": [],
      "tokens": 1077,
-     "ms": 40.6
+     "ms": 52.4
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 946,
-     "ms": 45.9
+     "ms": 55.2
     }
    },
    "context7": {
@@ -1695,7 +1695,7 @@
     ],
     "rejected": [],
     "tokens": 926,
-    "ms": 290.4
+    "ms": 394.7
    },
    "variants": {
     "keyword": {
@@ -1707,14 +1707,14 @@
      ],
      "rejected": [],
      "tokens": 302,
-     "ms": 99.4
+     "ms": 134.7
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 507,
-     "ms": 51.4
+     "ms": 68.1
     },
     "fetched": {
      "pass": false,
@@ -1725,7 +1725,7 @@
      ],
      "rejected": [],
      "tokens": 926,
-     "ms": 290.4
+     "ms": 394.7
     }
    },
    "context7": {
@@ -1757,8 +1757,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 864,
-    "ms": 369.3
+    "tokens": 866,
+    "ms": 448.2
    },
    "variants": {
     "keyword": {
@@ -1766,21 +1766,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 737,
-     "ms": 118.5
+     "ms": 155.7
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 693,
-     "ms": 54.2
+     "ms": 66.1
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 864,
-     "ms": 369.3
+     "tokens": 866,
+     "ms": 448.2
     }
    },
    "context7": {
@@ -1809,7 +1809,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 896,
-    "ms": 83.8
+    "ms": 93.6
    },
    "variants": {
     "keyword": {
@@ -1817,21 +1817,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 360,
-     "ms": 19.1
+     "ms": 23.8
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 783,
-     "ms": 50.0
+     "ms": 62.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 896,
-     "ms": 83.8
+     "ms": 93.6
     }
    },
    "context7": {
@@ -1860,7 +1860,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 870,
-    "ms": 91.2
+    "ms": 105.9
    },
    "variants": {
     "keyword": {
@@ -1868,21 +1868,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 351,
-     "ms": 22.1
+     "ms": 26.5
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 734,
-     "ms": 54.7
+     "ms": 70.1
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 870,
-     "ms": 91.2
+     "ms": 105.9
     }
    },
    "context7": {
@@ -1911,7 +1911,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 843,
-    "ms": 77.1
+    "ms": 96.9
    },
    "variants": {
     "keyword": {
@@ -1919,21 +1919,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 908,
-     "ms": 18.9
+     "ms": 23.6
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 893,
-     "ms": 52.7
+     "ms": 61.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 843,
-     "ms": 77.1
+     "ms": 96.9
     }
    },
    "context7": {
@@ -1962,7 +1962,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 754,
-    "ms": 83.5
+    "ms": 108.3
    },
    "variants": {
     "keyword": {
@@ -1970,21 +1970,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 934,
-     "ms": 20.2
+     "ms": 26.8
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 964,
-     "ms": 56.0
+     "ms": 70.7
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 754,
-     "ms": 83.5
+     "ms": 108.3
     }
    },
    "context7": {
@@ -2012,8 +2012,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 874,
-    "ms": 82.7
+    "tokens": 827,
+    "ms": 99.7
    },
    "variants": {
     "keyword": {
@@ -2021,21 +2021,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 923,
-     "ms": 21.4
+     "ms": 25.9
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 932,
-     "ms": 54.5
+     "ms": 73.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 874,
-     "ms": 82.7
+     "tokens": 827,
+     "ms": 99.7
     }
    },
    "context7": {
@@ -2068,7 +2068,7 @@
     ],
     "rejected": [],
     "tokens": 796,
-    "ms": 90.9
+    "ms": 120.4
    },
    "variants": {
     "keyword": {
@@ -2076,14 +2076,14 @@
      "missing": [],
      "rejected": [],
      "tokens": 913,
-     "ms": 8.5
+     "ms": 11.0
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 891,
-     "ms": 32.3
+     "ms": 37.7
     },
     "fetched": {
      "pass": false,
@@ -2094,7 +2094,7 @@
      ],
      "rejected": [],
      "tokens": 796,
-     "ms": 90.9
+     "ms": 120.4
     }
    },
    "context7": {
@@ -2126,8 +2126,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 828,
-    "ms": 107.2
+    "tokens": 876,
+    "ms": 143.5
    },
    "variants": {
     "keyword": {
@@ -2135,7 +2135,7 @@
      "missing": [],
      "rejected": [],
      "tokens": 909,
-     "ms": 34.1
+     "ms": 47.8
     },
     "hybrid": {
      "pass": false,
@@ -2146,14 +2146,14 @@
      ],
      "rejected": [],
      "tokens": 970,
-     "ms": 36.6
+     "ms": 43.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 828,
-     "ms": 107.2
+     "tokens": 876,
+     "ms": 143.5
     }
    },
    "context7": {
@@ -2182,7 +2182,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 872,
-    "ms": 41.9
+    "ms": 50.1
    },
    "variants": {
     "keyword": {
@@ -2190,21 +2190,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 821,
-     "ms": 3.2
+     "ms": 4.0
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 884,
-     "ms": 31.6
+     "ms": 41.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 872,
-     "ms": 41.9
+     "ms": 50.1
     }
    },
    "context7": {
@@ -2233,7 +2233,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 755,
-    "ms": 41.4
+    "ms": 55.9
    },
    "variants": {
     "keyword": {
@@ -2241,21 +2241,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 946,
-     "ms": 3.1
+     "ms": 4.0
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 904,
-     "ms": 31.9
+     "ms": 41.7
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 755,
-     "ms": 41.4
+     "ms": 55.9
     }
    },
    "context7": {
@@ -2284,7 +2284,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 807,
-    "ms": 45.3
+    "ms": 58.5
    },
    "variants": {
     "keyword": {
@@ -2292,21 +2292,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 918,
-     "ms": 7.2
+     "ms": 9.7
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 931,
-     "ms": 36.8
+     "ms": 43.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 807,
-     "ms": 45.3
+     "ms": 58.5
     }
    },
    "context7": {
@@ -2334,8 +2334,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 839,
-    "ms": 118.2
+    "tokens": 846,
+    "ms": 157.0
    },
    "variants": {
     "keyword": {
@@ -2343,21 +2343,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 915,
-     "ms": 48.0
+     "ms": 67.1
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 915,
-     "ms": 45.4
+     "ms": 59.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 839,
-     "ms": 118.2
+     "tokens": 846,
+     "ms": 157.0
     }
    },
    "context7": {
@@ -2392,8 +2392,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 957,
-    "ms": 212.8
+    "tokens": 952,
+    "ms": 278.7
    },
    "variants": {
     "keyword": {
@@ -2405,21 +2405,21 @@
      ],
      "rejected": [],
      "tokens": 924,
-     "ms": 99.5
+     "ms": 141.6
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 843,
-     "ms": 49.2
+     "ms": 64.2
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 957,
-     "ms": 212.8
+     "tokens": 952,
+     "ms": 278.7
     }
    },
    "context7": {
@@ -2444,15 +2444,11 @@
    "set": "tuning",
    "grading": "[[[\"parse_obj\"]], [\"model_validate\"]]",
    "lockdocs": {
-    "pass": false,
-    "missing": [
-     [
-      "parse_obj"
-     ]
-    ],
+    "pass": true,
+    "missing": [],
     "rejected": [],
-    "tokens": 875,
-    "ms": 54.8
+    "tokens": 845,
+    "ms": 63.7
    },
    "variants": {
     "keyword": {
@@ -2464,7 +2460,7 @@
      ],
      "rejected": [],
      "tokens": 900,
-     "ms": 15.7
+     "ms": 21.1
     },
     "hybrid": {
      "pass": false,
@@ -2475,18 +2471,14 @@
      ],
      "rejected": [],
      "tokens": 922,
-     "ms": 44.7
+     "ms": 59.2
     },
     "fetched": {
-     "pass": false,
-     "missing": [
-      [
-       "parse_obj"
-      ]
-     ],
+     "pass": true,
+     "missing": [],
      "rejected": [],
-     "tokens": 875,
-     "ms": 54.8
+     "tokens": 845,
+     "ms": 63.7
     }
    },
    "context7": {
@@ -2520,8 +2512,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 829,
-    "ms": 68.8
+    "tokens": 825,
+    "ms": 76.0
    },
    "variants": {
     "keyword": {
@@ -2533,21 +2525,21 @@
      ],
      "rejected": [],
      "tokens": 941,
-     "ms": 20.1
+     "ms": 25.6
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 858,
-     "ms": 50.7
+     "ms": 59.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 829,
-     "ms": 68.8
+     "tokens": 825,
+     "ms": 76.0
     }
    },
    "context7": {
@@ -2575,8 +2567,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 965,
-    "ms": 53.1
+    "tokens": 961,
+    "ms": 62.4
    },
    "variants": {
     "keyword": {
@@ -2584,21 +2576,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 908,
-     "ms": 15.5
+     "ms": 20.4
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 867,
-     "ms": 45.9
+     "ms": 58.3
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 965,
-     "ms": 53.1
+     "tokens": 961,
+     "ms": 62.4
     }
    },
    "context7": {
@@ -2633,8 +2625,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 777,
-    "ms": 65.5
+    "tokens": 775,
+    "ms": 77.4
    },
    "variants": {
     "keyword": {
@@ -2646,21 +2638,21 @@
      ],
      "rejected": [],
      "tokens": 826,
-     "ms": 19.3
+     "ms": 25.4
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 867,
-     "ms": 50.6
+     "ms": 60.2
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 777,
-     "ms": 65.5
+     "tokens": 775,
+     "ms": 77.4
     }
    },
    "context7": {
@@ -2689,7 +2681,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 818,
-    "ms": 52.9
+    "ms": 68.0
    },
    "variants": {
     "keyword": {
@@ -2697,21 +2689,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 854,
-     "ms": 15.3
+     "ms": 19.8
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 915,
-     "ms": 45.2
+     "ms": 53.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 818,
-     "ms": 52.9
+     "ms": 68.0
     }
    },
    "context7": {
@@ -2747,8 +2739,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 824,
-    "ms": 67.0
+    "tokens": 880,
+    "ms": 78.9
    },
    "variants": {
     "keyword": {
@@ -2756,21 +2748,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 839,
-     "ms": 19.8
+     "ms": 26.0
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 884,
-     "ms": 49.5
+     "ms": 65.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 824,
-     "ms": 67.0
+     "tokens": 880,
+     "ms": 78.9
     }
    },
    "context7": {
@@ -2803,8 +2795,8 @@
      ]
     ],
     "rejected": [],
-    "tokens": 924,
-    "ms": 53.6
+    "tokens": 923,
+    "ms": 64.1
    },
    "variants": {
     "keyword": {
@@ -2817,7 +2809,7 @@
      ],
      "rejected": [],
      "tokens": 878,
-     "ms": 15.5
+     "ms": 20.5
     },
     "hybrid": {
      "pass": false,
@@ -2829,7 +2821,7 @@
      ],
      "rejected": [],
      "tokens": 945,
-     "ms": 48.1
+     "ms": 55.1
     },
     "fetched": {
      "pass": false,
@@ -2840,8 +2832,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 924,
-     "ms": 53.6
+     "tokens": 923,
+     "ms": 64.1
     }
    },
    "context7": {
@@ -2853,7 +2845,8 @@
     "tokens": 683,
     "ms": 2725,
     "library": "/pydantic/pydantic",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -2870,8 +2863,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 956,
-    "ms": 65.5
+    "tokens": 952,
+    "ms": 80.1
    },
    "variants": {
     "keyword": {
@@ -2879,21 +2872,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 898,
-     "ms": 19.5
+     "ms": 25.5
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 892,
-     "ms": 49.5
+     "ms": 64.2
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 956,
-     "ms": 65.5
+     "tokens": 952,
+     "ms": 80.1
     }
    },
    "context7": {
@@ -2921,8 +2914,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 1018,
-    "ms": 73.0
+    "tokens": 1020,
+    "ms": 102.6
    },
    "variants": {
     "keyword": {
@@ -2930,21 +2923,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 1003,
-     "ms": 41.9
+     "ms": 58.0
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 1005,
-     "ms": 35.0
+     "ms": 47.1
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 1018,
-     "ms": 73.0
+     "tokens": 1020,
+     "ms": 102.6
     }
    },
    "context7": {
@@ -2976,30 +2969,30 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 935,
-    "ms": 76.1
+    "tokens": 962,
+    "ms": 96.9
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 955,
-     "ms": 43.8
+     "tokens": 960,
+     "ms": 60.2
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 935,
-     "ms": 36.4
+     "tokens": 962,
+     "ms": 48.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 935,
-     "ms": 76.1
+     "tokens": 962,
+     "ms": 96.9
     }
    },
    "context7": {
@@ -3028,7 +3021,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 912,
-    "ms": 34.5
+    "ms": 45.8
    },
    "variants": {
     "keyword": {
@@ -3036,21 +3029,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 907,
-     "ms": 6.7
+     "ms": 8.7
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 911,
-     "ms": 35.7
+     "ms": 41.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 912,
-     "ms": 34.5
+     "ms": 45.8
     }
    },
    "context7": {
@@ -3083,7 +3076,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 891,
-    "ms": 35.4
+    "ms": 41.4
    },
    "variants": {
     "keyword": {
@@ -3091,21 +3084,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 683,
-     "ms": 6.3
+     "ms": 8.8
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 891,
-     "ms": 36.2
+     "ms": 43.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 891,
-     "ms": 35.4
+     "ms": 41.4
     }
    },
    "context7": {
@@ -3134,7 +3127,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 823,
-    "ms": 260.7
+    "ms": 362.6
    },
    "variants": {
     "keyword": {
@@ -3142,21 +3135,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 796,
-     "ms": 194.4
+     "ms": 276.2
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 796,
-     "ms": 51.3
+     "ms": 67.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 823,
-     "ms": 260.7
+     "ms": 362.6
     }
    },
    "context7": {
@@ -3185,7 +3178,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 962,
-    "ms": 53.2
+    "ms": 68.8
    },
    "variants": {
     "keyword": {
@@ -3197,7 +3190,7 @@
      ],
      "rejected": [],
      "tokens": 956,
-     "ms": 22.8
+     "ms": 28.2
     },
     "hybrid": {
      "pass": false,
@@ -3208,14 +3201,14 @@
      ],
      "rejected": [],
      "tokens": 970,
-     "ms": 52.7
+     "ms": 60.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 962,
-     "ms": 53.2
+     "ms": 68.8
     }
    },
    "context7": {
@@ -3244,7 +3237,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 941,
-    "ms": 52.5
+    "ms": 62.7
    },
    "variants": {
     "keyword": {
@@ -3252,21 +3245,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 849,
-     "ms": 21.2
+     "ms": 27.7
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 903,
-     "ms": 57.9
+     "ms": 61.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 941,
-     "ms": 52.5
+     "ms": 62.7
     }
    },
    "context7": {
@@ -3295,7 +3288,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 971,
-    "ms": 130.0
+    "ms": 169.9
    },
    "variants": {
     "keyword": {
@@ -3309,7 +3302,7 @@
      ],
      "rejected": [],
      "tokens": 1134,
-     "ms": 8.6
+     "ms": 11.5
     },
     "hybrid": {
      "pass": false,
@@ -3322,14 +3315,14 @@
      ],
      "rejected": [],
      "tokens": 1025,
-     "ms": 32.6
+     "ms": 36.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 971,
-     "ms": 130.0
+     "ms": 169.9
     }
    },
    "context7": {
@@ -3366,7 +3359,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 979,
-    "ms": 144.3
+    "ms": 192.6
    },
    "variants": {
     "keyword": {
@@ -3379,7 +3372,7 @@
      ],
      "rejected": [],
      "tokens": 358,
-     "ms": 6.6
+     "ms": 9.4
     },
     "hybrid": {
      "pass": false,
@@ -3391,14 +3384,14 @@
      ],
      "rejected": [],
      "tokens": 461,
-     "ms": 31.7
+     "ms": 39.3
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 979,
-     "ms": 144.3
+     "ms": 192.6
     }
    },
    "context7": {
@@ -3427,7 +3420,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 1003,
-    "ms": 48.5
+    "ms": 63.2
    },
    "variants": {
     "keyword": {
@@ -3435,21 +3428,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 1003,
-     "ms": 2.9
+     "ms": 3.5
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 1047,
-     "ms": 32.3
+     "ms": 40.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 1003,
-     "ms": 48.5
+     "ms": 63.2
     }
    },
    "context7": {
@@ -3478,7 +3471,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 1144,
-    "ms": 49.3
+    "ms": 63.9
    },
    "variants": {
     "keyword": {
@@ -3491,7 +3484,7 @@
      ],
      "rejected": [],
      "tokens": 286,
-     "ms": 1.6
+     "ms": 2.1
     },
     "hybrid": {
      "pass": false,
@@ -3503,14 +3496,14 @@
      ],
      "rejected": [],
      "tokens": 764,
-     "ms": 31.7
+     "ms": 39.3
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 1144,
-     "ms": 49.3
+     "ms": 63.9
     }
    },
    "context7": {
@@ -3538,8 +3531,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 797,
-    "ms": 345.2
+    "tokens": 796,
+    "ms": 473.9
    },
    "variants": {
     "keyword": {
@@ -3547,21 +3540,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 912,
-     "ms": 99.8
+     "ms": 150.4
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 925,
-     "ms": 40.1
+     "ms": 44.5
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 797,
-     "ms": 345.2
+     "tokens": 796,
+     "ms": 473.9
     }
    },
    "context7": {
@@ -3590,7 +3583,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 720,
-    "ms": 308.9
+    "ms": 416.7
    },
    "variants": {
     "keyword": {
@@ -3598,21 +3591,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 882,
-     "ms": 26.3
+     "ms": 34.7
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 961,
-     "ms": 36.7
+     "ms": 40.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 720,
-     "ms": 308.9
+     "ms": 416.7
     }
    },
    "context7": {
@@ -3641,7 +3634,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 854,
-    "ms": 74.2
+    "ms": 88.1
    },
    "variants": {
     "keyword": {
@@ -3654,7 +3647,7 @@
      ],
      "rejected": [],
      "tokens": 871,
-     "ms": 8.0
+     "ms": 10.4
     },
     "hybrid": {
      "pass": false,
@@ -3666,14 +3659,14 @@
      ],
      "rejected": [],
      "tokens": 898,
-     "ms": 37.0
+     "ms": 50.7
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 854,
-     "ms": 74.2
+     "ms": 88.1
     }
    },
    "context7": {
@@ -3702,7 +3695,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 849,
-    "ms": 77.3
+    "ms": 98.9
    },
    "variants": {
     "keyword": {
@@ -3716,7 +3709,7 @@
      ],
      "rejected": [],
      "tokens": 919,
-     "ms": 6.0
+     "ms": 7.9
     },
     "hybrid": {
      "pass": false,
@@ -3729,14 +3722,14 @@
      ],
      "rejected": [],
      "tokens": 898,
-     "ms": 34.6
+     "ms": 52.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 849,
-     "ms": 77.3
+     "ms": 98.9
     }
    },
    "context7": {
@@ -3768,8 +3761,8 @@
      ]
     ],
     "rejected": [],
-    "tokens": 829,
-    "ms": 296.4
+    "tokens": 846,
+    "ms": 384.9
    },
    "variants": {
     "keyword": {
@@ -3781,7 +3774,7 @@
      ],
      "rejected": [],
      "tokens": 945,
-     "ms": 26.6
+     "ms": 34.7
     },
     "hybrid": {
      "pass": false,
@@ -3792,7 +3785,7 @@
      ],
      "rejected": [],
      "tokens": 963,
-     "ms": 34.0
+     "ms": 45.5
     },
     "fetched": {
      "pass": false,
@@ -3802,8 +3795,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 829,
-     "ms": 296.4
+     "tokens": 846,
+     "ms": 384.9
     }
    },
    "context7": {
@@ -3837,8 +3830,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 854,
-    "ms": 330.5
+    "tokens": 848,
+    "ms": 437.5
    },
    "variants": {
     "keyword": {
@@ -3846,21 +3839,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 925,
-     "ms": 37.9
+     "ms": 52.8
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 910,
-     "ms": 33.9
+     "ms": 41.2
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 854,
-     "ms": 330.5
+     "tokens": 848,
+     "ms": 437.5
     }
    },
    "context7": {
@@ -3889,7 +3882,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 849,
-    "ms": 291.0
+    "ms": 384.6
    },
    "variants": {
     "keyword": {
@@ -3901,7 +3894,7 @@
      ],
      "rejected": [],
      "tokens": 583,
-     "ms": 27.0
+     "ms": 35.3
     },
     "hybrid": {
      "pass": false,
@@ -3912,14 +3905,14 @@
      ],
      "rejected": [],
      "tokens": 948,
-     "ms": 35.0
+     "ms": 40.3
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 849,
-     "ms": 291.0
+     "ms": 384.6
     }
    },
    "context7": {
@@ -3949,8 +3942,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 820,
-    "ms": 353.4
+    "tokens": 846,
+    "ms": 471.2
    },
    "variants": {
     "keyword": {
@@ -3962,7 +3955,7 @@
      ],
      "rejected": [],
      "tokens": 583,
-     "ms": 37.5
+     "ms": 52.8
     },
     "hybrid": {
      "pass": false,
@@ -3973,14 +3966,14 @@
      ],
      "rejected": [],
      "tokens": 942,
-     "ms": 33.8
+     "ms": 44.5
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 820,
-     "ms": 353.4
+     "tokens": 846,
+     "ms": 471.2
     }
    },
    "context7": {
@@ -4016,7 +4009,7 @@
      "useActionState"
     ],
     "tokens": 832,
-    "ms": 342.5
+    "ms": 409.3
    },
    "variants": {
     "keyword": {
@@ -4024,7 +4017,7 @@
      "missing": [],
      "rejected": [],
      "tokens": 863,
-     "ms": 46.9
+     "ms": 66.2
     },
     "hybrid": {
      "pass": false,
@@ -4033,7 +4026,7 @@
       "useActionState"
      ],
      "tokens": 959,
-     "ms": 37.6
+     "ms": 49.0
     },
     "fetched": {
      "pass": false,
@@ -4047,7 +4040,7 @@
       "useActionState"
      ],
      "tokens": 832,
-     "ms": 342.5
+     "ms": 409.3
     }
    },
    "context7": {
@@ -4083,7 +4076,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 872,
-    "ms": 350.4
+    "ms": 464.2
    },
    "variants": {
     "keyword": {
@@ -4095,21 +4088,21 @@
      ],
      "rejected": [],
      "tokens": 981,
-     "ms": 47.0
+     "ms": 63.3
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 961,
-     "ms": 38.7
+     "ms": 43.5
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 872,
-     "ms": 350.4
+     "ms": 464.2
     }
    },
    "context7": {
@@ -4138,7 +4131,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 823,
-    "ms": 76.7
+    "ms": 98.7
    },
    "variants": {
     "keyword": {
@@ -4151,7 +4144,7 @@
      ],
      "rejected": [],
      "tokens": 403,
-     "ms": 7.1
+     "ms": 9.0
     },
     "hybrid": {
      "pass": false,
@@ -4163,14 +4156,14 @@
      ],
      "rejected": [],
      "tokens": 925,
-     "ms": 37.2
+     "ms": 44.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 823,
-     "ms": 76.7
+     "ms": 98.7
     }
    },
    "context7": {
@@ -4201,7 +4194,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 854,
-    "ms": 83.8
+    "ms": 104.4
    },
    "variants": {
     "keyword": {
@@ -4214,7 +4207,7 @@
      ],
      "rejected": [],
      "tokens": 923,
-     "ms": 6.8
+     "ms": 8.7
     },
     "hybrid": {
      "pass": false,
@@ -4226,14 +4219,14 @@
      ],
      "rejected": [],
      "tokens": 941,
-     "ms": 37.8
+     "ms": 45.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 854,
-     "ms": 83.8
+     "ms": 104.4
     }
    },
    "context7": {
@@ -4261,8 +4254,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 887,
-    "ms": 139.6
+    "tokens": 897,
+    "ms": 185.9
    },
    "variants": {
     "keyword": {
@@ -4270,21 +4263,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 880,
-     "ms": 40.0
+     "ms": 50.2
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 966,
-     "ms": 37.3
+     "ms": 45.3
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 887,
-     "ms": 139.6
+     "tokens": 897,
+     "ms": 185.9
     }
    },
    "context7": {
@@ -4315,7 +4308,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 839,
-    "ms": 121.8
+    "ms": 164.9
    },
    "variants": {
     "keyword": {
@@ -4323,21 +4316,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 797,
-     "ms": 42.3
+     "ms": 55.4
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 899,
-     "ms": 39.3
+     "ms": 51.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 839,
-     "ms": 121.8
+     "ms": 164.9
     }
    },
    "context7": {
@@ -4366,7 +4359,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 813,
-    "ms": 74.3
+    "ms": 95.9
    },
    "variants": {
     "keyword": {
@@ -4381,7 +4374,7 @@
      ],
      "rejected": [],
      "tokens": 900,
-     "ms": 17.2
+     "ms": 22.9
     },
     "hybrid": {
      "pass": false,
@@ -4395,14 +4388,14 @@
      ],
      "rejected": [],
      "tokens": 163,
-     "ms": 32.2
+     "ms": 43.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 813,
-     "ms": 74.3
+     "ms": 95.9
     }
    },
    "context7": {
@@ -4433,7 +4426,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 932,
-    "ms": 71.2
+    "ms": 97.0
    },
    "variants": {
     "keyword": {
@@ -4448,7 +4441,7 @@
      ],
      "rejected": [],
      "tokens": 473,
-     "ms": 6.6
+     "ms": 8.8
     },
     "hybrid": {
      "pass": false,
@@ -4462,14 +4455,14 @@
      ],
      "rejected": [],
      "tokens": 968,
-     "ms": 29.8
+     "ms": 42.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 932,
-     "ms": 71.2
+     "ms": 97.0
     }
    },
    "context7": {
@@ -4497,8 +4490,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 871,
-    "ms": 712.2
+    "tokens": 852,
+    "ms": 977.9
    },
    "variants": {
     "keyword": {
@@ -4506,21 +4499,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 847,
-     "ms": 309.7
+     "ms": 431.6
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 860,
-     "ms": 77.3
+     "ms": 92.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 871,
-     "ms": 712.2
+     "tokens": 852,
+     "ms": 977.9
     }
    },
    "context7": {
@@ -4550,8 +4543,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 768,
-    "ms": 851.1
+    "tokens": 815,
+    "ms": 1167.4
    },
    "variants": {
     "keyword": {
@@ -4564,21 +4557,21 @@
      ],
      "rejected": [],
      "tokens": 810,
-     "ms": 407.0
+     "ms": 575.8
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 872,
-     "ms": 86.4
+     "ms": 104.2
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 768,
-     "ms": 851.1
+     "tokens": 815,
+     "ms": 1167.4
     }
    },
    "context7": {
@@ -4606,8 +4599,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 834,
-    "ms": 142.9
+    "tokens": 828,
+    "ms": 166.4
    },
    "variants": {
     "keyword": {
@@ -4615,21 +4608,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 917,
-     "ms": 43.1
+     "ms": 54.0
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 931,
-     "ms": 78.7
+     "ms": 95.2
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 834,
-     "ms": 142.9
+     "tokens": 828,
+     "ms": 166.4
     }
    },
    "context7": {
@@ -4659,8 +4652,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 871,
-    "ms": 157.4
+    "tokens": 863,
+    "ms": 189.8
    },
    "variants": {
     "keyword": {
@@ -4668,21 +4661,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 831,
-     "ms": 55.6
+     "ms": 67.4
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 897,
-     "ms": 87.4
+     "ms": 103.4
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 871,
-     "ms": 157.4
+     "tokens": 863,
+     "ms": 189.8
     }
    },
    "context7": {
@@ -4710,8 +4703,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 815,
-    "ms": 889.8
+    "tokens": 812,
+    "ms": 1185.4
    },
    "variants": {
     "keyword": {
@@ -4723,7 +4716,7 @@
      ],
      "rejected": [],
      "tokens": 770,
-     "ms": 335.2
+     "ms": 444.6
     },
     "hybrid": {
      "pass": false,
@@ -4734,14 +4727,14 @@
      ],
      "rejected": [],
      "tokens": 839,
-     "ms": 84.2
+     "ms": 101.1
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 815,
-     "ms": 889.8
+     "tokens": 812,
+     "ms": 1185.4
     }
    },
    "context7": {
@@ -4769,8 +4762,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 818,
-    "ms": 909.2
+    "tokens": 802,
+    "ms": 1214.2
    },
    "variants": {
     "keyword": {
@@ -4782,21 +4775,21 @@
      ],
      "rejected": [],
      "tokens": 860,
-     "ms": 326.6
+     "ms": 473.4
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 777,
-     "ms": 84.6
+     "ms": 104.4
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 818,
-     "ms": 909.2
+     "tokens": 802,
+     "ms": 1214.2
     }
    },
    "context7": {
@@ -4824,8 +4817,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 794,
-    "ms": 170.9
+    "tokens": 790,
+    "ms": 205.6
    },
    "variants": {
     "keyword": {
@@ -4833,21 +4826,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 862,
-     "ms": 47.7
+     "ms": 57.8
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 853,
-     "ms": 83.0
+     "ms": 101.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 794,
-     "ms": 170.9
+     "tokens": 790,
+     "ms": 205.6
     }
    },
    "context7": {
@@ -4875,8 +4868,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 740,
-    "ms": 173.3
+    "tokens": 736,
+    "ms": 207.1
    },
    "variants": {
     "keyword": {
@@ -4884,21 +4877,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 520,
-     "ms": 48.6
+     "ms": 58.4
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 845,
-     "ms": 86.7
+     "ms": 97.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 740,
-     "ms": 173.3
+     "tokens": 736,
+     "ms": 207.1
     }
    },
    "context7": {
@@ -4930,8 +4923,8 @@
      ]
     ],
     "rejected": [],
-    "tokens": 878,
-    "ms": 156.1
+    "tokens": 873,
+    "ms": 203.4
    },
    "variants": {
     "keyword": {
@@ -4943,7 +4936,7 @@
      ],
      "rejected": [],
      "tokens": 372,
-     "ms": 26.0
+     "ms": 34.4
     },
     "hybrid": {
      "pass": false,
@@ -4954,7 +4947,7 @@
      ],
      "rejected": [],
      "tokens": 555,
-     "ms": 40.5
+     "ms": 47.4
     },
     "fetched": {
      "pass": false,
@@ -4964,8 +4957,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 878,
-     "ms": 156.1
+     "tokens": 873,
+     "ms": 203.4
     }
    },
    "context7": {
@@ -4999,8 +4992,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 832,
-    "ms": 199.0
+    "tokens": 828,
+    "ms": 256.8
    },
    "variants": {
     "keyword": {
@@ -5012,7 +5005,7 @@
      ],
      "rejected": [],
      "tokens": 729,
-     "ms": 37.1
+     "ms": 49.9
     },
     "hybrid": {
      "pass": false,
@@ -5023,14 +5016,14 @@
      ],
      "rejected": [],
      "tokens": 898,
-     "ms": 41.5
+     "ms": 55.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 832,
-     "ms": 199.0
+     "tokens": 828,
+     "ms": 256.8
     }
    },
    "context7": {
@@ -5058,8 +5051,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 875,
-    "ms": 58.2
+    "tokens": 865,
+    "ms": 75.7
    },
    "variants": {
     "keyword": {
@@ -5071,7 +5064,7 @@
      ],
      "rejected": [],
      "tokens": 803,
-     "ms": 12.5
+     "ms": 15.4
     },
     "hybrid": {
      "pass": false,
@@ -5082,14 +5075,14 @@
      ],
      "rejected": [],
      "tokens": 985,
-     "ms": 41.3
+     "ms": 52.4
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 875,
-     "ms": 58.2
+     "tokens": 865,
+     "ms": 75.7
     }
    },
    "context7": {
@@ -5119,8 +5112,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 783,
-    "ms": 63.9
+    "tokens": 766,
+    "ms": 81.7
    },
    "variants": {
     "keyword": {
@@ -5128,21 +5121,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 933,
-     "ms": 12.8
+     "ms": 15.7
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 930,
-     "ms": 41.1
+     "ms": 51.1
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 783,
-     "ms": 63.9
+     "tokens": 766,
+     "ms": 81.7
     }
    },
    "context7": {
@@ -5171,7 +5164,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 797,
-    "ms": 81.8
+    "ms": 103.5
    },
    "variants": {
     "keyword": {
@@ -5179,21 +5172,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 897,
-     "ms": 21.3
+     "ms": 26.4
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 946,
-     "ms": 56.9
+     "ms": 63.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 797,
-     "ms": 81.8
+     "ms": 103.5
     }
    },
    "context7": {
@@ -5224,7 +5217,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 816,
-    "ms": 532.3
+    "ms": 718.2
    },
    "variants": {
     "keyword": {
@@ -5232,21 +5225,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 847,
-     "ms": 396.5
+     "ms": 520.0
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 828,
-     "ms": 117.0
+     "tokens": 865,
+     "ms": 142.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 816,
-     "ms": 532.3
+     "ms": 718.2
     }
    },
    "context7": {
@@ -5275,29 +5268,29 @@
     "missing": [],
     "rejected": [],
     "tokens": 881,
-    "ms": 78.0
+    "ms": 96.9
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 928,
-     "ms": 20.7
+     "tokens": 874,
+     "ms": 24.6
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 917,
-     "ms": 50.9
+     "ms": 66.1
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 881,
-     "ms": 78.0
+     "ms": 96.9
     }
    },
    "context7": {
@@ -5322,16 +5315,11 @@
    "set": "tuning",
    "grading": "[[[\"await params\", \"Promise<{\"]], []]",
    "lockdocs": {
-    "pass": false,
-    "missing": [
-     [
-      "await params",
-      "Promise<{"
-     ]
-    ],
+    "pass": true,
+    "missing": [],
     "rejected": [],
-    "tokens": 881,
-    "ms": 84.9
+    "tokens": 880,
+    "ms": 104.9
    },
    "variants": {
     "keyword": {
@@ -5343,8 +5331,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 949,
-     "ms": 20.8
+     "tokens": 927,
+     "ms": 27.2
     },
     "hybrid": {
      "pass": false,
@@ -5356,19 +5344,14 @@
      ],
      "rejected": [],
      "tokens": 946,
-     "ms": 55.2
+     "ms": 69.7
     },
     "fetched": {
-     "pass": false,
-     "missing": [
-      [
-       "await params",
-       "Promise<{"
-      ]
-     ],
+     "pass": true,
+     "missing": [],
      "rejected": [],
-     "tokens": 881,
-     "ms": 84.9
+     "tokens": 880,
+     "ms": 104.9
     }
    },
    "context7": {
@@ -5397,7 +5380,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 896,
-    "ms": 50.0
+    "ms": 65.7
    },
    "variants": {
     "keyword": {
@@ -5405,27 +5388,31 @@
      "missing": [],
      "rejected": [],
      "tokens": 420,
-     "ms": 2.8
+     "ms": 3.5
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 420,
-     "ms": 32.0
+     "ms": 43.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 896,
-     "ms": 50.0
+     "ms": 65.7
     }
    },
    "context7": {
-    "error": "HTTP 404",
-    "ms": 3327.2388550000187,
-    "library": "/rails/tailwindcss-rails"
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 578,
+    "ms": 6783,
+    "library": "/erimicel/select2-tailwindcss-theme",
+    "version_match": "unversioned"
    }
   },
   {
@@ -5443,7 +5430,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 874,
-    "ms": 49.5
+    "ms": 67.8
    },
    "variants": {
     "keyword": {
@@ -5455,7 +5442,7 @@
      ],
      "rejected": [],
      "tokens": 297,
-     "ms": 1.7
+     "ms": 2.1
     },
     "hybrid": {
      "pass": false,
@@ -5466,20 +5453,28 @@
      ],
      "rejected": [],
      "tokens": 516,
-     "ms": 29.8
+     "ms": 39.3
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 874,
-     "ms": 49.5
+     "ms": 67.8
     }
    },
    "context7": {
-    "error": "HTTP 404",
-    "ms": 3210.879936000026,
-    "library": "/rails/tailwindcss-rails"
+    "pass": false,
+    "missing": [
+     [
+      "@custom-variant"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 578,
+    "ms": 6704,
+    "library": "/erimicel/select2-tailwindcss-theme",
+    "version_match": "unversioned"
    }
   },
   {
@@ -5497,7 +5492,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 899,
-    "ms": 76.7
+    "ms": 101.2
    },
    "variants": {
     "keyword": {
@@ -5505,21 +5500,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 856,
-     "ms": 7.0
+     "ms": 8.8
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 907,
-     "ms": 36.5
+     "ms": 43.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 899,
-     "ms": 76.7
+     "ms": 101.2
     }
    },
    "context7": {
@@ -5548,7 +5543,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 796,
-    "ms": 84.3
+    "ms": 111.4
    },
    "variants": {
     "keyword": {
@@ -5561,7 +5556,7 @@
      ],
      "rejected": [],
      "tokens": 925,
-     "ms": 6.9
+     "ms": 8.7
     },
     "hybrid": {
      "pass": false,
@@ -5573,14 +5568,14 @@
      ],
      "rejected": [],
      "tokens": 816,
-     "ms": 36.2
+     "ms": 46.4
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 796,
-     "ms": 84.3
+     "ms": 111.4
     }
    },
    "context7": {
@@ -5609,7 +5604,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 790,
-    "ms": 42.0
+    "ms": 57.1
    },
    "variants": {
     "keyword": {
@@ -5617,21 +5612,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 792,
-     "ms": 2.9
+     "ms": 3.9
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 881,
-     "ms": 32.9
+     "ms": 37.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 790,
-     "ms": 42.0
+     "ms": 57.1
     }
    },
    "context7": {
@@ -5663,7 +5658,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 851,
-    "ms": 44.3
+    "ms": 58.4
    },
    "variants": {
     "keyword": {
@@ -5676,7 +5671,7 @@
      ],
      "rejected": [],
      "tokens": 918,
-     "ms": 7.0
+     "ms": 9.2
     },
     "hybrid": {
      "pass": false,
@@ -5688,14 +5683,14 @@
      ],
      "rejected": [],
      "tokens": 868,
-     "ms": 37.3
+     "ms": 48.1
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 851,
-     "ms": 44.3
+     "ms": 58.4
     }
    },
    "context7": {
@@ -5729,7 +5724,7 @@
     ],
     "rejected": [],
     "tokens": 768,
-    "ms": 74.1
+    "ms": 95.2
    },
    "variants": {
     "keyword": {
@@ -5742,7 +5737,7 @@
      ],
      "rejected": [],
      "tokens": 866,
-     "ms": 7.3
+     "ms": 9.9
     },
     "hybrid": {
      "pass": false,
@@ -5754,7 +5749,7 @@
      ],
      "rejected": [],
      "tokens": 843,
-     "ms": 39.3
+     "ms": 46.1
     },
     "fetched": {
      "pass": false,
@@ -5766,7 +5761,7 @@
      ],
      "rejected": [],
      "tokens": 768,
-     "ms": 74.1
+     "ms": 95.2
     }
    },
    "context7": {
@@ -5795,7 +5790,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 741,
-    "ms": 79.7
+    "ms": 96.4
    },
    "variants": {
     "keyword": {
@@ -5807,7 +5802,7 @@
      ],
      "rejected": [],
      "tokens": 1027,
-     "ms": 5.6
+     "ms": 7.8
     },
     "hybrid": {
      "pass": false,
@@ -5818,14 +5813,14 @@
      ],
      "rejected": [],
      "tokens": 1017,
-     "ms": 37.8
+     "ms": 40.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 741,
-     "ms": 79.7
+     "ms": 96.4
     }
    },
    "context7": {
@@ -5853,8 +5848,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 770,
-    "ms": 176.8
+    "tokens": 750,
+    "ms": 217.7
    },
    "variants": {
     "keyword": {
@@ -5866,7 +5861,7 @@
      ],
      "rejected": [],
      "tokens": 798,
-     "ms": 48.2
+     "ms": 60.3
     },
     "hybrid": {
      "pass": false,
@@ -5877,14 +5872,14 @@
      ],
      "rejected": [],
      "tokens": 803,
-     "ms": 87.2
+     "ms": 99.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 770,
-     "ms": 176.8
+     "tokens": 750,
+     "ms": 217.7
     }
    },
    "context7": {
@@ -5912,8 +5907,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 901,
-    "ms": 62.3
+    "tokens": 887,
+    "ms": 84.7
    },
    "variants": {
     "keyword": {
@@ -5926,8 +5921,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 891,
-     "ms": 13.0
+     "tokens": 896,
+     "ms": 16.6
     },
     "hybrid": {
      "pass": false,
@@ -5939,15 +5934,15 @@
       ]
      ],
      "rejected": [],
-     "tokens": 908,
-     "ms": 42.8
+     "tokens": 877,
+     "ms": 56.1
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 901,
-     "ms": 62.3
+     "tokens": 887,
+     "ms": 84.7
     }
    },
    "context7": {
@@ -5976,7 +5971,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 881,
-    "ms": 53.1
+    "ms": 70.7
    },
    "variants": {
     "keyword": {
@@ -5984,21 +5979,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 851,
-     "ms": 22.2
+     "ms": 27.6
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 842,
-     "ms": 52.5
+     "ms": 64.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 881,
-     "ms": 53.1
+     "ms": 70.7
     }
    },
    "context7": {
@@ -6026,8 +6021,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 1165,
-    "ms": 35.0
+    "tokens": 1162,
+    "ms": 44.0
    },
    "variants": {
     "keyword": {
@@ -6035,21 +6030,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 985,
-     "ms": 5.2
+     "ms": 6.4
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 854,
-     "ms": 34.7
+     "ms": 45.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 1165,
-     "ms": 35.0
+     "tokens": 1162,
+     "ms": 44.0
     }
    },
    "context7": {
@@ -6080,7 +6075,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 1158,
-    "ms": 43.3
+    "ms": 61.1
    },
    "variants": {
     "keyword": {
@@ -6088,21 +6083,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 510,
-     "ms": 10.4
+     "ms": 13.2
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 386,
-     "ms": 43.1
+     "ms": 56.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 1158,
-     "ms": 43.3
+     "ms": 61.1
     }
    },
    "context7": {
@@ -6130,8 +6125,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 924,
-    "ms": 49.8
+    "tokens": 930,
+    "ms": 69.0
    },
    "variants": {
     "keyword": {
@@ -6139,7 +6134,7 @@
      "missing": [],
      "rejected": [],
      "tokens": 972,
-     "ms": 15.1
+     "ms": 19.9
     },
     "hybrid": {
      "pass": false,
@@ -6150,14 +6145,14 @@
      ],
      "rejected": [],
      "tokens": 949,
-     "ms": 45.7
+     "ms": 58.3
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 924,
-     "ms": 49.8
+     "tokens": 930,
+     "ms": 69.0
     }
    },
    "context7": {
@@ -6169,7 +6164,8 @@
     "tokens": 1092,
     "ms": 1857,
     "library": "/pydantic/pydantic",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -6186,8 +6182,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 888,
-    "ms": 60.7
+    "tokens": 884,
+    "ms": 81.9
    },
    "variants": {
     "keyword": {
@@ -6199,7 +6195,7 @@
      ],
      "rejected": [],
      "tokens": 829,
-     "ms": 18.7
+     "ms": 25.3
     },
     "hybrid": {
      "pass": false,
@@ -6210,14 +6206,14 @@
      ],
      "rejected": [],
      "tokens": 917,
-     "ms": 50.9
+     "ms": 59.1
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 888,
-     "ms": 60.7
+     "tokens": 884,
+     "ms": 81.9
     }
    },
    "context7": {
@@ -6246,7 +6242,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 898,
-    "ms": 82.2
+    "ms": 103.3
    },
    "variants": {
     "keyword": {
@@ -6258,7 +6254,7 @@
      ],
      "rejected": [],
      "tokens": 895,
-     "ms": 21.4
+     "ms": 27.4
     },
     "hybrid": {
      "pass": false,
@@ -6269,14 +6265,14 @@
      ],
      "rejected": [],
      "tokens": 881,
-     "ms": 57.6
+     "ms": 71.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 898,
-     "ms": 82.2
+     "ms": 103.3
     }
    },
    "context7": {
@@ -6286,7 +6282,8 @@
     "tokens": 950,
     "ms": 3170,
     "library": "/vercel/next.js/v15.1.11",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
@@ -6304,7 +6301,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 856,
-    "ms": 117.5
+    "ms": 142.4
    },
    "variants": {
     "keyword": {
@@ -6312,21 +6309,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 881,
-     "ms": 72.9
+     "ms": 92.0
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 834,
-     "ms": 123.0
+     "ms": 147.5
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 856,
-     "ms": 117.5
+     "ms": 142.4
     }
    },
    "context7": {
@@ -6336,7 +6333,8 @@
     "tokens": 1258,
     "ms": 3159,
     "library": "/vercel/next.js/v16.2.9",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
@@ -6353,8 +6351,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 979,
-    "ms": 35.0
+    "tokens": 975,
+    "ms": 45.2
    },
    "variants": {
     "keyword": {
@@ -6362,21 +6360,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 858,
-     "ms": 5.2
+     "ms": 6.5
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 957,
-     "ms": 35.0
+     "ms": 40.1
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 979,
-     "ms": 35.0
+     "tokens": 975,
+     "ms": 45.2
     }
    },
    "context7": {
@@ -6386,7 +6384,8 @@
     "tokens": 132,
     "ms": 2243,
     "library": "/colinhacks/zod/v3.24.2",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
@@ -6404,7 +6403,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 888,
-    "ms": 42.5
+    "ms": 55.0
    },
    "variants": {
     "keyword": {
@@ -6416,7 +6415,7 @@
      ],
      "rejected": [],
      "tokens": 196,
-     "ms": 10.0
+     "ms": 12.1
     },
     "hybrid": {
      "pass": false,
@@ -6427,14 +6426,14 @@
      ],
      "rejected": [],
      "tokens": 1139,
-     "ms": 43.3
+     "ms": 48.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 888,
-     "ms": 42.5
+     "ms": 55.0
     }
    },
    "context7": {
@@ -6444,7 +6443,8 @@
     "tokens": 1048,
     "ms": 3495,
     "library": "/colinhacks/zod/v4.0.1",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
@@ -6461,8 +6461,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 896,
-    "ms": 59.2
+    "tokens": 892,
+    "ms": 81.5
    },
    "variants": {
     "keyword": {
@@ -6470,21 +6470,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 901,
-     "ms": 19.8
+     "ms": 25.6
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 901,
-     "ms": 49.3
+     "ms": 63.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 896,
-     "ms": 59.2
+     "tokens": 892,
+     "ms": 81.5
     }
    },
    "context7": {
@@ -6494,7 +6494,8 @@
     "tokens": 1135,
     "ms": 2870,
     "library": "/pydantic/pydantic",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -6511,8 +6512,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 962,
-    "ms": 50.0
+    "tokens": 938,
+    "ms": 69.8
    },
    "variants": {
     "keyword": {
@@ -6524,7 +6525,7 @@
      ],
      "rejected": [],
      "tokens": 909,
-     "ms": 15.8
+     "ms": 19.7
     },
     "hybrid": {
      "pass": false,
@@ -6535,14 +6536,14 @@
      ],
      "rejected": [],
      "tokens": 882,
-     "ms": 44.5
+     "ms": 66.5
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 962,
-     "ms": 50.0
+     "tokens": 938,
+     "ms": 69.8
     }
    },
    "context7": {
@@ -6558,7 +6559,8 @@
     "tokens": 1319,
     "ms": 2189,
     "library": "/pydantic/pydantic",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -6575,8 +6577,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 876,
-    "ms": 61.4
+    "tokens": 872,
+    "ms": 79.0
    },
    "variants": {
     "keyword": {
@@ -6584,21 +6586,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 861,
-     "ms": 19.7
+     "ms": 25.1
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 908,
-     "ms": 50.3
+     "ms": 64.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 876,
-     "ms": 61.4
+     "tokens": 872,
+     "ms": 79.0
     }
    },
    "context7": {
@@ -6608,7 +6610,8 @@
     "tokens": 1319,
     "ms": 1630,
     "library": "/pydantic/pydantic",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -6625,8 +6628,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 858,
-    "ms": 156.4
+    "tokens": 867,
+    "ms": 192.9
    },
    "variants": {
     "keyword": {
@@ -6634,21 +6637,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 1017,
-     "ms": 49.6
+     "ms": 62.5
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 1017,
-     "ms": 89.0
+     "ms": 102.7
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 858,
-     "ms": 156.4
+     "tokens": 867,
+     "ms": 192.9
     }
    },
    "context7": {
@@ -6658,7 +6661,8 @@
     "tokens": 976,
     "ms": 2516,
     "library": "/websites/sqlalchemy_en_20",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -6676,7 +6680,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 784,
-    "ms": 72.4
+    "ms": 90.0
    },
    "variants": {
     "keyword": {
@@ -6689,7 +6693,7 @@
      ],
      "rejected": [],
      "tokens": 895,
-     "ms": 8.3
+     "ms": 10.3
     },
     "hybrid": {
      "pass": false,
@@ -6701,14 +6705,14 @@
      ],
      "rejected": [],
      "tokens": 905,
-     "ms": 38.4
+     "ms": 47.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 784,
-     "ms": 72.4
+     "ms": 90.0
     }
    },
    "context7": {
@@ -6718,7 +6722,8 @@
     "tokens": 990,
     "ms": 2698,
     "library": "/eslint/eslint/v8.57.1",
-    "version_match": "exact"
+    "version_match": "exact",
+    "reused": true
    }
   },
   {
@@ -6740,7 +6745,7 @@
     ],
     "rejected": [],
     "tokens": 788,
-    "ms": 76.0
+    "ms": 101.2
    },
    "variants": {
     "keyword": {
@@ -6752,7 +6757,7 @@
      ],
      "rejected": [],
      "tokens": 943,
-     "ms": 6.3
+     "ms": 7.8
     },
     "hybrid": {
      "pass": false,
@@ -6763,7 +6768,7 @@
      ],
      "rejected": [],
      "tokens": 943,
-     "ms": 36.3
+     "ms": 48.0
     },
     "fetched": {
      "pass": false,
@@ -6774,7 +6779,7 @@
      ],
      "rejected": [],
      "tokens": 788,
-     "ms": 76.0
+     "ms": 101.2
     }
    },
    "context7": {
@@ -6784,7 +6789,8 @@
     "tokens": 959,
     "ms": 2626,
     "library": "/eslint/eslint/v9.39.3",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
@@ -6801,8 +6807,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 676,
-    "ms": 45.3
+    "tokens": 673,
+    "ms": 62.4
    },
    "variants": {
     "keyword": {
@@ -6810,7 +6816,7 @@
      "missing": [],
      "rejected": [],
      "tokens": 917,
-     "ms": 8.0
+     "ms": 10.5
     },
     "hybrid": {
      "pass": false,
@@ -6821,14 +6827,14 @@
      ],
      "rejected": [],
      "tokens": 851,
-     "ms": 41.3
+     "ms": 51.5
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 676,
-     "ms": 45.3
+     "tokens": 673,
+     "ms": 62.4
     }
    },
    "context7": {
@@ -6838,7 +6844,8 @@
     "tokens": 840,
     "ms": 2923,
     "library": "/vitejs/vite",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -6856,7 +6863,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 823,
-    "ms": 77.4
+    "ms": 97.5
    },
    "variants": {
     "keyword": {
@@ -6864,7 +6871,7 @@
      "missing": [],
      "rejected": [],
      "tokens": 952,
-     "ms": 6.5
+     "ms": 8.7
     },
     "hybrid": {
      "pass": false,
@@ -6875,14 +6882,14 @@
      ],
      "rejected": [],
      "tokens": 948,
-     "ms": 38.8
+     "ms": 42.4
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 823,
-     "ms": 77.4
+     "ms": 97.5
     }
    },
    "context7": {
@@ -6894,7 +6901,8 @@
     "tokens": 1155,
     "ms": 2796,
     "library": "/reactjs/react.dev",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -6912,7 +6920,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 812,
-    "ms": 82.1
+    "ms": 104.1
    },
    "variants": {
     "keyword": {
@@ -6925,7 +6933,7 @@
      ],
      "rejected": [],
      "tokens": 902,
-     "ms": 6.4
+     "ms": 8.9
     },
     "hybrid": {
      "pass": false,
@@ -6937,14 +6945,14 @@
      ],
      "rejected": [],
      "tokens": 903,
-     "ms": 38.4
+     "ms": 51.1
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 812,
-     "ms": 82.1
+     "ms": 104.1
     }
    },
    "context7": {
@@ -6954,7 +6962,8 @@
     "tokens": 778,
     "ms": 2187,
     "library": "/reactjs/react.dev",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -6972,7 +6981,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 898,
-    "ms": 43.4
+    "ms": 55.4
    },
    "variants": {
     "keyword": {
@@ -6984,7 +6993,7 @@
      ],
      "rejected": [],
      "tokens": 883,
-     "ms": 6.5
+     "ms": 9.2
     },
     "hybrid": {
      "pass": false,
@@ -6995,14 +7004,14 @@
      ],
      "rejected": [],
      "tokens": 923,
-     "ms": 36.9
+     "ms": 49.5
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 898,
-     "ms": 43.4
+     "ms": 55.4
     }
    },
    "context7": {
@@ -7012,7 +7021,8 @@
     "tokens": 583,
     "ms": 2735,
     "library": "/websites/reactrouter",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -7029,8 +7039,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 837,
-    "ms": 174.1
+    "tokens": 769,
+    "ms": 209.4
    },
    "variants": {
     "keyword": {
@@ -7042,7 +7052,7 @@
      ],
      "rejected": [],
      "tokens": 873,
-     "ms": 46.9
+     "ms": 61.1
     },
     "hybrid": {
      "pass": false,
@@ -7053,14 +7063,14 @@
      ],
      "rejected": [],
      "tokens": 912,
-     "ms": 86.6
+     "ms": 103.2
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 837,
-     "ms": 174.1
+     "tokens": 769,
+     "ms": 209.4
     }
    },
    "context7": {
@@ -7070,7 +7080,8 @@
     "tokens": 440,
     "ms": 2828,
     "library": "/django/django",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -7088,7 +7099,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 860,
-    "ms": 48.4
+    "ms": 61.7
    },
    "variants": {
     "keyword": {
@@ -7100,7 +7111,7 @@
      ],
      "rejected": [],
      "tokens": 1276,
-     "ms": 3.0
+     "ms": 3.6
     },
     "hybrid": {
      "pass": false,
@@ -7111,14 +7122,14 @@
      ],
      "rejected": [],
      "tokens": 1209,
-     "ms": 33.0
+     "ms": 44.1
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 860,
-     "ms": 48.4
+     "ms": 61.7
     }
    },
    "context7": {
@@ -7128,7 +7139,8 @@
     "tokens": 511,
     "ms": 1488,
     "library": "/rails/tailwindcss-rails",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -7150,7 +7162,7 @@
     ],
     "rejected": [],
     "tokens": 939,
-    "ms": 50.2
+    "ms": 66.7
    },
    "variants": {
     "keyword": {
@@ -7162,7 +7174,7 @@
      ],
      "rejected": [],
      "tokens": 402,
-     "ms": 1.8
+     "ms": 2.2
     },
     "hybrid": {
      "pass": false,
@@ -7173,7 +7185,7 @@
      ],
      "rejected": [],
      "tokens": 434,
-     "ms": 31.0
+     "ms": 41.7
     },
     "fetched": {
      "pass": false,
@@ -7184,7 +7196,7 @@
      ],
      "rejected": [],
      "tokens": 939,
-     "ms": 50.2
+     "ms": 66.7
     }
    },
    "context7": {
@@ -7198,7 +7210,8 @@
     "tokens": 511,
     "ms": 1274,
     "library": "/rails/tailwindcss-rails",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -7216,7 +7229,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 890,
-    "ms": 52.9
+    "ms": 65.2
    },
    "variants": {
     "keyword": {
@@ -7224,21 +7237,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 877,
-     "ms": 20.4
+     "ms": 27.5
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 840,
-     "ms": 53.1
+     "ms": 62.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 890,
-     "ms": 52.9
+     "ms": 65.2
     }
    },
    "context7": {
@@ -7248,7 +7261,8 @@
     "tokens": 133,
     "ms": 2762,
     "library": "/websites/rs_tokio_tokio",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   }
  ],
@@ -7257,33 +7271,33 @@
    "answered": 105,
    "passed": 59,
    "total": 105,
-   "median_tokens": 883,
-   "median_ms": 19.1,
-   "p95_ms": 194.4
+   "median_tokens": 882,
+   "median_ms": 24.6,
+   "p95_ms": 276.2
   },
   "hybrid": {
    "answered": 105,
    "passed": 60,
    "total": 105,
-   "median_tokens": 904,
-   "median_ms": 40.6,
-   "p95_ms": 86.7
+   "median_tokens": 903,
+   "median_ms": 52.4,
+   "p95_ms": 103.2
   },
   "fetched": {
    "answered": 105,
-   "passed": 94,
+   "passed": 96,
    "total": 105,
-   "median_tokens": 871,
-   "median_ms": 76.1,
-   "p95_ms": 369.3
+   "median_tokens": 866,
+   "median_ms": 96.9,
+   "p95_ms": 473.9
   },
   "context7": {
-   "answered": 103,
-   "passed": 76,
+   "answered": 105,
+   "passed": 77,
    "total": 105,
-   "median_tokens": 910,
-   "median_ms": 2575,
-   "p95_ms": 3320
+   "median_tokens": 908,
+   "median_ms": 2583,
+   "p95_ms": 3398
   }
  },
  "variants": [
@@ -7301,13 +7315,13 @@
   ]
  ],
  "context7_calls": {
-  "calls": 39,
+  "calls": 8,
   "rate_limited": 0,
-  "errors": 2,
+  "errors": 4,
   "stopped": false,
   "limit": "200",
-  "remaining": "161",
-  "reused": 83
+  "remaining": "190",
+  "reused": 103
  },
  "runner": {
   "os": "Linux",

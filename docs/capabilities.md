@@ -17,5 +17,5 @@ is in [vision.md](vision.md).
 | LD-MCP | MCP server with the `resolve`, `docs` and `api` tools over stdio | supported | crates/lockdocs/src/mcp.rs, crates/lockdocs/src/tools.rs | LD-SEARCH |
 | LD-CLI | Command line with the same queries, plus `index`, `fetch` and `setup` | supported | crates/lockdocs/src/main.rs, crates/lockdocs/src/setup.rs | LD-SEARCH |
 | LD-NPM | npm launcher and native binaries for five platforms | supported | packages/lockdocs, packages/npm | LD-CLI |
-| LD-BENCH | Version-sensitive benchmark against Context7, run on GitHub-hosted runners | supported | bench/run.py, bench/questions.json, .github/workflows/bench.yml | LD-CLI |
+| LD-BENCH | Version-sensitive benchmark against Context7, run on our own Linux CI runners | supported | bench/run.py, bench/questions.json, .github/workflows/bench.yml | LD-CLI |
 | LD-SEMANTIC-RERANK | Rerank the top results with a stronger local model for questions worded differently from the docs | planned | | LD-SEARCH |

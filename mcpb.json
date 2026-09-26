@@ -1,0 +1,1 @@
+{"server":{"mcp_config":{"env":{"LOCKDOCS_ROOT":"${user_config.project}"}}},"user_config":{"project":{"type":"directory","title":"Project folder","description":"The project whose lockfile lockdocs reads by default.","required":true}}}

@@ -29,6 +29,7 @@ jobs:
       name: lockdocs
       npm-package: '@sylphx/lockdocs'
       mcp-name: io.github.SylphxAI/lockdocs
+      mcpb: true
       # A real project: zod pinned in a lockfile.
       smoke: |
         npm init -y >/dev/null

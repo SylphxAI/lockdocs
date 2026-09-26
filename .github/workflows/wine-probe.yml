@@ -1,0 +1,34 @@
+name: wine-probe
+on:
+  push:
+    branches: [ci/own-runners]
+jobs:
+  probe:
+    runs-on: sylphx-linux-standard
+    timeout-minutes: 30
+    steps:
+      - run: |
+          uname -a; cat /proc/sys/vm/mmap_min_addr; cat /proc/sys/kernel/randomize_va_space; ulimit -a | head -5; nproc; free -g | head -2
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+        with:
+          targets: x86_64-pc-windows-msvc
+          components: llvm-tools
+      - name: hello.exe
+        run: |
+          set -euo pipefail
+          curl -fsSL https://github.com/rust-cross/cargo-xwin/releases/download/v0.23.1/cargo-xwin-v0.23.1.x86_64-unknown-linux-musl.tar.gz | tar -xz -C /usr/local/bin cargo-xwin 2>/dev/null || { mkdir -p $RUNNER_TEMP/bin; curl -fsSL https://github.com/rust-cross/cargo-xwin/releases/download/v0.23.1/cargo-xwin-v0.23.1.x86_64-unknown-linux-musl.tar.gz | tar -xz -C $RUNNER_TEMP/bin cargo-xwin; echo $RUNNER_TEMP/bin >> $GITHUB_PATH; export PATH=$RUNNER_TEMP/bin:$PATH; }
+          sudo apt-get update -qq && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends clang wine wine64 >/dev/null
+          cd $RUNNER_TEMP && cargo new -q hello && cd hello && XWIN_ACCEPT_LICENSE=1 cargo xwin build -q --release --target x86_64-pc-windows-msvc
+          cp target/x86_64-pc-windows-msvc/release/hello.exe $RUNNER_TEMP/
+      - name: noble wine
+        run: |
+          dpkg -l | grep -i wine | awk '{print $2, $3}'; ls -la /usr/bin/wine* /usr/lib/wine/ 2>&1 | head -20
+          echo "--- wine --version"; wine --version || echo "FAIL $?"
+          echo "--- wine hello"; WINEPREFIX=$RUNNER_TEMP/w1 WINEDEBUG=-all wine $RUNNER_TEMP/hello.exe || echo "FAIL $?"
+          echo "--- wine64 hello"; WINEPREFIX=$RUNNER_TEMP/w2 WINEDEBUG=-all /usr/lib/wine/wine64 $RUNNER_TEMP/hello.exe || echo "FAIL $?"
+          echo "--- with WINEDLLOVERRIDES"; WINEPREFIX=$RUNNER_TEMP/w3 WINEDEBUG=err+all WINEDLLOVERRIDES="mscoree,mshtml=" wine $RUNNER_TEMP/hello.exe 2>&1 | tail -20 || echo "FAIL $?"
+          echo "--- setarch -R"; WINEPREFIX=$RUNNER_TEMP/w4 WINEDEBUG=-all setarch -R wine $RUNNER_TEMP/hello.exe || echo "FAIL $?"
+      - name: docker cargo-xwin image wine
+        run: |
+          time docker pull -q messense/cargo-xwin:latest || echo "FAIL pull"
+          docker run --rm -v $RUNNER_TEMP:/o messense/cargo-xwin:latest bash -c 'wine --version; WINEDEBUG=-all wine /o/hello.exe' || echo "FAIL $?"

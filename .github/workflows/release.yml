@@ -25,7 +25,7 @@ concurrency:
 
 jobs:
   release:
-    uses: SylphxAI/mcp-kit/.github/workflows/release.yml@ci/own-runners
+    uses: SylphxAI/mcp-kit/.github/workflows/release.yml@v0
     permissions:
       contents: write
       id-token: write

@@ -2,13 +2,13 @@
  "tokenizer": "tiktoken o200k_base",
  "index": {
   "axum07": {
-   "ms": 345,
+   "ms": 391,
    "report": {
     "missing": [],
-    "ms": 333,
+    "ms": 378,
     "packages": [
      {
-      "build_ms": 209,
+      "build_ms": 164,
       "ecosystem": "cargo",
       "package": "axum@0.7.9",
       "sections": 262,
@@ -16,7 +16,7 @@
       "symbols": 236
      },
      {
-      "build_ms": 287,
+      "build_ms": 319,
       "ecosystem": "cargo",
       "package": "tokio@1.41.1",
       "sections": 551,
@@ -27,13 +27,13 @@
    }
   },
   "axum08": {
-   "ms": 401,
+   "ms": 382,
    "report": {
     "missing": [],
-    "ms": 390,
+    "ms": 370,
     "packages": [
      {
-      "build_ms": 179,
+      "build_ms": 170,
       "ecosystem": "cargo",
       "package": "axum@0.8.1",
       "sections": 272,
@@ -41,7 +41,7 @@
       "symbols": 264
      },
      {
-      "build_ms": 349,
+      "build_ms": 324,
       "ecosystem": "cargo",
       "package": "tokio@1.43.0",
       "sections": 561,
@@ -52,13 +52,13 @@
    }
   },
   "django42": {
-   "ms": 473,
+   "ms": 532,
    "report": {
     "missing": [],
-    "ms": 459,
+    "ms": 516,
     "packages": [
      {
-      "build_ms": 400,
+      "build_ms": 451,
       "ecosystem": "pypi",
       "package": "django@4.2.30",
       "sections": 159,
@@ -69,13 +69,13 @@
    }
   },
   "django51": {
-   "ms": 480,
+   "ms": 534,
    "report": {
     "missing": [],
-    "ms": 467,
+    "ms": 517,
     "packages": [
      {
-      "build_ms": 408,
+      "build_ms": 453,
       "ecosystem": "pypi",
       "package": "django@5.1.15",
       "sections": 159,
@@ -86,16 +86,16 @@
    }
   },
   "eslint8": {
-   "ms": 182,
+   "ms": 185,
    "report": {
     "missing": [],
-    "ms": 177,
+    "ms": 179,
     "packages": [
      {
-      "build_ms": 137,
+      "build_ms": 144,
       "ecosystem": "npm",
       "package": "eslint@8.57.1",
-      "sections": 26,
+      "sections": 27,
       "source": "node_modules/eslint",
       "symbols": 893
      }
@@ -103,16 +103,16 @@
    }
   },
   "eslint9": {
-   "ms": 80,
+   "ms": 78,
    "report": {
     "missing": [],
-    "ms": 75,
+    "ms": 73,
     "packages": [
      {
-      "build_ms": 35,
+      "build_ms": 39,
       "ecosystem": "npm",
       "package": "eslint@9.39.5",
-      "sections": 27,
+      "sections": 28,
       "source": "node_modules/eslint",
       "symbols": 855
      }
@@ -120,10 +120,10 @@
    }
   },
   "express4": {
-   "ms": 72,
+   "ms": 81,
    "report": {
     "missing": [],
-    "ms": 67,
+    "ms": 77,
     "packages": [
      {
       "build_ms": 2,
@@ -134,7 +134,7 @@
       "symbols": 35
      },
      {
-      "build_ms": 17,
+      "build_ms": 22,
       "ecosystem": "npm",
       "package": "express@4.21.2",
       "sections": 276,
@@ -151,7 +151,7 @@
     "ms": 44,
     "packages": [
      {
-      "build_ms": 1,
+      "build_ms": 4,
       "ecosystem": "npm",
       "package": "@types/express@5.0.6",
       "sections": 5,
@@ -159,7 +159,7 @@
       "symbols": 34
      },
      {
-      "build_ms": 9,
+      "build_ms": 7,
       "ecosystem": "npm",
       "package": "express@5.2.1",
       "sections": 18,
@@ -170,13 +170,13 @@
    }
   },
   "fastapi0115": {
-   "ms": 83,
+   "ms": 89,
    "report": {
     "missing": [],
-    "ms": 79,
+    "ms": 85,
     "packages": [
      {
-      "build_ms": 34,
+      "build_ms": 36,
       "ecosystem": "pypi",
       "package": "fastapi@0.115.14",
       "sections": 27,
@@ -187,10 +187,10 @@
    }
   },
   "fastapi088": {
-   "ms": 71,
+   "ms": 69,
    "report": {
     "missing": [],
-    "ms": 67,
+    "ms": 66,
     "packages": [
      {
       "build_ms": 20,
@@ -204,16 +204,16 @@
    }
   },
   "next14": {
-   "ms": 378,
+   "ms": 391,
    "report": {
     "missing": [],
-    "ms": 366,
+    "ms": 379,
     "packages": [
      {
-      "build_ms": 322,
+      "build_ms": 331,
       "ecosystem": "npm",
       "package": "next@14.2.35",
-      "sections": 9,
+      "sections": 10,
       "source": "node_modules/next",
       "symbols": 4904
      },
@@ -226,7 +226,7 @@
       "symbols": 0
      },
      {
-      "build_ms": 232,
+      "build_ms": 235,
       "ecosystem": "npm",
       "package": "react-dom@18.3.1",
       "sections": 7,
@@ -237,13 +237,13 @@
    }
   },
   "next15": {
-   "ms": 603,
+   "ms": 576,
    "report": {
     "missing": [],
-    "ms": 591,
+    "ms": 563,
     "packages": [
      {
-      "build_ms": 404,
+      "build_ms": 426,
       "ecosystem": "npm",
       "package": "next@15.1.0",
       "sections": 9,
@@ -251,7 +251,7 @@
       "symbols": 5585
      },
      {
-      "build_ms": 53,
+      "build_ms": 337,
       "ecosystem": "npm",
       "package": "react@19.0.0",
       "sections": 4,
@@ -259,7 +259,7 @@
       "symbols": 0
      },
      {
-      "build_ms": 550,
+      "build_ms": 506,
       "ecosystem": "npm",
       "package": "react-dom@19.0.0",
       "sections": 7,
@@ -270,13 +270,13 @@
    }
   },
   "next16": {
-   "ms": 868,
+   "ms": 1070,
    "report": {
     "missing": [],
-    "ms": 840,
+    "ms": 1038,
     "packages": [
      {
-      "build_ms": 773,
+      "build_ms": 965,
       "ecosystem": "npm",
       "package": "next@16.3.6",
       "sections": 3598,
@@ -284,7 +284,7 @@
       "symbols": 8354
      },
      {
-      "build_ms": 429,
+      "build_ms": 455,
       "ecosystem": "npm",
       "package": "react@19.2.8",
       "sections": 4,
@@ -292,7 +292,7 @@
       "symbols": 0
      },
      {
-      "build_ms": 550,
+      "build_ms": 711,
       "ecosystem": "npm",
       "package": "react-dom@19.2.8",
       "sections": 7,
@@ -303,13 +303,13 @@
    }
   },
   "prisma5": {
-   "ms": 92,
+   "ms": 97,
    "report": {
     "missing": [],
-    "ms": 87,
+    "ms": 92,
     "packages": [
      {
-      "build_ms": 47,
+      "build_ms": 54,
       "ecosystem": "npm",
       "package": "@prisma/client@5.22.0",
       "sections": 4,
@@ -317,7 +317,7 @@
       "symbols": 814
      },
      {
-      "build_ms": 50,
+      "build_ms": 51,
       "ecosystem": "npm",
       "package": "prisma@5.22.0",
       "sections": 14,
@@ -328,13 +328,13 @@
    }
   },
   "prisma6": {
-   "ms": 123,
+   "ms": 125,
    "report": {
     "missing": [],
-    "ms": 118,
+    "ms": 119,
     "packages": [
      {
-      "build_ms": 82,
+      "build_ms": 84,
       "ecosystem": "npm",
       "package": "@prisma/client@6.19.3",
       "sections": 4,
@@ -342,7 +342,7 @@
       "symbols": 851
      },
      {
-      "build_ms": 77,
+      "build_ms": 79,
       "ecosystem": "npm",
       "package": "prisma@6.19.3",
       "sections": 14,
@@ -353,13 +353,13 @@
    }
   },
   "pydantic1": {
-   "ms": 98,
+   "ms": 106,
    "report": {
     "missing": [],
-    "ms": 94,
+    "ms": 101,
     "packages": [
      {
-      "build_ms": 50,
+      "build_ms": 56,
       "ecosystem": "pypi",
       "package": "pydantic@1.10.18",
       "sections": 135,
@@ -370,13 +370,13 @@
    }
   },
   "pydantic2": {
-   "ms": 176,
+   "ms": 184,
    "report": {
     "missing": [],
-    "ms": 170,
+    "ms": 177,
     "packages": [
      {
-      "build_ms": 121,
+      "build_ms": 129,
       "ecosystem": "pypi",
       "package": "pydantic@2.9.2",
       "sections": 191,
@@ -387,13 +387,13 @@
    }
   },
   "react18": {
-   "ms": 361,
+   "ms": 370,
    "report": {
     "missing": [],
-    "ms": 351,
+    "ms": 359,
     "packages": [
      {
-      "build_ms": 149,
+      "build_ms": 287,
       "ecosystem": "npm",
       "package": "@types/react@18.3.31",
       "sections": 5,
@@ -401,7 +401,7 @@
       "symbols": 1853
      },
      {
-      "build_ms": 15,
+      "build_ms": 18,
       "ecosystem": "npm",
       "package": "@types/react-dom@18.3.7",
       "sections": 5,
@@ -409,7 +409,7 @@
       "symbols": 295
      },
      {
-      "build_ms": 284,
+      "build_ms": 182,
       "ecosystem": "npm",
       "package": "react@18.3.1",
       "sections": 4,
@@ -417,7 +417,7 @@
       "symbols": 1853
      },
      {
-      "build_ms": 265,
+      "build_ms": 272,
       "ecosystem": "npm",
       "package": "react-dom@18.3.1",
       "sections": 7,
@@ -428,13 +428,13 @@
    }
   },
   "react19": {
-   "ms": 659,
+   "ms": 662,
    "report": {
     "missing": [],
-    "ms": 649,
+    "ms": 651,
     "packages": [
      {
-      "build_ms": 351,
+      "build_ms": 145,
       "ecosystem": "npm",
       "package": "@types/react@19.2.18",
       "sections": 5,
@@ -450,7 +450,7 @@
       "symbols": 206
      },
      {
-      "build_ms": 353,
+      "build_ms": 216,
       "ecosystem": "npm",
       "package": "react@19.2.8",
       "sections": 4,
@@ -458,7 +458,7 @@
       "symbols": 1829
      },
      {
-      "build_ms": 582,
+      "build_ms": 589,
       "ecosystem": "npm",
       "package": "react-dom@19.2.8",
       "sections": 7,
@@ -469,13 +469,13 @@
    }
   },
   "rr6": {
-   "ms": 279,
+   "ms": 290,
    "report": {
     "missing": [],
-    "ms": 271,
+    "ms": 282,
     "packages": [
      {
-      "build_ms": 45,
+      "build_ms": 47,
       "ecosystem": "npm",
       "package": "react@18.3.1",
       "sections": 4,
@@ -483,7 +483,7 @@
       "symbols": 0
      },
      {
-      "build_ms": 198,
+      "build_ms": 216,
       "ecosystem": "npm",
       "package": "react-dom@18.3.1",
       "sections": 7,
@@ -491,7 +491,7 @@
       "symbols": 0
      },
      {
-      "build_ms": 25,
+      "build_ms": 24,
       "ecosystem": "npm",
       "package": "react-router@6.26.2",
       "sections": 74,
@@ -499,7 +499,7 @@
       "symbols": 207
      },
      {
-      "build_ms": 204,
+      "build_ms": 218,
       "ecosystem": "npm",
       "package": "react-router-dom@6.26.2",
       "sections": 80,
@@ -510,13 +510,13 @@
    }
   },
   "rr7": {
-   "ms": 524,
+   "ms": 515,
    "report": {
     "missing": [],
-    "ms": 516,
+    "ms": 507,
     "packages": [
      {
-      "build_ms": 259,
+      "build_ms": 258,
       "ecosystem": "npm",
       "package": "react@19.0.0",
       "sections": 4,
@@ -524,7 +524,7 @@
       "symbols": 0
      },
      {
-      "build_ms": 461,
+      "build_ms": 450,
       "ecosystem": "npm",
       "package": "react-dom@19.0.0",
       "sections": 7,
@@ -532,7 +532,7 @@
       "symbols": 0
      },
      {
-      "build_ms": 281,
+      "build_ms": 296,
       "ecosystem": "npm",
       "package": "react-router@7.1.1",
       "sections": 92,
@@ -543,13 +543,13 @@
    }
   },
   "sqlalchemy14": {
-   "ms": 466,
+   "ms": 500,
    "report": {
     "missing": [],
-    "ms": 451,
+    "ms": 483,
     "packages": [
      {
-      "build_ms": 392,
+      "build_ms": 417,
       "ecosystem": "pypi",
       "package": "sqlalchemy@1.4.54",
       "sections": 8,
@@ -560,13 +560,13 @@
    }
   },
   "sqlalchemy20": {
-   "ms": 604,
+   "ms": 650,
    "report": {
     "missing": [],
-    "ms": 588,
+    "ms": 631,
     "packages": [
      {
-      "build_ms": 521,
+      "build_ms": 568,
       "ecosystem": "pypi",
       "package": "sqlalchemy@2.0.54",
       "sections": 8,
@@ -577,10 +577,10 @@
    }
   },
   "tailwind3": {
-   "ms": 50,
+   "ms": 46,
    "report": {
     "missing": [],
-    "ms": 46,
+    "ms": 42,
     "packages": [
      {
       "build_ms": 9,
@@ -594,13 +594,13 @@
    }
   },
   "tailwind4": {
-   "ms": 46,
+   "ms": 44,
    "report": {
     "missing": [],
-    "ms": 43,
+    "ms": 40,
     "packages": [
      {
-      "build_ms": 6,
+      "build_ms": 7,
       "ecosystem": "npm",
       "package": "tailwindcss@4.1.18",
       "sections": 4,
@@ -611,13 +611,13 @@
    }
   },
   "vite5": {
-   "ms": 91,
+   "ms": 93,
    "report": {
     "missing": [],
-    "ms": 87,
+    "ms": 88,
     "packages": [
      {
-      "build_ms": 46,
+      "build_ms": 51,
       "ecosystem": "npm",
       "package": "vite@5.4.21",
       "sections": 131,
@@ -628,13 +628,13 @@
    }
   },
   "vite6": {
-   "ms": 90,
+   "ms": 100,
    "report": {
     "missing": [],
-    "ms": 85,
+    "ms": 94,
     "packages": [
      {
-      "build_ms": 49,
+      "build_ms": 55,
       "ecosystem": "npm",
       "package": "vite@6.4.3",
       "sections": 91,
@@ -645,13 +645,13 @@
    }
   },
   "zod3": {
-   "ms": 65,
+   "ms": 73,
    "report": {
     "missing": [],
-    "ms": 61,
+    "ms": 69,
     "packages": [
      {
-      "build_ms": 28,
+      "build_ms": 31,
       "ecosystem": "npm",
       "package": "zod@3.23.8",
       "sections": 121,
@@ -662,16 +662,16 @@
    }
   },
   "zod4": {
-   "ms": 106,
+   "ms": 115,
    "report": {
     "missing": [],
-    "ms": 101,
+    "ms": 109,
     "packages": [
      {
-      "build_ms": 63,
+      "build_ms": 68,
       "ecosystem": "npm",
       "package": "zod@4.1.5",
-      "sections": 8,
+      "sections": 9,
       "source": "node_modules/zod",
       "symbols": 3164
      }
@@ -681,10 +681,10 @@
  },
  "fetch": {
   "axum07": {
-   "ms": 1636,
+   "ms": 2469,
    "report": {
     "model": true,
-    "ms": 1632,
+    "ms": 2465,
     "packages": [
      {
       "files": 2,
@@ -694,7 +694,7 @@
       "tag": "axum-v0.7.9"
      },
      {
-      "files": 1,
+      "files": 18,
       "note": null,
       "package": "tokio@1.41.1",
       "repo": "github.com/tokio-rs/tokio",
@@ -704,10 +704,10 @@
    }
   },
   "axum08": {
-   "ms": 2101,
+   "ms": 2192,
    "report": {
     "model": true,
-    "ms": 2098,
+    "ms": 2187,
     "packages": [
      {
       "files": 0,
@@ -717,7 +717,7 @@
       "tag": null
      },
      {
-      "files": 1,
+      "files": 18,
       "note": null,
       "package": "tokio@1.43.0",
       "repo": "github.com/tokio-rs/tokio",
@@ -727,10 +727,10 @@
    }
   },
   "django42": {
-   "ms": 4897,
+   "ms": 4160,
    "report": {
     "model": true,
-    "ms": 4893,
+    "ms": 4156,
     "packages": [
      {
       "files": 601,
@@ -743,10 +743,10 @@
    }
   },
   "django51": {
-   "ms": 4876,
+   "ms": 4787,
    "report": {
     "model": true,
-    "ms": 4872,
+    "ms": 4783,
     "packages": [
      {
       "files": 629,
@@ -759,10 +759,10 @@
    }
   },
   "eslint8": {
-   "ms": 3197,
+   "ms": 3476,
    "report": {
     "model": true,
-    "ms": 3193,
+    "ms": 3471,
     "packages": [
      {
       "files": 409,
@@ -775,10 +775,10 @@
    }
   },
   "eslint9": {
-   "ms": 3391,
+   "ms": 3330,
    "report": {
     "model": true,
-    "ms": 3387,
+    "ms": 3325,
     "packages": [
      {
       "files": 435,
@@ -791,10 +791,10 @@
    }
   },
   "express4": {
-   "ms": 2984,
+   "ms": 3582,
    "report": {
     "model": true,
-    "ms": 2980,
+    "ms": 3578,
     "packages": [
      {
       "files": 6,
@@ -814,10 +814,10 @@
    }
   },
   "express5": {
-   "ms": 3046,
+   "ms": 2913,
    "report": {
     "model": true,
-    "ms": 3042,
+    "ms": 2909,
     "packages": [
      {
       "files": 38,
@@ -837,10 +837,10 @@
    }
   },
   "fastapi0115": {
-   "ms": 2482,
+   "ms": 2264,
    "report": {
     "model": true,
-    "ms": 2478,
+    "ms": 2260,
     "packages": [
      {
       "files": 180,
@@ -853,10 +853,10 @@
    }
   },
   "fastapi088": {
-   "ms": 2335,
+   "ms": 2594,
    "report": {
     "model": true,
-    "ms": 2331,
+    "ms": 2590,
     "packages": [
      {
       "files": 113,
@@ -869,10 +869,10 @@
    }
   },
   "next14": {
-   "ms": 4976,
+   "ms": 3699,
    "report": {
     "model": true,
-    "ms": 4972,
+    "ms": 3694,
     "packages": [
      {
       "files": 318,
@@ -882,14 +882,14 @@
       "tag": "v14.2.35"
      },
      {
-      "files": 3,
+      "files": 140,
       "note": null,
       "package": "react@18.3.1",
       "repo": "github.com/facebook/react",
       "tag": "v18.3.1"
      },
      {
-      "files": 3,
+      "files": 140,
       "note": null,
       "package": "react-dom@18.3.1",
       "repo": "github.com/facebook/react",
@@ -899,10 +899,10 @@
    }
   },
   "next15": {
-   "ms": 3429,
+   "ms": 4137,
    "report": {
     "model": true,
-    "ms": 3424,
+    "ms": 4131,
     "packages": [
      {
       "files": 365,
@@ -929,10 +929,10 @@
    }
   },
   "next16": {
-   "ms": 4143,
+   "ms": 3730,
    "report": {
     "model": true,
-    "ms": 4137,
+    "ms": 3724,
     "packages": [
      {
       "files": 458,
@@ -959,20 +959,20 @@
    }
   },
   "prisma5": {
-   "ms": 1697,
+   "ms": 6014,
    "report": {
     "model": true,
-    "ms": 1694,
+    "ms": 6009,
     "packages": [
      {
-      "files": 2,
+      "files": 236,
       "note": null,
       "package": "@prisma/client@5.22.0",
       "repo": "github.com/prisma/prisma",
       "tag": "5.22.0"
      },
      {
-      "files": 2,
+      "files": 236,
       "note": null,
       "package": "prisma@5.22.0",
       "repo": "github.com/prisma/prisma",
@@ -982,20 +982,20 @@
    }
   },
   "prisma6": {
-   "ms": 1739,
+   "ms": 3632,
    "report": {
     "model": true,
-    "ms": 1736,
+    "ms": 3626,
     "packages": [
      {
-      "files": 2,
+      "files": 247,
       "note": null,
       "package": "@prisma/client@6.19.3",
       "repo": "github.com/prisma/prisma",
       "tag": "6.19.3"
      },
      {
-      "files": 2,
+      "files": 247,
       "note": null,
       "package": "prisma@6.19.3",
       "repo": "github.com/prisma/prisma",
@@ -1005,10 +1005,10 @@
    }
   },
   "pydantic1": {
-   "ms": 1635,
+   "ms": 1757,
    "report": {
     "model": true,
-    "ms": 1631,
+    "ms": 1754,
     "packages": [
      {
       "files": 176,
@@ -1021,10 +1021,10 @@
    }
   },
   "pydantic2": {
-   "ms": 1223,
+   "ms": 1177,
    "report": {
     "model": true,
-    "ms": 1219,
+    "ms": 1173,
     "packages": [
      {
       "files": 80,
@@ -1037,14 +1037,14 @@
    }
   },
   "react18": {
-   "ms": 2396,
+   "ms": 2923,
    "report": {
     "model": true,
-    "ms": 2394,
+    "ms": 2919,
     "packages": [
      {
-      "files": 0,
-      "note": "no git tag found for 18.3.31",
+      "files": 137,
+      "note": null,
       "package": "@types/react@18.3.31",
       "repo": "github.com/DefinitelyTyped/DefinitelyTyped",
       "tag": null
@@ -1057,14 +1057,14 @@
       "tag": null
      },
      {
-      "files": 3,
+      "files": 140,
       "note": null,
       "package": "react@18.3.1",
       "repo": "github.com/facebook/react",
       "tag": "v18.3.1"
      },
      {
-      "files": 3,
+      "files": 140,
       "note": null,
       "package": "react-dom@18.3.1",
       "repo": "github.com/facebook/react",
@@ -1074,10 +1074,10 @@
    }
   },
   "react19": {
-   "ms": 3314,
+   "ms": 2912,
    "report": {
     "model": true,
-    "ms": 3310,
+    "ms": 2908,
     "packages": [
      {
       "files": 180,
@@ -1111,20 +1111,20 @@
    }
   },
   "rr6": {
-   "ms": 2184,
+   "ms": 2148,
    "report": {
     "model": true,
-    "ms": 2180,
+    "ms": 2144,
     "packages": [
      {
-      "files": 3,
+      "files": 140,
       "note": null,
       "package": "react@18.3.1",
       "repo": "github.com/facebook/react",
       "tag": "v18.3.1"
      },
      {
-      "files": 3,
+      "files": 140,
       "note": null,
       "package": "react-dom@18.3.1",
       "repo": "github.com/facebook/react",
@@ -1148,10 +1148,10 @@
    }
   },
   "rr7": {
-   "ms": 2112,
+   "ms": 2033,
    "report": {
     "model": true,
-    "ms": 2109,
+    "ms": 2029,
     "packages": [
      {
       "files": 184,
@@ -1178,10 +1178,10 @@
    }
   },
   "sqlalchemy14": {
-   "ms": 3270,
+   "ms": 2995,
    "report": {
     "model": true,
-    "ms": 3266,
+    "ms": 2991,
     "packages": [
      {
       "files": 179,
@@ -1194,10 +1194,10 @@
    }
   },
   "sqlalchemy20": {
-   "ms": 3201,
+   "ms": 3057,
    "report": {
     "model": true,
-    "ms": 3197,
+    "ms": 3053,
     "packages": [
      {
       "files": 198,
@@ -1210,13 +1210,13 @@
    }
   },
   "tailwind3": {
-   "ms": 725,
+   "ms": 3464,
    "report": {
     "model": true,
-    "ms": 723,
+    "ms": 3460,
     "packages": [
      {
-      "files": 2,
+      "files": 192,
       "note": null,
       "package": "tailwindcss@3.4.19",
       "repo": "github.com/tailwindlabs/tailwindcss",
@@ -1226,13 +1226,13 @@
    }
   },
   "tailwind4": {
-   "ms": 2472,
+   "ms": 7799,
    "report": {
     "model": true,
-    "ms": 2469,
+    "ms": 7795,
     "packages": [
      {
-      "files": 200,
+      "files": 224,
       "note": null,
       "package": "tailwindcss@4.1.18",
       "repo": "github.com/tailwindlabs/tailwindcss",
@@ -1242,10 +1242,10 @@
    }
   },
   "vite5": {
-   "ms": 1379,
+   "ms": 1136,
    "report": {
     "model": true,
-    "ms": 1376,
+    "ms": 1133,
     "packages": [
      {
       "files": 37,
@@ -1258,10 +1258,10 @@
    }
   },
   "vite6": {
-   "ms": 1511,
+   "ms": 1367,
    "report": {
     "model": true,
-    "ms": 1508,
+    "ms": 1364,
     "packages": [
      {
       "files": 47,
@@ -1274,10 +1274,10 @@
    }
   },
   "zod3": {
-   "ms": 612,
+   "ms": 630,
    "report": {
     "model": true,
-    "ms": 609,
+    "ms": 628,
     "packages": [
      {
       "files": 4,
@@ -1290,10 +1290,10 @@
    }
   },
   "zod4": {
-   "ms": 1219,
+   "ms": 1337,
    "report": {
     "model": true,
-    "ms": 1216,
+    "ms": 1334,
     "packages": [
      {
       "files": 18,
@@ -1315,34 +1315,36 @@
    "question": "How do I reject unknown keys in an object schema?",
    "why": "v3: .strict() on ZodObject",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\".strict(\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 1019,
-    "ms": 84.3
+    "tokens": 1075,
+    "ms": 86.7
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 1079,
-     "ms": 29.1
+     "tokens": 1091,
+     "ms": 32.0
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 1070,
-     "ms": 40.4
+     "tokens": 1091,
+     "ms": 41.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 1019,
-     "ms": 84.3
+     "tokens": 1075,
+     "ms": 86.7
     }
    },
    "context7": {
@@ -1364,20 +1366,22 @@
    "question": "How do I reject unknown keys in an object schema?",
    "why": "v4: z.strictObject() (.strict() is legacy)",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"strictObject\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 946,
-    "ms": 133.8
+    "tokens": 1015,
+    "ms": 141.6
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 1073,
-     "ms": 55.8
+     "tokens": 1103,
+     "ms": 61.9
     },
     "hybrid": {
      "pass": false,
@@ -1387,15 +1391,15 @@
       ]
      ],
      "rejected": [],
-     "tokens": 1142,
-     "ms": 48.6
+     "tokens": 1144,
+     "ms": 57.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 946,
-     "ms": 133.8
+     "tokens": 1015,
+     "ms": 141.6
     }
    },
    "context7": {
@@ -1417,34 +1421,36 @@
    "question": "How do I validate that a string is an email address?",
    "why": "v3: z.string().email(); top-level z.email() does not exist",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\".email(\"]], [\"z.email(\"]]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 1167,
-    "ms": 40.4
+    "tokens": 1119,
+    "ms": 47.1
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 961,
-     "ms": 5.5
+     "tokens": 1018,
+     "ms": 6.7
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 1042,
-     "ms": 44.4
+     "tokens": 1019,
+     "ms": 40.2
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 1167,
-     "ms": 40.4
+     "tokens": 1119,
+     "ms": 47.1
     }
    },
    "context7": {
@@ -1466,34 +1472,36 @@
    "question": "How do I validate that a string is an email address?",
    "why": "v4: top-level z.email()",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"z.email(\", \"function email(\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 965,
-    "ms": 58.6
+    "tokens": 903,
+    "ms": 60.2
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 1147,
-     "ms": 10.6
+     "tokens": 616,
+     "ms": 13.2
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 1038,
-     "ms": 47.6
+     "tokens": 389,
+     "ms": 56.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 965,
-     "ms": 58.6
+     "tokens": 903,
+     "ms": 60.2
     }
    },
    "context7": {
@@ -1515,34 +1523,36 @@
    "question": "How do I customize the error message when validation fails?",
    "why": "v3: message / required_error / errorMap params",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"required_error\", \"invalid_type_error\", \"errorMap\", \"{ message:\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 985,
-    "ms": 45.7
+    "tokens": 991,
+    "ms": 47.3
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 868,
-     "ms": 5.4
+     "tokens": 979,
+     "ms": 6.4
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 868,
-     "ms": 45.6
+     "tokens": 920,
+     "ms": 46.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 985,
-     "ms": 45.7
+     "tokens": 991,
+     "ms": 47.3
     }
    },
    "context7": {
@@ -1564,34 +1574,36 @@
    "question": "How do I customize the error message when validation fails?",
    "why": "v4: unified `error` param; required_error removed (reject of 'required_error' dropped: v4 migration notes legitimately mention it as removed)",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"$ZodErrorMap\", \"{ error:\", \"error:\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 989,
-    "ms": 51.6
+    "tokens": 991,
+    "ms": 59.9
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 389,
-     "ms": 9.5
+     "tokens": 392,
+     "ms": 12.6
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 646,
-     "ms": 46.1
+     "tokens": 608,
+     "ms": 55.5
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 989,
-     "ms": 51.6
+     "tokens": 991,
+     "ms": 59.9
     }
    },
    "context7": {
@@ -1613,12 +1625,14 @@
    "question": "How do I define a record schema with string keys and number values?",
    "why": "v4: z.record(keySchema, valueSchema)",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"record(\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 1026,
-    "ms": 57.2
+    "tokens": 946,
+    "ms": 55.2
    },
    "variants": {
     "keyword": {
@@ -1629,8 +1643,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 1114,
-     "ms": 10.5
+     "tokens": 1117,
+     "ms": 13.5
     },
     "hybrid": {
      "pass": false,
@@ -1640,15 +1654,15 @@
       ]
      ],
      "rejected": [],
-     "tokens": 1049,
-     "ms": 47.9
+     "tokens": 1077,
+     "ms": 52.4
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 1026,
-     "ms": 57.2
+     "tokens": 946,
+     "ms": 55.2
     }
    },
    "context7": {
@@ -1670,6 +1684,8 @@
    "question": "Is cookies() from next/headers synchronous or does it return a Promise?",
    "why": "14: cookies() returns ReadonlyRequestCookies synchronously",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"ReadonlyRequestCookies\"]], [\"Promise<ReadonlyRequestCookies>\", \"await cookies()\"]]",
    "lockdocs": {
     "pass": false,
     "missing": [
@@ -1678,8 +1694,8 @@
      ]
     ],
     "rejected": [],
-    "tokens": 849,
-    "ms": 342.1
+    "tokens": 926,
+    "ms": 394.7
    },
    "variants": {
     "keyword": {
@@ -1691,14 +1707,14 @@
      ],
      "rejected": [],
      "tokens": 302,
-     "ms": 117.9
+     "ms": 134.7
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 340,
-     "ms": 61.4
+     "tokens": 507,
+     "ms": 68.1
     },
     "fetched": {
      "pass": false,
@@ -1708,8 +1724,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 849,
-     "ms": 342.1
+     "tokens": 926,
+     "ms": 394.7
     }
    },
    "context7": {
@@ -1723,7 +1739,8 @@
     "tokens": 1144,
     "ms": 2994,
     "library": "/vercel/next.js/v14.3.0-canary.87",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
@@ -1734,34 +1751,36 @@
    "question": "Is cookies() from next/headers synchronous or does it return a Promise?",
    "why": "15: cookies() is async",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"Promise<ReadonlyRequestCookies>\", \"await cookies()\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 892,
-    "ms": 392.2
+    "tokens": 866,
+    "ms": 448.2
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 662,
-     "ms": 137.0
+     "tokens": 737,
+     "ms": 155.7
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 618,
-     "ms": 62.6
+     "tokens": 693,
+     "ms": 66.1
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 892,
-     "ms": 392.2
+     "tokens": 866,
+     "ms": 448.2
     }
    },
    "context7": {
@@ -1783,34 +1802,36 @@
    "question": "How do I read the incoming request headers in a server component?",
    "why": "14: headers() is sync",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"headers()\", \"function headers(\"]], [\"Promise<ReadonlyHeaders>\", \"await headers()\"]]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 892,
-    "ms": 79.7
+    "tokens": 896,
+    "ms": 93.6
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 376,
-     "ms": 17.8
+     "tokens": 360,
+     "ms": 23.8
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 869,
-     "ms": 55.9
+     "tokens": 783,
+     "ms": 62.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 892,
-     "ms": 79.7
+     "tokens": 896,
+     "ms": 93.6
     }
    },
    "context7": {
@@ -1820,7 +1841,8 @@
     "tokens": 1363,
     "ms": 1612,
     "library": "/vercel/next.js/v14.3.0-canary.87",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
@@ -1831,34 +1853,36 @@
    "question": "How do I read the incoming request headers in a server component?",
    "why": "15: headers() is async",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"Promise<ReadonlyHeaders>\", \"await headers()\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 872,
-    "ms": 84.5
+    "tokens": 870,
+    "ms": 105.9
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 718,
-     "ms": 19.6
+     "tokens": 351,
+     "ms": 26.5
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 897,
-     "ms": 64.8
+     "tokens": 734,
+     "ms": 70.1
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 872,
-     "ms": 84.5
+     "tokens": 870,
+     "ms": 105.9
     }
    },
    "context7": {
@@ -1880,34 +1904,36 @@
    "question": "How do I opt a server component out of caching so it renders dynamically?",
    "why": "14: unstable_noStore()",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"unstable_noStore\", \"noStore\", \"force-dynamic\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 761,
-    "ms": 82.1
+    "tokens": 843,
+    "ms": 96.9
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 891,
-     "ms": 17.5
+     "tokens": 908,
+     "ms": 23.6
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 933,
-     "ms": 56.0
+     "tokens": 893,
+     "ms": 61.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 761,
-     "ms": 82.1
+     "tokens": 843,
+     "ms": 96.9
     }
    },
    "context7": {
@@ -1917,7 +1943,8 @@
     "tokens": 744,
     "ms": 1564,
     "library": "/vercel/next.js/v14.3.0-canary.87",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
@@ -1928,34 +1955,36 @@
    "question": "How do I opt a server component out of caching so it renders dynamically?",
    "why": "15: connection() (unstable_noStore deprecated)",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"connection()\", \"function connection(\", \"unstable_noStore\", \"force-dynamic\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 798,
-    "ms": 93.1
+    "tokens": 754,
+    "ms": 108.3
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 899,
-     "ms": 19.7
+     "tokens": 934,
+     "ms": 26.8
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 924,
-     "ms": 61.4
+     "tokens": 964,
+     "ms": 70.7
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 798,
-     "ms": 93.1
+     "tokens": 754,
+     "ms": 108.3
     }
    },
    "context7": {
@@ -1977,18 +2006,14 @@
    "question": "How do I run code after the response has finished streaming?",
    "why": "15.1: after() from next/server (unstable_after in 15.0)",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"unstable_after\", \"after(\", \"function after\"]], []]",
    "lockdocs": {
-    "pass": false,
-    "missing": [
-     [
-      "unstable_after",
-      "after(",
-      "function after"
-     ]
-    ],
+    "pass": true,
+    "missing": [],
     "rejected": [],
-    "tokens": 879,
-    "ms": 91.9
+    "tokens": 827,
+    "ms": 99.7
    },
    "variants": {
     "keyword": {
@@ -1996,27 +2021,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 923,
-     "ms": 19.6
+     "ms": 25.9
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 855,
-     "ms": 63.3
+     "tokens": 932,
+     "ms": 73.6
     },
     "fetched": {
-     "pass": false,
-     "missing": [
-      [
-       "unstable_after",
-       "after(",
-       "function after"
-      ]
-     ],
+     "pass": true,
+     "missing": [],
      "rejected": [],
-     "tokens": 879,
-     "ms": 91.9
+     "tokens": 827,
+     "ms": 99.7
     }
    },
    "context7": {
@@ -2038,6 +2057,8 @@
    "question": "How do I return data with a custom HTTP status code from a loader?",
    "why": "v6: json() helper",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"json(\"]], []]",
    "lockdocs": {
     "pass": false,
     "missing": [
@@ -2047,7 +2068,7 @@
     ],
     "rejected": [],
     "tokens": 796,
-    "ms": 98.9
+    "ms": 120.4
    },
    "variants": {
     "keyword": {
@@ -2055,14 +2076,14 @@
      "missing": [],
      "rejected": [],
      "tokens": 913,
-     "ms": 8.9
+     "ms": 11.0
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 913,
-     "ms": 42.0
+     "tokens": 891,
+     "ms": 37.7
     },
     "fetched": {
      "pass": false,
@@ -2073,7 +2094,7 @@
      ],
      "rejected": [],
      "tokens": 796,
-     "ms": 98.9
+     "ms": 120.4
     }
    },
    "context7": {
@@ -2099,15 +2120,24 @@
    "question": "How do I return data with a custom HTTP status code from a loader?",
    "why": "v7: data() helper (json() deprecated)",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"data(\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 892,
-    "ms": 121.9
+    "tokens": 876,
+    "ms": 143.5
    },
    "variants": {
     "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 909,
+     "ms": 47.8
+    },
+    "hybrid": {
      "pass": false,
      "missing": [
       [
@@ -2115,22 +2145,15 @@
       ]
      ],
      "rejected": [],
-     "tokens": 889,
-     "ms": 40.2
-    },
-    "hybrid": {
-     "pass": true,
-     "missing": [],
-     "rejected": [],
-     "tokens": 928,
-     "ms": 41.8
+     "tokens": 970,
+     "ms": 43.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 892,
-     "ms": 121.9
+     "tokens": 876,
+     "ms": 143.5
     }
    },
    "context7": {
@@ -2152,34 +2175,36 @@
    "question": "How do I stream slow data from a loader with deferred values?",
    "why": "v6: defer() + <Await>",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"defer(\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 895,
-    "ms": 46.9
+    "tokens": 872,
+    "ms": 50.1
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 851,
-     "ms": 3.3
+     "tokens": 821,
+     "ms": 4.0
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 884,
-     "ms": 38.2
+     "ms": 41.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 895,
-     "ms": 46.9
+     "tokens": 872,
+     "ms": 50.1
     }
    },
    "context7": {
@@ -2201,12 +2226,14 @@
    "question": "Which future flag enables React.startTransition for state updates?",
    "why": "v6.26: future.v7_startTransition",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"v7_startTransition\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 815,
-    "ms": 51.6
+    "tokens": 755,
+    "ms": 55.9
    },
    "variants": {
     "keyword": {
@@ -2214,21 +2241,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 946,
-     "ms": 3.2
+     "ms": 4.0
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 904,
-     "ms": 39.3
+     "ms": 41.7
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 815,
-     "ms": 51.6
+     "tokens": 755,
+     "ms": 55.9
     }
    },
    "context7": {
@@ -2250,34 +2277,36 @@
    "question": "How do I create a browser router with data loaders?",
    "why": "v7: createBrowserRouter from react-router",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"createBrowserRouter\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 838,
-    "ms": 51.1
+    "tokens": 807,
+    "ms": 58.5
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 866,
-     "ms": 7.5
+     "tokens": 918,
+     "ms": 9.7
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 920,
-     "ms": 46.0
+     "tokens": 931,
+     "ms": 43.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 838,
-     "ms": 51.1
+     "tokens": 807,
+     "ms": 58.5
     }
    },
    "context7": {
@@ -2299,34 +2328,36 @@
    "question": "How do I convert a model instance to a dict?",
    "why": "v1: .dict()",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\".dict(\", \"def dict(\"]], [\"model_dump\"]]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 948,
-    "ms": 151.1
+    "tokens": 846,
+    "ms": 157.0
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 953,
-     "ms": 68.2
+     "tokens": 915,
+     "ms": 67.1
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 915,
-     "ms": 55.9
+     "ms": 59.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 948,
-     "ms": 151.1
+     "tokens": 846,
+     "ms": 157.0
     }
    },
    "context7": {
@@ -2355,12 +2386,14 @@
    "question": "How do I convert a model instance to a dict?",
    "why": "v2: .model_dump()",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"model_dump\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 909,
-    "ms": 244.8
+    "tokens": 952,
+    "ms": 278.7
    },
    "variants": {
     "keyword": {
@@ -2371,26 +2404,22 @@
       ]
      ],
      "rejected": [],
-     "tokens": 823,
-     "ms": 129.7
+     "tokens": 924,
+     "ms": 141.6
     },
     "hybrid": {
-     "pass": false,
-     "missing": [
-      [
-       "model_dump"
-      ]
-     ],
+     "pass": true,
+     "missing": [],
      "rejected": [],
-     "tokens": 893,
-     "ms": 64.1
+     "tokens": 843,
+     "ms": 64.2
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 909,
-     "ms": 244.8
+     "tokens": 952,
+     "ms": 278.7
     }
    },
    "context7": {
@@ -2412,12 +2441,14 @@
    "question": "How do I create a model from a dict and validate it?",
    "why": "v1: Model.parse_obj()",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"parse_obj\"]], [\"model_validate\"]]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 884,
-    "ms": 63.0
+    "tokens": 845,
+    "ms": 63.7
    },
    "variants": {
     "keyword": {
@@ -2428,8 +2459,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 954,
-     "ms": 18.6
+     "tokens": 900,
+     "ms": 21.1
     },
     "hybrid": {
      "pass": false,
@@ -2439,15 +2470,15 @@
       ]
      ],
      "rejected": [],
-     "tokens": 907,
-     "ms": 58.0
+     "tokens": 922,
+     "ms": 59.2
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 884,
-     "ms": 63.0
+     "tokens": 845,
+     "ms": 63.7
     }
    },
    "context7": {
@@ -2475,12 +2506,14 @@
    "question": "How do I create a model from a dict and validate it?",
    "why": "v2: Model.model_validate()",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"model_validate\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 843,
-    "ms": 72.3
+    "tokens": 825,
+    "ms": 76.0
    },
    "variants": {
     "keyword": {
@@ -2492,25 +2525,21 @@
      ],
      "rejected": [],
      "tokens": 941,
-     "ms": 22.2
+     "ms": 25.6
     },
     "hybrid": {
-     "pass": false,
-     "missing": [
-      [
-       "model_validate"
-      ]
-     ],
+     "pass": true,
+     "missing": [],
      "rejected": [],
-     "tokens": 950,
-     "ms": 60.0
+     "tokens": 858,
+     "ms": 59.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 843,
-     "ms": 72.3
+     "tokens": 825,
+     "ms": 76.0
     }
    },
    "context7": {
@@ -2532,39 +2561,36 @@
    "question": "How do I add a custom validator for a field?",
    "why": "v1: @validator",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"@validator\", \"def validator(\"]], [\"field_validator\"]]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 965,
-    "ms": 62.5
+    "tokens": 961,
+    "ms": 62.4
    },
    "variants": {
     "keyword": {
-     "pass": false,
-     "missing": [
-      [
-       "@validator",
-       "def validator("
-      ]
-     ],
+     "pass": true,
+     "missing": [],
      "rejected": [],
-     "tokens": 985,
-     "ms": 18.6
+     "tokens": 908,
+     "ms": 20.4
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 823,
-     "ms": 54.0
+     "tokens": 867,
+     "ms": 58.3
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 965,
-     "ms": 62.5
+     "tokens": 961,
+     "ms": 62.4
     }
    },
    "context7": {
@@ -2593,12 +2619,14 @@
    "question": "How do I add a custom validator for a field?",
    "why": "v2: @field_validator",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"field_validator\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 764,
-    "ms": 67.3
+    "tokens": 775,
+    "ms": 77.4
    },
    "variants": {
     "keyword": {
@@ -2609,22 +2637,22 @@
       ]
      ],
      "rejected": [],
-     "tokens": 784,
-     "ms": 22.5
+     "tokens": 826,
+     "ms": 25.4
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 867,
-     "ms": 63.3
+     "ms": 60.2
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 764,
-     "ms": 67.3
+     "tokens": 775,
+     "ms": 77.4
     }
    },
    "context7": {
@@ -2646,34 +2674,36 @@
    "question": "How do I get the JSON schema of a model?",
    "why": "v1: Model.schema() / schema_json()",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"schema_json\", \"def schema(\", \".schema(\"]], [\"model_json_schema\"]]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 878,
-    "ms": 61.6
+    "tokens": 818,
+    "ms": 68.0
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 923,
-     "ms": 18.5
+     "tokens": 854,
+     "ms": 19.8
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 913,
-     "ms": 55.9
+     "tokens": 915,
+     "ms": 53.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 878,
-     "ms": 61.6
+     "tokens": 818,
+     "ms": 68.0
     }
    },
    "context7": {
@@ -2703,34 +2733,36 @@
    "question": "How do I get the JSON schema of a model?",
    "why": "v2: Model.model_json_schema()",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"model_json_schema\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 817,
-    "ms": 72.3
+    "tokens": 880,
+    "ms": 78.9
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 884,
-     "ms": 22.3
+     "tokens": 839,
+     "ms": 26.0
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 858,
-     "ms": 56.3
+     "tokens": 884,
+     "ms": 65.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 817,
-     "ms": 72.3
+     "tokens": 880,
+     "ms": 78.9
     }
    },
    "context7": {
@@ -2750,16 +2782,21 @@
    "package": "pydantic",
    "version": "1.10.18",
    "question": "How do I allow extra fields on a model?",
-   "why": "v1: class Config: extra = Extra.allow",
+   "why": "v1: class Config: extra = Extra.allow. Rejects the v2 idiom model_config = ConfigDict (0 matches in pydantic 1.10.18 source and docs). Until 0.3 it rejected ConfigDict, which pydantic 1.10 also ships (config.py)",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"Extra.allow\", \"class Config\"]], [\"model_config = ConfigDict\"]]",
    "lockdocs": {
     "pass": false,
-    "missing": [],
-    "rejected": [
-     "ConfigDict"
+    "missing": [
+     [
+      "Extra.allow",
+      "class Config"
+     ]
     ],
-    "tokens": 945,
-    "ms": 59.0
+    "rejected": [],
+    "tokens": 923,
+    "ms": 64.1
    },
    "variants": {
     "keyword": {
@@ -2771,8 +2808,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 952,
-     "ms": 18.3
+     "tokens": 878,
+     "ms": 20.5
     },
     "hybrid": {
      "pass": false,
@@ -2783,27 +2820,30 @@
       ]
      ],
      "rejected": [],
-     "tokens": 952,
-     "ms": 55.8
+     "tokens": 945,
+     "ms": 55.1
     },
     "fetched": {
      "pass": false,
-     "missing": [],
-     "rejected": [
-      "ConfigDict"
+     "missing": [
+      [
+       "Extra.allow",
+       "class Config"
+      ]
      ],
-     "tokens": 945,
-     "ms": 59.0
+     "rejected": [],
+     "tokens": 923,
+     "ms": 64.1
     }
    },
    "context7": {
     "pass": false,
     "missing": [],
     "rejected": [
-     "ConfigDict"
+     "model_config = ConfigDict"
     ],
-    "tokens": 718,
-    "ms": 1581,
+    "tokens": 683,
+    "ms": 2725,
     "library": "/pydantic/pydantic",
     "version_match": "unversioned",
     "reused": true
@@ -2817,12 +2857,14 @@
    "question": "How do I allow extra fields on a model?",
    "why": "v2: model_config = ConfigDict(extra='allow')",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"ConfigDict\", \"model_config\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 934,
-    "ms": 70.6
+    "tokens": 952,
+    "ms": 80.1
    },
    "variants": {
     "keyword": {
@@ -2830,21 +2872,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 898,
-     "ms": 22.2
+     "ms": 25.5
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 919,
-     "ms": 62.4
+     "tokens": 892,
+     "ms": 64.2
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 934,
-     "ms": 70.6
+     "tokens": 952,
+     "ms": 80.1
     }
    },
    "context7": {
@@ -2866,34 +2908,36 @@
    "question": "How do I declare a route with a path parameter?",
    "why": "0.7: /users/:id",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"/:\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 960,
-    "ms": 88.4
+    "tokens": 1020,
+    "ms": 102.6
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 955,
-     "ms": 51.4
+     "tokens": 1003,
+     "ms": 58.0
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 933,
-     "ms": 45.1
+     "tokens": 1005,
+     "ms": 47.1
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 960,
-     "ms": 88.4
+     "tokens": 1020,
+     "ms": 102.6
     }
    },
    "context7": {
@@ -2919,34 +2963,36 @@
    "question": "How do I declare a route with a path parameter?",
    "why": "0.8: /users/{id}",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"/{\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 925,
-    "ms": 93.5
+    "tokens": 962,
+    "ms": 96.9
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 947,
-     "ms": 52.0
+     "tokens": 960,
+     "ms": 60.2
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 925,
-     "ms": 45.3
+     "tokens": 962,
+     "ms": 48.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 925,
-     "ms": 93.5
+     "tokens": 962,
+     "ms": 96.9
     }
    },
    "context7": {
@@ -2968,34 +3014,36 @@
    "question": "How do I implement a custom extractor with FromRequestParts?",
    "why": "0.7: #[async_trait] on the impl",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"async_trait\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 926,
-    "ms": 46.5
+    "tokens": 912,
+    "ms": 45.8
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 908,
-     "ms": 7.1
+     "tokens": 907,
+     "ms": 8.7
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 908,
-     "ms": 40.6
+     "tokens": 911,
+     "ms": 41.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 926,
-     "ms": 46.5
+     "tokens": 912,
+     "ms": 45.8
     }
    },
    "context7": {
@@ -3021,34 +3069,36 @@
    "question": "How do I make an extractor optional with Option<T>?",
    "why": "0.8: OptionalFromRequestParts",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"OptionalFromRequestParts\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 898,
-    "ms": 41.6
+    "tokens": 891,
+    "ms": 41.4
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 663,
-     "ms": 6.9
+     "tokens": 683,
+     "ms": 8.8
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 898,
-     "ms": 41.6
+     "tokens": 891,
+     "ms": 43.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 898,
-     "ms": 41.6
+     "tokens": 891,
+     "ms": 41.4
     }
    },
    "context7": {
@@ -3070,12 +3120,14 @@
    "question": "How do I run blocking code without blocking the async runtime?",
    "why": "tokio::task::spawn_blocking",
    "line": "single",
+   "set": "tuning",
+   "grading": "[[[\"spawn_blocking\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 820,
-    "ms": 316.1
+    "tokens": 823,
+    "ms": 362.6
    },
    "variants": {
     "keyword": {
@@ -3083,21 +3135,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 796,
-     "ms": 249.7
+     "ms": 276.2
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 793,
-     "ms": 57.4
+     "tokens": 796,
+     "ms": 67.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 820,
-     "ms": 316.1
+     "tokens": 823,
+     "ms": 362.6
     }
    },
    "context7": {
@@ -3119,16 +3171,14 @@
    "question": "How do I wait on several futures and take whichever finishes first?",
    "why": "tokio::select!",
    "line": "single",
+   "set": "tuning",
+   "grading": "[[[\"select!\"]], []]",
    "lockdocs": {
-    "pass": false,
-    "missing": [
-     [
-      "select!"
-     ]
-    ],
+    "pass": true,
+    "missing": [],
     "rejected": [],
-    "tokens": 969,
-    "ms": 60.1
+    "tokens": 962,
+    "ms": 68.8
    },
    "variants": {
     "keyword": {
@@ -3140,7 +3190,7 @@
      ],
      "rejected": [],
      "tokens": 956,
-     "ms": 20.8
+     "ms": 28.2
     },
     "hybrid": {
      "pass": false,
@@ -3150,19 +3200,15 @@
       ]
      ],
      "rejected": [],
-     "tokens": 958,
-     "ms": 55.0
+     "tokens": 970,
+     "ms": 60.6
     },
     "fetched": {
-     "pass": false,
-     "missing": [
-      [
-       "select!"
-      ]
-     ],
+     "pass": true,
+     "missing": [],
      "rejected": [],
-     "tokens": 969,
-     "ms": 60.1
+     "tokens": 962,
+     "ms": 68.8
     }
    },
    "context7": {
@@ -3184,34 +3230,36 @@
    "question": "How do I put a timeout on a future?",
    "why": "tokio::time::timeout",
    "line": "single",
+   "set": "tuning",
+   "grading": "[[[\"timeout(\", \"fn timeout\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 920,
-    "ms": 54.7
+    "tokens": 941,
+    "ms": 62.7
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 881,
-     "ms": 20.1
+     "tokens": 849,
+     "ms": 27.7
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 910,
-     "ms": 56.4
+     "tokens": 903,
+     "ms": 61.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 920,
-     "ms": 54.7
+     "tokens": 941,
+     "ms": 62.7
     }
    },
    "context7": {
@@ -3233,18 +3281,14 @@
    "question": "How do I add Tailwind to my main CSS file?",
    "why": "v3: @tailwind base/components/utilities directives (tailwindcss 3.4 docs, installation)",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"@tailwind base\", \"@tailwind components\", \"@tailwind utilities\"]], [\"@import \\\"tailwindcss\\\"\"]]",
    "lockdocs": {
-    "pass": false,
-    "missing": [
-     [
-      "@tailwind base",
-      "@tailwind components",
-      "@tailwind utilities"
-     ]
-    ],
+    "pass": true,
+    "missing": [],
     "rejected": [],
-    "tokens": 959,
-    "ms": 62.4
+    "tokens": 971,
+    "ms": 169.9
    },
    "variants": {
     "keyword": {
@@ -3257,8 +3301,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 1116,
-     "ms": 10.4
+     "tokens": 1134,
+     "ms": 11.5
     },
     "hybrid": {
      "pass": false,
@@ -3270,21 +3314,15 @@
       ]
      ],
      "rejected": [],
-     "tokens": 1080,
-     "ms": 40.6
+     "tokens": 1025,
+     "ms": 36.6
     },
     "fetched": {
-     "pass": false,
-     "missing": [
-      [
-       "@tailwind base",
-       "@tailwind components",
-       "@tailwind utilities"
-      ]
-     ],
+     "pass": true,
+     "missing": [],
      "rejected": [],
-     "tokens": 959,
-     "ms": 62.4
+     "tokens": 971,
+     "ms": 169.9
     }
    },
    "context7": {
@@ -3314,17 +3352,14 @@
    "question": "How do I add Tailwind to my main CSS file?",
    "why": "v4: @import \"tailwindcss\" replaces @tailwind directives (v4 upgrade guide)",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"@import \\\"tailwindcss\\\"\", \"@import 'tailwindcss'\"]], []]",
    "lockdocs": {
-    "pass": false,
-    "missing": [
-     [
-      "@import \"tailwindcss\"",
-      "@import 'tailwindcss'"
-     ]
-    ],
+    "pass": true,
+    "missing": [],
     "rejected": [],
-    "tokens": 849,
-    "ms": 145.9
+    "tokens": 979,
+    "ms": 192.6
    },
    "variants": {
     "keyword": {
@@ -3336,8 +3371,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 281,
-     "ms": 8.9
+     "tokens": 358,
+     "ms": 9.4
     },
     "hybrid": {
      "pass": false,
@@ -3348,20 +3383,15 @@
       ]
      ],
      "rejected": [],
-     "tokens": 445,
-     "ms": 39.2
+     "tokens": 461,
+     "ms": 39.3
     },
     "fetched": {
-     "pass": false,
-     "missing": [
-      [
-       "@import \"tailwindcss\"",
-       "@import 'tailwindcss'"
-      ]
-     ],
+     "pass": true,
+     "missing": [],
      "rejected": [],
-     "tokens": 849,
-     "ms": 145.9
+     "tokens": 979,
+     "ms": 192.6
     }
    },
    "context7": {
@@ -3383,34 +3413,36 @@
    "question": "How do I add a custom brand color to the theme?",
    "why": "v3: theme.extend.colors in tailwind.config.js (package stubs/config.full.js; v3 docs customizing colors)",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"extend:\", \"theme.extend\", \"tailwind.config\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 1035,
-    "ms": 40.9
+    "tokens": 1003,
+    "ms": 63.2
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 988,
-     "ms": 3.1
+     "tokens": 1003,
+     "ms": 3.5
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 1047,
-     "ms": 41.3
+     "ms": 40.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 1035,
-     "ms": 40.9
+     "tokens": 1003,
+     "ms": 63.2
     }
    },
    "context7": {
@@ -3432,12 +3464,14 @@
    "question": "How do I add a custom brand color to the theme?",
    "why": "v4: CSS-first @theme { --color-brand: ... } (v4 docs, theme variables)",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"@theme\", \"--color-\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 1147,
-    "ms": 54.0
+    "tokens": 1144,
+    "ms": 63.9
    },
    "variants": {
     "keyword": {
@@ -3449,8 +3483,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 437,
-     "ms": 2.0
+     "tokens": 286,
+     "ms": 2.1
     },
     "hybrid": {
      "pass": false,
@@ -3461,15 +3495,15 @@
       ]
      ],
      "rejected": [],
-     "tokens": 531,
-     "ms": 36.8
+     "tokens": 764,
+     "ms": 39.3
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 1147,
-     "ms": 54.0
+     "tokens": 1144,
+     "ms": 63.9
     }
    },
    "context7": {
@@ -3491,34 +3525,36 @@
    "question": "How do I configure ESLint rules for my project?",
    "why": "8.57: eslintrc (.eslintrc.*) is the default config system; flat config opt-in (eslint 8 docs, configuring)",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\".eslintrc\", \"eslintrc\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 813,
-    "ms": 407.0
+    "tokens": 796,
+    "ms": 473.9
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 866,
-     "ms": 133.9
+     "tokens": 912,
+     "ms": 150.4
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 925,
-     "ms": 48.2
+     "ms": 44.5
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 813,
-     "ms": 407.0
+     "tokens": 796,
+     "ms": 473.9
     }
    },
    "context7": {
@@ -3540,34 +3576,36 @@
    "question": "How do I configure ESLint rules for my project?",
    "why": "9.x: flat config eslint.config.js is the default (eslint 9 migration guide)",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"eslint.config.js\", \"eslint.config.mjs\", \"eslint.config\", \"flat config\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 741,
-    "ms": 360.1
+    "tokens": 720,
+    "ms": 416.7
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 940,
-     "ms": 30.2
+     "tokens": 882,
+     "ms": 34.7
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 961,
-     "ms": 45.1
+     "ms": 40.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 741,
-     "ms": 360.1
+     "tokens": 720,
+     "ms": 416.7
     }
    },
    "context7": {
@@ -3589,12 +3627,14 @@
    "question": "How do I make ESLint ignore certain files?",
    "why": "8.57: .eslintignore / ignorePatterns (lib/cli-engine/cli-engine.js mentions .eslintignore)",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\".eslintignore\", \"ignorePatterns\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
     "tokens": 854,
-    "ms": 83.5
+    "ms": 88.1
    },
    "variants": {
     "keyword": {
@@ -3606,8 +3646,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 901,
-     "ms": 7.5
+     "tokens": 871,
+     "ms": 10.4
     },
     "hybrid": {
      "pass": false,
@@ -3618,15 +3658,15 @@
       ]
      ],
      "rejected": [],
-     "tokens": 836,
-     "ms": 43.6
+     "tokens": 898,
+     "ms": 50.7
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 854,
-     "ms": 83.5
+     "ms": 88.1
     }
    },
    "context7": {
@@ -3648,12 +3688,14 @@
    "question": "How do I make ESLint ignore certain files?",
    "why": "9.x: `ignores` in flat config / globalIgnores() from eslint/config (lib/types/config-api.d.ts); .eslintignore only warns",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"ignores:\", \"\\\"ignores\\\"\", \"globalIgnores(\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 825,
-    "ms": 82.8
+    "tokens": 849,
+    "ms": 98.9
    },
    "variants": {
     "keyword": {
@@ -3666,8 +3708,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 909,
-     "ms": 6.4
+     "tokens": 919,
+     "ms": 7.9
     },
     "hybrid": {
      "pass": false,
@@ -3679,15 +3721,15 @@
       ]
      ],
      "rejected": [],
-     "tokens": 996,
-     "ms": 45.8
+     "tokens": 898,
+     "ms": 52.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 825,
-     "ms": 82.8
+     "tokens": 849,
+     "ms": 98.9
     }
    },
    "context7": {
@@ -3709,6 +3751,8 @@
    "question": "Which JavaScript type does Prisma Client use for Bytes fields?",
    "why": "5.x: Bytes map to Buffer (Prisma 6 upgrade guide: 'Buffer replaced by Uint8Array')",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"Buffer\"]], [\"Uint8Array\"]]",
    "lockdocs": {
     "pass": false,
     "missing": [
@@ -3717,8 +3761,8 @@
      ]
     ],
     "rejected": [],
-    "tokens": 878,
-    "ms": 78.1
+    "tokens": 846,
+    "ms": 384.9
    },
    "variants": {
     "keyword": {
@@ -3729,8 +3773,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 894,
-     "ms": 32.9
+     "tokens": 945,
+     "ms": 34.7
     },
     "hybrid": {
      "pass": false,
@@ -3740,8 +3784,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 971,
-     "ms": 42.7
+     "tokens": 963,
+     "ms": 45.5
     },
     "fetched": {
      "pass": false,
@@ -3751,8 +3795,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 878,
-     "ms": 78.1
+     "tokens": 846,
+     "ms": 384.9
     }
    },
    "context7": {
@@ -3780,42 +3824,36 @@
    "question": "Which JavaScript type does Prisma Client use for Bytes fields?",
    "why": "6.x: Bytes = Uint8Array (@prisma/client 6.19.3 runtime/library.d.ts:167)",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"Uint8Array\"]], []]",
    "lockdocs": {
-    "pass": false,
-    "missing": [
-     [
-      "Uint8Array"
-     ]
-    ],
+    "pass": true,
+    "missing": [],
     "rejected": [],
-    "tokens": 878,
-    "ms": 95.0
+    "tokens": 848,
+    "ms": 437.5
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 967,
-     "ms": 49.6
+     "tokens": 925,
+     "ms": 52.8
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 853,
-     "ms": 45.0
+     "tokens": 910,
+     "ms": 41.2
     },
     "fetched": {
-     "pass": false,
-     "missing": [
-      [
-       "Uint8Array"
-      ]
-     ],
+     "pass": true,
+     "missing": [],
      "rejected": [],
-     "tokens": 878,
-     "ms": 95.0
+     "tokens": 848,
+     "ms": 437.5
     }
    },
    "context7": {
@@ -3837,16 +3875,14 @@
    "question": "Which preview feature enables full-text search on PostgreSQL?",
    "why": "5.x: previewFeatures = [\"fullTextSearch\"] (Prisma 5 docs, full-text search)",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"fullTextSearch\"]], [\"fullTextSearchPostgres\"]]",
    "lockdocs": {
-    "pass": false,
-    "missing": [
-     [
-      "fullTextSearch"
-     ]
-    ],
+    "pass": true,
+    "missing": [],
     "rejected": [],
-    "tokens": 915,
-    "ms": 70.5
+    "tokens": 849,
+    "ms": 384.6
    },
    "variants": {
     "keyword": {
@@ -3857,8 +3893,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 829,
-     "ms": 31.9
+     "tokens": 583,
+     "ms": 35.3
     },
     "hybrid": {
      "pass": false,
@@ -3868,19 +3904,15 @@
       ]
      ],
      "rejected": [],
-     "tokens": 949,
-     "ms": 43.7
+     "tokens": 948,
+     "ms": 40.3
     },
     "fetched": {
-     "pass": false,
-     "missing": [
-      [
-       "fullTextSearch"
-      ]
-     ],
+     "pass": true,
+     "missing": [],
      "rejected": [],
-     "tokens": 915,
-     "ms": 70.5
+     "tokens": 849,
+     "ms": 384.6
     }
    },
    "context7": {
@@ -3904,16 +3936,14 @@
    "question": "Which preview feature enables full-text search on PostgreSQL?",
    "why": "6.0: renamed to fullTextSearchPostgres (Prisma 6 upgrade guide)",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"fullTextSearchPostgres\"]], []]",
    "lockdocs": {
-    "pass": false,
-    "missing": [
-     [
-      "fullTextSearchPostgres"
-     ]
-    ],
+    "pass": true,
+    "missing": [],
     "rejected": [],
-    "tokens": 850,
-    "ms": 89.6
+    "tokens": 846,
+    "ms": 471.2
    },
    "variants": {
     "keyword": {
@@ -3924,8 +3954,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 836,
-     "ms": 49.5
+     "tokens": 583,
+     "ms": 52.8
     },
     "hybrid": {
      "pass": false,
@@ -3935,19 +3965,15 @@
       ]
      ],
      "rejected": [],
-     "tokens": 921,
-     "ms": 43.5
+     "tokens": 942,
+     "ms": 44.5
     },
     "fetched": {
-     "pass": false,
-     "missing": [
-      [
-       "fullTextSearchPostgres"
-      ]
-     ],
+     "pass": true,
+     "missing": [],
      "rejected": [],
-     "tokens": 850,
-     "ms": 89.6
+     "tokens": 846,
+     "ms": 471.2
     }
    },
    "context7": {
@@ -3969,38 +3995,52 @@
    "question": "Which hook updates state based on the result of a form action?",
    "why": "18.3: no action hook; useActionState absent from @types/react 18.3.31 (0 matches), use useState/useReducer",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"useReducer\", \"useState\"]], [\"useActionState\"]]",
    "lockdocs": {
     "pass": false,
-    "missing": [],
+    "missing": [
+     [
+      "useReducer",
+      "useState"
+     ]
+    ],
     "rejected": [
      "useActionState"
     ],
-    "tokens": 951,
-    "ms": 128.8
+    "tokens": 832,
+    "ms": 409.3
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 956,
-     "ms": 58.5
+     "tokens": 863,
+     "ms": 66.2
     },
     "hybrid": {
-     "pass": true,
-     "missing": [],
-     "rejected": [],
-     "tokens": 921,
-     "ms": 45.0
-    },
-    "fetched": {
      "pass": false,
      "missing": [],
      "rejected": [
       "useActionState"
      ],
-     "tokens": 951,
-     "ms": 128.8
+     "tokens": 959,
+     "ms": 49.0
+    },
+    "fetched": {
+     "pass": false,
+     "missing": [
+      [
+       "useReducer",
+       "useState"
+      ]
+     ],
+     "rejected": [
+      "useActionState"
+     ],
+     "tokens": 832,
+     "ms": 409.3
     }
    },
    "context7": {
@@ -4029,12 +4069,14 @@
    "question": "Which hook updates state based on the result of a form action?",
    "why": "19: useActionState (@types/react 19.2.18 index.d.ts)",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"useActionState\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 869,
-    "ms": 416.7
+    "tokens": 872,
+    "ms": 464.2
    },
    "variants": {
     "keyword": {
@@ -4045,22 +4087,22 @@
       ]
      ],
      "rejected": [],
-     "tokens": 891,
-     "ms": 53.6
+     "tokens": 981,
+     "ms": 63.3
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 961,
-     "ms": 44.1
+     "ms": 43.5
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 869,
-     "ms": 416.7
+     "tokens": 872,
+     "ms": 464.2
     }
    },
    "context7": {
@@ -4082,12 +4124,14 @@
    "question": "How do I read the value of a promise during render, suspending until it resolves?",
    "why": "18.3: no `use` API (absent from @types/react 18.3.31); Suspense-enabled data library or useEffect",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"Suspense\", \"useEffect\"]], [\"function use<\", \"use(promise\"]]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 804,
-    "ms": 47.8
+    "tokens": 823,
+    "ms": 98.7
    },
    "variants": {
     "keyword": {
@@ -4099,8 +4143,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 687,
-     "ms": 6.9
+     "tokens": 403,
+     "ms": 9.0
     },
     "hybrid": {
      "pass": false,
@@ -4111,15 +4155,15 @@
       ]
      ],
      "rejected": [],
-     "tokens": 891,
-     "ms": 42.3
+     "tokens": 925,
+     "ms": 44.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 804,
-     "ms": 47.8
+     "tokens": 823,
+     "ms": 98.7
     }
    },
    "context7": {
@@ -4143,12 +4187,14 @@
    "question": "How do I read the value of a promise during render, suspending until it resolves?",
    "why": "19: use(promise) (@types/react 19.2.18 index.d.ts:1973 `function use<T>(usable: Usable<T>): T`)",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"use(\", \"function use<\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 859,
-    "ms": 93.9
+    "tokens": 854,
+    "ms": 104.4
    },
    "variants": {
     "keyword": {
@@ -4160,8 +4206,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 664,
-     "ms": 6.7
+     "tokens": 923,
+     "ms": 8.7
     },
     "hybrid": {
      "pass": false,
@@ -4172,15 +4218,15 @@
       ]
      ],
      "rejected": [],
-     "tokens": 896,
-     "ms": 48.9
+     "tokens": 941,
+     "ms": 45.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 859,
-     "ms": 93.9
+     "tokens": 854,
+     "ms": 104.4
     }
    },
    "context7": {
@@ -4202,34 +4248,36 @@
    "question": "How do I configure options separately for the client and SSR environments in the Vite config?",
    "why": "5.4: `ssr` options / build.ssr; no `environments` in UserConfig (dist/node/index.d.ts, 0 matches)",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"ssr:\", \"ssr?:\", \"SSROptions\", \"build.ssr\"]], [\"environments:\"]]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 907,
-    "ms": 164.4
+    "tokens": 897,
+    "ms": 185.9
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 915,
-     "ms": 43.8
+     "tokens": 880,
+     "ms": 50.2
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 963,
-     "ms": 45.6
+     "tokens": 966,
+     "ms": 45.3
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 907,
-     "ms": 164.4
+     "tokens": 897,
+     "ms": 185.9
     }
    },
    "context7": {
@@ -4253,34 +4301,36 @@
    "question": "How do I configure options separately for the client and SSR environments in the Vite config?",
    "why": "6.x: Environment API, `environments?: Record<string, EnvironmentOptions>` (vite 6.4.3 dist/node/index.d.ts:3901)",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"environments\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 803,
-    "ms": 142.2
+    "tokens": 839,
+    "ms": 164.9
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 902,
-     "ms": 48.2
+     "tokens": 797,
+     "ms": 55.4
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 874,
-     "ms": 44.7
+     "tokens": 899,
+     "ms": 51.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 803,
-     "ms": 142.2
+     "tokens": 839,
+     "ms": 164.9
     }
    },
    "context7": {
@@ -4302,12 +4352,14 @@
    "question": "How do I define a route that matches every remaining path segment with a wildcard?",
    "why": "4.x: app.get('*') / '/files/*' (path-to-regexp 0.1; express 4 routing guide)",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"'*'\", \"\\\"*\\\"\", \"/*'\", \"/*\\\"\"]], [\"*splat\"]]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 730,
-    "ms": 85.8
+    "tokens": 813,
+    "ms": 95.9
    },
    "variants": {
     "keyword": {
@@ -4321,8 +4373,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 1113,
-     "ms": 18.1
+     "tokens": 900,
+     "ms": 22.9
     },
     "hybrid": {
      "pass": false,
@@ -4335,15 +4387,15 @@
       ]
      ],
      "rejected": [],
-     "tokens": 1019,
-     "ms": 42.8
+     "tokens": 163,
+     "ms": 43.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 730,
-     "ms": 85.8
+     "tokens": 813,
+     "ms": 95.9
     }
    },
    "context7": {
@@ -4367,12 +4419,14 @@
    "question": "How do I define a route that matches every remaining path segment with a wildcard?",
    "why": "5.x: wildcards must be named, '/*splat' (express 5 migration guide, path-to-regexp v8)",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"*splat\", \"/*name\", \"{*\", \"named wildcard\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 944,
-    "ms": 87.2
+    "tokens": 932,
+    "ms": 97.0
    },
    "variants": {
     "keyword": {
@@ -4386,8 +4440,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 603,
-     "ms": 8.5
+     "tokens": 473,
+     "ms": 8.8
     },
     "hybrid": {
      "pass": false,
@@ -4401,14 +4455,14 @@
      ],
      "rejected": [],
      "tokens": 968,
-     "ms": 37.8
+     "ms": 42.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 944,
-     "ms": 87.2
+     "tokens": 932,
+     "ms": 97.0
     }
    },
    "context7": {
@@ -4430,34 +4484,36 @@
    "question": "How do I declare a model column with Python type annotations?",
    "why": "1.4: Column(...) on declarative classes; mapped_column absent in 1.4.54 orm/ (verified)",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"Column(\"]], [\"mapped_column\"]]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 869,
-    "ms": 854.9
+    "tokens": 852,
+    "ms": 977.9
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 857,
-     "ms": 397.4
+     "tokens": 847,
+     "ms": 431.6
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 860,
-     "ms": 89.3
+     "ms": 92.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 869,
-     "ms": 854.9
+     "tokens": 852,
+     "ms": 977.9
     }
    },
    "context7": {
@@ -4481,12 +4537,14 @@
    "question": "How do I declare a model column with Python type annotations?",
    "why": "2.0: Mapped[...] = mapped_column() (sqlalchemy 2.0.54 orm/_orm_constructors.py)",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"mapped_column\", \"Mapped[\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 841,
-    "ms": 1036.5
+    "tokens": 815,
+    "ms": 1167.4
    },
    "variants": {
     "keyword": {
@@ -4498,22 +4556,22 @@
       ]
      ],
      "rejected": [],
-     "tokens": 913,
-     "ms": 518.7
+     "tokens": 810,
+     "ms": 575.8
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 805,
-     "ms": 102.4
+     "tokens": 872,
+     "ms": 104.2
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 841,
-     "ms": 1036.5
+     "tokens": 815,
+     "ms": 1167.4
     }
    },
    "context7": {
@@ -4535,12 +4593,14 @@
    "question": "How do I create the declarative base class for my models?",
    "why": "1.4: Base = declarative_base(); DeclarativeBase class absent in 1.4.54 (verified)",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"declarative_base(\"]], [\"(DeclarativeBase)\"]]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 831,
-    "ms": 152.1
+    "tokens": 828,
+    "ms": 166.4
    },
    "variants": {
     "keyword": {
@@ -4548,21 +4608,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 917,
-     "ms": 47.2
+     "ms": 54.0
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 919,
-     "ms": 85.9
+     "tokens": 931,
+     "ms": 95.2
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 831,
-     "ms": 152.1
+     "tokens": 828,
+     "ms": 166.4
     }
    },
    "context7": {
@@ -4586,34 +4646,36 @@
    "question": "How do I create the declarative base class for my models?",
    "why": "2.0: class Base(DeclarativeBase) (sqlalchemy 2.0.54 orm/decl_api.py)",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"DeclarativeBase\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 860,
-    "ms": 167.2
+    "tokens": 863,
+    "ms": 189.8
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 956,
-     "ms": 56.8
+     "tokens": 831,
+     "ms": 67.4
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 920,
-     "ms": 94.3
+     "tokens": 897,
+     "ms": 103.4
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 860,
-     "ms": 167.2
+     "tokens": 863,
+     "ms": 189.8
     }
    },
    "context7": {
@@ -4635,16 +4697,14 @@
    "question": "How do I set a database-computed default value for a model field?",
    "why": "4.2: only Python-side default=; db_default absent in 4.2.30 fields/__init__.py (0 matches)",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"default=\"]], [\"db_default\"]]",
    "lockdocs": {
-    "pass": false,
-    "missing": [
-     [
-      "default="
-     ]
-    ],
+    "pass": true,
+    "missing": [],
     "rejected": [],
-    "tokens": 852,
-    "ms": 482.8
+    "tokens": 812,
+    "ms": 1185.4
    },
    "variants": {
     "keyword": {
@@ -4655,8 +4715,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 848,
-     "ms": 396.2
+     "tokens": 770,
+     "ms": 444.6
     },
     "hybrid": {
      "pass": false,
@@ -4666,19 +4726,15 @@
       ]
      ],
      "rejected": [],
-     "tokens": 835,
-     "ms": 87.7
+     "tokens": 839,
+     "ms": 101.1
     },
     "fetched": {
-     "pass": false,
-     "missing": [
-      [
-       "default="
-      ]
-     ],
+     "pass": true,
+     "missing": [],
      "rejected": [],
-     "tokens": 852,
-     "ms": 482.8
+     "tokens": 812,
+     "ms": 1185.4
     }
    },
    "context7": {
@@ -4700,16 +4756,14 @@
    "question": "How do I set a database-computed default value for a model field?",
    "why": "5.0+: Field.db_default (django 5.1.15 fields/__init__.py, 19 matches)",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"db_default\"]], []]",
    "lockdocs": {
-    "pass": false,
-    "missing": [
-     [
-      "db_default"
-     ]
-    ],
+    "pass": true,
+    "missing": [],
     "rejected": [],
-    "tokens": 858,
-    "ms": 490.7
+    "tokens": 802,
+    "ms": 1214.2
    },
    "variants": {
     "keyword": {
@@ -4720,30 +4774,22 @@
       ]
      ],
      "rejected": [],
-     "tokens": 847,
-     "ms": 420.8
+     "tokens": 860,
+     "ms": 473.4
     },
     "hybrid": {
-     "pass": false,
-     "missing": [
-      [
-       "db_default"
-      ]
-     ],
+     "pass": true,
+     "missing": [],
      "rejected": [],
-     "tokens": 841,
-     "ms": 93.9
+     "tokens": 777,
+     "ms": 104.4
     },
     "fetched": {
-     "pass": false,
-     "missing": [
-      [
-       "db_default"
-      ]
-     ],
+     "pass": true,
+     "missing": [],
      "rejected": [],
-     "tokens": 858,
-     "ms": 490.7
+     "tokens": 802,
+     "ms": 1214.2
     }
    },
    "context7": {
@@ -4765,12 +4811,14 @@
    "question": "How do I require login for all views by default?",
    "why": "4.2: @login_required / LoginRequiredMixin per view; LoginRequiredMiddleware absent in 4.2.30",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"login_required\", \"LoginRequiredMixin\"]], [\"LoginRequiredMiddleware\"]]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 816,
-    "ms": 86.6
+    "tokens": 790,
+    "ms": 205.6
    },
    "variants": {
     "keyword": {
@@ -4778,21 +4826,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 862,
-     "ms": 46.2
+     "ms": 57.8
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 846,
-     "ms": 89.2
+     "tokens": 853,
+     "ms": 101.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 816,
-     "ms": 86.6
+     "tokens": 790,
+     "ms": 205.6
     }
    },
    "context7": {
@@ -4814,12 +4862,14 @@
    "question": "How do I require login for all views by default?",
    "why": "5.1: django.contrib.auth.middleware.LoginRequiredMiddleware (django 5.1.15)",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"LoginRequiredMiddleware\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 855,
-    "ms": 91.7
+    "tokens": 736,
+    "ms": 207.1
    },
    "variants": {
     "keyword": {
@@ -4827,21 +4877,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 520,
-     "ms": 46.3
+     "ms": 58.4
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 835,
-     "ms": 94.5
+     "tokens": 845,
+     "ms": 97.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 855,
-     "ms": 91.7
+     "tokens": 736,
+     "ms": 207.1
     }
    },
    "context7": {
@@ -4863,6 +4913,8 @@
    "question": "How do I run code when the application starts up and shuts down?",
    "why": "0.88: @app.on_event('startup'/'shutdown'); FastAPI(lifespan=) absent (0.88.0 applications.py, 0 matches; added 0.93)",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"on_event\"]], [\"lifespan=\"]]",
    "lockdocs": {
     "pass": false,
     "missing": [
@@ -4871,8 +4923,8 @@
      ]
     ],
     "rejected": [],
-    "tokens": 833,
-    "ms": 180.9
+    "tokens": 873,
+    "ms": 203.4
    },
    "variants": {
     "keyword": {
@@ -4883,8 +4935,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 576,
-     "ms": 34.8
+     "tokens": 372,
+     "ms": 34.4
     },
     "hybrid": {
      "pass": false,
@@ -4895,7 +4947,7 @@
      ],
      "rejected": [],
      "tokens": 555,
-     "ms": 47.9
+     "ms": 47.4
     },
     "fetched": {
      "pass": false,
@@ -4905,8 +4957,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 833,
-     "ms": 180.9
+     "tokens": 873,
+     "ms": 203.4
     }
    },
    "context7": {
@@ -4934,12 +4986,14 @@
    "question": "How do I run code when the application starts up and shuts down?",
    "why": "0.115: FastAPI(lifespan=...) with asynccontextmanager (0.115.14 applications.py)",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"lifespan\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 867,
-    "ms": 231.3
+    "tokens": 828,
+    "ms": 256.8
    },
    "variants": {
     "keyword": {
@@ -4950,8 +5004,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 900,
-     "ms": 47.7
+     "tokens": 729,
+     "ms": 49.9
     },
     "hybrid": {
      "pass": false,
@@ -4961,15 +5015,15 @@
       ]
      ],
      "rejected": [],
-     "tokens": 936,
-     "ms": 53.4
+     "tokens": 898,
+     "ms": 55.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 867,
-     "ms": 231.3
+     "tokens": 828,
+     "ms": 256.8
     }
    },
    "context7": {
@@ -4991,12 +5045,14 @@
    "question": "How do I declare a query parameter with validation metadata?",
    "why": "0.88: q: str = Query(default=None, max_length=50); Annotated support added in 0.95 (0.88.0 dependencies/utils.py, 0 matches)",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"Query(\"]], [\"Annotated[\"]]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 875,
-    "ms": 69.3
+    "tokens": 865,
+    "ms": 75.7
    },
    "variants": {
     "keyword": {
@@ -5007,8 +5063,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 884,
-     "ms": 15.1
+     "tokens": 803,
+     "ms": 15.4
     },
     "hybrid": {
      "pass": false,
@@ -5018,15 +5074,15 @@
       ]
      ],
      "rejected": [],
-     "tokens": 975,
-     "ms": 49.6
+     "tokens": 985,
+     "ms": 52.4
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 875,
-     "ms": 69.3
+     "tokens": 865,
+     "ms": 75.7
     }
    },
    "context7": {
@@ -5050,34 +5106,36 @@
    "question": "How do I declare a query parameter with validation metadata?",
    "why": "0.115: q: Annotated[str | None, Query(max_length=50)] recommended (0.115.14 dependencies/utils.py)",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"Annotated[\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 838,
-    "ms": 70.1
+    "tokens": 766,
+    "ms": 81.7
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 926,
-     "ms": 15.5
+     "tokens": 933,
+     "ms": 15.7
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 926,
-     "ms": 54.0
+     "tokens": 930,
+     "ms": 51.1
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 838,
-     "ms": 70.1
+     "tokens": 766,
+     "ms": 81.7
     }
    },
    "context7": {
@@ -5099,34 +5157,36 @@
    "question": "How do I run code before a request is completed, for example to redirect or rewrite?",
    "why": "15.1: middleware.ts / NextMiddleware; Proxy does not exist before 16",
    "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"middleware\"]], [\"NextProxy\", \"proxy.ts\"]]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 831,
-    "ms": 90.1
+    "tokens": 797,
+    "ms": 103.5
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 363,
-     "ms": 19.7
+     "tokens": 897,
+     "ms": 26.4
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 936,
-     "ms": 61.2
+     "tokens": 946,
+     "ms": 63.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 831,
-     "ms": 90.1
+     "tokens": 797,
+     "ms": 103.5
     }
    },
    "context7": {
@@ -5150,34 +5210,36 @@
    "question": "How do I run code before a request is completed, for example to redirect or rewrite?",
    "why": "16: middleware renamed to proxy (next 16.3.6 dist/server/web/types.d.ts: '@deprecated Use NextProxy instead. Middleware has been renamed to Proxy.')",
    "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"proxy.ts\", \"proxy.js\", \"NextProxy\", \"export function proxy\", \"Proxy allows\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 869,
-    "ms": 629.5
+    "tokens": 816,
+    "ms": 718.2
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 837,
-     "ms": 431.7
+     "tokens": 847,
+     "ms": 520.0
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 789,
-     "ms": 119.9
+     "tokens": 865,
+     "ms": 142.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 869,
-     "ms": 629.5
+     "tokens": 816,
+     "ms": 718.2
     }
    },
    "context7": {
@@ -5190,40 +5252,2052 @@
     "version_match": "same major",
     "reused": true
    }
+  },
+  {
+   "id": "next14-params",
+   "project": "next14",
+   "package": "next",
+   "version": "14.2.35",
+   "question": "How do I read the dynamic route parameters in a page component?",
+   "why": "14: params is a plain object prop (no 'await params' in v14.2.35 docs/02-app/02-api-reference/02-file-conventions/page.mdx)",
+   "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"params\"]], [\"await params\", \"Promise<{\"]]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 881,
+    "ms": 96.9
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 874,
+     "ms": 24.6
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 917,
+     "ms": 66.1
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 881,
+     "ms": 96.9
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1037,
+    "ms": 2606,
+    "library": "/vercel/next.js/v14.3.0-canary.87",
+    "version_match": "same major",
+    "reused": true
+   }
+  },
+  {
+   "id": "next15-params",
+   "project": "next15",
+   "package": "next",
+   "version": "15.1.0",
+   "question": "How do I read the dynamic route parameters in a page component?",
+   "why": "15: params is a Promise (v15.1.0 page.mdx, 18 matches)",
+   "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"await params\", \"Promise<{\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 880,
+    "ms": 104.9
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "await params",
+       "Promise<{"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 927,
+     "ms": 27.2
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "await params",
+       "Promise<{"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 946,
+     "ms": 69.7
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 880,
+     "ms": 104.9
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1427,
+    "ms": 2666,
+    "library": "/vercel/next.js/v15.1.11",
+    "version_match": "same major",
+    "reused": true
+   }
+  },
+  {
+   "id": "tw3-dark",
+   "project": "tailwind3",
+   "package": "tailwindcss",
+   "version": "3.4.19",
+   "question": "How do I switch dark mode to a class instead of the operating system setting?",
+   "why": "v3: darkMode: 'selector' / 'class' in tailwind.config.js (v3 site dark-mode.mdx)",
+   "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"darkMode\"]], [\"@custom-variant\"]]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 896,
+    "ms": 65.7
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 420,
+     "ms": 3.5
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 420,
+     "ms": 43.6
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 896,
+     "ms": 65.7
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 578,
+    "ms": 6783,
+    "library": "/erimicel/select2-tailwindcss-theme",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "tw4-dark",
+   "project": "tailwind4",
+   "package": "tailwindcss",
+   "version": "4.1.18",
+   "question": "How do I switch dark mode to a class instead of the operating system setting?",
+   "why": "v4: @custom-variant dark (&:where(.dark, .dark *)) in CSS (v4 site dark-mode.mdx)",
+   "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"@custom-variant\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 874,
+    "ms": 67.8
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "@custom-variant"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 297,
+     "ms": 2.1
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "@custom-variant"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 516,
+     "ms": 39.3
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 874,
+     "ms": 67.8
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [
+     [
+      "@custom-variant"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 578,
+    "ms": 6704,
+    "library": "/erimicel/select2-tailwindcss-theme",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "react18-ref",
+   "project": "react18",
+   "package": "react",
+   "version": "18.3.1",
+   "question": "How do I pass a ref through to a child component?",
+   "why": "18: forwardRef (@types/react 18.3.31)",
+   "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"forwardRef\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 899,
+    "ms": 101.2
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 856,
+     "ms": 8.8
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 907,
+     "ms": 43.9
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 899,
+     "ms": 101.2
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 570,
+    "ms": 2826,
+    "library": "/reactjs/react.dev",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "react19-ref",
+   "project": "react19",
+   "package": "react",
+   "version": "19.2.8",
+   "question": "How do I pass a ref through to a child component?",
+   "why": "19: ref is a regular prop; forwardRef is no longer necessary (react.dev forwardRef.md)",
+   "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"as a prop\", \"no longer necessary\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 796,
+    "ms": 111.4
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "as a prop",
+       "no longer necessary"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 925,
+     "ms": 8.7
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "as a prop",
+       "no longer necessary"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 816,
+     "ms": 46.4
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 796,
+     "ms": 111.4
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 587,
+    "ms": 2618,
+    "library": "/reactjs/react.dev",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "rr6-types",
+   "project": "rr6",
+   "package": "react-router",
+   "version": "6.26.2",
+   "question": "How do I get typed loader data in my route component?",
+   "why": "v6: useLoaderData() (docs/hooks/use-loader-data.md); generated route types arrived in v7",
+   "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"useLoaderData\"]], [\"Route.ComponentProps\", \"+types\"]]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 790,
+    "ms": 57.1
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 792,
+     "ms": 3.9
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 881,
+     "ms": 37.9
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 790,
+     "ms": 57.1
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [],
+    "rejected": [
+     "Route.ComponentProps",
+     "+types"
+    ],
+    "tokens": 848,
+    "ms": 2558,
+    "library": "/websites/reactrouter",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "rr7-types",
+   "project": "rr7",
+   "package": "react-router",
+   "version": "7.1.1",
+   "question": "How do I get typed loader data in my route component?",
+   "why": "v7: generated ./+types/<route> and Route.ComponentProps (react-router@7.1.1 docs/start/framework/data-loading.md)",
+   "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"Route.ComponentProps\", \"+types\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 851,
+    "ms": 58.4
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "Route.ComponentProps",
+       "+types"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 918,
+     "ms": 9.2
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "Route.ComponentProps",
+       "+types"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 868,
+     "ms": 48.1
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 851,
+     "ms": 58.4
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 913,
+    "ms": 2768,
+    "library": "/websites/reactrouter",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "eslint8-globals",
+   "project": "eslint8",
+   "package": "eslint",
+   "version": "8.57.1",
+   "question": "How do I tell ESLint about browser global variables?",
+   "why": "8: env: { browser: true } in .eslintrc (v8.57.1 language-options.md)",
+   "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"\\\"browser\\\": true\", \"browser: true\"]], []]",
+   "lockdocs": {
+    "pass": false,
+    "missing": [
+     [
+      "\"browser\": true",
+      "browser: true"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 768,
+    "ms": 95.2
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "\"browser\": true",
+       "browser: true"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 866,
+     "ms": 9.9
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "\"browser\": true",
+       "browser: true"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 843,
+     "ms": 46.1
+    },
+    "fetched": {
+     "pass": false,
+     "missing": [
+      [
+       "\"browser\": true",
+       "browser: true"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 768,
+     "ms": 95.2
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 654,
+    "ms": 2587,
+    "library": "/eslint/eslint/v8.57.1",
+    "version_match": "exact",
+    "reused": true
+   }
+  },
+  {
+   "id": "eslint9-globals",
+   "project": "eslint9",
+   "package": "eslint",
+   "version": "9.39.5",
+   "question": "How do I tell ESLint about browser global variables?",
+   "why": "9: languageOptions: { globals: globals.browser } (v9.39.5 language-options.md)",
+   "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"globals.browser\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 741,
+    "ms": 96.4
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "globals.browser"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 1027,
+     "ms": 7.8
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "globals.browser"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 1017,
+     "ms": 40.8
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 741,
+     "ms": 96.4
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 602,
+    "ms": 2783,
+    "library": "/eslint/eslint/v9.39.3",
+    "version_match": "same major",
+    "reused": true
+   }
+  },
+  {
+   "id": "dj51-generated",
+   "project": "django51",
+   "package": "django",
+   "version": "5.1.15",
+   "question": "How do I add a model field whose value the database computes from other columns?",
+   "why": "5.0+: models.GeneratedField (5.1.15 docs/ref/models/fields.txt)",
+   "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"GeneratedField\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 750,
+    "ms": 217.7
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "GeneratedField"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 798,
+     "ms": 60.3
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "GeneratedField"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 803,
+     "ms": 99.0
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 750,
+     "ms": 217.7
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 616,
+    "ms": 2802,
+    "library": "/django/django",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "fa0115-querymodel",
+   "project": "fastapi0115",
+   "package": "fastapi",
+   "version": "0.115.14",
+   "question": "How do I declare a group of query parameters with a Pydantic model?",
+   "why": "0.115.0+: query parameter models (docs/en/docs/tutorial/query-param-models.md)",
+   "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"Query Parameter Models\", \"FilterParams\", \"query parameter model\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 887,
+    "ms": 84.7
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "Query Parameter Models",
+       "FilterParams",
+       "query parameter model"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 896,
+     "ms": 16.6
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "Query Parameter Models",
+       "FilterParams",
+       "query parameter model"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 877,
+     "ms": 56.1
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 887,
+     "ms": 84.7
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 546,
+    "ms": 2583,
+    "library": "/websites/fastapi_tiangolo",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "tokio-channel",
+   "project": "axum08",
+   "package": "tokio",
+   "version": "1.43.0",
+   "question": "How do I send messages from many tasks to a single consumer task?",
+   "why": "tokio::sync::mpsc",
+   "line": "single",
+   "set": "tuning",
+   "grading": "[[[\"mpsc\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 881,
+    "ms": 70.7
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 851,
+     "ms": 27.6
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 842,
+     "ms": 64.8
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 881,
+     "ms": 70.7
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1489,
+    "ms": 2830,
+    "library": "/websites/rs_tokio_tokio",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "zod3-datetime",
+   "project": "zod3",
+   "package": "zod",
+   "version": "3.23.8",
+   "question": "How do I validate an ISO 8601 datetime string?",
+   "why": "3.23: z.string().datetime(); z.iso arrived in zod 4 (0 matches in v3.23.8 README)",
+   "line": "older",
+   "set": "tuning",
+   "grading": "[[[\".datetime(\"]], [\"z.iso.\"]]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1162,
+    "ms": 44.0
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 985,
+     "ms": 6.4
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 854,
+     "ms": 45.0
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 1162,
+     "ms": 44.0
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [],
+    "rejected": [
+     "z.iso."
+    ],
+    "tokens": 1110,
+    "ms": 3012,
+    "library": "/colinhacks/zod/v3.24.2",
+    "version_match": "same major",
+    "reused": true
+   }
+  },
+  {
+   "id": "zod4-datetime",
+   "project": "zod4",
+   "package": "zod",
+   "version": "4.1.5",
+   "question": "How do I validate an ISO 8601 datetime string?",
+   "why": "4: z.iso.datetime() (v4.1.5 packages/docs/content/api.mdx)",
+   "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"z.iso.datetime\", \"iso.datetime(\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1158,
+    "ms": 61.1
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 510,
+     "ms": 13.2
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 386,
+     "ms": 56.6
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 1158,
+     "ms": 61.1
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1499,
+    "ms": 2418,
+    "library": "/colinhacks/zod/v4.0.1",
+    "version_match": "same major",
+    "reused": true
+   }
+  },
+  {
+   "id": "pyd1-frozen",
+   "project": "pydantic1",
+   "package": "pydantic",
+   "version": "1.10.18",
+   "question": "How do I make model instances immutable?",
+   "why": "v1: class Config: allow_mutation = False / frozen = True (v1.10.18 docs/usage/model_config.md). Rejects the v2 idiom model_config = ConfigDict",
+   "line": "older",
+   "set": "tuning",
+   "grading": "[[[\"allow_mutation\"]], [\"model_config = ConfigDict\"]]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 930,
+    "ms": 69.0
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 972,
+     "ms": 19.9
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "allow_mutation"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 949,
+     "ms": 58.3
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 930,
+     "ms": 69.0
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [],
+    "rejected": [
+     "model_config = ConfigDict"
+    ],
+    "tokens": 1092,
+    "ms": 1857,
+    "library": "/pydantic/pydantic",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "pyd2-frozen",
+   "project": "pydantic2",
+   "package": "pydantic",
+   "version": "2.9.2",
+   "question": "How do I make model instances immutable?",
+   "why": "v2: model_config = ConfigDict(frozen=True) (v2.9.2 docs/concepts/models.md)",
+   "line": "newer",
+   "set": "tuning",
+   "grading": "[[[\"frozen=True\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 884,
+    "ms": 81.9
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "frozen=True"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 829,
+     "ms": 25.3
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "frozen=True"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 917,
+     "ms": 59.1
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 884,
+     "ms": 81.9
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1214,
+    "ms": 2487,
+    "library": "/pydantic/pydantic",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "next15-form",
+   "project": "next15",
+   "package": "next",
+   "version": "15.1.0",
+   "question": "How do I build a search form that navigates to a results page with client-side navigation?",
+   "why": "15.0+: <Form> from next/form (v15.1.0 docs/01-app/03-api-reference/02-components/form.mdx)",
+   "line": "newer",
+   "set": "held-out",
+   "grading": "[[[\"next/form\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 898,
+    "ms": 103.3
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "next/form"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 895,
+     "ms": 27.4
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "next/form"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 881,
+     "ms": 71.0
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 898,
+     "ms": 103.3
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 950,
+    "ms": 3170,
+    "library": "/vercel/next.js/v15.1.11",
+    "version_match": "same major",
+    "reused": true
+   }
+  },
+  {
+   "id": "next16-cache",
+   "project": "next16",
+   "package": "next",
+   "version": "16.3.6",
+   "question": "How do I cache the result of an expensive function across requests?",
+   "why": "16: the 'use cache' directive (v16.3.6 docs/01-app/03-api-reference/01-directives/use-cache.mdx)",
+   "line": "newer",
+   "set": "held-out",
+   "grading": "[[[\"use cache\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 856,
+    "ms": 142.4
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 881,
+     "ms": 92.0
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 834,
+     "ms": 147.5
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 856,
+     "ms": 142.4
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1258,
+    "ms": 3159,
+    "library": "/vercel/next.js/v16.2.9",
+    "version_match": "same major",
+    "reused": true
+   }
+  },
+  {
+   "id": "zod3-meta",
+   "project": "zod3",
+   "package": "zod",
+   "version": "3.23.8",
+   "question": "How do I attach a description to a schema?",
+   "why": "3.23: .describe(); .meta() arrived in zod 4 (0 matches in v3.23.8 README)",
+   "line": "older",
+   "set": "held-out",
+   "grading": "[[[\".describe(\"]], [\".meta(\"]]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 975,
+    "ms": 45.2
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 858,
+     "ms": 6.5
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 957,
+     "ms": 40.1
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 975,
+     "ms": 45.2
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 132,
+    "ms": 2243,
+    "library": "/colinhacks/zod/v3.24.2",
+    "version_match": "same major",
+    "reused": true
+   }
+  },
+  {
+   "id": "zod4-meta",
+   "project": "zod4",
+   "package": "zod",
+   "version": "4.1.5",
+   "question": "How do I attach a description to a schema?",
+   "why": "4: .meta() with the global registry (v4.1.5 packages/docs/content/metadata.mdx)",
+   "line": "newer",
+   "set": "held-out",
+   "grading": "[[[\".meta(\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 888,
+    "ms": 55.0
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       ".meta("
+      ]
+     ],
+     "rejected": [],
+     "tokens": 196,
+     "ms": 12.1
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       ".meta("
+      ]
+     ],
+     "rejected": [],
+     "tokens": 1139,
+     "ms": 48.8
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 888,
+     "ms": 55.0
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1048,
+    "ms": 3495,
+    "library": "/colinhacks/zod/v4.0.1",
+    "version_match": "same major",
+    "reused": true
+   }
+  },
+  {
+   "id": "pyd2-computed",
+   "project": "pydantic2",
+   "package": "pydantic",
+   "version": "2.9.2",
+   "question": "How do I include a computed property when serializing a model?",
+   "why": "2: @computed_field (v2.9.2 docs/concepts/fields.md)",
+   "line": "newer",
+   "set": "held-out",
+   "grading": "[[[\"computed_field\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 892,
+    "ms": 81.5
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 901,
+     "ms": 25.6
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 901,
+     "ms": 63.9
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 892,
+     "ms": 81.5
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1135,
+    "ms": 2870,
+    "library": "/pydantic/pydantic",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "pyd1-json",
+   "project": "pydantic1",
+   "package": "pydantic",
+   "version": "1.10.18",
+   "question": "How do I parse and validate a model from a JSON string?",
+   "why": "1: Model.parse_raw() (v1.10.18 docs/usage/models.md)",
+   "line": "older",
+   "set": "held-out",
+   "grading": "[[[\"parse_raw\"]], [\"model_validate_json\"]]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 938,
+    "ms": 69.8
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "parse_raw"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 909,
+     "ms": 19.7
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "parse_raw"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 882,
+     "ms": 66.5
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 938,
+     "ms": 69.8
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [
+     [
+      "parse_raw"
+     ]
+    ],
+    "rejected": [
+     "model_validate_json"
+    ],
+    "tokens": 1319,
+    "ms": 2189,
+    "library": "/pydantic/pydantic",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "pyd2-json",
+   "project": "pydantic2",
+   "package": "pydantic",
+   "version": "2.9.2",
+   "question": "How do I parse and validate a model from a JSON string?",
+   "why": "2: Model.model_validate_json() (v2.9.2 docs/concepts/models.md)",
+   "line": "newer",
+   "set": "held-out",
+   "grading": "[[[\"model_validate_json\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 872,
+    "ms": 79.0
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 861,
+     "ms": 25.1
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 908,
+     "ms": 64.0
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 872,
+     "ms": 79.0
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1319,
+    "ms": 1630,
+    "library": "/pydantic/pydantic",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "sa20-dataclass",
+   "project": "sqlalchemy20",
+   "package": "sqlalchemy",
+   "version": "2.0.54",
+   "question": "How do I declare ORM models that are also Python dataclasses?",
+   "why": "2.0: MappedAsDataclass (rel_2_0_54 doc/build/orm/dataclasses.rst)",
+   "line": "newer",
+   "set": "held-out",
+   "grading": "[[[\"MappedAsDataclass\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 867,
+    "ms": 192.9
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 1017,
+     "ms": 62.5
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 1017,
+     "ms": 102.7
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 867,
+     "ms": 192.9
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 976,
+    "ms": 2516,
+    "library": "/websites/sqlalchemy_en_20",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "eslint8-plugins",
+   "project": "eslint8",
+   "package": "eslint",
+   "version": "8.57.1",
+   "question": "How do I add a plugin to my ESLint configuration?",
+   "why": "8: \"plugins\": [...] in .eslintrc (v8.57.1 docs/src/use/configure/plugins.md)",
+   "line": "older",
+   "set": "held-out",
+   "grading": "[[[\"\\\"plugins\\\": [\", \"plugins: [\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 784,
+    "ms": 90.0
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "\"plugins\": [",
+       "plugins: ["
+      ]
+     ],
+     "rejected": [],
+     "tokens": 895,
+     "ms": 10.3
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "\"plugins\": [",
+       "plugins: ["
+      ]
+     ],
+     "rejected": [],
+     "tokens": 905,
+     "ms": 47.9
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 784,
+     "ms": 90.0
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 990,
+    "ms": 2698,
+    "library": "/eslint/eslint/v8.57.1",
+    "version_match": "exact",
+    "reused": true
+   }
+  },
+  {
+   "id": "eslint9-plugins",
+   "project": "eslint9",
+   "package": "eslint",
+   "version": "9.39.5",
+   "question": "How do I add a plugin to my ESLint configuration?",
+   "why": "9: plugins: { name: plugin } in eslint.config.js (v9.39.5 docs/src/use/configure/plugins.md)",
+   "line": "newer",
+   "set": "held-out",
+   "grading": "[[[\"plugins: {\"]], []]",
+   "lockdocs": {
+    "pass": false,
+    "missing": [
+     [
+      "plugins: {"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 788,
+    "ms": 101.2
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "plugins: {"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 943,
+     "ms": 7.8
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "plugins: {"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 943,
+     "ms": 48.0
+    },
+    "fetched": {
+     "pass": false,
+     "missing": [
+      [
+       "plugins: {"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 788,
+     "ms": 101.2
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 959,
+    "ms": 2626,
+    "library": "/eslint/eslint/v9.39.3",
+    "version_match": "same major",
+    "reused": true
+   }
+  },
+  {
+   "id": "vite6-envapi",
+   "project": "vite6",
+   "package": "vite",
+   "version": "6.4.3",
+   "question": "How does a plugin know which environment it is running in?",
+   "why": "6: this.environment in plugin hooks (v6.4.3 docs/guide/api-environment-plugins.md)",
+   "line": "newer",
+   "set": "held-out",
+   "grading": "[[[\"this.environment\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 673,
+    "ms": 62.4
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 917,
+     "ms": 10.5
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "this.environment"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 851,
+     "ms": 51.5
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 673,
+     "ms": 62.4
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 840,
+    "ms": 2923,
+    "library": "/vitejs/vite",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "react18-context",
+   "project": "react18",
+   "package": "react",
+   "version": "18.3.1",
+   "question": "How do I provide a context value to child components?",
+   "why": "18: <SomeContext.Provider value> (@types/react 18.3.31)",
+   "line": "older",
+   "set": "held-out",
+   "grading": "[[[\".Provider\"]], [\"Starting in React 19\"]]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 823,
+    "ms": 97.5
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 952,
+     "ms": 8.7
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       ".Provider"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 948,
+     "ms": 42.4
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 823,
+     "ms": 97.5
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [],
+    "rejected": [
+     "Starting in React 19"
+    ],
+    "tokens": 1155,
+    "ms": 2796,
+    "library": "/reactjs/react.dev",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "react19-context",
+   "project": "react19",
+   "package": "react",
+   "version": "19.2.8",
+   "question": "How do I provide a context value to child components?",
+   "why": "19: render <SomeContext> as the provider; .Provider is legacy (react.dev createContext.md)",
+   "line": "newer",
+   "set": "held-out",
+   "grading": "[[[\"Starting in React 19\", \"is a legacy way\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 812,
+    "ms": 104.1
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "Starting in React 19",
+       "is a legacy way"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 902,
+     "ms": 8.9
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "Starting in React 19",
+       "is a legacy way"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 903,
+     "ms": 51.1
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 812,
+     "ms": 104.1
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 778,
+    "ms": 2187,
+    "library": "/reactjs/react.dev",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "rr7-routesfile",
+   "project": "rr7",
+   "package": "react-router",
+   "version": "7.1.1",
+   "question": "Where do I configure my app's routes?",
+   "why": "7 framework mode: app/routes.ts (react-router@7.1.1 docs/start/framework/routing.md)",
+   "line": "newer",
+   "set": "held-out",
+   "grading": "[[[\"routes.ts\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 898,
+    "ms": 55.4
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "routes.ts"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 883,
+     "ms": 9.2
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "routes.ts"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 923,
+     "ms": 49.5
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 898,
+     "ms": 55.4
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 583,
+    "ms": 2735,
+    "library": "/websites/reactrouter",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "dj51-facets",
+   "project": "django51",
+   "package": "django",
+   "version": "5.1.15",
+   "question": "How do I show counts next to the admin list filters?",
+   "why": "5.0+: ModelAdmin.show_facets (5.1.15 docs/ref/contrib/admin/index.txt)",
+   "line": "newer",
+   "set": "held-out",
+   "grading": "[[[\"show_facets\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 769,
+    "ms": 209.4
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "show_facets"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 873,
+     "ms": 61.1
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "show_facets"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 912,
+     "ms": 103.2
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 769,
+     "ms": 209.4
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 440,
+    "ms": 2828,
+    "library": "/django/django",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "tw3-source",
+   "project": "tailwind3",
+   "package": "tailwindcss",
+   "version": "3.4.19",
+   "question": "How do I tell Tailwind which files to scan for class names?",
+   "why": "v3: content: [...] in tailwind.config.js (v3 site content-configuration.mdx)",
+   "line": "older",
+   "set": "held-out",
+   "grading": "[[[\"content:\"]], [\"@source\"]]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 860,
+    "ms": 61.7
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "content:"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 1276,
+     "ms": 3.6
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "content:"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 1209,
+     "ms": 44.1
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 860,
+     "ms": 61.7
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 511,
+    "ms": 1488,
+    "library": "/rails/tailwindcss-rails",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "tw4-source",
+   "project": "tailwind4",
+   "package": "tailwindcss",
+   "version": "4.1.18",
+   "question": "How do I tell Tailwind which files to scan for class names?",
+   "why": "v4: automatic detection plus @source in CSS (v4 site detecting-classes-in-source-files.mdx)",
+   "line": "newer",
+   "set": "held-out",
+   "grading": "[[[\"@source\"]], []]",
+   "lockdocs": {
+    "pass": false,
+    "missing": [
+     [
+      "@source"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 939,
+    "ms": 66.7
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "@source"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 402,
+     "ms": 2.2
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "@source"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 434,
+     "ms": 41.7
+    },
+    "fetched": {
+     "pass": false,
+     "missing": [
+      [
+       "@source"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 939,
+     "ms": 66.7
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [
+     [
+      "@source"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 511,
+    "ms": 1274,
+    "library": "/rails/tailwindcss-rails",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "tokio-interval",
+   "project": "axum08",
+   "package": "tokio",
+   "version": "1.43.0",
+   "question": "How do I run a task every few seconds?",
+   "why": "tokio::time::interval",
+   "line": "single",
+   "set": "held-out",
+   "grading": "[[[\"interval(\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 890,
+    "ms": 65.2
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 877,
+     "ms": 27.5
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 840,
+     "ms": 62.6
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 890,
+     "ms": 65.2
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 133,
+    "ms": 2762,
+    "library": "/websites/rs_tokio_tokio",
+    "version_match": "unversioned",
+    "reused": true
+   }
   }
  ],
  "summary": {
   "keyword": {
-   "answered": 70,
-   "passed": 41,
-   "total": 70,
-   "median_tokens": 898,
-   "median_ms": 22.2,
-   "p95_ms": 397.4
+   "answered": 105,
+   "passed": 59,
+   "total": 105,
+   "median_tokens": 882,
+   "median_ms": 24.6,
+   "p95_ms": 276.2
   },
   "hybrid": {
-   "answered": 70,
-   "passed": 46,
-   "total": 70,
-   "median_tokens": 915,
-   "median_ms": 48.6,
-   "p95_ms": 94.3
+   "answered": 105,
+   "passed": 60,
+   "total": 105,
+   "median_tokens": 903,
+   "median_ms": 52.4,
+   "p95_ms": 103.2
   },
   "fetched": {
-   "answered": 70,
-   "passed": 55,
-   "total": 70,
-   "median_tokens": 875,
-   "median_ms": 86.6,
-   "p95_ms": 490.7
+   "answered": 105,
+   "passed": 96,
+   "total": 105,
+   "median_tokens": 866,
+   "median_ms": 96.9,
+   "p95_ms": 473.9
   },
   "context7": {
-   "answered": 70,
-   "passed": 49,
-   "total": 70,
+   "answered": 105,
+   "passed": 77,
+   "total": 105,
    "median_tokens": 908,
-   "median_ms": 2011,
-   "p95_ms": 3327
+   "median_ms": 2583,
+   "p95_ms": 3398
   }
  },
  "variants": [
@@ -5241,13 +7315,13 @@
   ]
  ],
  "context7_calls": {
-  "calls": 4,
+  "calls": 8,
   "rate_limited": 0,
-  "errors": 0,
+  "errors": 4,
   "stopped": false,
   "limit": "200",
-  "remaining": "196",
-  "reused": 67
+  "remaining": "190",
+  "reused": 103
  },
  "runner": {
   "os": "Linux",

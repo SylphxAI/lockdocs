@@ -2,13 +2,22 @@
 """lockdocs benchmark: version-specific questions against real installs.
 
 Usage: python3 bench/run.py <lockdocs-binary> <projects-dir> <out.json> [--context7] [--only id,id]
+       [--variant name:KEY=VALUE,KEY=VALUE ...]
+
+`--variant` adds a configuration run after `lockdocs fetch` with extra
+environment (for weight sweeps on CI, e.g. `head25:LOCKDOCS_HEAD_WEIGHT=0.25`).
+Questions marked `"set": "held-out"` are not used for tuning: they are written
+before the ranking changes they measure and reported in their own column.
+Once held-out questions are used to diagnose a miss, they join the tuning set
+(`history` says when) and new held-out questions replace them.
 
 Each question names a project (with dependencies installed at pinned versions)
 and a package. An answer passes when it contains at least one string from
 every `expect` group and none of the `reject` strings (case-insensitive).
 Tokens are counted with tiktoken o200k_base when available, else chars/4.
 Context7 is queried the way its MCP server does (library search, then
-context for the question) on the anonymous tier; 429s are recorded, not retried.
+context for the question) on the anonymous tier, trying the next search result
+when a library answers HTTP 404; 429s are recorded, not retried.
 """
 import json, os, subprocess, sys, time, urllib.parse, urllib.request
 
@@ -77,8 +86,9 @@ def c7_get(url):
 
 
 def c7_library(pkg, version, question):
-    """Pick the library like the resolve step would: top search result,
-    then the listed version with the same major (exact when present)."""
+    """Pick libraries like the resolve step would: search results in order,
+    each at the listed version with the same major (exact when present).
+    Returns up to three candidates; the first one that answers is used."""
     key = (pkg, version)
     if key in _c7_ids:
         return _c7_ids[key], 0.0
@@ -89,28 +99,39 @@ def c7_library(pkg, version, question):
     if not results:
         _c7_ids[key] = None
         return None, ms
-    pick = results[0]
-    lib = pick["id"]
-    versions = pick.get("versions") or []
     major = version.lstrip("v").split(".")[0]
-    exact = [v for v in versions if v.lstrip("v") == version.lstrip("v")]
-    same = [v for v in versions if v.lstrip("v").split(".")[0] == major]
-    chosen = (exact or same or [None])[-1]
-    ident = f"{lib}/{chosen}" if chosen else lib
-    _c7_ids[key] = {"id": ident, "versions": versions, "exact": bool(exact), "same_major": bool(same)}
-    return _c7_ids[key], ms
+    cands = []
+    for pick in results[:3]:
+        lib = pick["id"]
+        versions = pick.get("versions") or []
+        exact = [v for v in versions if v.lstrip("v") == version.lstrip("v")]
+        same = [v for v in versions if v.lstrip("v").split(".")[0] == major]
+        chosen = (exact or same or [None])[-1]
+        cands.append({"id": f"{lib}/{chosen}" if chosen else lib, "base": lib, "exact": bool(exact), "same_major": bool(same)})
+    _c7_ids[key] = cands
+    return cands, ms
 
 
 def run_context7(q, version):
-    lib, search_ms = c7_library(q["package"], version, q["question"])
-    if not lib:
+    cands, search_ms = c7_library(q["package"], version, q["question"])
+    if not cands:
         return {"error": "no library" if not c7_state["stopped"] else "rate limited", "ms": search_ms}
-    body, ms, err = c7_get(f"{C7}/context?" + urllib.parse.urlencode({"libraryId": lib["id"], "query": q["question"], "type": "txt"}))
+    total = search_ms
+    err, lib = None, cands[0]
+    # An agent whose first pick fails (HTTP 404) tries the next one; so do we.
+    for lib in cands:
+        for ident in dict.fromkeys([lib["id"], lib["base"]]):
+            body, ms, err = c7_get(f"{C7}/context?" + urllib.parse.urlencode({"libraryId": ident, "query": q["question"], "type": "txt"}))
+            total += ms
+            if body is not None or err != "HTTP 404":
+                break
+        if body is not None or err != "HTTP 404":
+            break
     if body is None:
-        return {"error": err, "ms": search_ms + ms, "library": lib["id"]}
+        return {"error": err, "ms": total, "library": lib["id"]}
     ok, missing, rej = grade(body, q)
-    return {"pass": ok, "missing": missing, "rejected": rej, "tokens": count(body), "ms": round(search_ms + ms), "library": lib["id"],
-            "version_match": "exact" if lib["exact"] else ("same major" if lib["same_major"] else "unversioned")}
+    return {"pass": ok, "missing": missing, "rejected": rej, "tokens": count(body), "ms": round(total), "library": ident,
+            "version_match": "exact" if lib["exact"] and ident == lib["id"] else ("same major" if lib["same_major"] and ident == lib["id"] else "unversioned")}
 
 
 VARIANTS = [
@@ -133,8 +154,18 @@ def run_lockdocs_env(binary, proj, q, env):
                 os.environ[k] = v
 
 
+def grader_key(q):
+    """Question identity for reusing a Context7 answer: text, package and grading."""
+    return (q["id"], q["question"], q["package"], json.dumps([q["expect"], q.get("reject", [])]))
+
+
 def main():
     binary, projects, out = sys.argv[1], sys.argv[2], sys.argv[3]
+    for i, a in enumerate(sys.argv):
+        if a == "--variant":
+            name, _, envs = sys.argv[i + 1].partition(":")
+            env = dict(kv.split("=", 1) for kv in envs.split(",") if kv)
+            VARIANTS.append((name, f"lockdocs, fetched, {envs}", env))
     with_c7 = "--context7" in sys.argv
     do_fetch = "--fetch" in sys.argv
     # Reuse Context7 answers from a previous run for identical questions on the
@@ -144,8 +175,9 @@ def main():
     if "--context7-cache" in sys.argv:
         prev = json.load(open(sys.argv[sys.argv.index("--context7-cache") + 1]))
         for r in prev.get("rows", []):
-            if "pass" in r.get("context7", {}):
-                c7_cache[(r["id"], r["question"], r["package"], r["version"])] = r["context7"]
+            # Rows from before `grading` was recorded are keyed without it and never match.
+            if "pass" in r.get("context7", {}) and "grading" in r:
+                c7_cache[(r["id"], r["question"], r["package"], r["grading"], r["version"])] = r["context7"]
     reused = 0
     only = None
     if "--only" in sys.argv:
@@ -161,11 +193,11 @@ def main():
         t = time.perf_counter()
         r = subprocess.run([binary, "index", "-C", proj, "--json"], capture_output=True, text=True, env={**os.environ, "LOCKDOCS_NO_UPSTREAM": "1"})
         index[p] = {"ms": round((time.perf_counter() - t) * 1000), "report": json.loads(r.stdout) if r.returncode == 0 else r.stderr}
-    variants = [v for v in VARIANTS if do_fetch or v[0] != "fetched"]
+    variants = [v for v in VARIANTS if do_fetch or v[0] in ("keyword", "hybrid")]
     results = {}
     fetch = {}
     for name, _, env in variants:
-        if name == "fetched":
+        if name == "fetched" and not fetch:
             for p in projs:
                 t = time.perf_counter()
                 r = subprocess.run([binary, "fetch", "-C", os.path.join(projects, p), "--json"], capture_output=True, text=True)
@@ -177,14 +209,14 @@ def main():
             first = text.splitlines()[0] if text else ""
             version = first.split(" · ")[0].rsplit("@", 1)[-1] if "@" in first else ""
             results[(name, q["id"])] = ({"pass": ok and code == 0, "missing": missing, "rejected": rej, "tokens": count(text), "ms": round(ms, 1)}, version)
-    main_variant = variants[-1][0]
+    main_variant = "fetched" if do_fetch else variants[-1][0]
     rows = []
     for q in qs:
         main_res, version = results[(main_variant, q["id"])]
         row = {"id": q["id"], "project": q["project"], "package": q["package"], "version": version, "question": q["question"], "why": q["why"], "line": q.get("line", ""),
-               "lockdocs": main_res, "variants": {n: results[(n, q["id"])][0] for n, _, _ in variants}}
+               "set": q.get("set", "tuning"), "grading": grader_key(q)[3], "lockdocs": main_res, "variants": {n: results[(n, q["id"])][0] for n, _, _ in variants}}
         if with_c7:
-            hit = c7_cache.get((q["id"], q["question"], q["package"], version))
+            hit = c7_cache.get(grader_key(q) + (version,))
             if hit is not None:
                 row["context7"] = dict(hit, reused=True)
                 reused += 1
@@ -221,8 +253,9 @@ def markdown(res, with_c7):
     if with_c7:
         cols.append(("context7", "Context7 (anonymous API)"))
     out = [f"Tokenizer: {res['tokenizer']}. Runner: {res['runner']['os']} {res['runner']['machine']}. {len(res['rows'])} questions.", ""]
-    groups = [("older", "older major"), ("newer", "newer major"), ("single", "single version")]
-    present = [g for g in groups if any(r.get("line") == g[0] for r in res["rows"])]
+    groups = [("older", "older major"), ("newer", "newer major"), ("single", "single version"), ("held-out", "held-out")]
+    in_group = lambda r, g: r.get("set") == "held-out" if g == "held-out" else r.get("line") == g
+    present = [g for g in groups if any(in_group(r, g[0]) for r in res["rows"])]
     out.append("| | correct | " + " | ".join(t for _, t in present) + " | median tokens | median latency | p95 latency |")
     out.append("|---|---|" + "---|" * len(present) + "---|---|---|")
     for key, label in cols:
@@ -231,13 +264,13 @@ def markdown(res, with_c7):
             continue
         subs = []
         for g, _ in present:
-            rs = [r for r in res["rows"] if r.get("line") == g]
+            rs = [r for r in res["rows"] if in_group(r, g)]
             subs.append(f"{sum(1 for r in rs if result_of(r, key).get('pass'))}/{len(rs)}")
         out.append(f"| {label} | {a['passed']}/{a['total']} | " + " | ".join(subs) + f" | {a['median_tokens']} | {a['median_ms']:.0f} ms | {a['p95_ms']:.0f} ms |")
     if with_c7 and res["context7_calls"]:
         c = res["context7_calls"]
         out += ["", f"Context7 (anonymous): {c['calls']} HTTP calls, {c['rate_limited']} rate-limited (429), {c['errors']} other errors; ratelimit-limit header {c['limit']}, remaining {c['remaining']}."
-                + (f" {c['reused']} answers reused from the previous run's identical question and version (see bench/run.py --context7-cache)." if c.get("reused") else "")]
+                + (f" {c['reused']} answers reused from the previous run's identical question, grading and version (see bench/run.py --context7-cache)." if c.get("reused") else "")]
     head = "| question | version | " + " | ".join(n for n, _ in cols) + " | tokens (last lockdocs) | ms |" + (" Context7 library |" if with_c7 else "")
     out += ["", head, "|---|---|" + "---|" * len(cols) + "---|---|" + ("---|" if with_c7 else "")]
     for r in res["rows"]:
@@ -245,7 +278,7 @@ def markdown(res, with_c7):
         for key, _ in cols:
             x = result_of(r, key)
             marks.append("✅" if x.get("pass") else ("❌" if "pass" in x else f"— ({x.get('error')})"))
-        line = f"| {r['id']} | {r['package']}@{r['version']} | " + " | ".join(marks) + f" | {r['lockdocs']['tokens']} | {r['lockdocs']['ms']:.0f} |"
+        line = f"| {r['id']}{' (held-out)' if r.get('set') == 'held-out' else ''} | {r['package']}@{r['version']} | " + " | ".join(marks) + f" | {r['lockdocs']['tokens']} | {r['lockdocs']['ms']:.0f} |"
         if with_c7:
             c = r.get("context7", {})
             line += f" {c.get('library', '')} ({c.get('version_match', '')}) |"

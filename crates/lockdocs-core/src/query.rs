@@ -19,6 +19,8 @@ pub const DEFAULT_TOKENS: usize = 1200;
 const RELEVANCE_FLOOR: f32 = 0.3;
 /// Share of the fused score from the embedding similarity.
 const DENSE_WEIGHT: f32 = 0.45;
+/// Share of the keyword score from headings and first sentences.
+const HEAD_WEIGHT: f32 = 0.25;
 /// Cross-dependency searches index at most this many direct dependencies.
 const MAX_PACKAGES: usize = 80;
 
@@ -211,8 +213,9 @@ impl Engine {
         if src.version != dep.version || std::env::var("LOCKDOCS_NO_UPSTREAM").is_ok() {
             return None;
         }
-        if let Some(c) = upstream::cached(dep) {
-            return Some(c);
+        let cached = upstream::cached(dep);
+        if let Some(c) = cached.as_ref().filter(|(_, m)| !(self.opts.fetch && upstream::stale(m))) {
+            return Some(c.clone());
         }
         if self.opts.fetch && upstream::repo_of(dep, src).is_some() {
             let _ = upstream::fetch(dep, src);
@@ -264,7 +267,7 @@ impl Engine {
                         json!({"package": d.id(), "status": "missing"}),
                     );
                 };
-                let status = match upstream::cached(d) {
+                let status = match upstream::cached(d).filter(|(_, m)| !upstream::stale(m)) {
                     Some((_, m)) => m,
                     None => match upstream::fetch(d, &src) {
                         Ok(m) => m,
@@ -554,9 +557,11 @@ impl Engine {
             }
         }
         let bm = Bm25::build(refs.iter().map(|&(pi, ei)| (ready[pi].0.terms[ei].as_slice(), ready[pi].0.lens[ei])));
-        let raw_idents = identifiers(q);
+        let hb = Bm25::build(refs.iter().map(|&(pi, ei)| (ready[pi].0.head[ei].as_slice(), ready[pi].0.head_lens[ei])));
+        let mut raw_idents = identifiers(q);
+        raw_idents.extend(api_words(&ready, q));
         let changes = change_intent(q);
-        let scored = hybrid_rank(&ready, &refs, &bm, &qterms, q, &raw_idents, changes);
+        let scored = hybrid_rank(&ready, &refs, (&bm, &hb), &qterms, q, &raw_idents, changes);
         let mut out = Pack::new(tokens);
         let mut header = String::new();
         for (idx, dep, note) in &ready {
@@ -602,7 +607,18 @@ impl Engine {
                 continue;
             }
             let e = resolve_alias(idx, e);
-            let block = render_entry(idx, e, if out.blocks == 0 { 2000 } else { 800 });
+            // The top result also carries the lead of its page and parent
+            // section, within the same budget.
+            let ctx = if out.blocks == 0 { section_context(idx, e) } else { None };
+            let max_doc = if out.blocks == 0 {
+                2000 - ctx.as_ref().map_or(0, |c| c.len().min(800) / 2)
+            } else {
+                800
+            };
+            let mut block = render_entry(idx, e, max_doc);
+            if let (Some(ctx), Some(nl)) = (ctx, block.find('\n')) {
+                block.insert_str(nl + 1, &ctx);
+            }
             if !out.push_block(&block) {
                 break;
             }
@@ -896,23 +912,58 @@ fn identifiers(q: &str) -> Vec<String> {
         .collect()
 }
 
+/// Plain words in the question that name a documented top-level API of the
+/// searched packages ("run code *after* the response" in Next.js, which
+/// exports `after`). They count as identifiers.
+fn api_words(ready: &[ReadyPkg], q: &str) -> Vec<String> {
+    let words: HashSet<String> = q
+        .split(|c: char| !(c.is_ascii_alphanumeric() || c == '_'))
+        .filter(|w| w.len() >= 4)
+        .map(|w| w.to_ascii_lowercase())
+        .filter(|w| !bm25::is_stop(w))
+        .collect();
+    let mut out = Vec::new();
+    for (idx, _, _) in ready {
+        for e in &idx.entries {
+            let top = matches!(e.kind, Kind::Function | Kind::Macro | Kind::Class)
+                && !e.doc.is_empty()
+                && !private_path(e)
+                && !e.legacy
+                && e.path.matches(['.', ':']).count() <= 2;
+            let n = e.name.trim_end_matches('!').to_ascii_lowercase();
+            if top && words.contains(&n) && !out.contains(&n) {
+                out.push(n);
+            }
+        }
+    }
+    out
+}
+
 /// BM25 and embedding similarity fused (each normalized to its best hit),
 /// then docs-specific boosts, then deprecation redirects ("use X instead")
 /// lift the API they point to. Returns (score, package, entry), best first.
 fn hybrid_rank(
     ready: &[ReadyPkg],
     refs: &[(usize, usize)],
-    bm: &Bm25,
+    (bm, hb): (&Bm25, &Bm25),
     qterms: &[String],
     q: &str,
     idents: &[String],
     changes: bool,
 ) -> Vec<(f32, usize, usize)> {
-    let mut fused: HashMap<usize, (f32, f32)> = HashMap::new();
-    let bm_hits = bm.search_weighted(&bm25::expand(qterms));
+    // (full-text BM25, heading BM25, dense), each normalized to its best hit.
+    let mut fused: HashMap<usize, (f32, f32, f32)> = HashMap::new();
+    let expanded = bm25::expand(qterms);
+    let bm_hits = bm.search_weighted(&expanded);
     let bmax = bm_hits.first().map_or(1.0, |h| h.score).max(1e-6);
     for h in bm_hits.iter().take(1500) {
         fused.entry(h.doc as usize).or_default().0 = h.score / bmax;
+    }
+    let head_w = std::env::var("LOCKDOCS_HEAD_WEIGHT").ok().and_then(|v| v.parse().ok()).unwrap_or(HEAD_WEIGHT);
+    let h_hits = hb.search_weighted(&expanded);
+    let hmax = h_hits.first().map_or(1.0, |h| h.score).max(1e-6);
+    for h in h_hits.iter().take(1500) {
+        fused.entry(h.doc as usize).or_default().1 = h.score / hmax;
     }
     let dense_w = std::env::var("LOCKDOCS_DENSE_WEIGHT").ok().and_then(|v| v.parse().ok()).unwrap_or(DENSE_WEIGHT);
     let qv = if ready.iter().all(|r| !r.0.vecs.is_empty()) {
@@ -939,7 +990,7 @@ fn hybrid_rank(
             }
         }
         for (i, c) in sims.iter().take(300) {
-            fused.entry(*i).or_default().1 = ((c - floor) / (cmax - floor).max(1e-6)).max(0.0);
+            fused.entry(*i).or_default().2 = ((c - floor) / (cmax - floor).max(1e-6)).max(0.0);
         }
     }
     let w = if qv.is_some() { dense_w } else { 0.0 };
@@ -950,14 +1001,16 @@ fn hybrid_rank(
     let debug = std::env::var("LOCKDOCS_DEBUG").is_ok();
     let mut scored: Vec<(f32, usize, usize)> = fused
         .into_iter()
-        .map(|(i, (b, d))| {
+        .map(|(i, (b, h, d))| {
             let (pi, ei) = refs[i];
             let e = &ready[pi].0.entries[ei];
-            let s = ((1.0 - w) * b + w * d) * boost(e, idents, changes) * name_hit(e, &rare);
+            let lexical = (1.0 - head_w) * b + head_w * h;
+            let major = major_of(&ready[pi].0.version);
+            let s = ((1.0 - w) * lexical + w * d) * boost(e, idents, changes, major) * name_hit(e, &rare);
             if debug && s > 0.3 {
                 eprintln!(
-                    "{s:.3} bm={b:.3} dense={d:.3} boost={:.2} name={:.2} {}",
-                    boost(e, idents, changes),
+                    "{s:.3} bm={b:.3} head={h:.3} dense={d:.3} boost={:.2} name={:.2} {}",
+                    boost(e, idents, changes, major),
                     name_hit(e, &rare),
                     e.path
                 );
@@ -1033,14 +1086,33 @@ pub fn redirects(text: &str) -> Vec<String> {
     out
 }
 
+/// Terms of a prose heading. Capitalized words are names (`TypeScript`,
+/// `JavaScript`) and stay whole; identifiers (`useActionState`,
+/// `model_dump`) are also split into their parts.
+fn heading_terms(h: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    for w in h.split(|c: char| !(c.is_ascii_alphanumeric() || c == '_')).filter(|w| !w.is_empty()) {
+        if w.starts_with(|c: char| c.is_ascii_uppercase()) && !w.contains('_') {
+            out.push(bm25::stem(&w.to_ascii_lowercase()));
+        } else {
+            out.extend(bm25::terms(w));
+        }
+    }
+    out
+}
+
 /// Entries whose name (or section heading) carries a query word are about it.
 fn name_hit(e: &Entry, qterms: &[String]) -> f32 {
-    let label = if e.kind == Kind::Prose {
-        e.name.rsplit(" › ").next().unwrap_or("")
+    let words = if e.kind == Kind::Prose {
+        let last = e.name.rsplit(" › ").next().unwrap_or("");
+        if crate::markdown::generic_heading(last) {
+            Vec::new()
+        } else {
+            heading_terms(last)
+        }
     } else {
-        e.name.as_str()
+        bm25::terms(&e.name)
     };
-    let words = bm25::terms(label);
     let n = qterms.iter().filter(|q| words.contains(q)).count();
     match n {
         0 => 1.0,
@@ -1049,7 +1121,32 @@ fn name_hit(e: &Entry, qterms: &[String]) -> f32 {
     }
 }
 
-fn boost(e: &Entry, idents: &[String], changes: bool) -> f32 {
+fn major_of(version: &str) -> u64 {
+    version.trim_start_matches('v').split('.').next().and_then(|m| m.parse().ok()).unwrap_or(0)
+}
+
+/// A migration or upgrade guide to a major older than the pinned one
+/// ("Migrating to v6.0.0" in ESLint 9, "Upgrade to Prisma ORM 4" in Prisma 6):
+/// history, not how things work now.
+fn old_upgrade_guide(e: &Entry, major: u64) -> bool {
+    let title = e.name.split(" › ").next().unwrap_or("");
+    let stem = e.file.rsplit('/').next().unwrap_or("");
+    [title, stem].iter().any(|t| {
+        let l = t.to_ascii_lowercase();
+        (l.contains("migrat") || l.contains("upgrad"))
+            && l.split(|c: char| !c.is_ascii_digit())
+                .find(|d| !d.is_empty() && d.len() <= 3)
+                .and_then(|d| d.parse::<u64>().ok())
+                .is_some_and(|v| v < major)
+    })
+}
+
+/// A page its own title marks as deprecated ("Configure Language Options (Deprecated)").
+fn deprecated_page(e: &Entry) -> bool {
+    e.name.split(" › ").next().unwrap_or("").to_ascii_lowercase().contains("(deprecated)")
+}
+
+fn boost(e: &Entry, idents: &[String], changes: bool, major: u64) -> f32 {
     let mut b = 1.0;
     // Curated guides from the project's own docs folder answer "how do I" better
     // than internal symbols do.
@@ -1057,13 +1154,32 @@ fn boost(e: &Entry, idents: &[String], changes: bool) -> f32 {
         b *= std::env::var("LOCKDOCS_UPSTREAM_BOOST").ok().and_then(|v| v.parse().ok()).unwrap_or(1.35);
     }
     if e.kind == Kind::Prose {
+        // A section headed by the API the question names (`after`, `select!`).
+        let last = e
+            .name
+            .rsplit(" › ")
+            .next()
+            .unwrap_or("")
+            .trim()
+            .trim_end_matches("()")
+            .trim_end_matches('!')
+            .to_ascii_lowercase();
+        if !last.is_empty() && idents.contains(&last) {
+            b *= 1.4;
+        }
+        if !changes && old_upgrade_guide(e, major) {
+            b *= 0.5;
+        }
+        if deprecated_page(e) {
+            b *= 0.6;
+        }
         if is_changelog(e) {
             b *= if changes { 1.5 } else { 0.5 };
         } else if e.file.to_ascii_uppercase().starts_with("README") {
             b *= 1.15;
         }
     } else {
-        let n = e.name.to_ascii_lowercase();
+        let n = e.name.trim_end_matches('!').to_ascii_lowercase();
         let p = e.path.to_ascii_lowercase();
         if idents.contains(&n) {
             b *= 1.8;
@@ -1162,6 +1278,100 @@ pub fn render_entry(idx: &PackageIndex, e: &Entry, max_doc: usize) -> String {
         s.push('\n');
     }
     s
+}
+
+/// The first paragraph of text of a section, and the short list or code
+/// block right after it (what the section offers). Tag-only lines
+/// (`<Deprecated>`) are skipped.
+fn lead(doc: &str) -> String {
+    let tag_only = |l: &str| l.starts_with('<') && l.ends_with('>');
+    let mut lines = doc.lines().map(str::trim_end).peekable();
+    let mut para: Vec<&str> = Vec::new();
+    for l in lines.by_ref() {
+        let t = l.trim();
+        if t.starts_with("```") || t.starts_with("~~~") {
+            return String::new();
+        }
+        if t.is_empty() || tag_only(t) {
+            if para.is_empty() {
+                continue;
+            }
+            break;
+        }
+        para.push(t);
+    }
+    let mut out = truncate(&para.join(" "), 320);
+    while lines.peek().is_some_and(|l| l.trim().is_empty()) {
+        lines.next();
+    }
+    let bullet = |l: &str| {
+        let t = l.trim_start();
+        t.starts_with("* ") || t.starts_with("- ") || t.split_once(". ").is_some_and(|(n, _)| !n.is_empty() && n.chars().all(|c| c.is_ascii_digit()))
+    };
+    if lines.peek().is_some_and(|l| bullet(l)) {
+        let mut list = String::new();
+        for l in lines.by_ref() {
+            if l.trim().is_empty() {
+                break;
+            }
+            let t = l.trim();
+            list.push_str(if bullet(l) { "\n" } else { " " });
+            list.push_str(t);
+        }
+        out.push_str(&truncate(&list, 400));
+    } else if lines.peek().is_some_and(|l| l.trim_start().starts_with("```")) {
+        let mut code = vec![lines.next().unwrap_or_default()];
+        for l in lines.by_ref() {
+            code.push(l);
+            if l.trim_start().starts_with("```") {
+                break;
+            }
+        }
+        let code = code.join("\n");
+        if code.len() <= 300 && code.matches("```").count() == 2 {
+            out.push('\n');
+            out.push_str(&code);
+        }
+    }
+    out
+}
+
+/// Leads of a prose section's page and parent section, quoted, when they
+/// say something the section does not (a deprecation notice on the page,
+/// the setup a subsection builds on).
+fn section_context(idx: &PackageIndex, e: &Entry) -> Option<String> {
+    if e.kind != Kind::Prose {
+        return None;
+    }
+    let parts: Vec<&str> = e.name.split(" › ").collect();
+    if parts.len() < 2 {
+        return None;
+    }
+    let mut wanted = vec![parts[0].to_string()];
+    if parts.len() > 2 {
+        wanted.push(parts[..parts.len() - 1].join(" › "));
+    }
+    let mut out = String::new();
+    for name in wanted {
+        let Some(p) = idx
+            .entries
+            .iter()
+            .filter(|x| x.kind == Kind::Prose && x.file == e.file && x.name == name)
+            .min_by_key(|x| x.line)
+        else {
+            continue;
+        };
+        let l = lead(&p.doc);
+        if l.len() < 20 || e.doc.contains(&l) || out.contains(&l) {
+            continue;
+        }
+        for line in format!("{}: {l}", p.name.rsplit(" › ").next().unwrap_or("")).lines() {
+            out.push_str("> ");
+            out.push_str(line);
+            out.push('\n');
+        }
+    }
+    (!out.is_empty()).then(|| out + "\n")
 }
 
 /// Token-budgeted output.
@@ -1279,7 +1489,43 @@ pub fn dep_key(d: &Dep) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::redirects;
+    use super::*;
+
+    #[test]
+    fn old_upgrade_guides_and_deprecated_pages() {
+        let e = |name: &str, file: &str| Entry {
+            kind: Kind::Prose,
+            name: name.into(),
+            path: name.into(),
+            file: file.into(),
+            line: 1,
+            sig: String::new(),
+            doc: String::new(),
+            alias_of: None,
+            legacy: false,
+        };
+        assert!(old_upgrade_guide(
+            &e("Migrating to v6.0.0 › x", "upstream:docs/src/use/migrating-to-6.0.0.md"),
+            9
+        ));
+        assert!(old_upgrade_guide(
+            &e("Upgrade to Prisma ORM 4 › x", "upstream:docs/700-upgrading-to-prisma-4.mdx"),
+            6
+        ));
+        assert!(!old_upgrade_guide(
+            &e("Upgrade to Prisma ORM 6 › x", "upstream:docs/500-upgrading-to-prisma-6.mdx"),
+            6
+        ));
+        assert!(!old_upgrade_guide(&e("Migration Guide › x", "upstream:docs/migration.md"), 2));
+        assert!(deprecated_page(&e("Configure Language Options (Deprecated) › Globals", "x.md")));
+        assert!(!heading_terms("Seeding with TypeScript or JavaScript").contains(&"type".to_string()));
+        assert!(heading_terms("useActionState reference").contains(&"action".to_string()));
+        let l = lead("Intro line.\n\n```css\n@import \"tailwindcss\";\n\n@custom-variant dark (&:where(.dark, .dark *));\n```\n\nMore.");
+        assert!(l.contains("@custom-variant") && l.ends_with("```"), "{l}");
+        let l = lead("Three helpers:\n\n* **`parse_obj`**: from a dict\n  more.\n* `parse_raw`\n\nNext.");
+        assert!(l.contains("parse_obj") && l.contains("parse_raw") && !l.contains("Next"), "{l}");
+        assert!(lead("<Deprecated>\n\nIn React 19, it is no longer necessary.\n\n</Deprecated>").starts_with("In React 19"));
+    }
 
     #[test]
     fn deprecation_redirects() {

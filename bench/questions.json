@@ -426,9 +426,9 @@
     ]
    ],
    "reject": [
-    "ConfigDict"
+    "model_config = ConfigDict"
    ],
-   "why": "v1: class Config: extra = Extra.allow",
+   "why": "v1: class Config: extra = Extra.allow. Rejects the v2 idiom model_config = ConfigDict (0 matches in pydantic 1.10.18 source and docs). Until 0.3 it rejected ConfigDict, which pydantic 1.10 also ships (config.py)",
    "line": "older"
   },
   {
@@ -1081,6 +1081,577 @@
    "reject": [],
    "why": "16: middleware renamed to proxy (next 16.3.6 dist/server/web/types.d.ts: '@deprecated Use NextProxy instead. Middleware has been renamed to Proxy.')",
    "line": "newer"
+  },
+  {
+   "id": "next14-params",
+   "project": "next14",
+   "package": "next",
+   "question": "How do I read the dynamic route parameters in a page component?",
+   "expect": [
+    [
+     "params"
+    ]
+   ],
+   "reject": [
+    "await params",
+    "Promise<{"
+   ],
+   "why": "14: params is a plain object prop (no 'await params' in v14.2.35 docs/02-app/02-api-reference/02-file-conventions/page.mdx)",
+   "line": "older",
+   "set": "tuning",
+   "history": "held-out in the first 0.3 run (lockdocs 11/17, Context7 12/17), then used to diagnose ranking misses"
+  },
+  {
+   "id": "next15-params",
+   "project": "next15",
+   "package": "next",
+   "question": "How do I read the dynamic route parameters in a page component?",
+   "expect": [
+    [
+     "await params",
+     "Promise<{"
+    ]
+   ],
+   "reject": [],
+   "why": "15: params is a Promise (v15.1.0 page.mdx, 18 matches)",
+   "line": "newer",
+   "set": "tuning",
+   "history": "held-out in the first 0.3 run (lockdocs 11/17, Context7 12/17), then used to diagnose ranking misses"
+  },
+  {
+   "id": "tw3-dark",
+   "project": "tailwind3",
+   "package": "tailwindcss",
+   "question": "How do I switch dark mode to a class instead of the operating system setting?",
+   "expect": [
+    [
+     "darkMode"
+    ]
+   ],
+   "reject": [
+    "@custom-variant"
+   ],
+   "why": "v3: darkMode: 'selector' / 'class' in tailwind.config.js (v3 site dark-mode.mdx)",
+   "line": "older",
+   "set": "tuning",
+   "history": "held-out in the first 0.3 run (lockdocs 11/17, Context7 12/17), then used to diagnose ranking misses"
+  },
+  {
+   "id": "tw4-dark",
+   "project": "tailwind4",
+   "package": "tailwindcss",
+   "question": "How do I switch dark mode to a class instead of the operating system setting?",
+   "expect": [
+    [
+     "@custom-variant"
+    ]
+   ],
+   "reject": [],
+   "why": "v4: @custom-variant dark (&:where(.dark, .dark *)) in CSS (v4 site dark-mode.mdx)",
+   "line": "newer",
+   "set": "tuning",
+   "history": "held-out in the first 0.3 run (lockdocs 11/17, Context7 12/17), then used to diagnose ranking misses"
+  },
+  {
+   "id": "react18-ref",
+   "project": "react18",
+   "package": "react",
+   "question": "How do I pass a ref through to a child component?",
+   "expect": [
+    [
+     "forwardRef"
+    ]
+   ],
+   "reject": [],
+   "why": "18: forwardRef (@types/react 18.3.31)",
+   "line": "older",
+   "set": "tuning",
+   "history": "held-out in the first 0.3 run (lockdocs 11/17, Context7 12/17), then used to diagnose ranking misses"
+  },
+  {
+   "id": "react19-ref",
+   "project": "react19",
+   "package": "react",
+   "question": "How do I pass a ref through to a child component?",
+   "expect": [
+    [
+     "as a prop",
+     "no longer necessary"
+    ]
+   ],
+   "reject": [],
+   "why": "19: ref is a regular prop; forwardRef is no longer necessary (react.dev forwardRef.md)",
+   "line": "newer",
+   "set": "tuning",
+   "history": "held-out in the first 0.3 run (lockdocs 11/17, Context7 12/17), then used to diagnose ranking misses"
+  },
+  {
+   "id": "rr6-types",
+   "project": "rr6",
+   "package": "react-router",
+   "question": "How do I get typed loader data in my route component?",
+   "expect": [
+    [
+     "useLoaderData"
+    ]
+   ],
+   "reject": [
+    "Route.ComponentProps",
+    "+types"
+   ],
+   "why": "v6: useLoaderData() (docs/hooks/use-loader-data.md); generated route types arrived in v7",
+   "line": "older",
+   "set": "tuning",
+   "history": "held-out in the first 0.3 run (lockdocs 11/17, Context7 12/17), then used to diagnose ranking misses"
+  },
+  {
+   "id": "rr7-types",
+   "project": "rr7",
+   "package": "react-router",
+   "question": "How do I get typed loader data in my route component?",
+   "expect": [
+    [
+     "Route.ComponentProps",
+     "+types"
+    ]
+   ],
+   "reject": [],
+   "why": "v7: generated ./+types/<route> and Route.ComponentProps (react-router@7.1.1 docs/start/framework/data-loading.md)",
+   "line": "newer",
+   "set": "tuning",
+   "history": "held-out in the first 0.3 run (lockdocs 11/17, Context7 12/17), then used to diagnose ranking misses"
+  },
+  {
+   "id": "eslint8-globals",
+   "project": "eslint8",
+   "package": "eslint",
+   "question": "How do I tell ESLint about browser global variables?",
+   "expect": [
+    [
+     "\"browser\": true",
+     "browser: true"
+    ]
+   ],
+   "reject": [],
+   "why": "8: env: { browser: true } in .eslintrc (v8.57.1 language-options.md)",
+   "line": "older",
+   "set": "tuning",
+   "history": "held-out in the first 0.3 run (lockdocs 11/17, Context7 12/17), then used to diagnose ranking misses"
+  },
+  {
+   "id": "eslint9-globals",
+   "project": "eslint9",
+   "package": "eslint",
+   "question": "How do I tell ESLint about browser global variables?",
+   "expect": [
+    [
+     "globals.browser"
+    ]
+   ],
+   "reject": [],
+   "why": "9: languageOptions: { globals: globals.browser } (v9.39.5 language-options.md)",
+   "line": "newer",
+   "set": "tuning",
+   "history": "held-out in the first 0.3 run (lockdocs 11/17, Context7 12/17), then used to diagnose ranking misses"
+  },
+  {
+   "id": "dj51-generated",
+   "project": "django51",
+   "package": "django",
+   "question": "How do I add a model field whose value the database computes from other columns?",
+   "expect": [
+    [
+     "GeneratedField"
+    ]
+   ],
+   "reject": [],
+   "why": "5.0+: models.GeneratedField (5.1.15 docs/ref/models/fields.txt)",
+   "line": "newer",
+   "set": "tuning",
+   "history": "held-out in the first 0.3 run (lockdocs 11/17, Context7 12/17), then used to diagnose ranking misses"
+  },
+  {
+   "id": "fa0115-querymodel",
+   "project": "fastapi0115",
+   "package": "fastapi",
+   "question": "How do I declare a group of query parameters with a Pydantic model?",
+   "expect": [
+    [
+     "Query Parameter Models",
+     "FilterParams",
+     "query parameter model"
+    ]
+   ],
+   "reject": [],
+   "why": "0.115.0+: query parameter models (docs/en/docs/tutorial/query-param-models.md)",
+   "line": "newer",
+   "set": "tuning",
+   "history": "held-out in the first 0.3 run (lockdocs 11/17, Context7 12/17), then used to diagnose ranking misses"
+  },
+  {
+   "id": "tokio-channel",
+   "project": "axum08",
+   "package": "tokio",
+   "question": "How do I send messages from many tasks to a single consumer task?",
+   "expect": [
+    [
+     "mpsc"
+    ]
+   ],
+   "reject": [],
+   "why": "tokio::sync::mpsc",
+   "line": "single",
+   "set": "tuning",
+   "history": "held-out in the first 0.3 run (lockdocs 11/17, Context7 12/17), then used to diagnose ranking misses"
+  },
+  {
+   "id": "zod3-datetime",
+   "project": "zod3",
+   "package": "zod",
+   "question": "How do I validate an ISO 8601 datetime string?",
+   "expect": [
+    [
+     ".datetime("
+    ]
+   ],
+   "reject": [
+    "z.iso."
+   ],
+   "why": "3.23: z.string().datetime(); z.iso arrived in zod 4 (0 matches in v3.23.8 README)",
+   "line": "older",
+   "set": "tuning",
+   "history": "held-out in the first 0.3 run (lockdocs 11/17, Context7 12/17), then used to diagnose ranking misses"
+  },
+  {
+   "id": "zod4-datetime",
+   "project": "zod4",
+   "package": "zod",
+   "question": "How do I validate an ISO 8601 datetime string?",
+   "expect": [
+    [
+     "z.iso.datetime",
+     "iso.datetime("
+    ]
+   ],
+   "reject": [],
+   "why": "4: z.iso.datetime() (v4.1.5 packages/docs/content/api.mdx)",
+   "line": "newer",
+   "set": "tuning",
+   "history": "held-out in the first 0.3 run (lockdocs 11/17, Context7 12/17), then used to diagnose ranking misses"
+  },
+  {
+   "id": "pyd1-frozen",
+   "project": "pydantic1",
+   "package": "pydantic",
+   "question": "How do I make model instances immutable?",
+   "expect": [
+    [
+     "allow_mutation"
+    ]
+   ],
+   "reject": [
+    "model_config = ConfigDict"
+   ],
+   "why": "v1: class Config: allow_mutation = False / frozen = True (v1.10.18 docs/usage/model_config.md). Rejects the v2 idiom model_config = ConfigDict",
+   "line": "older",
+   "set": "tuning",
+   "history": "held-out in the first 0.3 run (lockdocs 11/17, Context7 12/17), then used to diagnose ranking misses"
+  },
+  {
+   "id": "pyd2-frozen",
+   "project": "pydantic2",
+   "package": "pydantic",
+   "question": "How do I make model instances immutable?",
+   "expect": [
+    [
+     "frozen=True"
+    ]
+   ],
+   "reject": [],
+   "why": "v2: model_config = ConfigDict(frozen=True) (v2.9.2 docs/concepts/models.md)",
+   "line": "newer",
+   "set": "tuning",
+   "history": "held-out in the first 0.3 run (lockdocs 11/17, Context7 12/17), then used to diagnose ranking misses"
+  },
+  {
+   "id": "next15-form",
+   "project": "next15",
+   "package": "next",
+   "question": "How do I build a search form that navigates to a results page with client-side navigation?",
+   "expect": [
+    [
+     "next/form"
+    ]
+   ],
+   "reject": [],
+   "why": "15.0+: <Form> from next/form (v15.1.0 docs/01-app/03-api-reference/02-components/form.mdx)",
+   "line": "newer",
+   "set": "held-out"
+  },
+  {
+   "id": "next16-cache",
+   "project": "next16",
+   "package": "next",
+   "question": "How do I cache the result of an expensive function across requests?",
+   "expect": [
+    [
+     "use cache"
+    ]
+   ],
+   "reject": [],
+   "why": "16: the 'use cache' directive (v16.3.6 docs/01-app/03-api-reference/01-directives/use-cache.mdx)",
+   "line": "newer",
+   "set": "held-out"
+  },
+  {
+   "id": "zod3-meta",
+   "project": "zod3",
+   "package": "zod",
+   "question": "How do I attach a description to a schema?",
+   "expect": [
+    [
+     ".describe("
+    ]
+   ],
+   "reject": [
+    ".meta("
+   ],
+   "why": "3.23: .describe(); .meta() arrived in zod 4 (0 matches in v3.23.8 README)",
+   "line": "older",
+   "set": "held-out"
+  },
+  {
+   "id": "zod4-meta",
+   "project": "zod4",
+   "package": "zod",
+   "question": "How do I attach a description to a schema?",
+   "expect": [
+    [
+     ".meta("
+    ]
+   ],
+   "reject": [],
+   "why": "4: .meta() with the global registry (v4.1.5 packages/docs/content/metadata.mdx)",
+   "line": "newer",
+   "set": "held-out"
+  },
+  {
+   "id": "pyd2-computed",
+   "project": "pydantic2",
+   "package": "pydantic",
+   "question": "How do I include a computed property when serializing a model?",
+   "expect": [
+    [
+     "computed_field"
+    ]
+   ],
+   "reject": [],
+   "why": "2: @computed_field (v2.9.2 docs/concepts/fields.md)",
+   "line": "newer",
+   "set": "held-out"
+  },
+  {
+   "id": "pyd1-json",
+   "project": "pydantic1",
+   "package": "pydantic",
+   "question": "How do I parse and validate a model from a JSON string?",
+   "expect": [
+    [
+     "parse_raw"
+    ]
+   ],
+   "reject": [
+    "model_validate_json"
+   ],
+   "why": "1: Model.parse_raw() (v1.10.18 docs/usage/models.md)",
+   "line": "older",
+   "set": "held-out"
+  },
+  {
+   "id": "pyd2-json",
+   "project": "pydantic2",
+   "package": "pydantic",
+   "question": "How do I parse and validate a model from a JSON string?",
+   "expect": [
+    [
+     "model_validate_json"
+    ]
+   ],
+   "reject": [],
+   "why": "2: Model.model_validate_json() (v2.9.2 docs/concepts/models.md)",
+   "line": "newer",
+   "set": "held-out"
+  },
+  {
+   "id": "sa20-dataclass",
+   "project": "sqlalchemy20",
+   "package": "sqlalchemy",
+   "question": "How do I declare ORM models that are also Python dataclasses?",
+   "expect": [
+    [
+     "MappedAsDataclass"
+    ]
+   ],
+   "reject": [],
+   "why": "2.0: MappedAsDataclass (rel_2_0_54 doc/build/orm/dataclasses.rst)",
+   "line": "newer",
+   "set": "held-out"
+  },
+  {
+   "id": "eslint8-plugins",
+   "project": "eslint8",
+   "package": "eslint",
+   "question": "How do I add a plugin to my ESLint configuration?",
+   "expect": [
+    [
+     "\"plugins\": [",
+     "plugins: ["
+    ]
+   ],
+   "reject": [],
+   "why": "8: \"plugins\": [...] in .eslintrc (v8.57.1 docs/src/use/configure/plugins.md)",
+   "line": "older",
+   "set": "held-out"
+  },
+  {
+   "id": "eslint9-plugins",
+   "project": "eslint9",
+   "package": "eslint",
+   "question": "How do I add a plugin to my ESLint configuration?",
+   "expect": [
+    [
+     "plugins: {"
+    ]
+   ],
+   "reject": [],
+   "why": "9: plugins: { name: plugin } in eslint.config.js (v9.39.5 docs/src/use/configure/plugins.md)",
+   "line": "newer",
+   "set": "held-out"
+  },
+  {
+   "id": "vite6-envapi",
+   "project": "vite6",
+   "package": "vite",
+   "question": "How does a plugin know which environment it is running in?",
+   "expect": [
+    [
+     "this.environment"
+    ]
+   ],
+   "reject": [],
+   "why": "6: this.environment in plugin hooks (v6.4.3 docs/guide/api-environment-plugins.md)",
+   "line": "newer",
+   "set": "held-out"
+  },
+  {
+   "id": "react18-context",
+   "project": "react18",
+   "package": "react",
+   "question": "How do I provide a context value to child components?",
+   "expect": [
+    [
+     ".Provider"
+    ]
+   ],
+   "reject": [
+    "Starting in React 19"
+   ],
+   "why": "18: <SomeContext.Provider value> (@types/react 18.3.31)",
+   "line": "older",
+   "set": "held-out"
+  },
+  {
+   "id": "react19-context",
+   "project": "react19",
+   "package": "react",
+   "question": "How do I provide a context value to child components?",
+   "expect": [
+    [
+     "Starting in React 19",
+     "is a legacy way"
+    ]
+   ],
+   "reject": [],
+   "why": "19: render <SomeContext> as the provider; .Provider is legacy (react.dev createContext.md)",
+   "line": "newer",
+   "set": "held-out"
+  },
+  {
+   "id": "rr7-routesfile",
+   "project": "rr7",
+   "package": "react-router",
+   "question": "Where do I configure my app's routes?",
+   "expect": [
+    [
+     "routes.ts"
+    ]
+   ],
+   "reject": [],
+   "why": "7 framework mode: app/routes.ts (react-router@7.1.1 docs/start/framework/routing.md)",
+   "line": "newer",
+   "set": "held-out"
+  },
+  {
+   "id": "dj51-facets",
+   "project": "django51",
+   "package": "django",
+   "question": "How do I show counts next to the admin list filters?",
+   "expect": [
+    [
+     "show_facets"
+    ]
+   ],
+   "reject": [],
+   "why": "5.0+: ModelAdmin.show_facets (5.1.15 docs/ref/contrib/admin/index.txt)",
+   "line": "newer",
+   "set": "held-out"
+  },
+  {
+   "id": "tw3-source",
+   "project": "tailwind3",
+   "package": "tailwindcss",
+   "question": "How do I tell Tailwind which files to scan for class names?",
+   "expect": [
+    [
+     "content:"
+    ]
+   ],
+   "reject": [
+    "@source"
+   ],
+   "why": "v3: content: [...] in tailwind.config.js (v3 site content-configuration.mdx)",
+   "line": "older",
+   "set": "held-out"
+  },
+  {
+   "id": "tw4-source",
+   "project": "tailwind4",
+   "package": "tailwindcss",
+   "question": "How do I tell Tailwind which files to scan for class names?",
+   "expect": [
+    [
+     "@source"
+    ]
+   ],
+   "reject": [],
+   "why": "v4: automatic detection plus @source in CSS (v4 site detecting-classes-in-source-files.mdx)",
+   "line": "newer",
+   "set": "held-out"
+  },
+  {
+   "id": "tokio-interval",
+   "project": "axum08",
+   "package": "tokio",
+   "question": "How do I run a task every few seconds?",
+   "expect": [
+    [
+     "interval("
+    ]
+   ],
+   "reject": [],
+   "why": "tokio::time::interval",
+   "line": "single",
+   "set": "held-out"
   }
  ]
 }

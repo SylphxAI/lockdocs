@@ -215,6 +215,8 @@ struct Job {
 #[derive(Clone, Copy, PartialEq)]
 enum How {
     Prose,
+    /// A docs page written as a JS/TSX component.
+    Page,
     Example,
     Metadata,
     Ts,
@@ -293,12 +295,27 @@ fn plan(eco: Eco, src: &Source, extra_types: Option<&Path>, upstream: Option<&Pa
     }
     // Upstream docs fetched from the repository at this version's tag.
     if let Some(up) = upstream {
+        let pages: HashSet<String> = std::fs::read_to_string(up.join(".lockdocs-upstream.json"))
+            .ok()
+            .and_then(|t| serde_json::from_str::<crate::upstream::Manifest>(&t).ok())
+            .map(|m| m.pages.into_iter().collect())
+            .unwrap_or_default();
         let mut rels = Vec::new();
         walk_all(up, Path::new(""), 0, &mut rels);
         for r in rels {
             let e = ext_of(&r);
-            let rel = format!("upstream:{}", r.to_string_lossy().replace('\\', "/"));
-            if doc_ext(&e) || e == "mdoc" {
+            let plain = r.to_string_lossy().replace('\\', "/");
+            let rel = format!("upstream:{plain}");
+            if pages.contains(&plain) {
+                jobs.push(Job {
+                    abs: up.join(&r),
+                    rel,
+                    how: How::Page,
+                });
+                continue;
+            }
+            // Django and others write reStructuredText in `.txt` files under docs/.
+            if doc_ext(&e) || e == "mdoc" || e == "txt" {
                 jobs.push(Job {
                     abs: up.join(&r),
                     rel,
@@ -376,6 +393,12 @@ pub fn extract(eco: Eco, pkg_name: &str, src: &Source, extra_types: Option<&Path
                         for e in &mut out {
                             e.doc = includes.expand(&e.doc);
                         }
+                    }
+                }
+                How::Page => {
+                    if let Some((md, title)) = page_markdown(&text) {
+                        let title = title.unwrap_or_else(|| page_title(&job.rel));
+                        prose_titled(&md, &job.rel, 0, Some(title), &mut out);
                     }
                 }
                 How::Example => example(&text, &job.rel, &mut out),
@@ -505,10 +528,249 @@ fn example(text: &str, rel: &str, out: &mut Vec<Entry>) {
     });
 }
 
+/// Title for a page file without one: its route (`docs/installation/using-vite`).
+fn page_title(rel: &str) -> String {
+    let segs: Vec<&str> = rel.split('/').filter(|s| !(s.starts_with('(') && s.ends_with(')'))).collect();
+    let mut segs: Vec<&str> = segs.iter().rev().take(3).rev().copied().collect();
+    if let Some(last) = segs.last() {
+        if last.starts_with("page.") || last.starts_with("index.") {
+            segs.pop();
+        }
+    }
+    segs.join("/")
+        .trim_end_matches(".tsx")
+        .trim_end_matches(".jsx")
+        .trim_end_matches(".js")
+        .to_string()
+}
+
+/// Markdown from a docs page written as a JS/TSX component: `title:` values
+/// of listed steps become headings, `description:` and JSX text become
+/// paragraphs, `code:` strings become fenced code (language from `lang:`),
+/// and JSX `<h1>`..`<h6>` stay headings. Lines keep their source position
+/// where they can. Returns (markdown, page title from `metadata.title`).
+fn page_markdown(text: &str) -> Option<(String, Option<String>)> {
+    if text.len() > 200_000 {
+        return None;
+    }
+    parse_with("tsx", text, |root, src| {
+        let mut p = PageOut::default();
+        page_walk(root, src, &mut p, false);
+        p.flush();
+        let mut md = String::new();
+        let mut n = 0u32;
+        for (line, t) in &p.out {
+            while n + 1 < *line {
+                md.push('\n');
+                n += 1;
+            }
+            md.push_str(t);
+            md.push('\n');
+            n += 1 + t.matches('\n').count() as u32;
+        }
+        (md, p.title)
+    })
+    .filter(|(md, _)| !md.trim().is_empty())
+}
+
+#[derive(Default)]
+struct PageOut {
+    out: Vec<(u32, String)>,
+    para: String,
+    para_line: u32,
+    title: Option<String>,
+}
+
+impl PageOut {
+    fn text(&mut self, line: u32, t: &str) {
+        if self.para.trim().is_empty() {
+            self.para_line = line;
+        }
+        self.para.push_str(t);
+    }
+    fn flush(&mut self) {
+        let t = compact(&self.para, usize::MAX);
+        if !t.is_empty() {
+            self.out.push((self.para_line, t));
+        }
+        self.para.clear();
+    }
+    fn block(&mut self, line: u32, t: String) {
+        self.flush();
+        self.out.push((line, t));
+    }
+}
+
+fn line_of(n: Node) -> u32 {
+    n.start_position().row as u32 + 1
+}
+
+/// The value of a string, template string or tagged template (`dedent`...``).
+fn js_string(n: Node, src: &[u8]) -> Option<String> {
+    match n.kind() {
+        "string" => {
+            let raw = txt(n, src);
+            let inner = raw.get(1..raw.len().saturating_sub(1)).unwrap_or("");
+            Some(inner.replace("\\n", "\n").replace("\\'", "'").replace("\\\"", "\"").replace("\\\\", "\\"))
+        }
+        "template_string" => {
+            let raw = txt(n, src);
+            let inner = raw.get(1..raw.len().saturating_sub(1)).unwrap_or("");
+            Some(dedent(&inner.trim_matches('\n').lines().collect::<Vec<_>>()))
+        }
+        "call_expression" => n
+            .child_by_field_name("arguments")
+            .filter(|a| a.kind() == "template_string")
+            .and_then(|a| js_string(a, src)),
+        "parenthesized_expression" => n.named_child(0).and_then(|c| js_string(c, src)),
+        _ => None,
+    }
+}
+
+fn jsx_name(n: Node, src: &[u8]) -> String {
+    let open = if n.kind() == "jsx_element" {
+        n.child_by_field_name("open_tag")
+    } else {
+        Some(n)
+    };
+    open.and_then(|o| o.child_by_field_name("name"))
+        .map(|x| txt(x, src).to_string())
+        .unwrap_or_default()
+}
+
+/// The visible text inside a JSX element.
+fn jsx_text(n: Node, src: &[u8], out: &mut String) {
+    match n.kind() {
+        "jsx_text" => out.push_str(txt(n, src)),
+        "jsx_expression" => {
+            if let Some(v) = n.named_child(0).and_then(|c| js_string(c, src)) {
+                out.push_str(&v);
+            }
+        }
+        "jsx_attribute" | "jsx_opening_element" | "jsx_closing_element" => {}
+        _ => {
+            let mut c = n.walk();
+            for ch in n.named_children(&mut c) {
+                jsx_text(ch, src, out);
+            }
+        }
+    }
+}
+
+fn page_walk(n: Node, src: &[u8], p: &mut PageOut, in_array: bool) {
+    match n.kind() {
+        "import_statement" | "comment" | "jsx_attribute" => {}
+        "pair" => {
+            let key = n
+                .child_by_field_name("key")
+                .map(|k| txt(k, src).trim_matches(['"', '\'']).to_string())
+                .unwrap_or_default();
+            let Some(value) = n.child_by_field_name("value") else { return };
+            match key.as_str() {
+                "title" | "heading" => {
+                    if let Some(t) = js_string(value, src) {
+                        if !in_array && p.title.is_none() {
+                            p.title = Some(t);
+                        } else if in_array {
+                            p.block(line_of(n), format!("## {}", compact(&t, 200)));
+                        }
+                    }
+                }
+                "description" => {
+                    if let Some(t) = js_string(value, src) {
+                        p.block(line_of(value), compact(&t, usize::MAX));
+                    }
+                }
+                "code" => match js_string(value, src) {
+                    Some(code) => {
+                        let lang = n
+                            .parent()
+                            .and_then(|obj| {
+                                let mut c = obj.walk();
+                                let found = obj.named_children(&mut c).find(|x| {
+                                    x.kind() == "pair" && x.child_by_field_name("key").is_some_and(|k| txt(k, src).trim_matches(['"', '\'']) == "lang")
+                                });
+                                found
+                            })
+                            .and_then(|x| x.child_by_field_name("value"))
+                            .and_then(|v| js_string(v, src))
+                            .unwrap_or_default();
+                        p.block(line_of(value), format!("```{lang}\n{}\n```", code.trim_end()));
+                    }
+                    None => page_walk(value, src, p, in_array),
+                },
+                "name" | "lang" | "className" | "href" | "id" | "url" | "src" | "image" | "images" | "icon" | "openGraph" | "twitter" | "alternates" => {}
+                _ => page_walk(value, src, p, in_array),
+            }
+        }
+        "jsx_element" | "jsx_self_closing_element" => {
+            let name = jsx_name(n, src);
+            let b = name.as_bytes();
+            if b.len() == 2 && b[0] == b'h' && (b'1'..=b'6').contains(&b[1]) {
+                let mut t = String::new();
+                jsx_text(n, src, &mut t);
+                let t = compact(&t, 200);
+                if !t.is_empty() {
+                    p.block(line_of(n), format!("{} {t}", "#".repeat((b[1] - b'0') as usize)));
+                }
+            } else if name == "code" {
+                let mut t = String::new();
+                jsx_text(n, src, &mut t);
+                p.text(line_of(n), &format!("`{}`", t.trim()));
+            } else {
+                let block = matches!(name.as_str(), "p" | "li" | "div" | "section" | "ul" | "ol" | "pre" | "table" | "tr");
+                if block {
+                    p.flush();
+                }
+                let mut c = n.walk();
+                for ch in n.named_children(&mut c) {
+                    page_walk(ch, src, p, in_array);
+                }
+                if block {
+                    p.flush();
+                }
+            }
+        }
+        "jsx_text" => p.text(line_of(n), txt(n, src)),
+        "jsx_expression" => match n.named_child(0) {
+            Some(c) if matches!(c.kind(), "string" | "template_string") => {
+                let v = js_string(c, src).unwrap_or_default();
+                p.text(line_of(n), &v);
+            }
+            Some(c) => page_walk(c, src, p, in_array),
+            None => {}
+        },
+        _ => {
+            let arr = in_array || n.kind() == "array";
+            let mut c = n.walk();
+            for ch in n.named_children(&mut c) {
+                page_walk(ch, src, p, arr);
+            }
+        }
+    }
+}
+
 fn prose(text: &str, rel: &str, line_off: u32, out: &mut Vec<Entry>) {
+    prose_titled(text, rel, line_off, None, out)
+}
+
+fn prose_titled(text: &str, rel: &str, line_off: u32, given: Option<String>, out: &mut Vec<Entry>) {
     let (text, fm_title) = markdown::clean_mdx(text, rel.ends_with(".mdx"));
-    let file_title = rel.rsplit('/').next().unwrap_or(rel);
-    let title = if rel.contains("package metadata") {
+    // A page without a title is named after its file: `model_config.md` -> `model config`.
+    let file_name = rel.rsplit('/').next().unwrap_or(rel);
+    let file_title = if rel.starts_with("upstream:") && !is_doc_name(file_name) {
+        file_name
+            .rsplit_once('.')
+            .map_or(file_name, |x| x.0)
+            .trim_start_matches(|c: char| c.is_ascii_digit() || c == '-')
+            .replace(['_', '-'], " ")
+    } else {
+        file_name.to_string()
+    };
+    let file_title = file_title.as_str();
+    let title = if let Some(t) = given {
+        t
+    } else if rel.contains("package metadata") {
         "README".to_string()
     } else if let Some(t) = fm_title {
         t
@@ -569,7 +831,7 @@ fn txt<'a>(n: Node, src: &'a [u8]) -> &'a str {
 }
 
 fn compact(s: &str, cap: usize) -> String {
-    let mut out = String::with_capacity(s.len().min(cap + 8));
+    let mut out = String::with_capacity(s.len().min(cap.saturating_add(8)));
     let mut space = false;
     for c in s.chars() {
         if c.is_whitespace() {
@@ -1662,6 +1924,44 @@ export * as zz from "./external";
         assert!(e.iter().all(|x| x.name != "_private"));
         assert!(e.iter().any(|x| x.kind == Kind::Prose && x.doc == "Module docs."));
         assert_eq!(get("pydantic.main.create_model").kind, Kind::Function);
+    }
+
+    #[test]
+    fn docs_pages_written_as_components() {
+        let src = r#"import dedent from "dedent";
+export const metadata = { title: "Installing with Vite", description: "Use the Vite plugin.", openGraph: { title: "x" } };
+const steps = [
+  {
+    title: "Import Tailwind CSS",
+    body: (
+      <p>
+        Add an <code>@import</code> to your CSS file.
+      </p>
+    ),
+    code: { name: "CSS", lang: "css", code: dedent`
+        @import "tailwindcss";
+      ` },
+  },
+  { title: 'Old way', body: () => <p>Use directives{' '}here.</p>, code: { lang: 'css', code: '@tailwind base;\n@tailwind utilities;' } },
+];
+export default function Page() { return <div className="prose"><h3 className="sr-only">Overview</h3><p>Fast.</p></div> }
+"#;
+        let (md, title) = page_markdown(src).unwrap();
+        assert_eq!(title.as_deref(), Some("Installing with Vite"));
+        assert!(md.contains("## Import Tailwind CSS"), "{md}");
+        assert!(md.contains("Add an `@import` to your CSS file."), "{md}");
+        assert!(md.contains("```css\n@import \"tailwindcss\";\n```"), "{md}");
+        assert!(md.contains("@tailwind base;\n@tailwind utilities;"), "{md}");
+        assert!(md.contains("### Overview"), "{md}");
+        assert!(!md.contains("dedent") && !md.contains("prose"), "{md}");
+        let mut out = Vec::new();
+        prose_titled(&md, "upstream:site/docs/installation/page.tsx", 0, title, &mut out);
+        let s = out.iter().find(|e| e.name == "Installing with Vite › Import Tailwind CSS").unwrap();
+        assert_eq!(s.line, 5);
+        assert_eq!(
+            page_title("upstream:site/src/app/(docs)/docs/installation/(tabs)/using-vite/page.tsx"),
+            "installation/using-vite"
+        );
     }
 
     #[test]

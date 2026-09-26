@@ -121,18 +121,18 @@ Out of the box lockdocs reads only your disk (plus the one-time embedding model 
 ## Benchmarks
 
 <!-- bench:start -->
-70 questions whose correct answer depends on the version, over 15 libraries (zod, Next.js, React Router, pydantic, axum, tokio, Tailwind CSS, ESLint, Prisma, React, Vite, Express, SQLAlchemy, Django, FastAPI), each asked in a real project with that version installed. An answer passes when it contains the version-correct API and none of the other version's. Same questions and grader against Context7's anonymous API, on a GitHub-hosted runner ([run](https://github.com/SylphxAI/lockdocs/actions/runs/36125903106)):
+105 questions whose correct answer depends on the version, over 15 libraries (zod, Next.js, React Router, pydantic, axum, tokio, Tailwind CSS, ESLint, Prisma, React, Vite, Express, SQLAlchemy, Django, FastAPI), each asked in a real project with that version installed. An answer passes when it contains the version-correct API and none of the other version's. Same questions and grader against Context7's anonymous API, on a GitHub-hosted runner ([run](https://github.com/SylphxAI/lockdocs/actions/runs/36204404336)):
 
-| | correct | older majors | newer majors | tokio | median tokens | median latency |
-|---|---|---|---|---|---|---|
-| lockdocs + `lockdocs fetch` | 55/70 | 24/33 | 29/34 | 2/3 | 875 | 87 ms |
-| lockdocs, package files only | 46/70 | 22/33 | 22/34 | 2/3 | 915 | 49 ms |
-| Context7 (anonymous) | 49/70 | 12/33 | 34/34 | 3/3 | 908 | 2,011 ms |
+| | correct | older majors | newer majors | tokio | held-out | median tokens | median latency |
+|---|---|---|---|---|---|---|---|
+| lockdocs + `lockdocs fetch` | 96/105 | 38/45 | 53/55 | 5/5 | 16/18 | 866 | 97 ms |
+| lockdocs, package files only | 60/105 | 27/45 | 29/55 | 4/5 | 6/18 | 903 | 52 ms |
+| Context7 (anonymous) | 77/105 | 19/45 | 53/55 | 5/5 | 15/18 | 908 | 2,583 ms |
 <!-- bench:end -->
 
-- **Where versions matter most, lockdocs wins by 2x.** On older majors Context7 often answers with the newest API (all five pydantic 1 questions got pydantic 2 answers).
-- **Context7 is ahead on the newest majors (34/34 vs 29/34) and on tokio (3/3 vs 2/3)**, and we are working to close that. Its index covers docs websites that no package or tag ships (Prisma's docs now describe a later major), and lockdocs has a few ranking misses. The benchmark page lists every question and answer.
-- **~23x faster, no quota.** lockdocs latency is a fresh CLI process per question; `lockdocs fetch` is a one-time 0.6-5 s per project (median 2.4 s).
+- **Where versions matter most, lockdocs wins by 2x** (38/45 vs 19/45 on older majors). Context7 often answers with the newest API (pydantic 1 questions get pydantic 2 answers).
+- **Tied on the newest majors (53/55 each) and on tokio (5/5 each); ahead on held-out questions (16/18 vs 15/18)**, which were written before the ranking changes they measure and not used for tuning.
+- **~27x faster, fewer tokens, no quota.** lockdocs latency is a fresh CLI process per question; `lockdocs fetch` is a one-time download per project.
 
 Method, questions, per-question results and scripts: [benchmark page](https://sylphxai.github.io/lockdocs/benchmarks) and [`bench/`](bench/).
 

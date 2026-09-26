@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 /// Bump when extraction or the on-disk format changes.
-pub const FORMAT: u32 = 8;
+pub const FORMAT: u32 = 9;
 
 #[derive(Serialize, Deserialize)]
 pub struct PackageIndex {
@@ -26,6 +26,10 @@ pub struct PackageIndex {
     pub entries: Vec<Entry>,
     pub terms: Vec<Vec<(String, u16)>>,
     pub lens: Vec<u32>,
+    /// Terms of the heading or name plus the first sentence only, ranked on
+    /// their own so a long body does not bury what the entry says it is.
+    pub head: Vec<Vec<(String, u16)>>,
+    pub head_lens: Vec<u32>,
     pub build_ms: u64,
     /// `github.com/o/r@tag (N files)` when upstream docs are included.
     pub upstream: Option<String>,
@@ -93,6 +97,17 @@ pub fn entry_tf(e: &Entry) -> (Vec<(String, u16)>, u32) {
     }
 }
 
+/// Heading (or name) and first sentence: what an entry says it is about.
+pub fn head_tf(e: &Entry) -> (Vec<(String, u16)>, u32) {
+    let (prose, _) = split_code(&e.doc);
+    let first = summary(&prose);
+    if e.kind == Kind::Prose {
+        bm25::tf(&[(crate::markdown::topic_heading(&e.name), 2), (first, 1)])
+    } else {
+        bm25::tf(&[(&e.name, 2), (first, 1)])
+    }
+}
+
 /// Files whose change means the package was modified in place.
 fn stamp(src: &Source) -> String {
     let probe: Vec<PathBuf> = match &src.metadata {
@@ -119,9 +134,14 @@ fn stamp(src: &Source) -> String {
 /// What an entry means, for the embedding: its name and the start of its
 /// prose (code examples and long signatures dilute a mean-pooled vector).
 pub fn embed_text(e: &Entry) -> String {
-    let (prose, _) = split_code(&e.doc);
+    let (prose, code) = split_code(&e.doc);
     let mut body: String = prose.chars().take(600).collect();
     if e.kind == Kind::Prose {
+        // A code-only section embedded by its title alone matches short
+        // questions far too well; its code says what it is about.
+        if body.trim().is_empty() {
+            body = code.chars().take(600).collect();
+        }
         let head: Vec<&str> = e.name.split(" › ").collect();
         let tail = head[head.len().saturating_sub(2)..].join(" ");
         return format!("{tail}. {body}");
@@ -168,6 +188,7 @@ pub fn build(dep: &Dep, src: &Source, root: &Path, up: Option<&(PathBuf, Manifes
     let up_dir = up.filter(|(_, m)| m.files > 0).map(|(d, _)| d.as_path());
     let entries = extract::extract(dep.eco, &dep.name, src, types.as_deref(), up_dir);
     let (terms, lens): (Vec<_>, Vec<_>) = entries.iter().map(entry_tf).unzip();
+    let (head, head_lens): (Vec<_>, Vec<_>) = entries.iter().map(head_tf).unzip();
     let model = embed::get();
     let vecs: Vec<Vec8> = match &model {
         Some(m) => {
@@ -186,6 +207,8 @@ pub fn build(dep: &Dep, src: &Source, root: &Path, up: Option<&(PathBuf, Manifes
         entries,
         terms,
         lens,
+        head,
+        head_lens,
         build_ms: t.elapsed().as_millis() as u64,
         upstream: up
             .filter(|(_, m)| m.files > 0)

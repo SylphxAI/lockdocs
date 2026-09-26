@@ -34,9 +34,20 @@ jobs:
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
       - run: cargo test --workspace --locked
 
-  # Windows: the tests are cross-compiled to MSVC on Linux and run under wine.
-  # No macOS lane: we host no Apple hardware yet, and the release workflow
-  # checks the Apple binaries.
+  # macOS runs on our macOS pool, in the merge queue (its queue wait would slow
+  # every pull request). Windows, which we do not host: the tests are
+  # cross-compiled to MSVC on Linux and run under wine.
+  macos:
+    if: github.event_name == 'merge_group' || github.event_name == 'workflow_dispatch'
+    name: test macos
+    runs-on: [self-hosted, sylphx, macos, standard]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+      - run: cargo test --workspace --locked
+
   windows:
     name: test windows (wine)
     runs-on: sylphx-linux-standard
@@ -147,7 +158,7 @@ jobs:
   # The one required check.
   ci:
     if: always()
-    needs: [plain-language, test, windows, checks]
+    needs: [plain-language, test, macos, windows, checks]
     runs-on: sylphx-linux-standard
     timeout-minutes: 5
     steps:
@@ -156,4 +167,4 @@ jobs:
           RESULTS: ${{ join(needs.*.result, ' ') }}
         run: |
           echo "$RESULTS"
-          for r in $RESULTS; do test "$r" = success; done
+          for r in $RESULTS; do case "$r" in success|skipped) ;; *) exit 1 ;; esac; done

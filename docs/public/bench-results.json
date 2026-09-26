@@ -2,13 +2,13 @@
  "tokenizer": "tiktoken o200k_base",
  "index": {
   "axum07": {
-   "ms": 352,
+   "ms": 271,
    "report": {
     "missing": [],
-    "ms": 338,
+    "ms": 259,
     "packages": [
      {
-      "build_ms": 202,
+      "build_ms": 149,
       "ecosystem": "cargo",
       "package": "axum@0.7.9",
       "sections": 262,
@@ -16,7 +16,7 @@
       "symbols": 236
      },
      {
-      "build_ms": 305,
+      "build_ms": 218,
       "ecosystem": "cargo",
       "package": "tokio@1.41.1",
       "sections": 551,
@@ -27,13 +27,13 @@
    }
   },
   "axum08": {
-   "ms": 347,
+   "ms": 285,
    "report": {
     "missing": [],
-    "ms": 334,
+    "ms": 274,
     "packages": [
      {
-      "build_ms": 196,
+      "build_ms": 137,
       "ecosystem": "cargo",
       "package": "axum@0.8.1",
       "sections": 272,
@@ -41,7 +41,7 @@
       "symbols": 264
      },
      {
-      "build_ms": 300,
+      "build_ms": 236,
       "ecosystem": "cargo",
       "package": "tokio@1.43.0",
       "sections": 561,
@@ -52,13 +52,13 @@
    }
   },
   "django42": {
-   "ms": 496,
+   "ms": 375,
    "report": {
     "missing": [],
-    "ms": 479,
+    "ms": 359,
     "packages": [
      {
-      "build_ms": 426,
+      "build_ms": 309,
       "ecosystem": "pypi",
       "package": "django@4.2.30",
       "sections": 159,
@@ -69,13 +69,13 @@
    }
   },
   "django51": {
-   "ms": 489,
+   "ms": 371,
    "report": {
     "missing": [],
-    "ms": 472,
+    "ms": 353,
     "packages": [
      {
-      "build_ms": 420,
+      "build_ms": 303,
       "ecosystem": "pypi",
       "package": "django@5.1.15",
       "sections": 159,
@@ -86,13 +86,13 @@
    }
   },
   "eslint8": {
-   "ms": 172,
+   "ms": 130,
    "report": {
     "missing": [],
-    "ms": 167,
+    "ms": 126,
     "packages": [
      {
-      "build_ms": 141,
+      "build_ms": 97,
       "ecosystem": "npm",
       "package": "eslint@8.57.1",
       "sections": 27,
@@ -103,13 +103,13 @@
    }
   },
   "eslint9": {
-   "ms": 66,
+   "ms": 59,
    "report": {
     "missing": [],
-    "ms": 61,
+    "ms": 55,
     "packages": [
      {
-      "build_ms": 34,
+      "build_ms": 24,
       "ecosystem": "npm",
       "package": "eslint@9.39.5",
       "sections": 28,
@@ -120,13 +120,13 @@
    }
   },
   "express4": {
-   "ms": 56,
+   "ms": 53,
    "report": {
     "missing": [],
-    "ms": 51,
+    "ms": 49,
     "packages": [
      {
-      "build_ms": 5,
+      "build_ms": 4,
       "ecosystem": "npm",
       "package": "@types/express@4.17.25",
       "sections": 5,
@@ -134,7 +134,7 @@
       "symbols": 35
      },
      {
-      "build_ms": 24,
+      "build_ms": 16,
       "ecosystem": "npm",
       "package": "express@4.21.2",
       "sections": 276,
@@ -145,13 +145,13 @@
    }
   },
   "express5": {
-   "ms": 40,
+   "ms": 41,
    "report": {
     "missing": [],
-    "ms": 36,
+    "ms": 37,
     "packages": [
      {
-      "build_ms": 2,
+      "build_ms": 4,
       "ecosystem": "npm",
       "package": "@types/express@5.0.6",
       "sections": 5,
@@ -159,7 +159,7 @@
       "symbols": 34
      },
      {
-      "build_ms": 10,
+      "build_ms": 5,
       "ecosystem": "npm",
       "package": "express@5.2.1",
       "sections": 18,
@@ -170,13 +170,13 @@
    }
   },
   "fastapi0115": {
-   "ms": 72,
+   "ms": 65,
    "report": {
     "missing": [],
-    "ms": 68,
+    "ms": 61,
     "packages": [
      {
-      "build_ms": 32,
+      "build_ms": 24,
       "ecosystem": "pypi",
       "package": "fastapi@0.115.14",
       "sections": 27,
@@ -187,13 +187,13 @@
    }
   },
   "fastapi088": {
-   "ms": 62,
+   "ms": 54,
    "report": {
     "missing": [],
-    "ms": 58,
+    "ms": 52,
     "packages": [
      {
-      "build_ms": 20,
+      "build_ms": 14,
       "ecosystem": "pypi",
       "package": "fastapi@0.88.0",
       "sections": 24,
@@ -204,13 +204,13 @@
    }
   },
   "next14": {
-   "ms": 387,
+   "ms": 293,
    "report": {
     "missing": [],
-    "ms": 374,
+    "ms": 283,
     "packages": [
      {
-      "build_ms": 322,
+      "build_ms": 246,
       "ecosystem": "npm",
       "package": "next@14.2.35",
       "sections": 10,
@@ -226,7 +226,7 @@
       "symbols": 0
      },
      {
-      "build_ms": 249,
+      "build_ms": 169,
       "ecosystem": "npm",
       "package": "react-dom@18.3.1",
       "sections": 7,
@@ -237,13 +237,13 @@
    }
   },
   "next15": {
-   "ms": 634,
+   "ms": 429,
    "report": {
     "missing": [],
-    "ms": 619,
+    "ms": 417,
     "packages": [
      {
-      "build_ms": 406,
+      "build_ms": 314,
       "ecosystem": "npm",
       "package": "next@15.1.0",
       "sections": 9,
@@ -251,7 +251,7 @@
       "symbols": 5585
      },
      {
-      "build_ms": 417,
+      "build_ms": 35,
       "ecosystem": "npm",
       "package": "react@19.0.0",
       "sections": 4,
@@ -259,7 +259,7 @@
       "symbols": 0
      },
      {
-      "build_ms": 579,
+      "build_ms": 369,
       "ecosystem": "npm",
       "package": "react-dom@19.0.0",
       "sections": 7,
@@ -270,13 +270,13 @@
    }
   },
   "next16": {
-   "ms": 944,
+   "ms": 713,
    "report": {
     "missing": [],
-    "ms": 904,
+    "ms": 681,
     "packages": [
      {
-      "build_ms": 835,
+      "build_ms": 605,
       "ecosystem": "npm",
       "package": "next@16.3.6",
       "sections": 3598,
@@ -284,7 +284,7 @@
       "symbols": 8354
      },
      {
-      "build_ms": 391,
+      "build_ms": 25,
       "ecosystem": "npm",
       "package": "react@19.2.8",
       "sections": 4,
@@ -292,7 +292,7 @@
       "symbols": 0
      },
      {
-      "build_ms": 546,
+      "build_ms": 424,
       "ecosystem": "npm",
       "package": "react-dom@19.2.8",
       "sections": 7,
@@ -303,13 +303,13 @@
    }
   },
   "prisma5": {
-   "ms": 88,
+   "ms": 73,
    "report": {
     "missing": [],
-    "ms": 82,
+    "ms": 69,
     "packages": [
      {
-      "build_ms": 54,
+      "build_ms": 39,
       "ecosystem": "npm",
       "package": "@prisma/client@5.22.0",
       "sections": 4,
@@ -317,7 +317,7 @@
       "symbols": 814
      },
      {
-      "build_ms": 50,
+      "build_ms": 34,
       "ecosystem": "npm",
       "package": "prisma@5.22.0",
       "sections": 14,
@@ -328,13 +328,13 @@
    }
   },
   "prisma6": {
-   "ms": 117,
+   "ms": 94,
    "report": {
     "missing": [],
-    "ms": 110,
+    "ms": 89,
     "packages": [
      {
-      "build_ms": 80,
+      "build_ms": 55,
       "ecosystem": "npm",
       "package": "@prisma/client@6.19.3",
       "sections": 4,
@@ -342,7 +342,7 @@
       "symbols": 851
      },
      {
-      "build_ms": 82,
+      "build_ms": 59,
       "ecosystem": "npm",
       "package": "prisma@6.19.3",
       "sections": 14,
@@ -353,13 +353,13 @@
    }
   },
   "pydantic1": {
-   "ms": 100,
+   "ms": 80,
    "report": {
     "missing": [],
-    "ms": 95,
+    "ms": 76,
     "packages": [
      {
-      "build_ms": 53,
+      "build_ms": 38,
       "ecosystem": "pypi",
       "package": "pydantic@1.10.18",
       "sections": 135,
@@ -370,13 +370,13 @@
    }
   },
   "pydantic2": {
-   "ms": 172,
+   "ms": 135,
    "report": {
     "missing": [],
-    "ms": 165,
+    "ms": 129,
     "packages": [
      {
-      "build_ms": 126,
+      "build_ms": 89,
       "ecosystem": "pypi",
       "package": "pydantic@2.9.2",
       "sections": 191,
@@ -387,13 +387,13 @@
    }
   },
   "react18": {
-   "ms": 330,
+   "ms": 266,
    "report": {
     "missing": [],
-    "ms": 318,
+    "ms": 257,
     "packages": [
      {
-      "build_ms": 140,
+      "build_ms": 101,
       "ecosystem": "npm",
       "package": "@types/react@18.3.31",
       "sections": 5,
@@ -401,7 +401,7 @@
       "symbols": 1853
      },
      {
-      "build_ms": 17,
+      "build_ms": 14,
       "ecosystem": "npm",
       "package": "@types/react-dom@18.3.7",
       "sections": 5,
@@ -409,7 +409,7 @@
       "symbols": 295
      },
      {
-      "build_ms": 277,
+      "build_ms": 118,
       "ecosystem": "npm",
       "package": "react@18.3.1",
       "sections": 4,
@@ -417,7 +417,7 @@
       "symbols": 1853
      },
      {
-      "build_ms": 250,
+      "build_ms": 211,
       "ecosystem": "npm",
       "package": "react-dom@18.3.1",
       "sections": 7,
@@ -428,13 +428,13 @@
    }
   },
   "react19": {
-   "ms": 635,
+   "ms": 514,
    "report": {
     "missing": [],
-    "ms": 623,
+    "ms": 506,
     "packages": [
      {
-      "build_ms": 135,
+      "build_ms": 96,
       "ecosystem": "npm",
       "package": "@types/react@19.2.18",
       "sections": 5,
@@ -442,7 +442,7 @@
       "symbols": 1829
      },
      {
-      "build_ms": 12,
+      "build_ms": 9,
       "ecosystem": "npm",
       "package": "@types/react-dom@19.2.7",
       "sections": 5,
@@ -450,7 +450,7 @@
       "symbols": 206
      },
      {
-      "build_ms": 338,
+      "build_ms": 278,
       "ecosystem": "npm",
       "package": "react@19.2.8",
       "sections": 4,
@@ -458,7 +458,7 @@
       "symbols": 1829
      },
      {
-      "build_ms": 585,
+      "build_ms": 451,
       "ecosystem": "npm",
       "package": "react-dom@19.2.8",
       "sections": 7,
@@ -469,13 +469,13 @@
    }
   },
   "rr6": {
-   "ms": 258,
+   "ms": 204,
    "report": {
     "missing": [],
-    "ms": 248,
+    "ms": 198,
     "packages": [
      {
-      "build_ms": 194,
+      "build_ms": 31,
       "ecosystem": "npm",
       "package": "react@18.3.1",
       "sections": 4,
@@ -483,7 +483,7 @@
       "symbols": 0
      },
      {
-      "build_ms": 198,
+      "build_ms": 149,
       "ecosystem": "npm",
       "package": "react-dom@18.3.1",
       "sections": 7,
@@ -491,7 +491,7 @@
       "symbols": 0
      },
      {
-      "build_ms": 23,
+      "build_ms": 16,
       "ecosystem": "npm",
       "package": "react-router@6.26.2",
       "sections": 74,
@@ -499,7 +499,7 @@
       "symbols": 207
      },
      {
-      "build_ms": 24,
+      "build_ms": 15,
       "ecosystem": "npm",
       "package": "react-router-dom@6.26.2",
       "sections": 80,
@@ -510,13 +510,13 @@
    }
   },
   "rr7": {
-   "ms": 488,
+   "ms": 399,
    "report": {
     "missing": [],
-    "ms": 478,
+    "ms": 393,
     "packages": [
      {
-      "build_ms": 48,
+      "build_ms": 32,
       "ecosystem": "npm",
       "package": "react@19.0.0",
       "sections": 4,
@@ -524,7 +524,7 @@
       "symbols": 0
      },
      {
-      "build_ms": 450,
+      "build_ms": 346,
       "ecosystem": "npm",
       "package": "react-dom@19.0.0",
       "sections": 7,
@@ -532,7 +532,7 @@
       "symbols": 0
      },
      {
-      "build_ms": 121,
+      "build_ms": 227,
       "ecosystem": "npm",
       "package": "react-router@7.1.1",
       "sections": 92,
@@ -543,13 +543,13 @@
    }
   },
   "sqlalchemy14": {
-   "ms": 475,
+   "ms": 354,
    "report": {
     "missing": [],
-    "ms": 457,
+    "ms": 338,
     "packages": [
      {
-      "build_ms": 410,
+      "build_ms": 291,
       "ecosystem": "pypi",
       "package": "sqlalchemy@1.4.54",
       "sections": 8,
@@ -560,13 +560,13 @@
    }
   },
   "sqlalchemy20": {
-   "ms": 612,
+   "ms": 460,
    "report": {
     "missing": [],
-    "ms": 590,
+    "ms": 440,
     "packages": [
      {
-      "build_ms": 537,
+      "build_ms": 389,
       "ecosystem": "pypi",
       "package": "sqlalchemy@2.0.54",
       "sections": 8,
@@ -577,13 +577,13 @@
    }
   },
   "tailwind3": {
-   "ms": 36,
+   "ms": 38,
    "report": {
     "missing": [],
-    "ms": 32,
+    "ms": 35,
     "packages": [
      {
-      "build_ms": 9,
+      "build_ms": 6,
       "ecosystem": "npm",
       "package": "tailwindcss@3.4.19",
       "sections": 6,
@@ -594,13 +594,13 @@
    }
   },
   "tailwind4": {
-   "ms": 33,
+   "ms": 35,
    "report": {
     "missing": [],
-    "ms": 30,
+    "ms": 33,
     "packages": [
      {
-      "build_ms": 7,
+      "build_ms": 4,
       "ecosystem": "npm",
       "package": "tailwindcss@4.1.18",
       "sections": 4,
@@ -611,13 +611,13 @@
    }
   },
   "vite5": {
-   "ms": 83,
+   "ms": 72,
    "report": {
     "missing": [],
-    "ms": 78,
+    "ms": 68,
     "packages": [
      {
-      "build_ms": 51,
+      "build_ms": 38,
       "ecosystem": "npm",
       "package": "vite@5.4.21",
       "sections": 131,
@@ -628,13 +628,13 @@
    }
   },
   "vite6": {
-   "ms": 90,
+   "ms": 78,
    "report": {
     "missing": [],
-    "ms": 83,
+    "ms": 73,
     "packages": [
      {
-      "build_ms": 55,
+      "build_ms": 42,
       "ecosystem": "npm",
       "package": "vite@6.4.3",
       "sections": 91,
@@ -645,13 +645,13 @@
    }
   },
   "zod3": {
-   "ms": 62,
+   "ms": 57,
    "report": {
     "missing": [],
-    "ms": 58,
+    "ms": 54,
     "packages": [
      {
-      "build_ms": 31,
+      "build_ms": 24,
       "ecosystem": "npm",
       "package": "zod@3.23.8",
       "sections": 121,
@@ -662,13 +662,13 @@
    }
   },
   "zod4": {
-   "ms": 103,
+   "ms": 84,
    "report": {
     "missing": [],
-    "ms": 97,
+    "ms": 79,
     "packages": [
      {
-      "build_ms": 67,
+      "build_ms": 47,
       "ecosystem": "npm",
       "package": "zod@4.1.5",
       "sections": 9,
@@ -681,10 +681,10 @@
  },
  "fetch": {
   "axum07": {
-   "ms": 2457,
+   "ms": 2051,
    "report": {
     "model": true,
-    "ms": 2452,
+    "ms": 2048,
     "packages": [
      {
       "files": 2,
@@ -704,10 +704,10 @@
    }
   },
   "axum08": {
-   "ms": 1775,
+   "ms": 2992,
    "report": {
     "model": true,
-    "ms": 1770,
+    "ms": 2988,
     "packages": [
      {
       "files": 0,
@@ -727,10 +727,10 @@
    }
   },
   "django42": {
-   "ms": 5405,
+   "ms": 3471,
    "report": {
     "model": true,
-    "ms": 5400,
+    "ms": 3468,
     "packages": [
      {
       "files": 601,
@@ -743,10 +743,10 @@
    }
   },
   "django51": {
-   "ms": 4764,
+   "ms": 3698,
    "report": {
     "model": true,
-    "ms": 4760,
+    "ms": 3694,
     "packages": [
      {
       "files": 629,
@@ -759,10 +759,10 @@
    }
   },
   "eslint8": {
-   "ms": 3128,
+   "ms": 1530,
    "report": {
     "model": true,
-    "ms": 3124,
+    "ms": 1527,
     "packages": [
      {
       "files": 409,
@@ -775,10 +775,10 @@
    }
   },
   "eslint9": {
-   "ms": 2813,
+   "ms": 5287,
    "report": {
     "model": true,
-    "ms": 2808,
+    "ms": 5284,
     "packages": [
      {
       "files": 435,
@@ -791,10 +791,10 @@
    }
   },
   "express4": {
-   "ms": 2555,
+   "ms": 3302,
    "report": {
     "model": true,
-    "ms": 2551,
+    "ms": 3299,
     "packages": [
      {
       "files": 6,
@@ -814,10 +814,10 @@
    }
   },
   "express5": {
-   "ms": 2342,
+   "ms": 2617,
    "report": {
     "model": true,
-    "ms": 2337,
+    "ms": 2614,
     "packages": [
      {
       "files": 38,
@@ -837,10 +837,10 @@
    }
   },
   "fastapi0115": {
-   "ms": 1890,
+   "ms": 2637,
    "report": {
     "model": true,
-    "ms": 1886,
+    "ms": 2633,
     "packages": [
      {
       "files": 180,
@@ -853,10 +853,10 @@
    }
   },
   "fastapi088": {
-   "ms": 2346,
+   "ms": 1892,
    "report": {
     "model": true,
-    "ms": 2342,
+    "ms": 1888,
     "packages": [
      {
       "files": 113,
@@ -869,10 +869,10 @@
    }
   },
   "next14": {
-   "ms": 3408,
+   "ms": 1903,
    "report": {
     "model": true,
-    "ms": 3402,
+    "ms": 1899,
     "packages": [
      {
       "files": 318,
@@ -899,10 +899,10 @@
    }
   },
   "next15": {
-   "ms": 3391,
+   "ms": 2112,
    "report": {
     "model": true,
-    "ms": 3385,
+    "ms": 2108,
     "packages": [
      {
       "files": 365,
@@ -929,10 +929,10 @@
    }
   },
   "next16": {
-   "ms": 4773,
+   "ms": 2083,
    "report": {
     "model": true,
-    "ms": 4766,
+    "ms": 2078,
     "packages": [
      {
       "files": 458,
@@ -959,10 +959,10 @@
    }
   },
   "prisma5": {
-   "ms": 5434,
+   "ms": 5175,
    "report": {
     "model": true,
-    "ms": 5428,
+    "ms": 5170,
     "packages": [
      {
       "files": 236,
@@ -982,10 +982,10 @@
    }
   },
   "prisma6": {
-   "ms": 3635,
+   "ms": 3127,
    "report": {
     "model": true,
-    "ms": 3630,
+    "ms": 3123,
     "packages": [
      {
       "files": 247,
@@ -1005,10 +1005,10 @@
    }
   },
   "pydantic1": {
-   "ms": 1502,
+   "ms": 810,
    "report": {
     "model": true,
-    "ms": 1498,
+    "ms": 808,
     "packages": [
      {
       "files": 176,
@@ -1021,10 +1021,10 @@
    }
   },
   "pydantic2": {
-   "ms": 966,
+   "ms": 668,
    "report": {
     "model": true,
-    "ms": 961,
+    "ms": 665,
     "packages": [
      {
       "files": 80,
@@ -1037,10 +1037,10 @@
    }
   },
   "react18": {
-   "ms": 2179,
+   "ms": 2670,
    "report": {
     "model": true,
-    "ms": 2175,
+    "ms": 2667,
     "packages": [
      {
       "files": 137,
@@ -1074,10 +1074,10 @@
    }
   },
   "react19": {
-   "ms": 2096,
+   "ms": 3657,
    "report": {
     "model": true,
-    "ms": 2091,
+    "ms": 3654,
     "packages": [
      {
       "files": 180,
@@ -1111,10 +1111,10 @@
    }
   },
   "rr6": {
-   "ms": 1759,
+   "ms": 1667,
    "report": {
     "model": true,
-    "ms": 1754,
+    "ms": 1664,
     "packages": [
      {
       "files": 140,
@@ -1148,10 +1148,10 @@
    }
   },
   "rr7": {
-   "ms": 1652,
+   "ms": 1544,
    "report": {
     "model": true,
-    "ms": 1648,
+    "ms": 1541,
     "packages": [
      {
       "files": 184,
@@ -1178,10 +1178,10 @@
    }
   },
   "sqlalchemy14": {
-   "ms": 2244,
+   "ms": 2206,
    "report": {
     "model": true,
-    "ms": 2239,
+    "ms": 2203,
     "packages": [
      {
       "files": 179,
@@ -1194,10 +1194,10 @@
    }
   },
   "sqlalchemy20": {
-   "ms": 2333,
+   "ms": 2165,
    "report": {
     "model": true,
-    "ms": 2328,
+    "ms": 2162,
     "packages": [
      {
       "files": 198,
@@ -1210,10 +1210,10 @@
    }
   },
   "tailwind3": {
-   "ms": 2219,
+   "ms": 1582,
    "report": {
     "model": true,
-    "ms": 2214,
+    "ms": 1579,
     "packages": [
      {
       "files": 192,
@@ -1226,10 +1226,10 @@
    }
   },
   "tailwind4": {
-   "ms": 2857,
+   "ms": 1981,
    "report": {
     "model": true,
-    "ms": 2852,
+    "ms": 1977,
     "packages": [
      {
       "files": 224,
@@ -1242,10 +1242,10 @@
    }
   },
   "vite5": {
-   "ms": 974,
+   "ms": 1001,
    "report": {
     "model": true,
-    "ms": 971,
+    "ms": 999,
     "packages": [
      {
       "files": 37,
@@ -1258,10 +1258,10 @@
    }
   },
   "vite6": {
-   "ms": 1489,
+   "ms": 923,
    "report": {
     "model": true,
-    "ms": 1486,
+    "ms": 920,
     "packages": [
      {
       "files": 47,
@@ -1274,10 +1274,10 @@
    }
   },
   "zod3": {
-   "ms": 485,
+   "ms": 644,
    "report": {
     "model": true,
-    "ms": 482,
+    "ms": 642,
     "packages": [
      {
       "files": 4,
@@ -1290,10 +1290,10 @@
    }
   },
   "zod4": {
-   "ms": 1056,
+   "ms": 1134,
    "report": {
     "model": true,
-    "ms": 1053,
+    "ms": 1131,
     "packages": [
      {
       "files": 18,
@@ -1322,7 +1322,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 1072,
-    "ms": 84.0
+    "ms": 68.9
    },
    "variants": {
     "keyword": {
@@ -1330,21 +1330,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 1091,
-     "ms": 32.7
+     "ms": 23.8
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 1091,
-     "ms": 30.8
+     "ms": 33.4
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 1072,
-     "ms": 84.0
+     "ms": 68.9
     }
    },
    "context7": {
@@ -1372,8 +1372,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 946,
-    "ms": 133.8
+    "tokens": 1015,
+    "ms": 107.7
    },
    "variants": {
     "keyword": {
@@ -1381,7 +1381,7 @@
      "missing": [],
      "rejected": [],
      "tokens": 1103,
-     "ms": 62.7
+     "ms": 43.7
     },
     "hybrid": {
      "pass": false,
@@ -1392,14 +1392,14 @@
      ],
      "rejected": [],
      "tokens": 1144,
-     "ms": 41.1
+     "ms": 39.4
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 946,
-     "ms": 133.8
+     "tokens": 1015,
+     "ms": 107.7
     }
    },
    "context7": {
@@ -1427,30 +1427,30 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 1081,
-    "ms": 38.9
+    "tokens": 1122,
+    "ms": 35.7
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 974,
-     "ms": 6.9
+     "tokens": 1018,
+     "ms": 5.2
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 1078,
-     "ms": 31.1
+     "tokens": 1019,
+     "ms": 32.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 1081,
-     "ms": 38.9
+     "tokens": 1122,
+     "ms": 35.7
     }
    },
    "context7": {
@@ -1478,30 +1478,30 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 965,
-    "ms": 51.8
+    "tokens": 998,
+    "ms": 46.2
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 1153,
-     "ms": 13.7
+     "tokens": 616,
+     "ms": 10.0
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 915,
-     "ms": 42.4
+     "tokens": 389,
+     "ms": 41.5
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 965,
-     "ms": 51.8
+     "tokens": 998,
+     "ms": 46.2
     }
    },
    "context7": {
@@ -1529,30 +1529,30 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 987,
-    "ms": 35.0
+    "tokens": 995,
+    "ms": 36.6
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 952,
-     "ms": 6.5
+     "tokens": 979,
+     "ms": 5.0
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 878,
-     "ms": 34.2
+     "tokens": 920,
+     "ms": 33.3
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 987,
-     "ms": 35.0
+     "tokens": 995,
+     "ms": 36.6
     }
    },
    "context7": {
@@ -1580,8 +1580,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 978,
-    "ms": 47.4
+    "tokens": 991,
+    "ms": 44.6
    },
    "variants": {
     "keyword": {
@@ -1589,21 +1589,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 392,
-     "ms": 13.0
+     "ms": 9.7
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 649,
-     "ms": 41.6
+     "tokens": 608,
+     "ms": 39.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 978,
-     "ms": 47.4
+     "tokens": 991,
+     "ms": 44.6
     }
    },
    "context7": {
@@ -1631,8 +1631,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 1026,
-    "ms": 49.0
+    "tokens": 946,
+    "ms": 45.9
    },
    "variants": {
     "keyword": {
@@ -1644,7 +1644,7 @@
      ],
      "rejected": [],
      "tokens": 1117,
-     "ms": 14.3
+     "ms": 10.0
     },
     "hybrid": {
      "pass": false,
@@ -1655,14 +1655,14 @@
      ],
      "rejected": [],
      "tokens": 1077,
-     "ms": 39.8
+     "ms": 40.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 1026,
-     "ms": 49.0
+     "tokens": 946,
+     "ms": 45.9
     }
    },
    "context7": {
@@ -1694,8 +1694,8 @@
      ]
     ],
     "rejected": [],
-    "tokens": 879,
-    "ms": 388.5
+    "tokens": 926,
+    "ms": 290.4
    },
    "variants": {
     "keyword": {
@@ -1707,14 +1707,14 @@
      ],
      "rejected": [],
      "tokens": 302,
-     "ms": 135.0
+     "ms": 99.4
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 507,
-     "ms": 55.5
+     "ms": 51.4
     },
     "fetched": {
      "pass": false,
@@ -1724,8 +1724,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 879,
-     "ms": 388.5
+     "tokens": 926,
+     "ms": 290.4
     }
    },
    "context7": {
@@ -1757,8 +1757,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 897,
-    "ms": 455.2
+    "tokens": 864,
+    "ms": 369.3
    },
    "variants": {
     "keyword": {
@@ -1766,21 +1766,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 737,
-     "ms": 158.5
+     "ms": 118.5
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 693,
-     "ms": 57.9
+     "ms": 54.2
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 897,
-     "ms": 455.2
+     "tokens": 864,
+     "ms": 369.3
     }
    },
    "context7": {
@@ -1809,7 +1809,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 896,
-    "ms": 90.2
+    "ms": 83.8
    },
    "variants": {
     "keyword": {
@@ -1817,21 +1817,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 360,
-     "ms": 24.8
+     "ms": 19.1
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 783,
-     "ms": 55.3
+     "ms": 50.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 896,
-     "ms": 90.2
+     "ms": 83.8
     }
    },
    "context7": {
@@ -1860,7 +1860,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 870,
-    "ms": 99.8
+    "ms": 91.2
    },
    "variants": {
     "keyword": {
@@ -1868,21 +1868,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 351,
-     "ms": 27.9
+     "ms": 22.1
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 734,
-     "ms": 60.8
+     "ms": 54.7
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 870,
-     "ms": 99.8
+     "ms": 91.2
     }
    },
    "context7": {
@@ -1910,8 +1910,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 837,
-    "ms": 90.9
+    "tokens": 843,
+    "ms": 77.1
    },
    "variants": {
     "keyword": {
@@ -1919,21 +1919,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 908,
-     "ms": 24.7
+     "ms": 18.9
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 893,
-     "ms": 55.1
+     "ms": 52.7
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 837,
-     "ms": 90.9
+     "tokens": 843,
+     "ms": 77.1
     }
    },
    "context7": {
@@ -1961,8 +1961,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 778,
-    "ms": 99.7
+    "tokens": 754,
+    "ms": 83.5
    },
    "variants": {
     "keyword": {
@@ -1970,21 +1970,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 934,
-     "ms": 27.0
+     "ms": 20.2
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 964,
-     "ms": 58.2
+     "ms": 56.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 778,
-     "ms": 99.7
+     "tokens": 754,
+     "ms": 83.5
     }
    },
    "context7": {
@@ -2012,8 +2012,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 887,
-    "ms": 97.8
+    "tokens": 874,
+    "ms": 82.7
    },
    "variants": {
     "keyword": {
@@ -2021,21 +2021,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 923,
-     "ms": 27.1
+     "ms": 21.4
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 932,
-     "ms": 57.4
+     "ms": 54.5
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 887,
-     "ms": 97.8
+     "tokens": 874,
+     "ms": 82.7
     }
    },
    "context7": {
@@ -2068,7 +2068,7 @@
     ],
     "rejected": [],
     "tokens": 796,
-    "ms": 115.3
+    "ms": 90.9
    },
    "variants": {
     "keyword": {
@@ -2076,14 +2076,14 @@
      "missing": [],
      "rejected": [],
      "tokens": 913,
-     "ms": 11.3
+     "ms": 8.5
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 891,
-     "ms": 30.4
+     "ms": 32.3
     },
     "fetched": {
      "pass": false,
@@ -2094,7 +2094,7 @@
      ],
      "rejected": [],
      "tokens": 796,
-     "ms": 115.3
+     "ms": 90.9
     }
    },
    "context7": {
@@ -2127,7 +2127,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 828,
-    "ms": 135.2
+    "ms": 107.2
    },
    "variants": {
     "keyword": {
@@ -2135,7 +2135,7 @@
      "missing": [],
      "rejected": [],
      "tokens": 909,
-     "ms": 46.1
+     "ms": 34.1
     },
     "hybrid": {
      "pass": false,
@@ -2146,14 +2146,14 @@
      ],
      "rejected": [],
      "tokens": 970,
-     "ms": 37.5
+     "ms": 36.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 828,
-     "ms": 135.2
+     "ms": 107.2
     }
    },
    "context7": {
@@ -2190,14 +2190,14 @@
      "missing": [],
      "rejected": [],
      "tokens": 821,
-     "ms": 4.3
+     "ms": 3.2
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 884,
-     "ms": 31.2
+     "ms": 31.6
     },
     "fetched": {
      "pass": true,
@@ -2232,7 +2232,7 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 819,
+    "tokens": 755,
     "ms": 41.4
    },
    "variants": {
@@ -2241,20 +2241,20 @@
      "missing": [],
      "rejected": [],
      "tokens": 946,
-     "ms": 4.5
+     "ms": 3.1
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 904,
-     "ms": 30.4
+     "ms": 31.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 819,
+     "tokens": 755,
      "ms": 41.4
     }
    },
@@ -2284,7 +2284,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 807,
-    "ms": 48.3
+    "ms": 45.3
    },
    "variants": {
     "keyword": {
@@ -2292,21 +2292,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 918,
-     "ms": 10.0
+     "ms": 7.2
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 931,
-     "ms": 35.0
+     "ms": 36.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 807,
-     "ms": 48.3
+     "ms": 45.3
     }
    },
    "context7": {
@@ -2334,8 +2334,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 920,
-    "ms": 148.8
+    "tokens": 839,
+    "ms": 118.2
    },
    "variants": {
     "keyword": {
@@ -2343,21 +2343,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 915,
-     "ms": 69.6
+     "ms": 48.0
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 915,
-     "ms": 47.7
+     "ms": 45.4
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 920,
-     "ms": 148.8
+     "tokens": 839,
+     "ms": 118.2
     }
    },
    "context7": {
@@ -2392,8 +2392,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 944,
-    "ms": 282.6
+    "tokens": 957,
+    "ms": 212.8
    },
    "variants": {
     "keyword": {
@@ -2405,21 +2405,21 @@
      ],
      "rejected": [],
      "tokens": 924,
-     "ms": 141.9
+     "ms": 99.5
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 843,
-     "ms": 53.8
+     "ms": 49.2
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 944,
-     "ms": 282.6
+     "tokens": 957,
+     "ms": 212.8
     }
    },
    "context7": {
@@ -2444,11 +2444,15 @@
    "set": "tuning",
    "grading": "[[[\"parse_obj\"]], [\"model_validate\"]]",
    "lockdocs": {
-    "pass": true,
-    "missing": [],
+    "pass": false,
+    "missing": [
+     [
+      "parse_obj"
+     ]
+    ],
     "rejected": [],
-    "tokens": 884,
-    "ms": 57.5
+    "tokens": 875,
+    "ms": 54.8
    },
    "variants": {
     "keyword": {
@@ -2460,7 +2464,7 @@
      ],
      "rejected": [],
      "tokens": 900,
-     "ms": 22.3
+     "ms": 15.7
     },
     "hybrid": {
      "pass": false,
@@ -2471,14 +2475,18 @@
      ],
      "rejected": [],
      "tokens": 922,
-     "ms": 46.5
+     "ms": 44.7
     },
     "fetched": {
-     "pass": true,
-     "missing": [],
+     "pass": false,
+     "missing": [
+      [
+       "parse_obj"
+      ]
+     ],
      "rejected": [],
-     "tokens": 884,
-     "ms": 57.5
+     "tokens": 875,
+     "ms": 54.8
     }
    },
    "context7": {
@@ -2512,8 +2520,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 849,
-    "ms": 74.3
+    "tokens": 829,
+    "ms": 68.8
    },
    "variants": {
     "keyword": {
@@ -2525,21 +2533,21 @@
      ],
      "rejected": [],
      "tokens": 941,
-     "ms": 27.7
+     "ms": 20.1
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 858,
-     "ms": 55.5
+     "ms": 50.7
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 849,
-     "ms": 74.3
+     "tokens": 829,
+     "ms": 68.8
     }
    },
    "context7": {
@@ -2568,7 +2576,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 965,
-    "ms": 59.5
+    "ms": 53.1
    },
    "variants": {
     "keyword": {
@@ -2576,21 +2584,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 908,
-     "ms": 21.6
+     "ms": 15.5
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 867,
-     "ms": 46.4
+     "ms": 45.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 965,
-     "ms": 59.5
+     "ms": 53.1
     }
    },
    "context7": {
@@ -2625,8 +2633,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 764,
-    "ms": 74.0
+    "tokens": 777,
+    "ms": 65.5
    },
    "variants": {
     "keyword": {
@@ -2638,21 +2646,21 @@
      ],
      "rejected": [],
      "tokens": 826,
-     "ms": 26.5
+     "ms": 19.3
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 867,
-     "ms": 53.1
+     "ms": 50.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 764,
-     "ms": 74.0
+     "tokens": 777,
+     "ms": 65.5
     }
    },
    "context7": {
@@ -2681,7 +2689,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 818,
-    "ms": 58.5
+    "ms": 52.9
    },
    "variants": {
     "keyword": {
@@ -2689,21 +2697,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 854,
-     "ms": 21.1
+     "ms": 15.3
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 915,
-     "ms": 47.3
+     "ms": 45.2
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 818,
-     "ms": 58.5
+     "ms": 52.9
     }
    },
    "context7": {
@@ -2739,8 +2747,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 890,
-    "ms": 76.7
+    "tokens": 824,
+    "ms": 67.0
    },
    "variants": {
     "keyword": {
@@ -2748,21 +2756,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 839,
-     "ms": 27.9
+     "ms": 19.8
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 884,
-     "ms": 54.8
+     "ms": 49.5
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 890,
-     "ms": 76.7
+     "tokens": 824,
+     "ms": 67.0
     }
    },
    "context7": {
@@ -2782,10 +2790,10 @@
    "package": "pydantic",
    "version": "1.10.18",
    "question": "How do I allow extra fields on a model?",
-   "why": "v1: class Config: extra = Extra.allow. model_config is v2-only (0 matches in pydantic 1.10.18). The reject was ConfigDict until 0.3, but pydantic 1.10 ships a ConfigDict TypedDict (config.py), so quoting v1 source was wrongly failed",
+   "why": "v1: class Config: extra = Extra.allow. Rejects the v2 idiom model_config = ConfigDict (0 matches in pydantic 1.10.18 source and docs). Until 0.3 it rejected ConfigDict, which pydantic 1.10 also ships (config.py)",
    "line": "older",
    "set": "tuning",
-   "grading": "[[[\"Extra.allow\", \"class Config\"]], [\"model_config\"]]",
+   "grading": "[[[\"Extra.allow\", \"class Config\"]], [\"model_config = ConfigDict\"]]",
    "lockdocs": {
     "pass": false,
     "missing": [
@@ -2794,11 +2802,9 @@
       "class Config"
      ]
     ],
-    "rejected": [
-     "model_config"
-    ],
+    "rejected": [],
     "tokens": 924,
-    "ms": 60.7
+    "ms": 53.6
    },
    "variants": {
     "keyword": {
@@ -2811,7 +2817,7 @@
      ],
      "rejected": [],
      "tokens": 878,
-     "ms": 22.1
+     "ms": 15.5
     },
     "hybrid": {
      "pass": false,
@@ -2823,7 +2829,7 @@
      ],
      "rejected": [],
      "tokens": 945,
-     "ms": 50.2
+     "ms": 48.1
     },
     "fetched": {
      "pass": false,
@@ -2833,21 +2839,19 @@
        "class Config"
       ]
      ],
-     "rejected": [
-      "model_config"
-     ],
+     "rejected": [],
      "tokens": 924,
-     "ms": 60.7
+     "ms": 53.6
     }
    },
    "context7": {
     "pass": false,
     "missing": [],
     "rejected": [
-     "model_config"
+     "model_config = ConfigDict"
     ],
     "tokens": 683,
-    "ms": 2823,
+    "ms": 2725,
     "library": "/pydantic/pydantic",
     "version_match": "unversioned"
    }
@@ -2866,8 +2870,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 934,
-    "ms": 73.2
+    "tokens": 956,
+    "ms": 65.5
    },
    "variants": {
     "keyword": {
@@ -2875,21 +2879,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 898,
-     "ms": 27.8
+     "ms": 19.5
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 892,
-     "ms": 54.9
+     "ms": 49.5
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 934,
-     "ms": 73.2
+     "tokens": 956,
+     "ms": 65.5
     }
    },
    "context7": {
@@ -2918,7 +2922,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 1018,
-    "ms": 90.3
+    "ms": 73.0
    },
    "variants": {
     "keyword": {
@@ -2926,21 +2930,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 1003,
-     "ms": 57.1
+     "ms": 41.9
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 1005,
-     "ms": 33.4
+     "ms": 35.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 1018,
-     "ms": 90.3
+     "ms": 73.0
     }
    },
    "context7": {
@@ -2973,7 +2977,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 935,
-    "ms": 95.4
+    "ms": 76.1
    },
    "variants": {
     "keyword": {
@@ -2981,21 +2985,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 955,
-     "ms": 58.7
+     "ms": 43.8
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 935,
-     "ms": 35.4
+     "ms": 36.4
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 935,
-     "ms": 95.4
+     "ms": 76.1
     }
    },
    "context7": {
@@ -3023,30 +3027,30 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 926,
-    "ms": 39.0
+    "tokens": 912,
+    "ms": 34.5
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 909,
-     "ms": 9.0
+     "tokens": 907,
+     "ms": 6.7
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 908,
-     "ms": 33.6
+     "tokens": 911,
+     "ms": 35.7
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 926,
-     "ms": 39.0
+     "tokens": 912,
+     "ms": 34.5
     }
    },
    "context7": {
@@ -3078,30 +3082,30 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 894,
-    "ms": 39.3
+    "tokens": 891,
+    "ms": 35.4
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 670,
-     "ms": 8.8
+     "tokens": 683,
+     "ms": 6.3
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 894,
-     "ms": 35.7
+     "tokens": 891,
+     "ms": 36.2
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 894,
-     "ms": 39.3
+     "tokens": 891,
+     "ms": 35.4
     }
    },
    "context7": {
@@ -3130,7 +3134,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 823,
-    "ms": 353.7
+    "ms": 260.7
    },
    "variants": {
     "keyword": {
@@ -3138,21 +3142,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 796,
-     "ms": 264.4
+     "ms": 194.4
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 796,
-     "ms": 57.9
+     "ms": 51.3
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 823,
-     "ms": 353.7
+     "ms": 260.7
     }
    },
    "context7": {
@@ -3180,8 +3184,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 963,
-    "ms": 63.6
+    "tokens": 962,
+    "ms": 53.2
    },
    "variants": {
     "keyword": {
@@ -3193,7 +3197,7 @@
      ],
      "rejected": [],
      "tokens": 956,
-     "ms": 29.1
+     "ms": 22.8
     },
     "hybrid": {
      "pass": false,
@@ -3204,14 +3208,14 @@
      ],
      "rejected": [],
      "tokens": 970,
-     "ms": 54.1
+     "ms": 52.7
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 963,
-     "ms": 63.6
+     "tokens": 962,
+     "ms": 53.2
     }
    },
    "context7": {
@@ -3240,7 +3244,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 941,
-    "ms": 60.4
+    "ms": 52.5
    },
    "variants": {
     "keyword": {
@@ -3248,21 +3252,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 849,
-     "ms": 27.5
+     "ms": 21.2
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 903,
-     "ms": 54.2
+     "ms": 57.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 941,
-     "ms": 60.4
+     "ms": 52.5
     }
    },
    "context7": {
@@ -3291,7 +3295,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 971,
-    "ms": 164.7
+    "ms": 130.0
    },
    "variants": {
     "keyword": {
@@ -3304,8 +3308,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 1120,
-     "ms": 11.3
+     "tokens": 1134,
+     "ms": 8.6
     },
     "hybrid": {
      "pass": false,
@@ -3317,15 +3321,15 @@
       ]
      ],
      "rejected": [],
-     "tokens": 1080,
-     "ms": 29.1
+     "tokens": 1025,
+     "ms": 32.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 971,
-     "ms": 164.7
+     "ms": 130.0
     }
    },
    "context7": {
@@ -3361,8 +3365,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 1040,
-    "ms": 185.6
+    "tokens": 979,
+    "ms": 144.3
    },
    "variants": {
     "keyword": {
@@ -3374,8 +3378,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 342,
-     "ms": 9.1
+     "tokens": 358,
+     "ms": 6.6
     },
     "hybrid": {
      "pass": false,
@@ -3386,15 +3390,15 @@
       ]
      ],
      "rejected": [],
-     "tokens": 445,
-     "ms": 27.4
+     "tokens": 461,
+     "ms": 31.7
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 1040,
-     "ms": 185.6
+     "tokens": 979,
+     "ms": 144.3
     }
    },
    "context7": {
@@ -3422,30 +3426,30 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 995,
-    "ms": 53.3
+    "tokens": 1003,
+    "ms": 48.5
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 1002,
-     "ms": 3.6
+     "tokens": 1003,
+     "ms": 2.9
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 1047,
-     "ms": 30.5
+     "ms": 32.3
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 995,
-     "ms": 53.3
+     "tokens": 1003,
+     "ms": 48.5
     }
    },
    "context7": {
@@ -3473,8 +3477,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 1129,
-    "ms": 53.9
+    "tokens": 1144,
+    "ms": 49.3
    },
    "variants": {
     "keyword": {
@@ -3487,7 +3491,7 @@
      ],
      "rejected": [],
      "tokens": 286,
-     "ms": 2.2
+     "ms": 1.6
     },
     "hybrid": {
      "pass": false,
@@ -3499,14 +3503,14 @@
      ],
      "rejected": [],
      "tokens": 764,
-     "ms": 27.4
+     "ms": 31.7
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 1129,
-     "ms": 53.9
+     "tokens": 1144,
+     "ms": 49.3
     }
    },
    "context7": {
@@ -3534,8 +3538,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 850,
-    "ms": 462.3
+    "tokens": 797,
+    "ms": 345.2
    },
    "variants": {
     "keyword": {
@@ -3543,21 +3547,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 912,
-     "ms": 144.5
+     "ms": 99.8
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 925,
-     "ms": 36.7
+     "ms": 40.1
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 850,
-     "ms": 462.3
+     "tokens": 797,
+     "ms": 345.2
     }
    },
    "context7": {
@@ -3585,8 +3589,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 711,
-    "ms": 410.1
+    "tokens": 720,
+    "ms": 308.9
    },
    "variants": {
     "keyword": {
@@ -3594,21 +3598,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 882,
-     "ms": 34.6
+     "ms": 26.3
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 961,
-     "ms": 36.3
+     "ms": 36.7
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 711,
-     "ms": 410.1
+     "tokens": 720,
+     "ms": 308.9
     }
    },
    "context7": {
@@ -3637,7 +3641,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 854,
-    "ms": 87.5
+    "ms": 74.2
    },
    "variants": {
     "keyword": {
@@ -3650,7 +3654,7 @@
      ],
      "rejected": [],
      "tokens": 871,
-     "ms": 10.2
+     "ms": 8.0
     },
     "hybrid": {
      "pass": false,
@@ -3662,14 +3666,14 @@
      ],
      "rejected": [],
      "tokens": 898,
-     "ms": 35.2
+     "ms": 37.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 854,
-     "ms": 87.5
+     "ms": 74.2
     }
    },
    "context7": {
@@ -3697,8 +3701,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 825,
-    "ms": 90.6
+    "tokens": 849,
+    "ms": 77.3
    },
    "variants": {
     "keyword": {
@@ -3712,7 +3716,7 @@
      ],
      "rejected": [],
      "tokens": 919,
-     "ms": 8.1
+     "ms": 6.0
     },
     "hybrid": {
      "pass": false,
@@ -3725,14 +3729,14 @@
      ],
      "rejected": [],
      "tokens": 898,
-     "ms": 36.6
+     "ms": 34.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 825,
-     "ms": 90.6
+     "tokens": 849,
+     "ms": 77.3
     }
    },
    "context7": {
@@ -3757,11 +3761,15 @@
    "set": "tuning",
    "grading": "[[[\"Buffer\"]], [\"Uint8Array\"]]",
    "lockdocs": {
-    "pass": true,
-    "missing": [],
+    "pass": false,
+    "missing": [
+     [
+      "Buffer"
+     ]
+    ],
     "rejected": [],
-    "tokens": 980,
-    "ms": 392.8
+    "tokens": 829,
+    "ms": 296.4
    },
    "variants": {
     "keyword": {
@@ -3772,8 +3780,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 894,
-     "ms": 36.0
+     "tokens": 945,
+     "ms": 26.6
     },
     "hybrid": {
      "pass": false,
@@ -3783,15 +3791,19 @@
       ]
      ],
      "rejected": [],
-     "tokens": 955,
-     "ms": 31.5
+     "tokens": 963,
+     "ms": 34.0
     },
     "fetched": {
-     "pass": true,
-     "missing": [],
+     "pass": false,
+     "missing": [
+      [
+       "Buffer"
+      ]
+     ],
      "rejected": [],
-     "tokens": 980,
-     "ms": 392.8
+     "tokens": 829,
+     "ms": 296.4
     }
    },
    "context7": {
@@ -3825,8 +3837,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 993,
-    "ms": 441.9
+    "tokens": 854,
+    "ms": 330.5
    },
    "variants": {
     "keyword": {
@@ -3834,21 +3846,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 925,
-     "ms": 50.9
+     "ms": 37.9
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 981,
-     "ms": 32.3
+     "tokens": 910,
+     "ms": 33.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 993,
-     "ms": 441.9
+     "tokens": 854,
+     "ms": 330.5
     }
    },
    "context7": {
@@ -3876,8 +3888,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 937,
-    "ms": 389.8
+    "tokens": 849,
+    "ms": 291.0
    },
    "variants": {
     "keyword": {
@@ -3889,7 +3901,7 @@
      ],
      "rejected": [],
      "tokens": 583,
-     "ms": 34.9
+     "ms": 27.0
     },
     "hybrid": {
      "pass": false,
@@ -3900,14 +3912,14 @@
      ],
      "rejected": [],
      "tokens": 948,
-     "ms": 31.1
+     "ms": 35.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 937,
-     "ms": 389.8
+     "tokens": 849,
+     "ms": 291.0
     }
    },
    "context7": {
@@ -3937,8 +3949,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 838,
-    "ms": 473.6
+    "tokens": 820,
+    "ms": 353.4
    },
    "variants": {
     "keyword": {
@@ -3950,7 +3962,7 @@
      ],
      "rejected": [],
      "tokens": 583,
-     "ms": 52.3
+     "ms": 37.5
     },
     "hybrid": {
      "pass": false,
@@ -3961,14 +3973,14 @@
      ],
      "rejected": [],
      "tokens": 942,
-     "ms": 29.9
+     "ms": 33.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 838,
-     "ms": 473.6
+     "tokens": 820,
+     "ms": 353.4
     }
    },
    "context7": {
@@ -4003,8 +4015,8 @@
     "rejected": [
      "useActionState"
     ],
-    "tokens": 861,
-    "ms": 428.1
+    "tokens": 832,
+    "ms": 342.5
    },
    "variants": {
     "keyword": {
@@ -4012,7 +4024,7 @@
      "missing": [],
      "rejected": [],
      "tokens": 863,
-     "ms": 67.3
+     "ms": 46.9
     },
     "hybrid": {
      "pass": false,
@@ -4021,7 +4033,7 @@
       "useActionState"
      ],
      "tokens": 959,
-     "ms": 37.4
+     "ms": 37.6
     },
     "fetched": {
      "pass": false,
@@ -4034,8 +4046,8 @@
      "rejected": [
       "useActionState"
      ],
-     "tokens": 861,
-     "ms": 428.1
+     "tokens": 832,
+     "ms": 342.5
     }
    },
    "context7": {
@@ -4070,8 +4082,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 873,
-    "ms": 477.1
+    "tokens": 872,
+    "ms": 350.4
    },
    "variants": {
     "keyword": {
@@ -4083,21 +4095,21 @@
      ],
      "rejected": [],
      "tokens": 981,
-     "ms": 57.7
+     "ms": 47.0
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 961,
-     "ms": 37.0
+     "ms": 38.7
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 873,
-     "ms": 477.1
+     "tokens": 872,
+     "ms": 350.4
     }
    },
    "context7": {
@@ -4125,8 +4137,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 821,
-    "ms": 91.4
+    "tokens": 823,
+    "ms": 76.7
    },
    "variants": {
     "keyword": {
@@ -4139,7 +4151,7 @@
      ],
      "rejected": [],
      "tokens": 403,
-     "ms": 9.3
+     "ms": 7.1
     },
     "hybrid": {
      "pass": false,
@@ -4151,14 +4163,14 @@
      ],
      "rejected": [],
      "tokens": 925,
-     "ms": 37.6
+     "ms": 37.2
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 821,
-     "ms": 91.4
+     "tokens": 823,
+     "ms": 76.7
     }
    },
    "context7": {
@@ -4188,8 +4200,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 859,
-    "ms": 103.4
+    "tokens": 854,
+    "ms": 83.8
    },
    "variants": {
     "keyword": {
@@ -4202,7 +4214,7 @@
      ],
      "rejected": [],
      "tokens": 923,
-     "ms": 9.1
+     "ms": 6.8
     },
     "hybrid": {
      "pass": false,
@@ -4220,8 +4232,8 @@
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 859,
-     "ms": 103.4
+     "tokens": 854,
+     "ms": 83.8
     }
    },
    "context7": {
@@ -4249,8 +4261,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 843,
-    "ms": 181.0
+    "tokens": 887,
+    "ms": 139.6
    },
    "variants": {
     "keyword": {
@@ -4258,21 +4270,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 880,
-     "ms": 53.5
+     "ms": 40.0
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 966,
-     "ms": 40.8
+     "ms": 37.3
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 843,
-     "ms": 181.0
+     "tokens": 887,
+     "ms": 139.6
     }
    },
    "context7": {
@@ -4302,8 +4314,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 803,
-    "ms": 156.6
+    "tokens": 839,
+    "ms": 121.8
    },
    "variants": {
     "keyword": {
@@ -4311,21 +4323,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 797,
-     "ms": 54.8
+     "ms": 42.3
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 899,
-     "ms": 40.6
+     "ms": 39.3
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 803,
-     "ms": 156.6
+     "tokens": 839,
+     "ms": 121.8
     }
    },
    "context7": {
@@ -4354,7 +4366,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 813,
-    "ms": 89.6
+    "ms": 74.3
    },
    "variants": {
     "keyword": {
@@ -4369,7 +4381,7 @@
      ],
      "rejected": [],
      "tokens": 900,
-     "ms": 22.5
+     "ms": 17.2
     },
     "hybrid": {
      "pass": false,
@@ -4383,14 +4395,14 @@
      ],
      "rejected": [],
      "tokens": 163,
-     "ms": 31.6
+     "ms": 32.2
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 813,
-     "ms": 89.6
+     "ms": 74.3
     }
    },
    "context7": {
@@ -4420,8 +4432,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 864,
-    "ms": 87.6
+    "tokens": 932,
+    "ms": 71.2
    },
    "variants": {
     "keyword": {
@@ -4436,7 +4448,7 @@
      ],
      "rejected": [],
      "tokens": 473,
-     "ms": 8.5
+     "ms": 6.6
     },
     "hybrid": {
      "pass": false,
@@ -4450,14 +4462,14 @@
      ],
      "rejected": [],
      "tokens": 968,
-     "ms": 29.6
+     "ms": 29.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 864,
-     "ms": 87.6
+     "tokens": 932,
+     "ms": 71.2
     }
    },
    "context7": {
@@ -4485,30 +4497,30 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 869,
-    "ms": 959.6
+    "tokens": 871,
+    "ms": 712.2
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 805,
-     "ms": 421.1
+     "tokens": 847,
+     "ms": 309.7
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 848,
-     "ms": 95.6
+     "tokens": 860,
+     "ms": 77.3
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 869,
-     "ms": 959.6
+     "tokens": 871,
+     "ms": 712.2
     }
    },
    "context7": {
@@ -4538,8 +4550,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 841,
-    "ms": 1173.5
+    "tokens": 768,
+    "ms": 851.1
    },
    "variants": {
     "keyword": {
@@ -4552,26 +4564,21 @@
      ],
      "rejected": [],
      "tokens": 810,
-     "ms": 551.4
+     "ms": 407.0
     },
     "hybrid": {
-     "pass": false,
-     "missing": [
-      [
-       "mapped_column",
-       "Mapped["
-      ]
-     ],
+     "pass": true,
+     "missing": [],
      "rejected": [],
-     "tokens": 864,
-     "ms": 99.2
+     "tokens": 872,
+     "ms": 86.4
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 841,
-     "ms": 1173.5
+     "tokens": 768,
+     "ms": 851.1
     }
    },
    "context7": {
@@ -4599,8 +4606,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 830,
-    "ms": 169.3
+    "tokens": 834,
+    "ms": 142.9
    },
    "variants": {
     "keyword": {
@@ -4608,21 +4615,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 917,
-     "ms": 60.5
+     "ms": 43.1
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 931,
-     "ms": 90.3
+     "ms": 78.7
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 830,
-     "ms": 169.3
+     "tokens": 834,
+     "ms": 142.9
     }
    },
    "context7": {
@@ -4652,30 +4659,30 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 869,
-    "ms": 189.8
+    "tokens": 871,
+    "ms": 157.4
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 848,
-     "ms": 71.1
+     "tokens": 831,
+     "ms": 55.6
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 920,
-     "ms": 99.5
+     "tokens": 897,
+     "ms": 87.4
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 869,
-     "ms": 189.8
+     "tokens": 871,
+     "ms": 157.4
     }
    },
    "context7": {
@@ -4703,8 +4710,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 826,
-    "ms": 1200.5
+    "tokens": 815,
+    "ms": 889.8
    },
    "variants": {
     "keyword": {
@@ -4716,7 +4723,7 @@
      ],
      "rejected": [],
      "tokens": 770,
-     "ms": 444.4
+     "ms": 335.2
     },
     "hybrid": {
      "pass": false,
@@ -4727,14 +4734,14 @@
      ],
      "rejected": [],
      "tokens": 839,
-     "ms": 94.0
+     "ms": 84.2
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 826,
-     "ms": 1200.5
+     "tokens": 815,
+     "ms": 889.8
     }
    },
    "context7": {
@@ -4762,8 +4769,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 808,
-    "ms": 1250.4
+    "tokens": 818,
+    "ms": 909.2
    },
    "variants": {
     "keyword": {
@@ -4774,22 +4781,22 @@
       ]
      ],
      "rejected": [],
-     "tokens": 856,
-     "ms": 452.6
+     "tokens": 860,
+     "ms": 326.6
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 777,
-     "ms": 95.1
+     "ms": 84.6
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 808,
-     "ms": 1250.4
+     "tokens": 818,
+     "ms": 909.2
     }
    },
    "context7": {
@@ -4817,8 +4824,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 778,
-    "ms": 210.0
+    "tokens": 794,
+    "ms": 170.9
    },
    "variants": {
     "keyword": {
@@ -4826,21 +4833,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 862,
-     "ms": 60.5
+     "ms": 47.7
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 853,
-     "ms": 92.3
+     "ms": 83.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 778,
-     "ms": 210.0
+     "tokens": 794,
+     "ms": 170.9
     }
    },
    "context7": {
@@ -4868,8 +4875,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 798,
-    "ms": 210.7
+    "tokens": 740,
+    "ms": 173.3
    },
    "variants": {
     "keyword": {
@@ -4877,21 +4884,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 520,
-     "ms": 60.5
+     "ms": 48.6
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 845,
-     "ms": 98.3
+     "ms": 86.7
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 798,
-     "ms": 210.7
+     "tokens": 740,
+     "ms": 173.3
     }
    },
    "context7": {
@@ -4924,7 +4931,7 @@
     ],
     "rejected": [],
     "tokens": 878,
-    "ms": 201.1
+    "ms": 156.1
    },
    "variants": {
     "keyword": {
@@ -4936,7 +4943,7 @@
      ],
      "rejected": [],
      "tokens": 372,
-     "ms": 37.3
+     "ms": 26.0
     },
     "hybrid": {
      "pass": false,
@@ -4947,7 +4954,7 @@
      ],
      "rejected": [],
      "tokens": 555,
-     "ms": 45.7
+     "ms": 40.5
     },
     "fetched": {
      "pass": false,
@@ -4958,7 +4965,7 @@
      ],
      "rejected": [],
      "tokens": 878,
-     "ms": 201.1
+     "ms": 156.1
     }
    },
    "context7": {
@@ -4993,7 +5000,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 832,
-    "ms": 258.4
+    "ms": 199.0
    },
    "variants": {
     "keyword": {
@@ -5005,7 +5012,7 @@
      ],
      "rejected": [],
      "tokens": 729,
-     "ms": 50.0
+     "ms": 37.1
     },
     "hybrid": {
      "pass": false,
@@ -5016,14 +5023,14 @@
      ],
      "rejected": [],
      "tokens": 898,
-     "ms": 44.9
+     "ms": 41.5
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 832,
-     "ms": 258.4
+     "ms": 199.0
     }
    },
    "context7": {
@@ -5052,7 +5059,7 @@
     "missing": [],
     "rejected": [],
     "tokens": 875,
-    "ms": 65.2
+    "ms": 58.2
    },
    "variants": {
     "keyword": {
@@ -5063,8 +5070,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 884,
-     "ms": 16.5
+     "tokens": 803,
+     "ms": 12.5
     },
     "hybrid": {
      "pass": false,
@@ -5074,15 +5081,15 @@
       ]
      ],
      "rejected": [],
-     "tokens": 919,
-     "ms": 43.5
+     "tokens": 985,
+     "ms": 41.3
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 875,
-     "ms": 65.2
+     "ms": 58.2
     }
    },
    "context7": {
@@ -5113,29 +5120,29 @@
     "missing": [],
     "rejected": [],
     "tokens": 783,
-    "ms": 73.9
+    "ms": 63.9
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 896,
-     "ms": 17.0
+     "tokens": 933,
+     "ms": 12.8
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 896,
-     "ms": 44.3
+     "tokens": 930,
+     "ms": 41.1
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 783,
-     "ms": 73.9
+     "ms": 63.9
     }
    },
    "context7": {
@@ -5163,8 +5170,8 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 782,
-    "ms": 99.4
+    "tokens": 797,
+    "ms": 81.8
    },
    "variants": {
     "keyword": {
@@ -5172,21 +5179,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 897,
-     "ms": 26.4
+     "ms": 21.3
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 946,
-     "ms": 58.5
+     "ms": 56.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 782,
-     "ms": 99.4
+     "tokens": 797,
+     "ms": 81.8
     }
    },
    "context7": {
@@ -5216,30 +5223,30 @@
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 796,
-    "ms": 721.9
+    "tokens": 816,
+    "ms": 532.3
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 827,
-     "ms": 547.4
+     "tokens": 847,
+     "ms": 396.5
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 851,
-     "ms": 135.0
+     "tokens": 828,
+     "ms": 117.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 796,
-     "ms": 721.9
+     "tokens": 816,
+     "ms": 532.3
     }
    },
    "context7": {
@@ -5261,14 +5268,14 @@
    "question": "How do I read the dynamic route parameters in a page component?",
    "why": "14: params is a plain object prop (no 'await params' in v14.2.35 docs/02-app/02-api-reference/02-file-conventions/page.mdx)",
    "line": "older",
-   "set": "held-out",
+   "set": "tuning",
    "grading": "[[[\"params\"]], [\"await params\", \"Promise<{\"]]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 854,
-    "ms": 91.1
+    "tokens": 881,
+    "ms": 78.0
    },
    "variants": {
     "keyword": {
@@ -5276,21 +5283,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 928,
-     "ms": 25.2
+     "ms": 20.7
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 917,
-     "ms": 54.6
+     "ms": 50.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 854,
-     "ms": 91.1
+     "tokens": 881,
+     "ms": 78.0
     }
    },
    "context7": {
@@ -5300,7 +5307,8 @@
     "tokens": 1037,
     "ms": 2606,
     "library": "/vercel/next.js/v14.3.0-canary.87",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
@@ -5311,7 +5319,7 @@
    "question": "How do I read the dynamic route parameters in a page component?",
    "why": "15: params is a Promise (v15.1.0 page.mdx, 18 matches)",
    "line": "newer",
-   "set": "held-out",
+   "set": "tuning",
    "grading": "[[[\"await params\", \"Promise<{\"]], []]",
    "lockdocs": {
     "pass": false,
@@ -5322,8 +5330,8 @@
      ]
     ],
     "rejected": [],
-    "tokens": 845,
-    "ms": 100.7
+    "tokens": 881,
+    "ms": 84.9
    },
    "variants": {
     "keyword": {
@@ -5336,7 +5344,7 @@
      ],
      "rejected": [],
      "tokens": 949,
-     "ms": 27.4
+     "ms": 20.8
     },
     "hybrid": {
      "pass": false,
@@ -5348,7 +5356,7 @@
      ],
      "rejected": [],
      "tokens": 946,
-     "ms": 58.8
+     "ms": 55.2
     },
     "fetched": {
      "pass": false,
@@ -5359,8 +5367,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 845,
-     "ms": 100.7
+     "tokens": 881,
+     "ms": 84.9
     }
    },
    "context7": {
@@ -5370,7 +5378,8 @@
     "tokens": 1427,
     "ms": 2666,
     "library": "/vercel/next.js/v15.1.11",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
@@ -5381,14 +5390,14 @@
    "question": "How do I switch dark mode to a class instead of the operating system setting?",
    "why": "v3: darkMode: 'selector' / 'class' in tailwind.config.js (v3 site dark-mode.mdx)",
    "line": "older",
-   "set": "held-out",
+   "set": "tuning",
    "grading": "[[[\"darkMode\"]], [\"@custom-variant\"]]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 817,
-    "ms": 55.4
+    "tokens": 896,
+    "ms": 50.0
    },
    "variants": {
     "keyword": {
@@ -5396,26 +5405,26 @@
      "missing": [],
      "rejected": [],
      "tokens": 420,
-     "ms": 3.6
+     "ms": 2.8
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 420,
-     "ms": 27.6
+     "ms": 32.0
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 817,
-     "ms": 55.4
+     "tokens": 896,
+     "ms": 50.0
     }
    },
    "context7": {
     "error": "HTTP 404",
-    "ms": 3251.9937140000366,
+    "ms": 3327.2388550000187,
     "library": "/rails/tailwindcss-rails"
    }
   },
@@ -5427,18 +5436,14 @@
    "question": "How do I switch dark mode to a class instead of the operating system setting?",
    "why": "v4: @custom-variant dark (&:where(.dark, .dark *)) in CSS (v4 site dark-mode.mdx)",
    "line": "newer",
-   "set": "held-out",
+   "set": "tuning",
    "grading": "[[[\"@custom-variant\"]], []]",
    "lockdocs": {
-    "pass": false,
-    "missing": [
-     [
-      "@custom-variant"
-     ]
-    ],
+    "pass": true,
+    "missing": [],
     "rejected": [],
-    "tokens": 851,
-    "ms": 58.8
+    "tokens": 874,
+    "ms": 49.5
    },
    "variants": {
     "keyword": {
@@ -5450,7 +5455,7 @@
      ],
      "rejected": [],
      "tokens": 297,
-     "ms": 2.2
+     "ms": 1.7
     },
     "hybrid": {
      "pass": false,
@@ -5461,23 +5466,19 @@
      ],
      "rejected": [],
      "tokens": 516,
-     "ms": 27.1
+     "ms": 29.8
     },
     "fetched": {
-     "pass": false,
-     "missing": [
-      [
-       "@custom-variant"
-      ]
-     ],
+     "pass": true,
+     "missing": [],
      "rejected": [],
-     "tokens": 851,
-     "ms": 58.8
+     "tokens": 874,
+     "ms": 49.5
     }
    },
    "context7": {
     "error": "HTTP 404",
-    "ms": 3440.7304320000662,
+    "ms": 3210.879936000026,
     "library": "/rails/tailwindcss-rails"
    }
   },
@@ -5489,14 +5490,14 @@
    "question": "How do I pass a ref through to a child component?",
    "why": "18: forwardRef (@types/react 18.3.31)",
    "line": "older",
-   "set": "held-out",
+   "set": "tuning",
    "grading": "[[[\"forwardRef\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 912,
-    "ms": 93.0
+    "tokens": 899,
+    "ms": 76.7
    },
    "variants": {
     "keyword": {
@@ -5504,21 +5505,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 856,
-     "ms": 9.1
+     "ms": 7.0
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 907,
-     "ms": 37.0
+     "ms": 36.5
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 912,
-     "ms": 93.0
+     "tokens": 899,
+     "ms": 76.7
     }
    },
    "context7": {
@@ -5528,7 +5529,8 @@
     "tokens": 570,
     "ms": 2826,
     "library": "/reactjs/react.dev",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -5539,19 +5541,14 @@
    "question": "How do I pass a ref through to a child component?",
    "why": "19: ref is a regular prop; forwardRef is no longer necessary (react.dev forwardRef.md)",
    "line": "newer",
-   "set": "held-out",
+   "set": "tuning",
    "grading": "[[[\"as a prop\", \"no longer necessary\"]], []]",
    "lockdocs": {
-    "pass": false,
-    "missing": [
-     [
-      "as a prop",
-      "no longer necessary"
-     ]
-    ],
+    "pass": true,
+    "missing": [],
     "rejected": [],
-    "tokens": 911,
-    "ms": 101.2
+    "tokens": 796,
+    "ms": 84.3
    },
    "variants": {
     "keyword": {
@@ -5564,7 +5561,7 @@
      ],
      "rejected": [],
      "tokens": 925,
-     "ms": 9.3
+     "ms": 6.9
     },
     "hybrid": {
      "pass": false,
@@ -5576,19 +5573,14 @@
      ],
      "rejected": [],
      "tokens": 816,
-     "ms": 37.3
+     "ms": 36.2
     },
     "fetched": {
-     "pass": false,
-     "missing": [
-      [
-       "as a prop",
-       "no longer necessary"
-      ]
-     ],
+     "pass": true,
+     "missing": [],
      "rejected": [],
-     "tokens": 911,
-     "ms": 101.2
+     "tokens": 796,
+     "ms": 84.3
     }
    },
    "context7": {
@@ -5598,7 +5590,8 @@
     "tokens": 587,
     "ms": 2618,
     "library": "/reactjs/react.dev",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -5609,14 +5602,14 @@
    "question": "How do I get typed loader data in my route component?",
    "why": "v6: useLoaderData() (docs/hooks/use-loader-data.md); generated route types arrived in v7",
    "line": "older",
-   "set": "held-out",
+   "set": "tuning",
    "grading": "[[[\"useLoaderData\"]], [\"Route.ComponentProps\", \"+types\"]]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
     "tokens": 790,
-    "ms": 46.2
+    "ms": 42.0
    },
    "variants": {
     "keyword": {
@@ -5624,21 +5617,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 792,
-     "ms": 4.2
+     "ms": 2.9
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 881,
-     "ms": 29.8
+     "ms": 32.9
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 790,
-     "ms": 46.2
+     "ms": 42.0
     }
    },
    "context7": {
@@ -5651,7 +5644,8 @@
     "tokens": 848,
     "ms": 2558,
     "library": "/websites/reactrouter",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -5662,14 +5656,14 @@
    "question": "How do I get typed loader data in my route component?",
    "why": "v7: generated ./+types/<route> and Route.ComponentProps (react-router@7.1.1 docs/start/framework/data-loading.md)",
    "line": "newer",
-   "set": "held-out",
+   "set": "tuning",
    "grading": "[[[\"Route.ComponentProps\", \"+types\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
     "tokens": 851,
-    "ms": 50.0
+    "ms": 44.3
    },
    "variants": {
     "keyword": {
@@ -5682,7 +5676,7 @@
      ],
      "rejected": [],
      "tokens": 918,
-     "ms": 10.0
+     "ms": 7.0
     },
     "hybrid": {
      "pass": false,
@@ -5694,14 +5688,14 @@
      ],
      "rejected": [],
      "tokens": 868,
-     "ms": 37.6
+     "ms": 37.3
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 851,
-     "ms": 50.0
+     "ms": 44.3
     }
    },
    "context7": {
@@ -5711,7 +5705,8 @@
     "tokens": 913,
     "ms": 2768,
     "library": "/websites/reactrouter",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -5722,14 +5717,19 @@
    "question": "How do I tell ESLint about browser global variables?",
    "why": "8: env: { browser: true } in .eslintrc (v8.57.1 language-options.md)",
    "line": "older",
-   "set": "held-out",
+   "set": "tuning",
    "grading": "[[[\"\\\"browser\\\": true\", \"browser: true\"]], []]",
    "lockdocs": {
-    "pass": true,
-    "missing": [],
+    "pass": false,
+    "missing": [
+     [
+      "\"browser\": true",
+      "browser: true"
+     ]
+    ],
     "rejected": [],
-    "tokens": 793,
-    "ms": 83.9
+    "tokens": 768,
+    "ms": 74.1
    },
    "variants": {
     "keyword": {
@@ -5742,7 +5742,7 @@
      ],
      "rejected": [],
      "tokens": 866,
-     "ms": 9.9
+     "ms": 7.3
     },
     "hybrid": {
      "pass": false,
@@ -5754,14 +5754,19 @@
      ],
      "rejected": [],
      "tokens": 843,
-     "ms": 38.1
+     "ms": 39.3
     },
     "fetched": {
-     "pass": true,
-     "missing": [],
+     "pass": false,
+     "missing": [
+      [
+       "\"browser\": true",
+       "browser: true"
+      ]
+     ],
      "rejected": [],
-     "tokens": 793,
-     "ms": 83.9
+     "tokens": 768,
+     "ms": 74.1
     }
    },
    "context7": {
@@ -5771,7 +5776,8 @@
     "tokens": 654,
     "ms": 2587,
     "library": "/eslint/eslint/v8.57.1",
-    "version_match": "exact"
+    "version_match": "exact",
+    "reused": true
    }
   },
   {
@@ -5782,18 +5788,14 @@
    "question": "How do I tell ESLint about browser global variables?",
    "why": "9: languageOptions: { globals: globals.browser } (v9.39.5 language-options.md)",
    "line": "newer",
-   "set": "held-out",
+   "set": "tuning",
    "grading": "[[[\"globals.browser\"]], []]",
    "lockdocs": {
-    "pass": false,
-    "missing": [
-     [
-      "globals.browser"
-     ]
-    ],
+    "pass": true,
+    "missing": [],
     "rejected": [],
-    "tokens": 731,
-    "ms": 88.7
+    "tokens": 741,
+    "ms": 79.7
    },
    "variants": {
     "keyword": {
@@ -5805,7 +5807,7 @@
      ],
      "rejected": [],
      "tokens": 1027,
-     "ms": 8.2
+     "ms": 5.6
     },
     "hybrid": {
      "pass": false,
@@ -5816,18 +5818,14 @@
      ],
      "rejected": [],
      "tokens": 1017,
-     "ms": 33.8
+     "ms": 37.8
     },
     "fetched": {
-     "pass": false,
-     "missing": [
-      [
-       "globals.browser"
-      ]
-     ],
+     "pass": true,
+     "missing": [],
      "rejected": [],
-     "tokens": 731,
-     "ms": 88.7
+     "tokens": 741,
+     "ms": 79.7
     }
    },
    "context7": {
@@ -5837,7 +5835,8 @@
     "tokens": 602,
     "ms": 2783,
     "library": "/eslint/eslint/v9.39.3",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
@@ -5848,14 +5847,14 @@
    "question": "How do I add a model field whose value the database computes from other columns?",
    "why": "5.0+: models.GeneratedField (5.1.15 docs/ref/models/fields.txt)",
    "line": "newer",
-   "set": "held-out",
+   "set": "tuning",
    "grading": "[[[\"GeneratedField\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 760,
-    "ms": 212.8
+    "tokens": 770,
+    "ms": 176.8
    },
    "variants": {
     "keyword": {
@@ -5867,7 +5866,7 @@
      ],
      "rejected": [],
      "tokens": 798,
-     "ms": 61.8
+     "ms": 48.2
     },
     "hybrid": {
      "pass": false,
@@ -5878,14 +5877,14 @@
      ],
      "rejected": [],
      "tokens": 803,
-     "ms": 99.3
+     "ms": 87.2
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 760,
-     "ms": 212.8
+     "tokens": 770,
+     "ms": 176.8
     }
    },
    "context7": {
@@ -5895,7 +5894,8 @@
     "tokens": 616,
     "ms": 2802,
     "library": "/django/django",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -5906,14 +5906,14 @@
    "question": "How do I declare a group of query parameters with a Pydantic model?",
    "why": "0.115.0+: query parameter models (docs/en/docs/tutorial/query-param-models.md)",
    "line": "newer",
-   "set": "held-out",
+   "set": "tuning",
    "grading": "[[[\"Query Parameter Models\", \"FilterParams\", \"query parameter model\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
     "tokens": 901,
-    "ms": 75.3
+    "ms": 62.3
    },
    "variants": {
     "keyword": {
@@ -5926,8 +5926,8 @@
       ]
      ],
      "rejected": [],
-     "tokens": 888,
-     "ms": 17.9
+     "tokens": 891,
+     "ms": 13.0
     },
     "hybrid": {
      "pass": false,
@@ -5939,15 +5939,15 @@
       ]
      ],
      "rejected": [],
-     "tokens": 885,
-     "ms": 45.8
+     "tokens": 908,
+     "ms": 42.8
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 901,
-     "ms": 75.3
+     "ms": 62.3
     }
    },
    "context7": {
@@ -5957,7 +5957,8 @@
     "tokens": 546,
     "ms": 2583,
     "library": "/websites/fastapi_tiangolo",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -5968,36 +5969,36 @@
    "question": "How do I send messages from many tasks to a single consumer task?",
    "why": "tokio::sync::mpsc",
    "line": "single",
-   "set": "held-out",
+   "set": "tuning",
    "grading": "[[[\"mpsc\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 884,
-    "ms": 61.2
+    "tokens": 881,
+    "ms": 53.1
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 903,
-     "ms": 28.2
+     "tokens": 851,
+     "ms": 22.2
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 827,
-     "ms": 55.4
+     "tokens": 842,
+     "ms": 52.5
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 884,
-     "ms": 61.2
+     "tokens": 881,
+     "ms": 53.1
     }
    },
    "context7": {
@@ -6007,7 +6008,8 @@
     "tokens": 1489,
     "ms": 2830,
     "library": "/websites/rs_tokio_tokio",
-    "version_match": "unversioned"
+    "version_match": "unversioned",
+    "reused": true
    }
   },
   {
@@ -6018,36 +6020,36 @@
    "question": "How do I validate an ISO 8601 datetime string?",
    "why": "3.23: z.string().datetime(); z.iso arrived in zod 4 (0 matches in v3.23.8 README)",
    "line": "older",
-   "set": "held-out",
+   "set": "tuning",
    "grading": "[[[\".datetime(\"]], [\"z.iso.\"]]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 1166,
-    "ms": 36.5
+    "tokens": 1165,
+    "ms": 35.0
    },
    "variants": {
     "keyword": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 958,
-     "ms": 6.8
+     "tokens": 985,
+     "ms": 5.2
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 841,
+     "tokens": 854,
      "ms": 34.7
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 1166,
-     "ms": 36.5
+     "tokens": 1165,
+     "ms": 35.0
     }
    },
    "context7": {
@@ -6059,7 +6061,8 @@
     "tokens": 1110,
     "ms": 3012,
     "library": "/colinhacks/zod/v3.24.2",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
@@ -6070,14 +6073,14 @@
    "question": "How do I validate an ISO 8601 datetime string?",
    "why": "4: z.iso.datetime() (v4.1.5 packages/docs/content/api.mdx)",
    "line": "newer",
-   "set": "held-out",
+   "set": "tuning",
    "grading": "[[[\"z.iso.datetime\", \"iso.datetime(\"]], []]",
    "lockdocs": {
     "pass": true,
     "missing": [],
     "rejected": [],
-    "tokens": 1125,
-    "ms": 46.7
+    "tokens": 1158,
+    "ms": 43.3
    },
    "variants": {
     "keyword": {
@@ -6085,21 +6088,21 @@
      "missing": [],
      "rejected": [],
      "tokens": 510,
-     "ms": 14.0
+     "ms": 10.4
     },
     "hybrid": {
      "pass": true,
      "missing": [],
      "rejected": [],
      "tokens": 386,
-     "ms": 41.8
+     "ms": 43.1
     },
     "fetched": {
      "pass": true,
      "missing": [],
      "rejected": [],
-     "tokens": 1125,
-     "ms": 46.7
+     "tokens": 1158,
+     "ms": 43.3
     }
    },
    "context7": {
@@ -6109,7 +6112,8 @@
     "tokens": 1499,
     "ms": 2418,
     "library": "/colinhacks/zod/v4.0.1",
-    "version_match": "same major"
+    "version_match": "same major",
+    "reused": true
    }
   },
   {
@@ -6118,18 +6122,16 @@
    "package": "pydantic",
    "version": "1.10.18",
    "question": "How do I make model instances immutable?",
-   "why": "v1: class Config: allow_mutation = False / frozen = True (v1.10.18 docs/usage/model_config.md)",
+   "why": "v1: class Config: allow_mutation = False / frozen = True (v1.10.18 docs/usage/model_config.md). Rejects the v2 idiom model_config = ConfigDict",
    "line": "older",
-   "set": "held-out",
-   "grading": "[[[\"allow_mutation\"]], [\"model_config\"]]",
+   "set": "tuning",
+   "grading": "[[[\"allow_mutation\"]], [\"model_config = ConfigDict\"]]",
    "lockdocs": {
-    "pass": false,
+    "pass": true,
     "missing": [],
-    "rejected": [
-     "model_config"
-    ],
+    "rejected": [],
     "tokens": 924,
-    "ms": 55.2
+    "ms": 49.8
    },
    "variants": {
     "keyword": {
@@ -6137,7 +6139,7 @@
      "missing": [],
      "rejected": [],
      "tokens": 972,
-     "ms": 21.0
+     "ms": 15.1
     },
     "hybrid": {
      "pass": false,
@@ -6148,26 +6150,24 @@
      ],
      "rejected": [],
      "tokens": 949,
-     "ms": 49.2
+     "ms": 45.7
     },
     "fetched": {
-     "pass": false,
+     "pass": true,
      "missing": [],
-     "rejected": [
-      "model_config"
-     ],
+     "rejected": [],
      "tokens": 924,
-     "ms": 55.2
+     "ms": 49.8
     }
    },
    "context7": {
     "pass": false,
     "missing": [],
     "rejected": [
-     "model_config"
+     "model_config = ConfigDict"
     ],
-    "tokens": 1062,
-    "ms": 1885,
+    "tokens": 1092,
+    "ms": 1857,
     "library": "/pydantic/pydantic",
     "version_match": "unversioned"
    }
@@ -6180,18 +6180,14 @@
    "question": "How do I make model instances immutable?",
    "why": "v2: model_config = ConfigDict(frozen=True) (v2.9.2 docs/concepts/models.md)",
    "line": "newer",
-   "set": "held-out",
+   "set": "tuning",
    "grading": "[[[\"frozen=True\"]], []]",
    "lockdocs": {
-    "pass": false,
-    "missing": [
-     [
-      "frozen=True"
-     ]
-    ],
+    "pass": true,
+    "missing": [],
     "rejected": [],
-    "tokens": 914,
-    "ms": 70.8
+    "tokens": 888,
+    "ms": 60.7
    },
    "variants": {
     "keyword": {
@@ -6203,7 +6199,7 @@
      ],
      "rejected": [],
      "tokens": 829,
-     "ms": 26.4
+     "ms": 18.7
     },
     "hybrid": {
      "pass": false,
@@ -6214,18 +6210,14 @@
      ],
      "rejected": [],
      "tokens": 917,
-     "ms": 53.4
+     "ms": 50.9
     },
     "fetched": {
-     "pass": false,
-     "missing": [
-      [
-       "frozen=True"
-      ]
-     ],
+     "pass": true,
+     "missing": [],
      "rejected": [],
-     "tokens": 914,
-     "ms": 70.8
+     "tokens": 888,
+     "ms": 60.7
     }
    },
    "context7": {
@@ -6235,41 +6227,1062 @@
     "tokens": 1214,
     "ms": 2487,
     "library": "/pydantic/pydantic",
+    "version_match": "unversioned",
+    "reused": true
+   }
+  },
+  {
+   "id": "next15-form",
+   "project": "next15",
+   "package": "next",
+   "version": "15.1.0",
+   "question": "How do I build a search form that navigates to a results page with client-side navigation?",
+   "why": "15.0+: <Form> from next/form (v15.1.0 docs/01-app/03-api-reference/02-components/form.mdx)",
+   "line": "newer",
+   "set": "held-out",
+   "grading": "[[[\"next/form\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 898,
+    "ms": 82.2
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "next/form"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 895,
+     "ms": 21.4
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "next/form"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 881,
+     "ms": 57.6
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 898,
+     "ms": 82.2
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 950,
+    "ms": 3170,
+    "library": "/vercel/next.js/v15.1.11",
+    "version_match": "same major"
+   }
+  },
+  {
+   "id": "next16-cache",
+   "project": "next16",
+   "package": "next",
+   "version": "16.3.6",
+   "question": "How do I cache the result of an expensive function across requests?",
+   "why": "16: the 'use cache' directive (v16.3.6 docs/01-app/03-api-reference/01-directives/use-cache.mdx)",
+   "line": "newer",
+   "set": "held-out",
+   "grading": "[[[\"use cache\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 856,
+    "ms": 117.5
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 881,
+     "ms": 72.9
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 834,
+     "ms": 123.0
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 856,
+     "ms": 117.5
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1258,
+    "ms": 3159,
+    "library": "/vercel/next.js/v16.2.9",
+    "version_match": "same major"
+   }
+  },
+  {
+   "id": "zod3-meta",
+   "project": "zod3",
+   "package": "zod",
+   "version": "3.23.8",
+   "question": "How do I attach a description to a schema?",
+   "why": "3.23: .describe(); .meta() arrived in zod 4 (0 matches in v3.23.8 README)",
+   "line": "older",
+   "set": "held-out",
+   "grading": "[[[\".describe(\"]], [\".meta(\"]]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 979,
+    "ms": 35.0
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 858,
+     "ms": 5.2
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 957,
+     "ms": 35.0
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 979,
+     "ms": 35.0
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 132,
+    "ms": 2243,
+    "library": "/colinhacks/zod/v3.24.2",
+    "version_match": "same major"
+   }
+  },
+  {
+   "id": "zod4-meta",
+   "project": "zod4",
+   "package": "zod",
+   "version": "4.1.5",
+   "question": "How do I attach a description to a schema?",
+   "why": "4: .meta() with the global registry (v4.1.5 packages/docs/content/metadata.mdx)",
+   "line": "newer",
+   "set": "held-out",
+   "grading": "[[[\".meta(\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 888,
+    "ms": 42.5
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       ".meta("
+      ]
+     ],
+     "rejected": [],
+     "tokens": 196,
+     "ms": 10.0
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       ".meta("
+      ]
+     ],
+     "rejected": [],
+     "tokens": 1139,
+     "ms": 43.3
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 888,
+     "ms": 42.5
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1048,
+    "ms": 3495,
+    "library": "/colinhacks/zod/v4.0.1",
+    "version_match": "same major"
+   }
+  },
+  {
+   "id": "pyd2-computed",
+   "project": "pydantic2",
+   "package": "pydantic",
+   "version": "2.9.2",
+   "question": "How do I include a computed property when serializing a model?",
+   "why": "2: @computed_field (v2.9.2 docs/concepts/fields.md)",
+   "line": "newer",
+   "set": "held-out",
+   "grading": "[[[\"computed_field\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 896,
+    "ms": 59.2
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 901,
+     "ms": 19.8
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 901,
+     "ms": 49.3
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 896,
+     "ms": 59.2
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1135,
+    "ms": 2870,
+    "library": "/pydantic/pydantic",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "pyd1-json",
+   "project": "pydantic1",
+   "package": "pydantic",
+   "version": "1.10.18",
+   "question": "How do I parse and validate a model from a JSON string?",
+   "why": "1: Model.parse_raw() (v1.10.18 docs/usage/models.md)",
+   "line": "older",
+   "set": "held-out",
+   "grading": "[[[\"parse_raw\"]], [\"model_validate_json\"]]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 962,
+    "ms": 50.0
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "parse_raw"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 909,
+     "ms": 15.8
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "parse_raw"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 882,
+     "ms": 44.5
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 962,
+     "ms": 50.0
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [
+     [
+      "parse_raw"
+     ]
+    ],
+    "rejected": [
+     "model_validate_json"
+    ],
+    "tokens": 1319,
+    "ms": 2189,
+    "library": "/pydantic/pydantic",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "pyd2-json",
+   "project": "pydantic2",
+   "package": "pydantic",
+   "version": "2.9.2",
+   "question": "How do I parse and validate a model from a JSON string?",
+   "why": "2: Model.model_validate_json() (v2.9.2 docs/concepts/models.md)",
+   "line": "newer",
+   "set": "held-out",
+   "grading": "[[[\"model_validate_json\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 876,
+    "ms": 61.4
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 861,
+     "ms": 19.7
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 908,
+     "ms": 50.3
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 876,
+     "ms": 61.4
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 1319,
+    "ms": 1630,
+    "library": "/pydantic/pydantic",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "sa20-dataclass",
+   "project": "sqlalchemy20",
+   "package": "sqlalchemy",
+   "version": "2.0.54",
+   "question": "How do I declare ORM models that are also Python dataclasses?",
+   "why": "2.0: MappedAsDataclass (rel_2_0_54 doc/build/orm/dataclasses.rst)",
+   "line": "newer",
+   "set": "held-out",
+   "grading": "[[[\"MappedAsDataclass\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 858,
+    "ms": 156.4
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 1017,
+     "ms": 49.6
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 1017,
+     "ms": 89.0
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 858,
+     "ms": 156.4
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 976,
+    "ms": 2516,
+    "library": "/websites/sqlalchemy_en_20",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "eslint8-plugins",
+   "project": "eslint8",
+   "package": "eslint",
+   "version": "8.57.1",
+   "question": "How do I add a plugin to my ESLint configuration?",
+   "why": "8: \"plugins\": [...] in .eslintrc (v8.57.1 docs/src/use/configure/plugins.md)",
+   "line": "older",
+   "set": "held-out",
+   "grading": "[[[\"\\\"plugins\\\": [\", \"plugins: [\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 784,
+    "ms": 72.4
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "\"plugins\": [",
+       "plugins: ["
+      ]
+     ],
+     "rejected": [],
+     "tokens": 895,
+     "ms": 8.3
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "\"plugins\": [",
+       "plugins: ["
+      ]
+     ],
+     "rejected": [],
+     "tokens": 905,
+     "ms": 38.4
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 784,
+     "ms": 72.4
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 990,
+    "ms": 2698,
+    "library": "/eslint/eslint/v8.57.1",
+    "version_match": "exact"
+   }
+  },
+  {
+   "id": "eslint9-plugins",
+   "project": "eslint9",
+   "package": "eslint",
+   "version": "9.39.5",
+   "question": "How do I add a plugin to my ESLint configuration?",
+   "why": "9: plugins: { name: plugin } in eslint.config.js (v9.39.5 docs/src/use/configure/plugins.md)",
+   "line": "newer",
+   "set": "held-out",
+   "grading": "[[[\"plugins: {\"]], []]",
+   "lockdocs": {
+    "pass": false,
+    "missing": [
+     [
+      "plugins: {"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 788,
+    "ms": 76.0
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "plugins: {"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 943,
+     "ms": 6.3
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "plugins: {"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 943,
+     "ms": 36.3
+    },
+    "fetched": {
+     "pass": false,
+     "missing": [
+      [
+       "plugins: {"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 788,
+     "ms": 76.0
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 959,
+    "ms": 2626,
+    "library": "/eslint/eslint/v9.39.3",
+    "version_match": "same major"
+   }
+  },
+  {
+   "id": "vite6-envapi",
+   "project": "vite6",
+   "package": "vite",
+   "version": "6.4.3",
+   "question": "How does a plugin know which environment it is running in?",
+   "why": "6: this.environment in plugin hooks (v6.4.3 docs/guide/api-environment-plugins.md)",
+   "line": "newer",
+   "set": "held-out",
+   "grading": "[[[\"this.environment\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 676,
+    "ms": 45.3
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 917,
+     "ms": 8.0
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "this.environment"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 851,
+     "ms": 41.3
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 676,
+     "ms": 45.3
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 840,
+    "ms": 2923,
+    "library": "/vitejs/vite",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "react18-context",
+   "project": "react18",
+   "package": "react",
+   "version": "18.3.1",
+   "question": "How do I provide a context value to child components?",
+   "why": "18: <SomeContext.Provider value> (@types/react 18.3.31)",
+   "line": "older",
+   "set": "held-out",
+   "grading": "[[[\".Provider\"]], [\"Starting in React 19\"]]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 823,
+    "ms": 77.4
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 952,
+     "ms": 6.5
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       ".Provider"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 948,
+     "ms": 38.8
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 823,
+     "ms": 77.4
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [],
+    "rejected": [
+     "Starting in React 19"
+    ],
+    "tokens": 1155,
+    "ms": 2796,
+    "library": "/reactjs/react.dev",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "react19-context",
+   "project": "react19",
+   "package": "react",
+   "version": "19.2.8",
+   "question": "How do I provide a context value to child components?",
+   "why": "19: render <SomeContext> as the provider; .Provider is legacy (react.dev createContext.md)",
+   "line": "newer",
+   "set": "held-out",
+   "grading": "[[[\"Starting in React 19\", \"is a legacy way\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 812,
+    "ms": 82.1
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "Starting in React 19",
+       "is a legacy way"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 902,
+     "ms": 6.4
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "Starting in React 19",
+       "is a legacy way"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 903,
+     "ms": 38.4
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 812,
+     "ms": 82.1
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 778,
+    "ms": 2187,
+    "library": "/reactjs/react.dev",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "rr7-routesfile",
+   "project": "rr7",
+   "package": "react-router",
+   "version": "7.1.1",
+   "question": "Where do I configure my app's routes?",
+   "why": "7 framework mode: app/routes.ts (react-router@7.1.1 docs/start/framework/routing.md)",
+   "line": "newer",
+   "set": "held-out",
+   "grading": "[[[\"routes.ts\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 898,
+    "ms": 43.4
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "routes.ts"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 883,
+     "ms": 6.5
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "routes.ts"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 923,
+     "ms": 36.9
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 898,
+     "ms": 43.4
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 583,
+    "ms": 2735,
+    "library": "/websites/reactrouter",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "dj51-facets",
+   "project": "django51",
+   "package": "django",
+   "version": "5.1.15",
+   "question": "How do I show counts next to the admin list filters?",
+   "why": "5.0+: ModelAdmin.show_facets (5.1.15 docs/ref/contrib/admin/index.txt)",
+   "line": "newer",
+   "set": "held-out",
+   "grading": "[[[\"show_facets\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 837,
+    "ms": 174.1
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "show_facets"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 873,
+     "ms": 46.9
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "show_facets"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 912,
+     "ms": 86.6
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 837,
+     "ms": 174.1
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 440,
+    "ms": 2828,
+    "library": "/django/django",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "tw3-source",
+   "project": "tailwind3",
+   "package": "tailwindcss",
+   "version": "3.4.19",
+   "question": "How do I tell Tailwind which files to scan for class names?",
+   "why": "v3: content: [...] in tailwind.config.js (v3 site content-configuration.mdx)",
+   "line": "older",
+   "set": "held-out",
+   "grading": "[[[\"content:\"]], [\"@source\"]]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 860,
+    "ms": 48.4
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "content:"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 1276,
+     "ms": 3.0
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "content:"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 1209,
+     "ms": 33.0
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 860,
+     "ms": 48.4
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 511,
+    "ms": 1488,
+    "library": "/rails/tailwindcss-rails",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "tw4-source",
+   "project": "tailwind4",
+   "package": "tailwindcss",
+   "version": "4.1.18",
+   "question": "How do I tell Tailwind which files to scan for class names?",
+   "why": "v4: automatic detection plus @source in CSS (v4 site detecting-classes-in-source-files.mdx)",
+   "line": "newer",
+   "set": "held-out",
+   "grading": "[[[\"@source\"]], []]",
+   "lockdocs": {
+    "pass": false,
+    "missing": [
+     [
+      "@source"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 939,
+    "ms": 50.2
+   },
+   "variants": {
+    "keyword": {
+     "pass": false,
+     "missing": [
+      [
+       "@source"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 402,
+     "ms": 1.8
+    },
+    "hybrid": {
+     "pass": false,
+     "missing": [
+      [
+       "@source"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 434,
+     "ms": 31.0
+    },
+    "fetched": {
+     "pass": false,
+     "missing": [
+      [
+       "@source"
+      ]
+     ],
+     "rejected": [],
+     "tokens": 939,
+     "ms": 50.2
+    }
+   },
+   "context7": {
+    "pass": false,
+    "missing": [
+     [
+      "@source"
+     ]
+    ],
+    "rejected": [],
+    "tokens": 511,
+    "ms": 1274,
+    "library": "/rails/tailwindcss-rails",
+    "version_match": "unversioned"
+   }
+  },
+  {
+   "id": "tokio-interval",
+   "project": "axum08",
+   "package": "tokio",
+   "version": "1.43.0",
+   "question": "How do I run a task every few seconds?",
+   "why": "tokio::time::interval",
+   "line": "single",
+   "set": "held-out",
+   "grading": "[[[\"interval(\"]], []]",
+   "lockdocs": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 890,
+    "ms": 52.9
+   },
+   "variants": {
+    "keyword": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 877,
+     "ms": 20.4
+    },
+    "hybrid": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 840,
+     "ms": 53.1
+    },
+    "fetched": {
+     "pass": true,
+     "missing": [],
+     "rejected": [],
+     "tokens": 890,
+     "ms": 52.9
+    }
+   },
+   "context7": {
+    "pass": true,
+    "missing": [],
+    "rejected": [],
+    "tokens": 133,
+    "ms": 2762,
+    "library": "/websites/rs_tokio_tokio",
     "version_match": "unversioned"
    }
   }
  ],
  "summary": {
   "keyword": {
-   "answered": 87,
-   "passed": 51,
-   "total": 87,
-   "median_tokens": 888,
-   "median_ms": 26.4,
-   "p95_ms": 421.1
+   "answered": 105,
+   "passed": 59,
+   "total": 105,
+   "median_tokens": 883,
+   "median_ms": 19.1,
+   "p95_ms": 194.4
   },
   "hybrid": {
-   "answered": 87,
-   "passed": 53,
-   "total": 87,
-   "median_tokens": 899,
-   "median_ms": 41.6,
-   "p95_ms": 98.3
+   "answered": 105,
+   "passed": 60,
+   "total": 105,
+   "median_tokens": 904,
+   "median_ms": 40.6,
+   "p95_ms": 86.7
   },
   "fetched": {
-   "answered": 87,
-   "passed": 76,
-   "total": 87,
-   "median_tokens": 870,
-   "median_ms": 90.9,
-   "p95_ms": 721.9
+   "answered": 105,
+   "passed": 94,
+   "total": 105,
+   "median_tokens": 871,
+   "median_ms": 76.1,
+   "p95_ms": 369.3
   },
   "context7": {
-   "answered": 85,
-   "passed": 61,
-   "total": 87,
-   "median_tokens": 908,
-   "median_ms": 2487,
+   "answered": 103,
+   "passed": 76,
+   "total": 105,
+   "median_tokens": 910,
+   "median_ms": 2575,
    "p95_ms": 3320
   }
  },
@@ -6288,13 +7301,13 @@
   ]
  ],
  "context7_calls": {
-  "calls": 35,
+  "calls": 39,
   "rate_limited": 0,
   "errors": 2,
   "stopped": false,
   "limit": "200",
-  "remaining": "162",
-  "reused": 69
+  "remaining": "161",
+  "reused": 83
  },
  "runner": {
   "os": "Linux",

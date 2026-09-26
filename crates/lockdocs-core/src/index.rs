@@ -134,9 +134,14 @@ fn stamp(src: &Source) -> String {
 /// What an entry means, for the embedding: its name and the start of its
 /// prose (code examples and long signatures dilute a mean-pooled vector).
 pub fn embed_text(e: &Entry) -> String {
-    let (prose, _) = split_code(&e.doc);
+    let (prose, code) = split_code(&e.doc);
     let mut body: String = prose.chars().take(600).collect();
     if e.kind == Kind::Prose {
+        // A code-only section embedded by its title alone matches short
+        // questions far too well; its code says what it is about.
+        if body.trim().is_empty() {
+            body = code.chars().take(600).collect();
+        }
         let head: Vec<&str> = e.name.split(" › ").collect();
         let tail = head[head.len().saturating_sub(2)..].join(" ");
         return format!("{tail}. {body}");

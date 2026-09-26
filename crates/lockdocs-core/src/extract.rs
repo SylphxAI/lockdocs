@@ -756,7 +756,18 @@ fn prose(text: &str, rel: &str, line_off: u32, out: &mut Vec<Entry>) {
 
 fn prose_titled(text: &str, rel: &str, line_off: u32, given: Option<String>, out: &mut Vec<Entry>) {
     let (text, fm_title) = markdown::clean_mdx(text, rel.ends_with(".mdx"));
-    let file_title = rel.rsplit('/').next().unwrap_or(rel);
+    // A page without a title is named after its file: `model_config.md` -> `model config`.
+    let file_name = rel.rsplit('/').next().unwrap_or(rel);
+    let file_title = if rel.starts_with("upstream:") && !is_doc_name(file_name) {
+        file_name
+            .rsplit_once('.')
+            .map_or(file_name, |x| x.0)
+            .trim_start_matches(|c: char| c.is_ascii_digit() || c == '-')
+            .replace(['_', '-'], " ")
+    } else {
+        file_name.to_string()
+    };
+    let file_title = file_title.as_str();
     let title = if let Some(t) = given {
         t
     } else if rel.contains("package metadata") {
@@ -820,7 +831,7 @@ fn txt<'a>(n: Node, src: &'a [u8]) -> &'a str {
 }
 
 fn compact(s: &str, cap: usize) -> String {
-    let mut out = String::with_capacity(s.len().min(cap + 8));
+    let mut out = String::with_capacity(s.len().min(cap.saturating_add(8)));
     let mut space = false;
     for c in s.chars() {
         if c.is_whitespace() {

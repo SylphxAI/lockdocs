@@ -611,7 +611,7 @@ impl Engine {
             // section, within the same budget.
             let ctx = if out.blocks == 0 { section_context(idx, e) } else { None };
             let max_doc = if out.blocks == 0 {
-                2000 - ctx.as_ref().map_or(0, |c| c.len().min(800))
+                2000 - ctx.as_ref().map_or(0, |c| c.len().min(800) / 2)
             } else {
                 800
             };
@@ -1280,8 +1280,9 @@ pub fn render_entry(idx: &PackageIndex, e: &Entry, max_doc: usize) -> String {
     s
 }
 
-/// The first paragraph of text (and a short code block right after it) of a
-/// section. Tag-only lines (`<Deprecated>`) are skipped.
+/// The first paragraph of text of a section, and the short list or code
+/// block right after it (what the section offers). Tag-only lines
+/// (`<Deprecated>`) are skipped.
 fn lead(doc: &str) -> String {
     let tag_only = |l: &str| l.starts_with('<') && l.ends_with('>');
     let mut lines = doc.lines().map(str::trim_end).peekable();
@@ -1303,7 +1304,22 @@ fn lead(doc: &str) -> String {
     while lines.peek().is_some_and(|l| l.trim().is_empty()) {
         lines.next();
     }
-    if lines.peek().is_some_and(|l| l.trim_start().starts_with("```")) {
+    let bullet = |l: &str| {
+        let t = l.trim_start();
+        t.starts_with("* ") || t.starts_with("- ") || t.split_once(". ").is_some_and(|(n, _)| !n.is_empty() && n.chars().all(|c| c.is_ascii_digit()))
+    };
+    if lines.peek().is_some_and(|l| bullet(l)) {
+        let mut list = String::new();
+        for l in lines.by_ref() {
+            if l.trim().is_empty() {
+                break;
+            }
+            let t = l.trim();
+            list.push_str(if bullet(l) { "\n" } else { " " });
+            list.push_str(t);
+        }
+        out.push_str(&truncate(&list, 400));
+    } else if lines.peek().is_some_and(|l| l.trim_start().starts_with("```")) {
         let mut code = vec![lines.next().unwrap_or_default()];
         for l in lines.by_ref() {
             code.push(l);
@@ -1506,6 +1522,8 @@ mod tests {
         assert!(heading_terms("useActionState reference").contains(&"action".to_string()));
         let l = lead("Intro line.\n\n```css\n@import \"tailwindcss\";\n\n@custom-variant dark (&:where(.dark, .dark *));\n```\n\nMore.");
         assert!(l.contains("@custom-variant") && l.ends_with("```"), "{l}");
+        let l = lead("Three helpers:\n\n* **`parse_obj`**: from a dict\n  more.\n* `parse_raw`\n\nNext.");
+        assert!(l.contains("parse_obj") && l.contains("parse_raw") && !l.contains("Next"), "{l}");
         assert!(lead("<Deprecated>\n\nIn React 19, it is no longer necessary.\n\n</Deprecated>").starts_with("In React 19"));
     }
 

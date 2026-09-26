@@ -6,15 +6,18 @@ Usage: python3 bench/run.py <lockdocs-binary> <projects-dir> <out.json> [--conte
 
 `--variant` adds a configuration run after `lockdocs fetch` with extra
 environment (for weight sweeps on CI, e.g. `head25:LOCKDOCS_HEAD_WEIGHT=0.25`).
-Questions marked `"set": "held-out"` were written after the last tuning round
-and are reported separately, so tuning cannot quietly overfit the rest.
+Questions marked `"set": "held-out"` are not used for tuning: they are written
+before the ranking changes they measure and reported in their own column.
+Once held-out questions are used to diagnose a miss, they join the tuning set
+(`history` says when) and new held-out questions replace them.
 
 Each question names a project (with dependencies installed at pinned versions)
 and a package. An answer passes when it contains at least one string from
 every `expect` group and none of the `reject` strings (case-insensitive).
 Tokens are counted with tiktoken o200k_base when available, else chars/4.
 Context7 is queried the way its MCP server does (library search, then
-context for the question) on the anonymous tier; 429s are recorded, not retried.
+context for the question) on the anonymous tier, trying the next search result
+when a library answers HTTP 404; 429s are recorded, not retried.
 """
 import json, os, subprocess, sys, time, urllib.parse, urllib.request
 
@@ -83,8 +86,9 @@ def c7_get(url):
 
 
 def c7_library(pkg, version, question):
-    """Pick the library like the resolve step would: top search result,
-    then the listed version with the same major (exact when present)."""
+    """Pick libraries like the resolve step would: search results in order,
+    each at the listed version with the same major (exact when present).
+    Returns up to three candidates; the first one that answers is used."""
     key = (pkg, version)
     if key in _c7_ids:
         return _c7_ids[key], 0.0
@@ -95,28 +99,39 @@ def c7_library(pkg, version, question):
     if not results:
         _c7_ids[key] = None
         return None, ms
-    pick = results[0]
-    lib = pick["id"]
-    versions = pick.get("versions") or []
     major = version.lstrip("v").split(".")[0]
-    exact = [v for v in versions if v.lstrip("v") == version.lstrip("v")]
-    same = [v for v in versions if v.lstrip("v").split(".")[0] == major]
-    chosen = (exact or same or [None])[-1]
-    ident = f"{lib}/{chosen}" if chosen else lib
-    _c7_ids[key] = {"id": ident, "versions": versions, "exact": bool(exact), "same_major": bool(same)}
-    return _c7_ids[key], ms
+    cands = []
+    for pick in results[:3]:
+        lib = pick["id"]
+        versions = pick.get("versions") or []
+        exact = [v for v in versions if v.lstrip("v") == version.lstrip("v")]
+        same = [v for v in versions if v.lstrip("v").split(".")[0] == major]
+        chosen = (exact or same or [None])[-1]
+        cands.append({"id": f"{lib}/{chosen}" if chosen else lib, "base": lib, "exact": bool(exact), "same_major": bool(same)})
+    _c7_ids[key] = cands
+    return cands, ms
 
 
 def run_context7(q, version):
-    lib, search_ms = c7_library(q["package"], version, q["question"])
-    if not lib:
+    cands, search_ms = c7_library(q["package"], version, q["question"])
+    if not cands:
         return {"error": "no library" if not c7_state["stopped"] else "rate limited", "ms": search_ms}
-    body, ms, err = c7_get(f"{C7}/context?" + urllib.parse.urlencode({"libraryId": lib["id"], "query": q["question"], "type": "txt"}))
+    total = search_ms
+    err, lib = None, cands[0]
+    # An agent whose first pick fails (HTTP 404) tries the next one; so do we.
+    for lib in cands:
+        for ident in dict.fromkeys([lib["id"], lib["base"]]):
+            body, ms, err = c7_get(f"{C7}/context?" + urllib.parse.urlencode({"libraryId": ident, "query": q["question"], "type": "txt"}))
+            total += ms
+            if body is not None or err != "HTTP 404":
+                break
+        if body is not None or err != "HTTP 404":
+            break
     if body is None:
-        return {"error": err, "ms": search_ms + ms, "library": lib["id"]}
+        return {"error": err, "ms": total, "library": lib["id"]}
     ok, missing, rej = grade(body, q)
-    return {"pass": ok, "missing": missing, "rejected": rej, "tokens": count(body), "ms": round(search_ms + ms), "library": lib["id"],
-            "version_match": "exact" if lib["exact"] else ("same major" if lib["same_major"] else "unversioned")}
+    return {"pass": ok, "missing": missing, "rejected": rej, "tokens": count(body), "ms": round(total), "library": ident,
+            "version_match": "exact" if lib["exact"] and ident == lib["id"] else ("same major" if lib["same_major"] and ident == lib["id"] else "unversioned")}
 
 
 VARIANTS = [

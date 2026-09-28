@@ -111,8 +111,9 @@ alone — for anything that crops or masks, use the full-bleed `lockdocs-maskabl
 | `docs/public/favicon.ico` | `favicon/favicon.ico` |
 
 `python3 brand/build.py --check` fails if any of these stops being a
-byte-for-byte copy. Rebuilding the site is not needed for icon changes: the
-files are served from `docs/public/` as they are.
+byte-for-byte copy. The website files are plain copies under `docs/public/`, so
+a regenerated icon is picked up by the next docs build and deploy; the deploy
+workflow runs on changes under `docs/`.
 
 ### Surfaces still to move
 

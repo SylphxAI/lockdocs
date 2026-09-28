@@ -1,0 +1,18 @@
+{
+  "name": "lockdocs",
+  "icon": {
+    "master": "svg/lockdocs-app-icon.svg",
+    "small": "svg/lockdocs-app-icon.svg",
+    "apple_touch": "svg/lockdocs-maskable.svg",
+    "maskable": "svg/lockdocs-maskable.svg",
+    "palette": ["#06080C", "#7C9CFF", "#42D6A4"],
+    "snap_threshold": 0.5,
+    "sizes": [180, 192, 512, 1024],
+    "maskable_sizes": [192, 512]
+  },
+  "outputs": {
+    "docs/public/logo.svg": "svg/lockdocs-symbol.svg",
+    "docs/public/favicon.svg": "favicon/favicon.svg",
+    "docs/public/favicon.ico": "favicon/favicon.ico"
+  }
+}

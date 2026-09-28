@@ -101,3 +101,5 @@ jobs:
           $B tinymodel "turn a model into a dict" -C crates/lockdocs-core/tests/fixture | grep -q to_dict
       - name: Docs build
         run: bun run docs:build
+      - name: Brand home (hashes and surface copies agree)
+        run: python3 brand/build.py --check

@@ -1,11 +1,12 @@
 import { defineConfig } from 'vitepress'
+import tokens from '../../brand/tokens.json'
 
+const base = '/lockdocs/'
 const url = 'https://sylphxai.github.io/lockdocs/'
 const desc = 'Exact-version library docs from your lockfile — local, offline, no rate limits.'
-const icon = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='6' y='14' width='20' height='14' rx='3' fill='%237c9cff'/%3E%3Cpath d='M10 14V10a6 6 0 0 1 12 0v4' fill='none' stroke='%2342d6a4' stroke-width='3'/%3E%3Crect x='11' y='18' width='10' height='2' rx='1' fill='%2306080c'/%3E%3Crect x='11' y='22' width='7' height='2' rx='1' fill='%2306080c'/%3E%3C/svg%3E"
 
 export default defineConfig({
-  base: '/lockdocs/',
+  base,
   title: 'lockdocs',
   description: desc,
   appearance: 'force-dark',
@@ -15,8 +16,10 @@ export default defineConfig({
   lastUpdated: true,
   sitemap: { hostname: url },
   head: [
-    ['link', { rel: 'icon', href: icon }],
-    ['meta', { name: 'theme-color', content: '#06080c' }],
+    // The icons are copies of the brand home's files (brand/svg, brand/favicon).
+    ['link', { rel: 'icon', href: `${base}favicon.ico`, sizes: '48x48' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: `${base}favicon.svg` }],
+    ['meta', { name: 'theme-color', content: tokens.color.bg.$value }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:site_name', content: 'lockdocs' }],
     ['meta', { property: 'og:image', content: `${url}img/demo.gif` }],

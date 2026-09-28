@@ -20,6 +20,9 @@ MIT licensed.
 - `packages/lockdocs`: the npm launcher; `packages/npm/*`: native binaries
 - `bench/`: version-sensitive questions, project pins, and the runner
 - `docs/`: the VitePress site; `scripts/`: version sync
+- `brand/`: the brand home — vector masters, generated favicons and app icons,
+  colour and type tokens. The site's logo, favicon and theme colours are copies
+  of it. See `brand/README.md`
 
 ## Release
 

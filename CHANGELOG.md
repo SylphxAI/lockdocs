@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- The CLI prints one GitHub star line to stderr after the fifth successful interactive run, once ever (counter in the cache directory). It is silent for the MCP server, with `--json`, in CI, and when stderr is not a terminal; `LOCKDOCS_NO_STAR_HINT=1` turns it off.
+
 ## 0.3.0
 
 - **Docs sites follow your major.** For packages whose docs live in a separate website repository, `lockdocs fetch` takes the docs for the pinned major: the default branch when your major is the latest, a `vN` / `N.x` branch when the site keeps one (Tailwind CSS v3, Prisma v6), or the last commit before the next major was released. Pages about a later major are skipped. React keeps the latest-only rule (react.dev documents APIs before they ship). tokio's website (tutorial and topics) is added, and docs sites now work for crates and PyPI packages too.

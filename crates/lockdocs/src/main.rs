@@ -1,5 +1,6 @@
 mod mcp;
 mod setup;
+mod star_hint;
 mod tools;
 
 use anyhow::{bail, Result};
@@ -151,7 +152,12 @@ fn run() -> Result<()> {
     }
     let json = args.on("json");
     let engine = || Engine::new(&args.root(), args.opts());
-    match cmd.as_str() {
+    let counts_as_run = !json
+        && !matches!(
+            cmd.as_str(),
+            "mcp" | "serve" | "help" | "--help" | "-h" | "version" | "--version" | "-V" | "setup" | "cache" | "fetch" | "pull"
+        );
+    let result = match cmd.as_str() {
         "mcp" | "serve" => {
             let offline = args.on("offline");
             // Fetch the model in the background; queries are keyword-only until it lands.
@@ -207,7 +213,11 @@ fn run() -> Result<()> {
                 Err(err) => bail!("{err}"),
             }
         }
+    };
+    if result.is_ok() && counts_as_run {
+        star_hint::after_success();
     }
+    result
 }
 
 fn ensure_model(offline: bool) {

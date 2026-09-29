@@ -21,4 +21,5 @@
 | `LOCKDOCS_ROOT` | Project directory when the client sends no roots |
 | `LOCKDOCS_FETCH=1` | Allow [fetching](./fetch) exact versions that are not installed |
 | `LOCKDOCS_CACHE` | Cache directory (default: the OS cache dir + `/lockdocs`) |
+| `LOCKDOCS_NO_STAR_HINT=1` | Turn off the one-time GitHub star line the CLI prints to stderr after the fifth successful interactive run (never shown for the MCP server, with `--json`, in CI, or when stderr is not a terminal) |
 | `LOCKDOCS_NO_SYSTEM_PYTHON=1` | Do not ask the system interpreter for its site-packages |

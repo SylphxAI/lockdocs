@@ -187,9 +187,14 @@ lockdocs reads files on your machine and answers over stdio. Network use: the em
 
 ## Also from Sylphx
 
-- [**repomap**](https://github.com/SylphxAI/repomap): a map of your codebase for AI agents: code graph, search, call paths and change impact, with an interactive graph UI.
-- [**anymd**](https://github.com/SylphxAI/anymd): any file to clean Markdown for your AI agent: PDF, Word, PowerPoint, Excel, EPUB, HTML, images, audio and video.
-- [**readme-mark**](https://github.com/SylphxAI/readme-mark): beautiful README images from one URL.
+<!-- generated:also-from -->
+- [**anymd**](https://github.com/SylphxAI/anymd): Any file (PDF, Word, PowerPoint, Excel, EPUB, HTML, images) to clean Markdown for AI agents.
+- [**repomap**](https://github.com/SylphxAI/repomap): A map of your codebase for AI agents: code graph, search, call paths and change impact.
+- [**skills**](https://github.com/SylphxAI/skills): Battle-tested agent skills for Claude Code and Codex, installed in one command.
+- [**readme-mark**](https://github.com/SylphxAI/readme-mark): Beautiful README images from one URL: banners, badges, icons and stats cards.
+
+More from Sylphx: https://sylphx.com/open-source
+<!-- /generated:also-from -->
 
 ## Star history
 

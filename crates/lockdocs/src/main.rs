@@ -1,6 +1,5 @@
 mod mcp;
 mod setup;
-mod star_hint;
 mod tools;
 
 use anyhow::{bail, Result};
@@ -215,7 +214,12 @@ fn run() -> Result<()> {
         }
     };
     if result.is_ok() && counts_as_run {
-        star_hint::after_success();
+        mcp_kit::star_hint::after_success(
+            "Enjoying lockdocs? A GitHub star helps others find it: https://github.com/SylphxAI/lockdocs",
+            "LOCKDOCS_NO_STAR_HINT",
+            &lockdocs_core::cache::dir(),
+            false,
+        );
     }
     result
 }

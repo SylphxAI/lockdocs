@@ -8,3 +8,10 @@
 6. **Pack.** The top result also quotes the first paragraph of its page and parent section (with the short list or code block that follows), when they add something: a deprecation notice at the top of the page, or the setup a subsection builds on. Results are added in rank order until the token budget is spent (the last one trimmed at a line boundary), each with a `package@version path:line` citation.
 
 `api` is exact rather than ranked: it finds entries whose name matches the last segment of the symbol, scores qualifiers (`Router` in `axum::Router::route`), follows re-exports, and adds overloads, members and other matches.
+
+Shared mechanics (lexical tokenization, model download/loading, quantization,
+cache-root selection and the one-time CLI star hint) come from
+`sylphx-mcp-kit` 0.3. lockdocs keeps its model choice, identifier input policy,
+ranking and retention. Existing model files and persisted embedding indexes
+remain readable in the same `LOCKDOCS_CACHE` directory; no rebuild or migration
+is needed.

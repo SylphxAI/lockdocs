@@ -4,10 +4,7 @@ use std::path::PathBuf;
 
 /// `LOCKDOCS_CACHE`, else the OS cache directory, else a temp dir.
 pub fn dir() -> PathBuf {
-    if let Some(p) = std::env::var_os("LOCKDOCS_CACHE").filter(|p| !p.is_empty()) {
-        return PathBuf::from(p);
-    }
-    dirs::cache_dir().unwrap_or_else(std::env::temp_dir).join("lockdocs")
+    mcp_kit::cache::root("LOCKDOCS_CACHE", "lockdocs", mcp_kit::cache::Fallback::Temp, mcp_kit::cache::Override::NonEmpty).expect("temporary cache fallback")
 }
 
 /// FNV-1a 64: stable across builds and platforms.

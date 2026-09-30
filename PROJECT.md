@@ -4,7 +4,7 @@ Exact-version library docs for AI agents, from the project's lockfile, offline.
 It ships as a Rust MCP server and CLI, runs locally, needs no API key, and is
 MIT licensed.
 
-- Lifecycle: `active`, published as `@sylphx/lockdocs` (npm) and
+- Published as `@sylphx/lockdocs` (npm) and
   `io.github.SylphxAI/lockdocs` (MCP Registry)
 - Docs: https://sylphxai.github.io/lockdocs/
 

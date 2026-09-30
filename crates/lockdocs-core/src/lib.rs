@@ -4,7 +4,9 @@
 
 pub mod bm25;
 pub mod cache;
-pub mod embed;
+pub mod semantic;
+// Preserve the public module names without retaining local implementations.
+pub use semantic as embed;
 pub mod extract;
 pub mod fetch;
 pub mod index;
@@ -13,7 +15,7 @@ pub mod lockfile;
 pub mod markdown;
 pub mod project;
 pub mod query;
-pub mod tokenize;
+pub use mcp_kit::search as tokenize;
 pub mod upstream;
 
 use serde::{Deserialize, Serialize};

@@ -15,7 +15,8 @@ MIT licensed.
   fetch (`fetch.rs`), Markdown sections (`markdown.rs`), tree-sitter symbol
   extraction for TypeScript, Python, Rust and Go (`extract.rs`), BM25
   (`bm25.rs`), the per-version index cache (`index.rs`), and the three queries
-  (`query.rs`)
+  (`query.rs`), and embedding policy (`semantic.rs`, with the engine and
+  tokenizer from `sylphx-mcp-kit` 0.3)
 - `crates/lockdocs`: the `lockdocs` binary (CLI, MCP stdio server, `setup`)
 - `packages/lockdocs`: the npm launcher; `packages/npm/*`: native binaries
 - `bench/`: version-sensitive questions, project pins, and the runner

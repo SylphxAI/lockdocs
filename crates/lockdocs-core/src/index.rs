@@ -193,7 +193,7 @@ pub fn build(dep: &Dep, src: &Source, root: &Path, up: Option<&(PathBuf, Manifes
     let vecs: Vec<Vec8> = match &model {
         Some(m) => {
             use rayon::prelude::*;
-            entries.par_iter().map(|e| m.embed8(&embed_text(e))).collect()
+            entries.par_iter().map(|e| m.embed8(&embed_text(e)).unwrap_or_default()).collect()
         }
         None => Vec::new(),
     };

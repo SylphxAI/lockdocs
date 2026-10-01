@@ -100,3 +100,40 @@ fn first_use_reports_unavailable_upstream_and_reuses_note() {
     let offline = engine().docs(Some("tiny-schema"), "reject unknown keys", 1500).unwrap();
     assert!(offline.json["provenance"][0]["note"].is_null());
 }
+
+#[test]
+fn pinned_upstream_cache_is_reused_online_and_offline_with_provenance() {
+    let _ = engine(); // initialize the isolated test cache
+    let root = std::env::temp_dir().join(format!("lockdocs-cached-provenance-{}", std::process::id()));
+    let dep = lockdocs_core::Dep {
+        eco: lockdocs_core::Eco::Npm,
+        name: "cached-provenance-fixture".into(),
+        version: "1.2.3".into(),
+        direct: true,
+        from: "package-lock.json".into(),
+    };
+    let src = root.join("node_modules").join(&dep.name);
+    std::fs::create_dir_all(&src).unwrap();
+    // No repository metadata: any mistaken refresh would fail instead of contacting GitHub.
+    std::fs::write(src.join("package.json"), r#"{"name":"cached-provenance-fixture","version":"1.2.3"}"#).unwrap();
+    let cache = lockdocs_core::upstream::dir(&dep);
+    std::fs::create_dir_all(cache.join("docs")).unwrap();
+    std::fs::write(cache.join("docs/guide.md"), "# Pinned guide\n\nUse release_only_api to reject unknown keys.\n").unwrap();
+    let manifest = serde_json::json!({
+        "format": lockdocs_core::upstream::FORMAT,
+        "repo": "github.com/example/pinned", "tag": "v1.2.3",
+        "commit": "0123456789abcdef0123456789abcdef01234567",
+        "files": 1, "bytes": 73, "note": null, "site": null, "pages": [],
+    });
+    std::fs::write(cache.join(".lockdocs-upstream.json"), manifest.to_string()).unwrap();
+    for upstream in [true, false] {
+        let mut e = Engine::new(&root, Options { fetch: false, upstream });
+        e.project.deps = vec![dep.clone()];
+        let a = e.docs(Some(&dep.name), "reject unknown keys", 1500).unwrap();
+        assert!(a.text.contains("release_only_api") && a.text.contains("upstream:docs/guide.md"), "{}", a.text);
+        assert_eq!(a.json["provenance"][0]["upstream"]["commit"], manifest["commit"]);
+        assert_eq!(a.json["provenance"][0]["requested_version"], "1.2.3");
+    }
+    let _ = std::fs::remove_dir_all(&root);
+    let _ = std::fs::remove_dir_all(&cache);
+}

@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 /// Bump when extraction or the on-disk format changes.
-pub const FORMAT: u32 = 10;
+pub const FORMAT: u32 = 11;
 
 #[derive(Serialize, Deserialize)]
 pub struct PackageIndex {
@@ -157,7 +157,12 @@ pub fn embed_text(e: &Entry) -> String {
 
 fn cache_path(dep: &Dep, src: &Source, types: Option<&Path>, up: Option<&(PathBuf, Manifest)>, embed: &str) -> PathBuf {
     let up_key = up
-        .map(|(_, m)| format!("{}@{:?}:{}:{:?}:{:?}", m.repo, m.tag, m.files, m.site, m.commit))
+        .map(|(_, m)| {
+            format!(
+                "{}@{:?}:{}:{:?}:{:?}:{:?}:{}",
+                m.repo, m.tag, m.files, m.site, m.commit, m.note, m.docs_sites_checked
+            )
+        })
         .unwrap_or_default();
     let key = cache::hash(&[
         embed,

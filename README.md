@@ -113,7 +113,7 @@ Legacy copies bundled inside a package (`zod/v3` inside zod 4, `pydantic/v1` ins
 
 ### Upstream docs on first use
 
-The first `docs` or `api` query adds the selected dependencies' public release-tag docs once: it finds the GitHub repository in the package's own metadata and the git tag of your pinned version, resolves that tag to an immutable commit, and downloads only its docs folders (Markdown, MDX, reStructuredText, docs examples). It does not use ambient GitHub credentials or substitute major-version website docs. `lockdocs fetch` remains available to prewarm docs and explicitly add major-version docs sites. Answers then cite `next@15.1.0 upstream:docs/01-app/.../cookies.mdx:12`. See [Upstream docs and fetching](https://sylphxai.github.io/lockdocs/guide/fetch).
+The first `docs` or `api` query adds the selected dependencies' public release-tag docs once: it finds the GitHub repository in the package's own metadata and the git tag of your pinned version, resolves that tag to an immutable commit, and downloads only its docs folders (Markdown, MDX, reStructuredText, docs examples). It does not use ambient GitHub credentials or download major-version website docs by default. Previously opted-in docs-site caches are preserved and their provenance stays visible. `lockdocs fetch` remains available to prewarm docs and explicitly add major-version docs sites. Answers then cite `next@15.1.0 upstream:docs/01-app/.../cookies.mdx:12`. See [Upstream docs and fetching](https://sylphxai.github.io/lockdocs/guide/fetch).
 
 ### Not installed? Fetch the exact version (opt-in)
 

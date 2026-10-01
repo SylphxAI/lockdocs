@@ -81,6 +81,50 @@ fn provenance(ready: &[ReadyPkg]) -> Vec<Value> {
         .collect()
 }
 
+/// Keep network fallbacks visible on ordinary broad MCP answers without listing
+/// every dependency's long header or crowding out the actual answer.
+fn broad_header(ready: &[ReadyPkg], missing: &[(Dep, String)], tokens: usize) -> String {
+    let fetched = ready.iter().filter(|r| r.0.fetched).count();
+    let upstream = ready.iter().filter(|r| r.0.upstream.is_some()).count();
+    let notes = ready.iter().filter(|r| r.2.is_some()).count();
+    let mut header = format!("Searched {} direct dependencies: {} local package sources, {fetched} registry sources, {upstream} upstream sources; {notes} fallback notes, {} unavailable.\n", ready.len(), ready.len() - fetched, missing.len());
+    let max_chars = (tokens / 3).clamp(100, 400) * 3;
+    for (idx, _, note) in ready {
+        if let Some(note) = note {
+            let row = format!("Fallback {}: {}\n", idx.id(), truncate(note, 160));
+            if header.chars().count() + row.chars().count() > max_chars {
+                break;
+            }
+            header.push_str(&row);
+        }
+    }
+    for (dep, error) in missing {
+        let row = format!("Skipped {}: {}\n", dep.id(), truncate(error, 140));
+        if header.chars().count() + row.chars().count() > max_chars {
+            break;
+        }
+        header.push_str(&row);
+    }
+    for (idx, _, _) in ready {
+        if let Some(m) = &idx.upstream_provenance {
+            let row = format!(
+                "Upstream {}: {}@{} commit {}{}\n",
+                idx.id(),
+                m.repo,
+                m.tag.as_deref().unwrap_or("none"),
+                m.commit.as_deref().map(|s| &s[..s.len().min(7)]).unwrap_or("none"),
+                if m.site.is_some() { " + opted-in docs site" } else { "" }
+            );
+            if header.chars().count() + row.chars().count() > max_chars {
+                break;
+            }
+            header.push_str(&row);
+        }
+    }
+    header.push_str("Focus `package` or request JSON for full provenance.\n");
+    header
+}
+
 fn lang(eco: Eco) -> &'static str {
     match eco {
         Eco::Npm => "ts",
@@ -224,6 +268,8 @@ impl Engine {
                         Some(old) => format!("{old} {n}"),
                         None => n,
                     });
+                } else {
+                    self.upstream_notes.lock().unwrap().remove(&dep.id());
                 }
                 let idx = Arc::new(index::load_or_build(dep, &src, &self.project.root, up.as_ref()));
                 self.indexes.lock().unwrap().insert(key, idx.clone());
@@ -240,26 +286,17 @@ impl Engine {
             return (None, None);
         }
         let enabled = self.opts.fetch || self.opts.upstream;
-        if dep.from.ends_with("(git)") {
+        if fetch::is_git(dep) {
             return (
                 None,
                 enabled.then(|| "upstream docs skipped: git dependency's resolved commit is not a release tag; using its checkout files".into()),
             );
         }
         let cached = upstream::cached(dep);
-        if let Some(c) = cached
-            .as_ref()
-            .filter(|(_, m)| !enabled || (!upstream::stale(m) && (self.opts.fetch || (m.site.is_none() && (m.commit.is_some() || m.files == 0)))))
-        {
+        if let Some(c) = cached.as_ref().filter(|(_, m)| !enabled || !upstream::needs_refresh(m, self.opts.fetch)) {
             return (Some(c.clone()), c.1.note.clone());
         }
         if enabled {
-            if upstream::repo_of(dep, src).is_none() {
-                return (
-                    None,
-                    Some("upstream docs unavailable: no GitHub repository in package metadata; using package files".into()),
-                );
-            }
             let result = if self.opts.fetch {
                 upstream::fetch(dep, src)
             } else {
@@ -301,12 +338,20 @@ impl Engine {
         let rows: Vec<(Dep, String, Value)> = deps
             .par_iter()
             .map(|d| {
+                if fetch::is_git(d) {
+                    let src = locate::locate(d, &self.project.root);
+                    return (
+                        d.clone(),
+                        "upstream skipped: git dependency; use resolved checkout files".into(),
+                        json!({"package": d.id(), "status": "git-checkout", "source": src.map(|s| s.label)}),
+                    );
+                }
                 let src = match locate::locate(d, &self.project.root)
                     .filter(|s| s.version == d.version)
                     .or_else(|| fetch::cached(d))
                 {
                     Some(s) => Some(s),
-                    None if !d.from.ends_with("(git)") => fetch::fetch(d).ok(),
+                    None if !fetch::is_git(d) => fetch::fetch(d).ok(),
                     None => None,
                 };
                 let Some(src) = src else {
@@ -316,18 +361,15 @@ impl Engine {
                         json!({"package": d.id(), "status": "missing"}),
                     );
                 };
-                let status = match upstream::cached(d).filter(|(_, m)| !upstream::stale(m)) {
-                    Some((_, m)) => m,
-                    None => match upstream::fetch(d, &src) {
-                        Ok(m) => m,
-                        Err(e) => {
-                            return (
-                                d.clone(),
-                                format!("upstream docs: {e:#}"),
-                                json!({"package": d.id(), "status": "no-upstream", "error": format!("{e:#}")}),
-                            );
-                        }
-                    },
+                let status = match upstream::fetch(d, &src) {
+                    Ok(m) => m,
+                    Err(e) => {
+                        return (
+                            d.clone(),
+                            format!("upstream docs fetch failed: {e:#}"),
+                            json!({"package": d.id(), "status": "fetch-failed", "error": format!("{e:#}")}),
+                        )
+                    }
                 };
                 let line = match (&status.tag, status.files) {
                     (_, n) if n > 0 => format!(
@@ -340,8 +382,8 @@ impl Engine {
                 };
                 (
                     d.clone(),
-                    line,
-                    json!({"package": d.id(), "repo": status.repo, "tag": status.tag, "files": status.files, "note": status.note}),
+                    if let Some(note) = &status.note { format!("{line}; {note}") } else { line },
+                    json!({"package": d.id(), "upstream": status}),
                 )
             })
             .collect();
@@ -633,7 +675,7 @@ impl Engine {
             }
         }
         if broad {
-            header = format!("Searched {} direct dependencies. Pass `package` to focus.\n", ready.len());
+            header = broad_header(&ready, &missing, tokens);
         }
         for (d, e) in &missing {
             if !broad {
@@ -674,7 +716,7 @@ impl Engine {
             if !used_pkgs.contains(&idx.id()) {
                 used_pkgs.push(idx.id());
             }
-            hits_json.push(json!({"provenance": provenance(&ready), "package": idx.id(), "kind": e.kind.as_str(), "path": e.path, "file": e.file, "line": e.line, "score": score}));
+            hits_json.push(json!({"package": idx.id(), "kind": e.kind.as_str(), "path": e.path, "file": e.file, "line": e.line, "score": score}));
         }
         if out.blocks == 0 {
             out.push_raw(&format!(

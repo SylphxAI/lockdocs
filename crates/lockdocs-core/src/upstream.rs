@@ -29,7 +29,7 @@ pub struct Repo {
 
 /// Bump when what `fetch` downloads changes, so `lockdocs fetch` refreshes
 /// older copies (a stale copy is still used until then).
-pub const FORMAT: u32 = 3;
+pub const FORMAT: u32 = 4;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Manifest {
@@ -41,6 +41,9 @@ pub struct Manifest {
     /// Immutable package-repository commit resolved from the release tag.
     #[serde(default)]
     pub commit: Option<String>,
+    /// Explicit enrichment completed a docs-site lookup (including a genuine empty result).
+    #[serde(default)]
+    pub docs_sites_checked: bool,
     pub files: usize,
     pub bytes: u64,
     /// Why nothing was downloaded, when files == 0.
@@ -150,7 +153,10 @@ fn next_major_date(agent: &Client, dep: &Dep, repo: &Repo, major: u64) -> Result
         ..dep.clone()
     };
     for t in tag_candidates(&next) {
-        if let Some(v) = api(agent, &format!("/repos/{}/{}/commits/{}", repo.owner, repo.name, enc(&t)))? {
+        if let Some(sha) = release_commit(repo, &t, |path| api(agent, path))? {
+            let Some(v) = api(agent, &format!("/repos/{}/{}/commits/{sha}", repo.owner, repo.name))? else {
+                continue;
+            };
             if let Some(d) = v.pointer("/commit/committer/date").and_then(|d| d.as_str()) {
                 return Ok(Some(d.to_string()));
             }
@@ -315,7 +321,16 @@ fn download(agent: &Client, repo: &Repo, reference: &str, files: &[(String, u64)
             })
             .collect()
     });
-    Ok(results.into_iter().filter_map(|r| r.ok()).collect())
+    download_results(results)
+}
+
+fn download_results(results: Vec<Result<u64>>) -> Result<Vec<u64>> {
+    let failed = results.iter().filter(|r| r.is_err()).count();
+    if failed > 0 {
+        let first = results.iter().find_map(|r| r.as_ref().err()).expect("failed download");
+        bail!("{failed}/{} upstream files failed to download: {first:#}", results.len());
+    }
+    results.into_iter().collect()
 }
 
 /// Parse a GitHub URL or shorthand into owner/name.
@@ -415,6 +430,19 @@ pub fn stale(m: &Manifest) -> bool {
     m.format < FORMAT
 }
 
+/// A prior explicit enrichment is also usable by automatic and offline queries.
+pub fn needs_refresh(m: &Manifest, explicit: bool) -> bool {
+    if explicit {
+        stale(m) || !m.docs_sites_checked
+    } else {
+        !compatible(m)
+    }
+}
+
+fn compatible(m: &Manifest) -> bool {
+    m.format >= 3 && (m.commit.is_some() || m.site.is_some() || m.files == 0)
+}
+
 /// A previous fetch (with or without files). Never touches the network.
 pub fn cached(dep: &Dep) -> Option<(PathBuf, Manifest)> {
     let d = dir(dep);
@@ -490,6 +518,41 @@ fn api(agent: &Client, path: &str) -> Result<Option<Value>> {
         bail!("GitHub API HTTP {status} for {path}");
     }
     Ok(Some(serde_json::from_str(&body)?))
+}
+
+/// Resolve an exact tag ref, then peel at most eight annotated tag objects.
+/// The generic GET is only to make branch rejection and peeling network-free tests.
+fn release_commit(repo: &Repo, tag: &str, mut get: impl FnMut(&str) -> Result<Option<Value>>) -> Result<Option<String>> {
+    let path = format!("/repos/{}/{}/git/ref/tags/{}", repo.owner, repo.name, enc(tag));
+    let Some(reference) = get(&path)? else { return Ok(None) };
+    if reference.get("ref").and_then(Value::as_str) != Some(format!("refs/tags/{tag}").as_str()) {
+        bail!("GitHub returned a non-exact tag ref for {tag}");
+    }
+    let mut object = reference.get("object").cloned().context("tag ref has no object")?;
+    for depth in 0..=8 {
+        let sha = object
+            .get("sha")
+            .and_then(Value::as_str)
+            .filter(|s| s.len() == 40 && s.bytes().all(|b| b.is_ascii_hexdigit()))
+            .context("tag object has no immutable SHA")?
+            .to_string();
+        match object.get("type").and_then(Value::as_str) {
+            Some("commit") => return Ok(Some(sha)),
+            Some("tag") => {
+                if depth == 8 {
+                    bail!("release tag exceeds annotated-tag peel limit");
+                }
+                let path = format!("/repos/{}/{}/git/tags/{sha}", repo.owner, repo.name);
+                object = get(&path)?
+                    .context("annotated tag object unavailable")?
+                    .get("object")
+                    .cloned()
+                    .context("annotated tag has no object")?;
+            }
+            _ => bail!("release tag does not point to a commit"),
+        }
+    }
+    bail!("release tag exceeds annotated-tag peel limit")
 }
 
 fn enc(s: &str) -> String {
@@ -610,14 +673,52 @@ impl Drop for FetchGuard {
 
 fn publish(out: &Path, target: &Path, m: &Manifest) -> Result<()> {
     std::fs::write(out.join(".lockdocs-upstream.json"), serde_json::to_string(m)?)?;
-    if target.exists() {
-        std::fs::remove_dir_all(target)?;
+    let backup = target.with_file_name(format!(
+        "{}.previous-{}",
+        target.file_name().context("cache name")?.to_string_lossy(),
+        std::process::id()
+    ));
+    let had_prior = target.exists();
+    if had_prior {
+        if backup.exists() {
+            bail!("previous cache backup already exists; refusing to overwrite it");
+        }
+        std::fs::rename(target, &backup)?;
     }
-    std::fs::rename(out, target)?;
+    if let Err(e) = std::fs::rename(out, target) {
+        if had_prior {
+            let _ = std::fs::rename(&backup, target);
+        }
+        return Err(e.into());
+    }
+    if had_prior {
+        let _ = std::fs::remove_dir_all(backup);
+    }
     Ok(())
 }
 
 fn fetch_with(dep: &Dep, src: &Source, automatic: bool) -> Result<Manifest> {
+    crate::fetch::require_registry_origin(dep)?;
+    enrich_cached(cached(dep), !automatic, || fetch_attempt(dep, src, automatic))
+}
+
+fn enrich_cached(prior: Option<(PathBuf, Manifest)>, explicit: bool, attempt: impl FnOnce() -> Result<Manifest>) -> Result<Manifest> {
+    if let Some((_, m)) = prior.as_ref().filter(|(_, m)| !needs_refresh(m, explicit)) {
+        return Ok(m.clone());
+    }
+    match attempt() {
+        Ok(m) => Ok(m),
+        Err(e) => match prior.filter(|(_, m)| compatible(m)) {
+            Some((_, mut m)) => {
+                m.note = Some(format!("upstream refresh failed: {e:#}; previous complete cache retained"));
+                Ok(m)
+            }
+            None => Err(e),
+        },
+    }
+}
+
+fn fetch_attempt(dep: &Dep, src: &Source, automatic: bool) -> Result<Manifest> {
     let repo = repo_of(dep, src).context("no GitHub repository in the package metadata")?;
     let target = dir(dep);
     let parent = target.parent().context("upstream cache parent")?;
@@ -638,15 +739,10 @@ fn fetch_with(dep: &Dep, src: &Source, automatic: bool) -> Result<Manifest> {
     let mut root = None;
     let mut commit = None;
     for t in tag_candidates(dep) {
-        let Some(release) = api(&agent, &format!("/repos/{}/{}/commits/{}", repo.owner, repo.name, enc(&t)))? else {
+        let Some(sha) = release_commit(&repo, &t, |path| api(&agent, path))? else {
             continue;
         };
-        let sha = release
-            .get("sha")
-            .and_then(Value::as_str)
-            .filter(|s| s.len() == 40 && s.bytes().all(|b| b.is_ascii_hexdigit()))
-            .context("GitHub release did not resolve to an immutable commit")?;
-        if let Some(items) = tree(&agent, &repo, sha, false)? {
+        if let Some(items) = tree(&agent, &repo, &sha, false)? {
             commit = Some(sha.to_string());
             tag = Some(t);
             root = Some(items);
@@ -659,6 +755,7 @@ fn fetch_with(dep: &Dep, src: &Source, automatic: bool) -> Result<Manifest> {
             repo: label,
             tag: None,
             commit: None,
+            docs_sites_checked: !automatic,
             files: 0,
             bytes: 0,
             note: Some(format!("no git tag found for {}", dep.version)),
@@ -677,7 +774,7 @@ fn fetch_with(dep: &Dep, src: &Source, automatic: bool) -> Result<Manifest> {
                 }
             }
             Ok(None) => {}
-            Err(e) => m.note = Some(format!("{}; docs site skipped: {e:#}", m.note.unwrap_or_default())),
+            Err(e) => return Err(e.context("docs-site selection failed")),
         }
         publish(&out, &target, &m)?;
         return Ok(m);
@@ -764,13 +861,11 @@ fn fetch_with(dep: &Dep, src: &Source, automatic: bool) -> Result<Manifest> {
     });
     files.truncate(MAX_FILES);
     let ok = download(&agent, &repo, commit.as_deref().context("missing release commit")?, &files, &out)?;
-    let failed = files.len() - ok.len();
     // A separate docs-site repository, when the package keeps its docs there.
     let mut site = None;
     let mut site_n = 0usize;
     let mut site_bytes = 0u64;
     let mut pages = Vec::new();
-    let mut site_err = None;
     match if automatic { Ok(None) } else { site_files(&agent, dep, Some(&repo)) } {
         Ok(Some(s)) => {
             (site_n, site_bytes, pages) = download_site(&agent, &s, &out)?;
@@ -779,21 +874,20 @@ fn fetch_with(dep: &Dep, src: &Source, automatic: bool) -> Result<Manifest> {
             }
         }
         Ok(None) => {}
-        Err(e) => site_err = Some(format!("docs site skipped: {e:#}")),
+        Err(e) => return Err(e.context("docs-site selection failed")),
     }
     let m = Manifest {
         format: FORMAT,
         repo: label,
         tag: Some(tag),
         commit,
+        docs_sites_checked: !automatic,
         files: ok.len() + site_n,
         bytes: ok.iter().sum::<u64>() + site_bytes,
         note: if ok.is_empty() && site_n == 0 {
             Some("no docs folder at that tag".into())
-        } else if failed > 0 {
-            Some(format!("{failed} files failed to download"))
         } else {
-            site_err
+            None
         },
         site,
         pages,
@@ -823,6 +917,132 @@ fn download_site(agent: &Client, site: &SiteFiles, out: &Path) -> Result<(usize,
 #[cfg(test)]
 mod tests {
     use super::*;
+    fn manifest() -> Manifest {
+        Manifest {
+            format: FORMAT,
+            repo: "github.com/o/r".into(),
+            tag: Some("v1.2.3".into()),
+            commit: Some("0123456789abcdef0123456789abcdef01234567".into()),
+            docs_sites_checked: false,
+            files: 1,
+            bytes: 10,
+            note: None,
+            site: None,
+            pages: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn release_ref_rejects_branch_only_and_peels_annotated_tags() {
+        let repo = Repo {
+            owner: "o".into(),
+            name: "r".into(),
+            subdir: None,
+        };
+        let sha = "0123456789abcdef0123456789abcdef01234567";
+        let mut paths = Vec::new();
+        let none = release_commit(&repo, "v1.2.3", |p| {
+            paths.push(p.to_string());
+            Ok(None)
+        })
+        .unwrap();
+        assert!(none.is_none());
+        assert_eq!(paths, vec!["/repos/o/r/git/ref/tags/v1.2.3"]);
+        let branch = release_commit(&repo, "v1.2.3", |_| {
+            Ok(Some(serde_json::json!({
+                "ref": "refs/heads/v1.2.3", "object": {"type":"commit", "sha":sha}
+            })))
+        });
+        assert!(branch.is_err());
+        let mut calls = 0;
+        let commit = release_commit(&repo, "v1.2.3", |p| {
+            calls += 1;
+            if p.contains("/git/ref/tags/") {
+                Ok(Some(serde_json::json!({"ref":"refs/tags/v1.2.3", "object":{"type":"tag", "sha":sha}})))
+            } else {
+                Ok(Some(serde_json::json!({"object":{"type":"commit", "sha":sha}})))
+            }
+        })
+        .unwrap();
+        assert_eq!(commit.as_deref(), Some(sha));
+        assert_eq!(calls, 2);
+        let mut calls = 0;
+        let cycle = release_commit(&repo, "v1.2.3", |_| {
+            calls += 1;
+            Ok(Some(serde_json::json!({"ref":"refs/tags/v1.2.3", "object":{"type":"tag", "sha":sha}})))
+        });
+        assert!(cycle.is_err());
+        assert_eq!(calls, 9); // one exact-ref lookup plus at most eight tag-object lookups
+    }
+
+    #[test]
+    fn enrichment_policy_upgrades_once_and_preserves_opted_in_sites() {
+        let automatic = manifest();
+        assert!(needs_refresh(&automatic, true));
+        assert!(!needs_refresh(&automatic, false));
+        let mut explicit = automatic.clone();
+        explicit.docs_sites_checked = true;
+        explicit.site = Some("github.com/o/site@resolved (major-version docs)".into());
+        explicit.files = 2;
+        let upgraded = enrich_cached(Some((PathBuf::new(), automatic)), true, || Ok(explicit.clone())).unwrap();
+        assert_eq!(upgraded.files, 2);
+        for policy in [false, true] {
+            let reused = enrich_cached(Some((PathBuf::new(), upgraded.clone())), policy, || panic!("needless network refresh")).unwrap();
+            assert_eq!(reused.site, explicit.site);
+        }
+    }
+
+    #[test]
+    fn failed_downloads_are_not_empty_docs_or_published_partial_success() {
+        assert!(download_results(vec![]).unwrap().is_empty());
+        assert!(download_results(vec![Err(anyhow::anyhow!("HTTP 503"))])
+            .unwrap_err()
+            .to_string()
+            .contains("1/1"));
+        assert!(download_results(vec![Ok(10), Err(anyhow::anyhow!("HTTP 503"))])
+            .unwrap_err()
+            .to_string()
+            .contains("1/2"));
+        let old = manifest();
+        let preserved = enrich_cached(Some((PathBuf::new(), old.clone())), true, || {
+            download_results(vec![Ok(10), Err(anyhow::anyhow!("HTTP 503"))]).map(|_| unreachable!())
+        })
+        .unwrap();
+        assert_eq!(preserved.commit, old.commit);
+        assert_eq!(preserved.files, old.files);
+        assert!(!preserved.docs_sites_checked);
+        assert!(preserved.note.unwrap().contains("previous complete cache retained"));
+        assert!(enrich_cached(None, true, || Err(anyhow::anyhow!("download failed"))).is_err());
+    }
+
+    #[test]
+    fn git_origins_are_rejected_before_repository_or_tag_requests() {
+        let source = Source {
+            dir: PathBuf::new(),
+            files: None,
+            metadata: None,
+            version: "1.2.3".into(),
+            label: "checkout".into(),
+            fetched: false,
+        };
+        for (eco, from) in [(Eco::Cargo, "Cargo.lock (git)"), (Eco::PyPI, "uv.lock (git)")] {
+            let dep = Dep {
+                eco,
+                name: "git-fixture".into(),
+                version: "1.2.3".into(),
+                direct: true,
+                from: from.into(),
+            };
+            for result in [
+                fetch(&dep, &source),
+                fetch_automatic(&dep, &source),
+                crate::fetch::fetch(&dep).map(|_| manifest()),
+            ] {
+                assert!(result.unwrap_err().to_string().contains("git dependency"));
+            }
+        }
+    }
+
     #[test]
     fn automatic_client_is_anonymous_and_bounded() {
         let mut client = agent(true);

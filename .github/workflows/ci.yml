@@ -115,4 +115,4 @@ jobs:
       - name: Docs build
         run: bun run docs:build
       - name: Brand home (hashes and surface copies agree)
-        run: python3 brand/build.py --check
+        uses: SylphxAI/.github/.github/actions/brand@a6c81b4bcda66bf624f0a68e25e63b3c0ed043eb # shared brand generator

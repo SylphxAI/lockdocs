@@ -1,16 +1,53 @@
 # lockdocs brand
 
+## Shared generator
+
+CI uses the shared brand action pinned to `a6c81b4bcda66bf624f0a68e25e63b3c0ed043eb`.
+The masters, tokens, pixel grids and provenance remain in this repository;
+existing assets are unchanged by moving the generator. From the repository
+root, run this self-contained recipe. Select `OPERATION=write` to regenerate
+and verify, `OPERATION=check` to verify only, or `OPERATION=resnap` to
+intentionally redraw the small favicon grids, regenerate and verify.
+
+```sh
+(
+  set -eu
+  OPERATION=write # Choose write, check or resnap before running.
+  BRAND_SCRIPT="$(mktemp)"
+  trap 'rm -f "$BRAND_SCRIPT"' EXIT
+  curl --fail --location --output "$BRAND_SCRIPT" \
+    "https://raw.githubusercontent.com/SylphxAI/.github/a6c81b4bcda66bf624f0a68e25e63b3c0ed043eb/.github/actions/brand/build.py"
+  case "$OPERATION" in
+    check) set -- --check ;;
+    write) set -- ;;
+    resnap) set -- --resnap ;;
+    *) echo "Unknown brand operation: $OPERATION" >&2; exit 1 ;;
+  esac
+  if [ "$OPERATION" != check ]; then
+    python3 -m pip install pillow numpy resvg-py
+  fi
+  python3 "$BRAND_SCRIPT" --brand-dir "$PWD/brand" --root "$PWD" "$@"
+  if [ "$OPERATION" != check ]; then
+    python3 "$BRAND_SCRIPT" --brand-dir "$PWD/brand" --root "$PWD" --check
+  fi
+)
+```
+
+Check mode needs only Python 3 and does not regenerate files. Each invocation
+prepares and cleans up its own script; later references select an operation in
+this recipe, rather than reusing its temporary path. A download, dependency,
+regeneration or verification failure stops the recipe with a nonzero status.
+Generated-file comments that name `brand/build.py` describe the historical
+generator; they are preserved to keep the asset bytes and hashes unchanged.
+
 This folder is the source of truth for the lockdocs mark, its small sizes, its
 app icon, its colours and its type. Every surface copies from it — `brand.json`
 lists which file each surface is a copy of — and nothing draws its own.
-`build.py` rebuilds every derived file from the masters in `svg/`:
+[shared generator](https://github.com/SylphxAI/.github/tree/a6c81b4bcda66bf624f0a68e25e63b3c0ed043eb/.github/actions/brand) rebuilds every derived file from the masters in `svg/`:
 
-```bash
-pip install pillow numpy resvg-py
-python3 brand/build.py            # regenerate (favicon, app icons, tokens.css, provenance)
-python3 brand/build.py --resnap   # also redraw the 16/32 px grids from the master
-python3 brand/build.py --check    # verify hashes and surface copies (CI runs this; stdlib only)
-```
+Use the [shared recipe](#shared-generator): select `OPERATION=write` to
+regenerate, `OPERATION=resnap` to redraw grids as well, or `OPERATION=check`
+to verify hashes and surface copies.
 
 ## Name
 
@@ -73,14 +110,14 @@ face is part of the mark, because the mark has no lettering.
 
 ## Small sizes
 
-16 px and 32 px are not scaled renders. `build.py` renders the app icon at 8x,
+16 px and 32 px are not scaled renders. [shared generator](https://github.com/SylphxAI/.github/tree/a6c81b4bcda66bf624f0a68e25e63b3c0ed043eb/.github/actions/brand) renders the app icon at 8x,
 quantises every sample to the three colours in `brand.json` (`palette`), and
 writes the result as a character grid: `favicon/grid-16.txt` and
 `favicon/grid-32.txt`. A pixel takes the colour most of its samples agree on,
 and stays empty when fewer than `snap_threshold` (0.5) of its samples are
 filled.
 
-The grid files are meant to be hand-edited — a later `build.py` run draws from
+The grid files are meant to be hand-edited — a later [shared generator](https://github.com/SylphxAI/.github/tree/a6c81b4bcda66bf624f0a68e25e63b3c0ed043eb/.github/actions/brand) run draws from
 the grid as it stands; only `--resnap` redraws it from the master.
 `favicon/favicon.svg` is the 32 px grid as one path per colour, and
 `favicon/favicon.ico` holds 16 and 32 from the grids plus 48 from a direct
@@ -110,7 +147,7 @@ alone — for anything that crops or masks, use the full-bleed `lockdocs-maskabl
 | `docs/public/favicon.svg` | `favicon/favicon.svg` |
 | `docs/public/favicon.ico` | `favicon/favicon.ico` |
 
-`python3 brand/build.py --check` fails if any of these stops being a
+the [shared recipe](#shared-generator) with `OPERATION=check` fails if any of these stops being a
 byte-for-byte copy. The website files are plain copies under `docs/public/`, so
 a regenerated icon is picked up by the next docs build and deploy; the deploy
 workflow runs on changes under `docs/`.
@@ -151,7 +188,7 @@ workflow runs on changes under `docs/`.
   shipped: the logo's three colours, the docs theme's background and accent
   roles, and the theme's Inter stack.
 - Every file's SHA-256 is in `provenance.json`; the entry for each file says
-  where it came from, and `build.py` refreshes the hashes.
+  where it came from, and [shared generator](https://github.com/SylphxAI/.github/tree/a6c81b4bcda66bf624f0a68e25e63b3c0ed043eb/.github/actions/brand) refreshes the hashes.
 
 ## Trademark
 

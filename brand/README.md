@@ -154,20 +154,18 @@ workflow runs on changes under `docs/`.
 
 ### Surfaces still to move
 
-- `docs/.vitepress/theme/custom.css` keeps four brand tints as literal
-  `rgba()`: `--vp-c-brand-soft` (`rgba(124, 156, 255, 0.14)`), the hero
-  radial gradient (`rgba(124,156,255,.35)`, `rgba(66,214,164,.2)`) and the
-  hero-shot border and shadow (`rgba(124,156,255,.08)`). They are alpha tints
+- `docs/.vitepress/theme/custom.css` keeps three brand tints as literal
+  `rgba()`: `--vp-c-brand-soft` (`rgba(124, 156, 255, 0.14)`) and the hero
+  radial gradient (`rgba(124,156,255,.35)`, `rgba(66,214,164,.2)`). They are alpha tints
   of `--brand-color-accent` and `--brand-color-mint`; writing them as tokens
   needs `color-mix()`, which drops the whole declaration on browsers older
   than 2023, so they stay literals.
 - `README.md` badges: the shields.io URLs carry `color=7c9cff` (npm badge) and
   `42d6a4` (MCP Registry badge). shields.io renders from its own servers and
   cannot read a local token.
-- Social preview: `docs/.vitepress/config.ts` sets `og:image` to
-  `docs/public/img/demo.gif`, a 1400×780 terminal recording, not a 1200×630
-  still. There is no `og/` master. The audit of 2026-09-28 recorded this as a
-  gap to fill later rather than draw one now.
+- Social preview: `docs/public/og.png` is a copy of `og/lockdocs-og.png`, a
+  1200×630 still rendered from the shared Sylphx docs card template with this
+  brand's tokens and symbol (`docs/.vitepress/config.ts` sets `og:image`).
 
 ## Provenance
 

@@ -1,5 +1,7 @@
 # Records docs/public/img/demo.gif with VHS in CI (.github/workflows/demo.yml).
+# Captions in README.md:18 and docs/index.md (media) describe this script; change them together.
 Output docs/public/img/demo.gif
+Output docs/public/img/demo.mp4
 
 Require lockdocs
 
@@ -37,3 +39,4 @@ Sleep 3.5s
 Type "cd ../pydantic2 && lockdocs pydantic 'convert a model to a dict' | sed -n 3,8p"
 Enter
 Sleep 4.5s
+Screenshot docs/public/img/demo-poster.png

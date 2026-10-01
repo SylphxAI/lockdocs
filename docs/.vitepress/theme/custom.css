@@ -14,7 +14,12 @@
   --vp-home-hero-name-background: linear-gradient(120deg, var(--brand-color-accent) 10%, var(--brand-color-mint) 60%, var(--brand-color-gold) 95%);
   --vp-home-hero-image-background-image: radial-gradient(circle, rgba(124,156,255,.35), rgba(66,214,164,.2) 50%, transparent 70%);
   --vp-home-hero-image-filter: blur(56px);
+  --vp-button-brand-text: var(--brand-color-bg);
+  --vp-button-brand-bg: var(--brand-color-accent);
+  --vp-button-brand-hover-text: var(--brand-color-bg);
+  --vp-button-brand-hover-bg: var(--brand-color-accent-hover);
+  --vp-button-brand-active-text: var(--brand-color-bg);
+  --vp-button-brand-active-bg: var(--brand-color-accent-active);
 }
-.hero-shot { margin: 8px auto 48px; max-width: 1152px; padding: 0 24px; }
-.hero-shot img { width: 100%; border-radius: 16px; border: 1px solid rgba(255,255,255,.08); box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(124,156,255,.08); }
-.hero-shot p { text-align: center; color: var(--vp-c-text-2); font-size: 14px; }
+/* Hero install command wraps instead of being cut off on narrow screens */
+.sx-hero-extras .sx-install code { white-space: normal; overflow-wrap: anywhere; overflow: visible; min-width: 0; }

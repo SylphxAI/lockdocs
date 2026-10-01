@@ -13,6 +13,7 @@
   "outputs": {
     "docs/public/logo.svg": "svg/lockdocs-symbol.svg",
     "docs/public/favicon.svg": "favicon/favicon.svg",
-    "docs/public/favicon.ico": "favicon/favicon.ico"
+    "docs/public/favicon.ico": "favicon/favicon.ico",
+    "docs/public/og.png": "og/lockdocs-og.png"
   }
 }

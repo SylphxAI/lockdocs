@@ -39,5 +39,8 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: demo
-          path: docs/public/img/demo.gif
+          path: |
+            docs/public/img/demo.gif
+            docs/public/img/demo.mp4
+            docs/public/img/demo-poster.png
           if-no-files-found: error

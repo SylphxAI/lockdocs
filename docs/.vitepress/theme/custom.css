@@ -21,3 +21,5 @@
   --vp-button-brand-active-text: var(--brand-color-bg);
   --vp-button-brand-active-bg: var(--brand-color-accent-active);
 }
+/* Hero install command wraps instead of being cut off on narrow screens */
+.sx-hero-extras .sx-install code { white-space: normal; overflow-wrap: anywhere; overflow: visible; min-width: 0; }

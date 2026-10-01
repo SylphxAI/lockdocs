@@ -28,7 +28,7 @@ proof:
     label: with default settings from an empty cache
     link: /benchmarks
   - value: "58 ms"
-    label: median per question (Context7 2,583 ms)
+    label: median per question after lockdocs fetch
     link: /benchmarks
 media:
   kind: video

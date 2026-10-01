@@ -15,7 +15,7 @@
 
 <!-- results -->
 
-From [this run](https://github.com/SylphxAI/lockdocs/actions/runs/36804076600), on the lockdocs 0.4.0 release branch (commit b05aecd). A rerun on the merged release commit is pending; this page is updated when it finishes.
+From [this run](https://github.com/SylphxAI/lockdocs/actions/runs/36804076600), on the lockdocs 0.4.0 release branch (commit b05aecd).
 
 Tokenizer: tiktoken o200k_base. Runner: Linux x86_64. 105 questions.
 
@@ -25,14 +25,16 @@ Tokenizer: tiktoken o200k_base. Runner: Linux x86_64. 105 questions.
 | lockdocs, hybrid + upstream docs (after `lockdocs fetch`) | 96/105 | 38/45 | 53/55 | 5/5 | 16/18 | 880 | 58 ms | 313 ms |
 | Context7 (anonymous API) | 77/105 | 19/45 | 53/55 | 5/5 | 15/18 | 908 | 2583 ms | 3398 ms |
 
+Context7 (anonymous): answers reused from earlier runs (count in the run artifact).
+
 The per-question table, index build times and `lockdocs fetch` times are in the run's job summary and its `bench` artifact.
 
 ## Reading the results
 
-- **lockdocs is ahead overall (96/105 vs 77/105) and on older majors by 2x (38/45 vs 19/45), ties Context7 on the newest majors (53/55 each) and on tokio (5/5 each), and is ahead on the held-out questions (16/18 vs 15/18).** It also uses fewer tokens (880 vs 908 median) and answers in 58 ms instead of 2,583 ms.
+- **lockdocs is ahead overall (96/105 vs 77/105) and on older majors by 2x (38/45 vs 19/45), ties Context7 on the newest majors (53/55 each) and on tokio (5/5 each), and is ahead on the held-out questions (16/18 vs 15/18).** It also uses fewer tokens (880 vs 908 median) and answers in 58 ms instead of 2,583 ms (Context7 latency from the earlier runs its reused answers were measured in).
 - **Default first use: 70/105.** From an empty cache with no GitHub token, the first query downloads release-tag docs anonymously; median 185 ms including those downloads (p95 2258 ms). Running `lockdocs fetch` once raises it to 96/105.
 - **Where each still misses.** lockdocs: seven older-major questions (among them Next.js 14 `cookies()`, React Router 6 `json()`, FastAPI 0.88 `on_event`, Prisma 5 `Buffer`, ESLint 8 `env`), and two held-out newer-major questions (ESLint 9 plugins, Tailwind 4 `@source`). Context7 mostly answers older-major questions with the newest API, and two of its Tailwind answers came from unrelated libraries its search ranked first.
-- **Configurations matter.** Keyword-only on package files: 59/105. Adding the local embedding model: 60/105. Adding `lockdocs fetch` (upstream docs at each version's git tag, plus docs-site repositories for your major): 96/105.
+- **Configurations matter (from run 36204404336).** Keyword-only on package files: 59/105. Adding the local embedding model: 60/105. Adding `lockdocs fetch` (upstream docs at each version's git tag, plus docs-site repositories for your major): 96/105.
 - Latency for lockdocs is a fresh CLI process per question, including loading the embedding model; the MCP server keeps it loaded.
 - Context7 answers for questions whose wording, grading and pinned version are unchanged since the previous run were reused from that run (disclosed in the results line) to stay within the anonymous quota.
 - Contributions of new version-sensitive questions are welcome.

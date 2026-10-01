@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 0.4.0
+
+- **Useful docs on first use.** `docs` and `api` now automatically add public upstream docs for the requested release, anonymously. The existing fetcher resolves exact `refs/tags/` refs, rejects same-named branches, and peels annotated tags to an immutable commit before downloading bounded docs. Missing registry packages and major-version website docs remain explicit opt-in.
+- **Clear network controls.** `--no-fetch` or `LOCKDOCS_FETCH=0` disables query package/docs downloads; `--offline` or `LOCKDOCS_OFFLINE=1` prevents all downloads, including the embedding model. MCP `offline: true` restricts a call to installed/cached package and upstream files. Automatic upstream requests never use ambient GitHub credentials.
+- **Honest provenance and failures.** Structured answers include the source, requested version and upstream manifest; ordinary broad text answers retain a budgeted source/fallback summary. Fetch reports preserve their original flat fields alongside richer provenance. Installed-version drift is rejected instead of substituted, and git dependencies use checkout files rather than registry releases or guessed tags.
+- **Safe cache enrichment and retry.** Explicit fetching upgrades release-only caches with docs-site enrichment. Later default/offline queries preserve opted-in site docs and provenance. Transient registry lookup or file-download failures do not become permanent empty-doc results or overwrite a compatible complete cache; failures are disclosed and explicit enrichment remains retryable. Legacy format-3 caches are revalidated online and disclosed when read offline.
+- **Shared runtime.** Embeddings, identifier tokenization and supported cache-root resolution now use mcp-kit 0.3, alongside the shared MCP server, setup and npm launcher.
+- **One-click editor setup.** README and docs offer Cursor and VS Code install links; desktop bundles prompt for the project folder used to resolve the lockfile.
+- **Measured defaults.** The benchmark separately measures real first-use behavior from an empty isolated cache without credentials: 70/105. Explicit prefetch remains 96/105 and package-only hybrid 60/105; the prefetch score is not presented as the default score.
 - The CLI prints one GitHub star line to stderr after the fifth successful interactive run, once ever (counter in the cache directory). It is silent for the MCP server, with `--json`, in CI, and when stderr is not a terminal; `LOCKDOCS_NO_STAR_HINT=1` turns it off.
 
 ## 0.3.0

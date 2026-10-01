@@ -9,6 +9,7 @@
 use crate::locate::Source;
 use crate::{cache, Dep, Eco};
 use anyhow::{bail, Context, Result};
+use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::io::Read;
@@ -53,6 +54,10 @@ pub struct Manifest {
     /// Docs pages written as JS/TSX components, relative to the cache folder.
     #[serde(default)]
     pub pages: Vec<String>,
+    /// How the package repository was read: `codeload` (one tarball) or `rest`
+    /// (the per-file fallback, after a codeload failure or an over-size archive).
+    #[serde(default)]
+    pub via: Option<String>,
 }
 
 /// Packages whose docs live in a separate website repository. Paths with
@@ -264,7 +269,7 @@ fn site_docs(agent: &Client, dep: &Dep, pkg_repo: Option<&Repo>, out: &Path) -> 
         return Ok(None);
     };
     let mut kinds: std::collections::HashMap<String, bool> = std::collections::HashMap::new();
-    let got = read_tar(body, MAX_BYTES * 2, |p, _| {
+    let got = read_tar(body.body, MAX_BYTES * 2, |p, _| {
         match site_kind(p, major, &versioned, versioned_ok, &docs_dirs, &page_dirs) {
             Some(is_page) => {
                 kinds.insert(p.to_string(), is_page);
@@ -448,10 +453,33 @@ fn token() -> Option<String> {
         .find_map(|k| std::env::var(k).ok().filter(|v| !v.is_empty()))
 }
 
+/// The GitHub hosts requests go to (replaced by a local server in tests).
+#[derive(Clone)]
+struct Hosts {
+    api: String,
+    git: String,
+    codeload: String,
+    raw: String,
+}
+
+impl Hosts {
+    fn github() -> Self {
+        Hosts {
+            api: "https://api.github.com".into(),
+            git: "https://github.com".into(),
+            codeload: "https://codeload.github.com".into(),
+            raw: "https://raw.githubusercontent.com".into(),
+        }
+    }
+}
+
 struct Client {
     agent: ureq::Agent,
     authenticated: bool,
     deadline: Option<std::time::Instant>,
+    hosts: Hosts,
+    /// Largest compressed archive streamed from one repository.
+    max_archive: u64,
 }
 
 impl std::ops::Deref for Client {
@@ -484,15 +512,15 @@ fn agent(automatic: bool) -> Client {
         agent,
         authenticated: !automatic,
         deadline: automatic.then(|| std::time::Instant::now() + std::time::Duration::from_secs(45)),
+        hosts: Hosts::github(),
+        max_archive: MAX_ARCHIVE,
     }
 }
 
 /// GitHub API GET; Ok(None) on 404.
 fn api(agent: &Client, path: &str) -> Result<Option<Value>> {
     agent.check_deadline()?;
-    let mut req = agent
-        .get(&format!("https://api.github.com{path}"))
-        .header("Accept", "application/vnd.github+json");
+    let mut req = agent.get(&format!("{}{path}", agent.hosts.api)).header("Accept", "application/vnd.github+json");
     if let Some(t) = agent.authenticated.then(token).flatten() {
         req = req.header("Authorization", &format!("Bearer {t}"));
     }
@@ -620,7 +648,7 @@ fn basic(token: &str) -> String {
 /// when the repository does not exist or is private.
 fn list_refs(agent: &Client, repo: &Repo, prefixes: &[String]) -> Result<Option<Vec<GitRef>>> {
     agent.check_deadline()?;
-    let url = format!("https://github.com/{}/{}.git/git-upload-pack", repo.owner, repo.name);
+    let url = format!("{}/{}/{}.git/git-upload-pack", agent.hosts.git, repo.owner, repo.name);
     let mut req = agent
         .post(&url)
         .header("Content-Type", "application/x-git-upload-pack-request")
@@ -650,23 +678,56 @@ pub fn downloaded_bytes() -> u64 {
     DOWNLOADED.load(std::sync::atomic::Ordering::Relaxed)
 }
 
-struct Counted<R>(R);
-impl<R: Read> Read for Counted<R> {
+/// Largest compressed archive streamed from one repository by default. A
+/// bigger one is not downloaded whole: the repository falls back to per-file
+/// requests (see the measurements in the PR for the choice).
+const MAX_ARCHIVE: u64 = 150 << 20;
+
+/// Counts compressed bytes and stops the stream (with an error) past `cap`.
+struct Capped<R> {
+    inner: R,
+    seen: u64,
+    cap: u64,
+    exceeded: std::sync::Arc<std::sync::atomic::AtomicBool>,
+}
+impl<R: Read> Read for Capped<R> {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-        let n = self.0.read(buf)?;
+        let n = self.inner.read(buf)?;
+        self.seen += n as u64;
         DOWNLOADED.fetch_add(n as u64, std::sync::atomic::Ordering::Relaxed);
+        if self.seen > self.cap {
+            self.exceeded.store(true, std::sync::atomic::Ordering::Relaxed);
+            return Err(std::io::Error::other("archive exceeds the download cap"));
+        }
         Ok(n)
     }
 }
 
-/// Largest compressed archive streamed from one repository.
-const MAX_ARCHIVE: u64 = 1 << 30;
+/// An archive stream plus whether it was cut for being over the cap.
+struct Archive {
+    body: Box<dyn Read>,
+    exceeded: std::sync::Arc<std::sync::atomic::AtomicBool>,
+}
+impl Archive {
+    fn new(body: impl Read + 'static, cap: u64) -> Self {
+        let exceeded = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        Archive {
+            body: Box::new(Capped {
+                inner: body,
+                seen: 0,
+                cap,
+                exceeded: exceeded.clone(),
+            }),
+            exceeded,
+        }
+    }
+}
 
 /// Stream `https://codeload.github.com/<owner>/<repo>/tar.gz/<ref>` (a tag, a
 /// branch or a commit). Ok(None) on 404. Not governed by the REST API quota.
-fn codeload(agent: &Client, repo: &Repo, reference: &str) -> Result<Option<impl Read>> {
+fn codeload(agent: &Client, repo: &Repo, reference: &str) -> Result<Option<Archive>> {
     agent.check_deadline()?;
-    let url = format!("https://codeload.github.com/{}/{}/tar.gz/{}", repo.owner, repo.name, enc_path(reference));
+    let url = format!("{}/{}/{}/tar.gz/{}", agent.hosts.codeload, repo.owner, repo.name, enc_path(reference));
     let remaining = agent.deadline.map(|d| d.saturating_duration_since(std::time::Instant::now()));
     let mut req = agent
         .get(&url)
@@ -684,7 +745,7 @@ fn codeload(agent: &Client, repo: &Repo, reference: &str) -> Result<Option<impl 
         s @ (403 | 429) => bail!("codeload.github.com refused {}/{} (HTTP {s})", repo.owner, repo.name),
         s => bail!("codeload.github.com HTTP {s} for {}/{}@{reference}", repo.owner, repo.name),
     }
-    Ok(Some(Counted(res.into_body().into_reader().take(MAX_ARCHIVE))))
+    Ok(Some(Archive::new(res.into_body().into_reader(), agent.max_archive)))
 }
 
 /// Stream a `.tar.gz`: for every regular file (leading `<repo>-<ref>/` folder
@@ -840,6 +901,163 @@ impl PkgScan {
         }
         out
     }
+}
+
+struct Item {
+    path: String,
+    kind: String,
+    sha: String,
+    size: u64,
+}
+
+fn tree(agent: &Client, repo: &Repo, sha_or_ref: &str, recursive: bool) -> Result<Option<Vec<Item>>> {
+    let q = if recursive { "?recursive=1" } else { "" };
+    let Some(v) = api(agent, &format!("/repos/{}/{}/git/trees/{}{q}", repo.owner, repo.name, enc(sha_or_ref)))? else {
+        return Ok(None);
+    };
+    let items = v
+        .get("tree")
+        .and_then(|t| t.as_array())
+        .map(|a| {
+            a.iter()
+                .map(|i| Item {
+                    path: i.get("path").and_then(|p| p.as_str()).unwrap_or("").to_string(),
+                    kind: i.get("type").and_then(|p| p.as_str()).unwrap_or("").to_string(),
+                    sha: i.get("sha").and_then(|p| p.as_str()).unwrap_or("").to_string(),
+                    size: i.get("size").and_then(|p| p.as_u64()).unwrap_or(0),
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    Ok(Some(items))
+}
+
+fn download(agent: &Client, repo: &Repo, reference: &str, files: &[(String, u64)], out: &Path) -> Result<Vec<u64>> {
+    let pool = rayon::ThreadPoolBuilder::new().num_threads(16).build()?;
+    let results: Vec<Result<u64>> = pool.install(|| {
+        files
+            .par_iter()
+            .map(|(p, _)| {
+                let url = format!("{}/{}/{}/{}/{}", agent.hosts.raw, repo.owner, repo.name, enc(reference), enc_path(p));
+                agent.check_deadline()?;
+                let mut res = agent.get(&url).call()?;
+                if res.status().as_u16() != 200 {
+                    bail!("HTTP {} for {p}", res.status());
+                }
+                let mut buf = Vec::new();
+                res.body_mut().as_reader().take(MAX_FILE + 1).read_to_end(&mut buf)?;
+                if buf.len() as u64 > MAX_FILE {
+                    bail!("upstream file too large: {p}");
+                }
+                let Some(rel) = crate::fetch::safe_rel(Path::new(p), false) else {
+                    bail!("unsafe path {p}")
+                };
+                let dst = out.join(rel);
+                if let Some(d) = dst.parent() {
+                    std::fs::create_dir_all(d)?;
+                }
+                std::fs::write(dst, &buf)?;
+                Ok(buf.len() as u64)
+            })
+            .collect()
+    });
+    download_results(results)
+}
+
+fn download_results(results: Vec<Result<u64>>) -> Result<Vec<u64>> {
+    let failed = results.iter().filter(|r| r.is_err()).count();
+    if failed > 0 {
+        let first = results.iter().find_map(|r| r.as_ref().err()).expect("failed download");
+        bail!("{failed}/{} upstream files failed to download: {first:#}", results.len());
+    }
+    results.into_iter().collect()
+}
+
+/// The per-file fallback for one repository: GitHub's REST tree walk plus raw
+/// file requests (subject to the REST quota). Returns files written and bytes.
+fn rest_docs(agent: &Client, dep: &Dep, repo: &Repo, commit: &str, out: &Path) -> Result<(usize, u64)> {
+    let root = tree(agent, repo, commit, false)?.context("release commit tree not found")?;
+    let short = dep.name.rsplit('/').next().unwrap_or(&dep.name).to_ascii_lowercase();
+    let sub_base = repo.subdir.as_deref().and_then(|s| s.rsplit('/').next()).unwrap_or("").to_ascii_lowercase();
+    let mut roots: Vec<(String, String)> = Vec::new(); // (path, tree sha)
+    let mut files: Vec<(String, u64)> = Vec::new();
+    let mut calls = 0;
+    let mut frontier: Vec<(String, Vec<Item>, usize)> = vec![(String::new(), root, 0)];
+    while let Some((prefix, items, depth)) = frontier.pop() {
+        for it in items {
+            let name = it.path.to_ascii_lowercase();
+            let full = if prefix.is_empty() {
+                it.path.clone()
+            } else {
+                format!("{prefix}/{}", it.path)
+            };
+            if it.kind == "blob" {
+                // Root-level (or package-level) READMEs and changelogs.
+                let upper = it.path.to_ascii_uppercase();
+                let near = depth == 0 || repo.subdir.as_deref() == Some(prefix.as_str());
+                if near
+                    && doc_file(&it.path)
+                    && ["README", "CHANGELOG", "CHANGES", "HISTORY", "MIGRAT", "UPGRAD", "RELEASE"]
+                        .iter()
+                        .any(|p| upper.starts_with(p))
+                {
+                    files.push((full, it.size));
+                }
+                continue;
+            }
+            if it.kind != "tree" {
+                continue;
+            }
+            if DOC_ROOTS.contains(&name.as_str()) {
+                roots.push((full, it.sha));
+            } else if depth < 2 && calls < 10 {
+                let wanted = WRAPPERS.contains(&name.as_str())
+                    || (depth >= 1 && (name == short || name == sub_base || name.contains("docs")))
+                    || repo.subdir.as_deref().is_some_and(|s| s == full || s.starts_with(&format!("{full}/")));
+                if wanted {
+                    calls += 1;
+                    if let Some(children) = tree(agent, &repo, &it.sha, false)? {
+                        frontier.push((full, children, depth + 1));
+                    }
+                }
+            }
+        }
+    }
+    for (path, sha) in roots.iter().take(4) {
+        let Some(items) = tree(agent, &repo, sha, true)? else { continue };
+        // Keep English when the docs are split by language.
+        let langs: Vec<&str> = items
+            .iter()
+            .filter(|i| i.kind == "tree" && !i.path.contains('/') && is_lang(&i.path))
+            .map(|i| i.path.as_str())
+            .collect();
+        let only_en = langs.len() >= 2 && langs.contains(&"en");
+        for i in &items {
+            if i.kind != "blob" || !doc_file(&i.path) || i.size > MAX_FILE {
+                continue;
+            }
+            if only_en {
+                let first = i.path.split('/').next().unwrap_or("");
+                if is_lang(first) && first != "en" {
+                    continue;
+                }
+            }
+            files.push((format!("{path}/{}", i.path), i.size));
+        }
+    }
+    files.sort();
+    files.dedup();
+    let mut total = 0u64;
+    files.retain(|(_, s)| {
+        if *s > MAX_FILE || total.saturating_add(*s) > MAX_BYTES {
+            return false;
+        }
+        total += s;
+        true
+    });
+    files.truncate(MAX_FILES);
+    let ok = download(agent, repo, commit, &files, out)?;
+    Ok((ok.len(), ok.iter().sum()))
 }
 
 /// Download one repository snapshot and keep its docs (see `PkgScan`).
@@ -999,9 +1217,16 @@ fn fetch_attempt(dep: &Dep, src: &Source, automatic: bool) -> Result<Manifest> {
     let _guard = FetchGuard { lock, staging: out.clone() };
     std::fs::create_dir_all(&out)?;
     let agent = agent(automatic);
+    let m = build(&agent, dep, &repo, automatic, &out)?;
+    publish(&out, &target, &m)?;
+    Ok(m)
+}
+
+/// Download the docs of `dep`'s release (and docs site) into `out`; the caller publishes.
+fn build(agent: &Client, dep: &Dep, repo: &Repo, automatic: bool, out: &Path) -> Result<Manifest> {
     let label = format!("github.com/{}/{}", repo.owner, repo.name);
     let candidates = tag_candidates(dep);
-    let release = list_refs(&agent, &repo, &tag_prefixes(&candidates))?.and_then(|refs| pick_release(&candidates, &refs));
+    let release = list_refs(agent, repo, &tag_prefixes(&candidates))?.and_then(|refs| pick_release(&candidates, &refs));
     let Some((tag, commit)) = release else {
         let mut m = Manifest {
             format: FORMAT,
@@ -1014,8 +1239,9 @@ fn fetch_attempt(dep: &Dep, src: &Source, automatic: bool) -> Result<Manifest> {
             note: Some(format!("no git tag found for {} (tried {})", dep.version, candidates.join(", "))),
             site: None,
             pages: Vec::new(),
+            via: None,
         };
-        match if automatic { Ok(None) } else { site_docs(&agent, dep, Some(&repo), &out) } {
+        match if automatic { Ok(None) } else { site_docs(agent, dep, Some(repo), out) } {
             Ok(Some(site)) => {
                 if site.files > 0 {
                     m.files = site.files;
@@ -1028,25 +1254,26 @@ fn fetch_attempt(dep: &Dep, src: &Source, automatic: bool) -> Result<Manifest> {
             Ok(None) => {}
             Err(e) => return Err(e.context("docs-site selection failed")),
         }
-        publish(&out, &target, &m)?;
         return Ok(m);
     };
-    // One archive of the exact release commit; only the docs are kept.
-    let Some(body) = codeload(&agent, &repo, &commit)? else {
-        bail!("tag {tag} points to commit {commit}, but codeload.github.com has no archive for it (HTTP 404)");
+    // One archive of the exact release commit; only the docs are kept. When the
+    // archive is over the cap or codeload fails, this repository alone is read
+    // file by file through the REST API instead.
+    let (docs_n, docs_bytes, via) = match codeload_docs(agent, dep, repo, &tag, &commit, out) {
+        Ok(r) => r,
+        Err(e) => {
+            let _ = std::fs::remove_dir_all(out);
+            std::fs::create_dir_all(out)?;
+            let (n, bytes) = rest_docs(agent, dep, repo, &commit, out).with_context(|| format!("codeload path failed ({e:#}); per-file fallback failed"))?;
+            (n, bytes, "rest")
+        }
     };
-    let docs = extract_pkg_docs(body, dep, &repo).with_context(|| format!("reading the archive of {} at {tag}", repo.name))?;
-    let mut bytes = 0u64;
-    for (p, data) in &docs {
-        write_file(&out, p, data)?;
-        bytes += data.len() as u64;
-    }
     // A separate docs-site repository, when the package keeps its docs there.
     let mut site = None;
     let mut site_n = 0usize;
     let mut site_bytes = 0u64;
     let mut pages = Vec::new();
-    match if automatic { Ok(None) } else { site_docs(&agent, dep, Some(&repo), &out) } {
+    match if automatic { Ok(None) } else { site_docs(agent, dep, Some(repo), out) } {
         Ok(Some(s)) => {
             (site_n, site_bytes, pages) = (s.files, s.bytes, s.pages);
             if site_n > 0 {
@@ -1062,18 +1289,40 @@ fn fetch_attempt(dep: &Dep, src: &Source, automatic: bool) -> Result<Manifest> {
         tag: Some(tag),
         commit: Some(commit),
         docs_sites_checked: !automatic,
-        files: docs.len() + site_n,
-        bytes: bytes + site_bytes,
-        note: if docs.is_empty() && site_n == 0 {
+        files: docs_n + site_n,
+        bytes: docs_bytes + site_bytes,
+        note: if docs_n == 0 && site_n == 0 {
             Some("no docs folder at that tag".into())
         } else {
             None
         },
         site,
         pages,
+        via: Some(via.into()),
     };
-    publish(&out, &target, &m)?;
     Ok(m)
+}
+
+/// Stream the release archive and write its docs: (files, bytes, "codeload").
+/// Errors when the archive is missing, over the cap, or unreadable.
+fn codeload_docs(agent: &Client, dep: &Dep, repo: &Repo, tag: &str, commit: &str, out: &Path) -> Result<(usize, u64, &'static str)> {
+    let Some(body) = codeload(agent, repo, commit)? else {
+        bail!("tag {tag} points to commit {commit}, but codeload.github.com has no archive for it (HTTP 404)");
+    };
+    let read = extract_pkg_docs(body.body, dep, repo);
+    let docs = match read {
+        Ok(d) => d,
+        Err(_) if body.exceeded.load(std::sync::atomic::Ordering::Relaxed) => {
+            bail!("archive is over the {} MB download cap", agent.max_archive >> 20)
+        }
+        Err(e) => return Err(e.context(format!("reading the archive of {} at {tag}", repo.name))),
+    };
+    let mut bytes = 0u64;
+    for (p, d) in &docs {
+        write_file(out, p, d)?;
+        bytes += d.len() as u64;
+    }
+    Ok((docs.len(), bytes, "codeload"))
 }
 
 #[cfg(test)]
@@ -1091,6 +1340,7 @@ mod tests {
             note: None,
             site: None,
             pages: Vec::new(),
+            via: None,
         }
     }
 
@@ -1180,6 +1430,177 @@ mod tests {
         assert!(parse_ls_refs(b"0010ERR denied\n0000").is_err());
         assert!(parse_ls_refs(b"00ffshort").is_err());
         assert!(parse_ls_refs(b"zzzz").is_err());
+    }
+
+    /// A local stand-in for GitHub: git smart-HTTP, codeload, REST and raw.
+    /// `api_blocked` answers every REST request 403, like an exhausted quota.
+    struct Fake {
+        base: String,
+        seen: std::sync::Arc<std::sync::Mutex<Vec<String>>>,
+    }
+
+    #[derive(Clone, Copy, PartialEq)]
+    enum Codeload {
+        Ok,
+        Fail,
+    }
+
+    const SHA: &str = "1111111111111111111111111111111111111111";
+
+    fn fake(codeload: Codeload, api_blocked: bool, tag: Option<&str>) -> Fake {
+        use std::io::Write;
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let base = format!("http://{}", listener.local_addr().unwrap());
+        let seen: std::sync::Arc<std::sync::Mutex<Vec<String>>> = Default::default();
+        let log = seen.clone();
+        let tag = tag.map(String::from);
+        let archive = tarball(&[("README.md", b"# readme"), ("docs/guide.md", b"# guide"), ("src/lib.rs", b"fn x() {}")]);
+        std::thread::spawn(move || {
+            for stream in listener.incoming() {
+                let Ok(mut c) = stream else { return };
+                let mut buf = Vec::new();
+                let mut chunk = [0u8; 4096];
+                while !buf.windows(4).any(|w| w == b"\r\n\r\n") {
+                    let n = c.read(&mut chunk).unwrap_or(0);
+                    if n == 0 {
+                        break;
+                    }
+                    buf.extend_from_slice(&chunk[..n]);
+                }
+                let head = String::from_utf8_lossy(&buf).to_string();
+                let line = head.lines().next().unwrap_or("").to_string();
+                let path = line.split(' ').nth(1).unwrap_or("").to_string();
+                log.lock().unwrap().push(format!("{} {}", line.split(' ').next().unwrap_or(""), path));
+                let json = |v: serde_json::Value| (200, "application/json", v.to_string().into_bytes());
+                let (status, ctype, body): (u16, &str, Vec<u8>) = if path.ends_with("/git-upload-pack") {
+                    // Drain the request body (pkt-lines end with 0000).
+                    let mut body = buf.split(|_| false).next().unwrap().to_vec();
+                    while !body.ends_with(b"0000") {
+                        let n = c.read(&mut chunk).unwrap_or(0);
+                        if n == 0 {
+                            break;
+                        }
+                        body.extend_from_slice(&chunk[..n]);
+                    }
+                    let mut resp = String::new();
+                    if let Some(t) = &tag {
+                        let l = format!("{SHA} refs/tags/{t}\n");
+                        resp.push_str(&format!("{:04x}{l}", l.len() + 4));
+                    }
+                    resp.push_str("0000");
+                    (200, "application/x-git-upload-pack-result", resp.into_bytes())
+                } else if path.starts_with("/o/r/tar.gz/") {
+                    match codeload {
+                        Codeload::Ok => (200, "application/gzip", archive.clone()),
+                        Codeload::Fail => (500, "text/plain", b"boom".to_vec()),
+                    }
+                } else if path.starts_with("/repos/") {
+                    if api_blocked {
+                        (403, "application/json", br#"{"message":"API rate limit exceeded"}"#.to_vec())
+                    } else if path.contains("/git/trees/docs-sha") {
+                        json(serde_json::json!({"tree":[{"path":"guide.md","type":"blob","sha":"b2","size":7}]}))
+                    } else if path.contains("/git/trees/") {
+                        json(serde_json::json!({"tree":[
+                            {"path":"README.md","type":"blob","sha":"b1","size":8},
+                            {"path":"docs","type":"tree","sha":"docs-sha","size":0},
+                            {"path":"src","type":"tree","sha":"src-sha","size":0}]}))
+                    } else {
+                        (404, "application/json", b"{}".to_vec())
+                    }
+                } else if path.starts_with("/raw/o/r/") {
+                    (200, "text/markdown", b"# raw".to_vec())
+                } else {
+                    (404, "text/plain", Vec::new())
+                };
+                let _ = write!(
+                    c,
+                    "HTTP/1.1 {status} X\r\nContent-Type: {ctype}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+                    body.len()
+                );
+                let _ = c.write_all(&body);
+            }
+        });
+        Fake { base, seen }
+    }
+
+    fn client(f: &Fake, max_archive: u64) -> Client {
+        let agent = ureq::Agent::config_builder().http_status_as_error(false).proxy(None).build().into();
+        Client {
+            agent,
+            authenticated: false,
+            deadline: None,
+            hosts: Hosts {
+                api: f.base.clone(),
+                git: f.base.clone(),
+                codeload: f.base.clone(),
+                raw: format!("{}/raw", f.base),
+            },
+            max_archive,
+        }
+    }
+
+    fn run_build(f: &Fake, max_archive: u64) -> (Result<Manifest>, tempfile::TempDir) {
+        let out = tempfile::tempdir().unwrap();
+        let r = build(&client(f, max_archive), &dep("pkg", "1.2.3"), &repo(None), false, out.path());
+        (r, out)
+    }
+
+    fn requests(f: &Fake, prefix: &str) -> usize {
+        f.seen
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|l| l.split(' ').nth(1).unwrap_or("").starts_with(prefix))
+            .count()
+    }
+
+    #[test]
+    fn fetch_with_rest_api_blocked_succeeds_through_codeload() {
+        let f = fake(Codeload::Ok, true, Some("v1.2.3"));
+        let (m, out) = run_build(&f, MAX_ARCHIVE);
+        let m = m.unwrap();
+        assert_eq!(
+            (m.tag.as_deref(), m.commit.as_deref(), m.via.as_deref()),
+            (Some("v1.2.3"), Some(SHA), Some("codeload"))
+        );
+        assert_eq!(m.files, 2);
+        assert_eq!(std::fs::read_to_string(out.path().join("docs/guide.md")).unwrap(), "# guide");
+        assert!(!out.path().join("src").exists());
+        // Neither the REST API nor raw file requests were made.
+        assert_eq!(requests(&f, "/repos/") + requests(&f, "/raw/"), 0);
+        assert_eq!(requests(&f, &format!("/o/r/tar.gz/{SHA}")), 1);
+    }
+
+    #[test]
+    fn over_cap_archive_falls_back_to_per_file_for_that_repository() {
+        let f = fake(Codeload::Ok, false, Some("v1.2.3"));
+        let (m, out) = run_build(&f, 64);
+        let m = m.unwrap();
+        assert_eq!(m.via.as_deref(), Some("rest"));
+        assert!(m.files >= 2 && out.path().join("README.md").is_file() && out.path().join("docs/guide.md").is_file());
+        assert!(requests(&f, "/repos/") > 0 && requests(&f, "/raw/") > 0);
+    }
+
+    #[test]
+    fn codeload_failure_falls_back_and_both_failing_reports_both() {
+        let f = fake(Codeload::Fail, false, Some("v1.2.3"));
+        assert_eq!(run_build(&f, MAX_ARCHIVE).0.unwrap().via.as_deref(), Some("rest"));
+        let f = fake(Codeload::Fail, true, Some("v1.2.3"));
+        let e = format!("{:#}", run_build(&f, MAX_ARCHIVE).0.unwrap_err());
+        assert!(e.contains("codeload") && e.contains("fallback failed"), "{e}");
+    }
+
+    #[test]
+    fn missing_tag_is_a_clear_note_and_downloads_nothing() {
+        let f = fake(Codeload::Ok, true, None);
+        let m = run_build(&f, MAX_ARCHIVE).0.unwrap();
+        let note = m.note.unwrap();
+        assert!(
+            note.contains("no git tag found for 1.2.3") && note.contains("v1.2.3") && note.contains("1.2.3,"),
+            "{note}"
+        );
+        assert_eq!((m.tag, m.files), (None, 0));
+        assert_eq!(requests(&f, "/o/r/tar.gz/") + requests(&f, "/repos/"), 0);
     }
 
     #[test]

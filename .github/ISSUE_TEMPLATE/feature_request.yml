@@ -1,0 +1,46 @@
+name: Feature request
+description: Propose a concrete improvement to lockdocs.
+labels:
+- enhancement
+- owner:sylphx-oss
+body:
+- type: markdown
+  attributes:
+    value: 'Search existing issues first. Use [Discussions](https://github.com/SylphxAI/lockdocs/discussions)
+      for questions. Reports are public: use synthetic/public examples and redact secrets, personal data
+      and private source material. Report vulnerabilities through the [security policy](https://github.com/SylphxAI/lockdocs/security/policy),
+      not a public issue.'
+- type: textarea
+  id: environment
+  attributes:
+    label: Version and environment
+    description: Include `lockdocs version`, installation method (npm, native binary or Cargo), OS/architecture,
+      package-manager version and MCP client version if relevant.
+  validations:
+    required: true
+- type: textarea
+  id: workflow
+  attributes:
+    label: Use case and current limitation
+    description: Describe the version-sensitive library workflow, ecosystem and lockfile, and which of
+      resolve/docs/api it would improve.
+  validations:
+    required: true
+- type: textarea
+  id: example
+  attributes:
+    label: Example and configuration
+    description: CLI command or MCP tool name and JSON arguments; project root, ecosystem, lockfile format,
+      package@version, installation layout, offline/fetch/embedding mode and token budget. Redact private
+      package names and registry URLs. Give a small synthetic input/query and the desired output; do not
+      share private content.
+  validations:
+    required: true
+- type: textarea
+  id: acceptance
+  attributes:
+    label: Acceptance criteria and alternatives
+    description: What observable result would make this useful? Explain the current workaround or alternatives
+      and why they fall short.
+  validations:
+    required: true

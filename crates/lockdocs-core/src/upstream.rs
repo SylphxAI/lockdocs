@@ -198,6 +198,9 @@ fn next_major_date(agent: &Client, dep: &Dep, repo: &Repo, major: u64) -> Result
     Ok(v.pointer("/commit/committer/date").and_then(|d| d.as_str()).map(String::from))
 }
 
+/// Files read from an archive: path and content.
+type Docs = Vec<(String, Vec<u8>)>;
+
 /// What a docs site contributed: label, files written, bytes, page paths.
 struct SiteDocs {
     label: String,
@@ -265,27 +268,46 @@ fn site_docs(agent: &Client, dep: &Dep, pkg_repo: Option<&Repo>, out: &Path) -> 
     };
     // Versioned API pages always come from the default branch.
     let versioned_ok = reference == site.branch;
-    let Some(body) = codeload(agent, &repo, &reference)? else {
-        return Ok(None);
-    };
-    let mut kinds: std::collections::HashMap<String, bool> = std::collections::HashMap::new();
-    let got = read_tar(body.body, MAX_BYTES * 2, |p, _| {
-        match site_kind(p, major, &versioned, versioned_ok, &docs_dirs, &page_dirs) {
-            Some(is_page) => {
-                kinds.insert(p.to_string(), is_page);
-                true
-            }
-            None => false,
-        }
-    })?;
+    let keep = |p: &str| site_kind(p, major, &versioned, versioned_ok, &docs_dirs, &page_dirs);
     let dst = out.join(&repo.name);
+    let streamed = (|| -> Result<Option<Docs>> {
+        let Some(body) = codeload(agent, &repo, &reference)? else {
+            return Ok(None);
+        };
+        Ok(Some(read_tar(body.body, MAX_BYTES * 2, |p, _| keep(p).is_some())?))
+    })();
     let (mut files, mut bytes, mut pages) = (0usize, 0u64, Vec::new());
-    for (p, data) in got {
-        write_file(&dst, &p, &data)?;
-        files += 1;
-        bytes += data.len() as u64;
-        if kinds.get(&p).copied().unwrap_or(false) {
-            pages.push(format!("{}/{p}", repo.name));
+    match streamed {
+        Ok(None) => return Ok(None),
+        Ok(Some(got)) => {
+            for (p, data) in got {
+                write_file(&dst, &p, &data)?;
+                files += 1;
+                bytes += data.len() as u64;
+                if keep(&p) == Some(true) {
+                    pages.push(format!("{}/{p}", repo.name));
+                }
+            }
+        }
+        Err(_) => {
+            // Over the cap or codeload failed: read this docs site file by file.
+            let _ = std::fs::remove_dir_all(&dst);
+            let Some(items) = tree(agent, &repo, &reference, true)? else {
+                return Ok(None);
+            };
+            let wanted: Vec<(String, u64)> = items
+                .iter()
+                .filter(|i| i.kind == "blob" && i.size <= MAX_FILE)
+                .filter_map(|i| keep(&i.path).map(|_| (i.path.clone(), i.size)))
+                .collect();
+            let ok = download(agent, &repo, &reference, &wanted, &dst)?;
+            files = ok.len();
+            bytes = ok.iter().sum();
+            pages = wanted
+                .iter()
+                .filter(|(p, _)| keep(p) == Some(true))
+                .map(|(p, _)| format!("{}/{p}", repo.name))
+                .collect();
         }
     }
     pages.sort();
@@ -1016,7 +1038,7 @@ fn rest_docs(agent: &Client, dep: &Dep, repo: &Repo, commit: &str, out: &Path) -
                     || repo.subdir.as_deref().is_some_and(|s| s == full || s.starts_with(&format!("{full}/")));
                 if wanted {
                     calls += 1;
-                    if let Some(children) = tree(agent, &repo, &it.sha, false)? {
+                    if let Some(children) = tree(agent, repo, &it.sha, false)? {
                         frontier.push((full, children, depth + 1));
                     }
                 }
@@ -1024,7 +1046,7 @@ fn rest_docs(agent: &Client, dep: &Dep, repo: &Repo, commit: &str, out: &Path) -
         }
     }
     for (path, sha) in roots.iter().take(4) {
-        let Some(items) = tree(agent, &repo, sha, true)? else { continue };
+        let Some(items) = tree(agent, repo, sha, true)? else { continue };
         // Keep English when the docs are split by language.
         let langs: Vec<&str> = items
             .iter()

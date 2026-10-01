@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- **First-use fetch no longer depends on GitHub's REST API quota.** Upstream docs are found with `git ls-remote`-style tag lookups and read from one streamed `codeload.github.com` tarball per repository, filtered to docs paths, instead of the REST tree and per-file requests (60 per hour per IP anonymously; 6 of 10 benchmark projects failed behind a shared IP). Cold-cache, no token: 10/10 on the 10-question version set, no 403, 1-5 GitHub connections per project instead of 2-28. `upstream::FORMAT` is 5. A missing tag error lists the tag names tried.
+- **First-use fetch no longer depends on GitHub's REST API quota.** Upstream docs are found with `git ls-remote`-style tag lookups and read from one streamed `codeload.github.com` tarball per repository, filtered to docs paths, instead of the REST tree and per-file requests (60 per hour per IP anonymously; 6 of 10 benchmark projects failed behind a shared IP). Cold-cache, no token: 10/10 on the 10-question version set, no 403, 1-5 GitHub connections per project instead of 2-28. `upstream::FORMAT` is 5. A missing tag error lists the tag names tried. An archive over 150 MB compressed (or a codeload failure) falls back to the per-file REST path for that repository only, and the manifest records `via: codeload` or `rest`.
 
 ## 0.4.0
 

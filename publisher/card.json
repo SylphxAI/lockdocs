@@ -1,0 +1,28 @@
+{
+  "slug": "lockdocs",
+  "kind": "open-source",
+  "name": {
+    "en": "lockdocs",
+    "zh-Hant": "lockdocs"
+  },
+  "tagline": {
+    "en": "Docs for the exact library version you installed, read from your lockfile: local, offline, no rate limits.",
+    "zh-Hant": "按 lockfile 提供你實際安裝版本的函式庫文件，在本機離線運作，沒有使用次數限制。"
+  },
+  "category": {
+    "en": "Developer tools",
+    "zh-Hant": "開發者工具"
+  },
+  "url": "https://sylphxai.github.io/lockdocs/",
+  "status": "available",
+  "image": {
+    "src": "card.webp",
+    "alt": {
+      "en": "lockdocs home page: the docs for the version you actually installed",
+      "zh-Hant": "lockdocs 首頁：你實際安裝版本的文件"
+    }
+  },
+  "repo": "SylphxAI/lockdocs",
+  "licence": "MIT",
+  "docs": "https://sylphxai.github.io/lockdocs/guide/quickstart"
+}

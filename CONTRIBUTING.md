@@ -10,7 +10,7 @@ Start with the [README](README.md), [vision](docs/vision.md) and
   requests before starting. The [good first issue list](https://github.com/SylphxAI/lockdocs/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22good%20first%20issue%22)
   contains tasks when suitable ones are available.
 - Use [Discussions](https://github.com/SylphxAI/lockdocs/discussions) for usage
-  questions and early ideas. For a concrete bug or feature, use the
+  questions and early ideas. For a bug, feature request or documentation correction, use the
   [issue forms](https://github.com/SylphxAI/lockdocs/issues/new/choose).
 - Include the version, ecosystem, lockfile format, package@version, command/tool
   arguments and expected citations. A minimal public or synthetic project is

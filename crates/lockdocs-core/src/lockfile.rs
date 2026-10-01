@@ -21,6 +21,16 @@ pub const LOCKFILES: &[(&str, Eco)] = &[
     ("go.mod", Eco::Go),
 ];
 
+fn git_url(s: &str) -> bool {
+    s.contains("git+")
+        || s.contains("git://")
+        || s.contains("git@")
+        || s.contains("github:")
+        || s.contains(".git#")
+        || s.contains(".git?")
+        || s.ends_with(".git")
+}
+
 fn dep(eco: Eco, name: &str, version: &str, direct: bool, from: &str) -> Dep {
     Dep {
         eco,
@@ -95,13 +105,23 @@ pub fn npm_lock(text: &str, from: &str) -> anyhow::Result<Vec<Dep>> {
             }
             let Some(ver) = p.get("version").and_then(|v| v.as_str()) else { continue };
             let name = p.get("name").and_then(|n| n.as_str()).unwrap_or(name);
-            out.push(dep(Eco::Npm, name, ver, direct.contains(name), from));
+            let origin = if p.get("resolved").and_then(Value::as_str).is_some_and(git_url) || git_url(ver) {
+                format!("{from} (git)")
+            } else {
+                from.to_string()
+            };
+            out.push(dep(Eco::Npm, name, ver, direct.contains(name), &origin));
         }
     } else if let Some(deps) = v.get("dependencies").and_then(|d| d.as_object()) {
         // lockfileVersion 1
         for (name, p) in deps {
             if let Some(ver) = p.get("version").and_then(|v| v.as_str()) {
-                out.push(dep(Eco::Npm, name, ver, true, from));
+                let origin = if p.get("resolved").and_then(Value::as_str).is_some_and(git_url) || git_url(ver) {
+                    format!("{from} (git)")
+                } else {
+                    from.to_string()
+                };
+                out.push(dep(Eco::Npm, name, ver, true, &origin));
             }
         }
         // v1 has no reliable direct marker: every top-level entry counts.
@@ -260,6 +280,7 @@ pub fn yarn_lock(text: &str, direct: &HashSet<String>) -> Vec<Dep> {
     let mut out = Vec::new();
     let mut seen = HashSet::new();
     let mut names: Vec<String> = Vec::new();
+    let mut git_origin = false;
     for line in text.lines() {
         if line.is_empty() || line.starts_with('#') {
             continue;
@@ -270,6 +291,7 @@ pub fn yarn_lock(text: &str, direct: &HashSet<String>) -> Vec<Dep> {
                 continue;
             }
             let header = line.trim_end_matches(':');
+            git_origin = git_url(header);
             for spec in header.split(", ") {
                 let spec = spec.trim().trim_matches('"');
                 if let Some((name, _)) = split_at_version(spec) {
@@ -286,7 +308,13 @@ pub fn yarn_lock(text: &str, direct: &HashSet<String>) -> Vec<Dep> {
             let ver = ver.trim().trim_matches('"');
             for n in &names {
                 if seen.insert(format!("{n}@{ver}")) {
-                    out.push(dep(Eco::Npm, n, ver, direct.contains(n), "yarn.lock"));
+                    out.push(dep(
+                        Eco::Npm,
+                        n,
+                        ver,
+                        direct.contains(n),
+                        if git_origin { "yarn.lock (git)" } else { "yarn.lock" },
+                    ));
                 }
             }
             names.clear();
@@ -417,7 +445,12 @@ pub fn uv_lock(text: &str) -> anyhow::Result<Vec<Dep>> {
         if local.contains(name) {
             continue;
         }
-        out.push(dep(Eco::PyPI, name, ver, direct.contains(&norm_name(Eco::PyPI, name)), "uv.lock"));
+        let from = if p.get("source").is_some_and(|s| s.get("git").is_some()) {
+            "uv.lock (git)"
+        } else {
+            "uv.lock"
+        };
+        out.push(dep(Eco::PyPI, name, ver, direct.contains(&norm_name(Eco::PyPI, name)), from));
     }
     Ok(out)
 }
@@ -430,7 +463,15 @@ pub fn poetry_lock(text: &str, from: &str, direct: &HashSet<String>) -> anyhow::
             continue;
         };
         let is_direct = direct.is_empty() || direct.contains(&norm_name(Eco::PyPI, name));
-        out.push(dep(Eco::PyPI, name, ver, is_direct, from));
+        let origin = if p
+            .get("source")
+            .is_some_and(|s| s.get("git").is_some() || s.get("type").and_then(toml::Value::as_str) == Some("git"))
+        {
+            format!("{from} (git)")
+        } else {
+            from.to_string()
+        };
+        out.push(dep(Eco::PyPI, name, ver, is_direct, &origin));
     }
     Ok(out)
 }
@@ -441,7 +482,13 @@ pub fn pipfile_lock(text: &str) -> anyhow::Result<Vec<Dep>> {
     for sect in ["default", "develop"] {
         for (name, p) in v.get(sect).and_then(|s| s.as_object()).into_iter().flatten() {
             if let Some(ver) = p.get("version").and_then(|v| v.as_str()) {
-                out.push(dep(Eco::PyPI, name, ver.trim_start_matches("=="), true, "Pipfile.lock"));
+                out.push(dep(
+                    Eco::PyPI,
+                    name,
+                    ver.trim_start_matches("=="),
+                    true,
+                    if p.get("git").is_some() { "Pipfile.lock (git)" } else { "Pipfile.lock" },
+                ));
             }
         }
     }
@@ -536,6 +583,26 @@ fn parse_replace(line: &str, out: &mut BTreeMap<String, String>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn python_and_npm_git_origins_are_not_registry_releases() {
+        let uv = r#"[[package]]
+name = "git-lib"
+version = "1.2.3"
+source = { git = "https://github.com/o/r?rev=abc#01234567" }
+"#;
+        assert_eq!(uv_lock(uv).unwrap()[0].from, "uv.lock (git)");
+        let poetry = r#"[[package]]
+name = "git-lib"
+version = "1.2.3"
+[package.source]
+type = "git"
+url = "https://github.com/o/r"
+"#;
+        assert_eq!(poetry_lock(poetry, "poetry.lock", &HashSet::new()).unwrap()[0].from, "poetry.lock (git)");
+        let npm = r#"{"packages":{"node_modules/git-lib":{"version":"1.2.3","resolved":"git+https://github.com/o/r.git#abc"}}}"#;
+        assert_eq!(npm_lock(npm, "package-lock.json").unwrap()[0].from, "package-lock.json (git)");
+    }
 
     #[test]
     fn npm_v3() {

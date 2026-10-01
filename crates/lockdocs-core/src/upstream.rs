@@ -3,7 +3,8 @@
 //! This module finds the repository from the package's own metadata, finds
 //! the tag for the pinned version, and downloads only the docs folders
 //! (Markdown, MDX, reStructuredText) from GitHub into the cache, once.
-//! Network use is opt-in: `lockdocs fetch`, `--fetch` or `LOCKDOCS_FETCH=1`.
+//! First-use queries fetch public docs at an immutable release commit. Explicit
+//! `fetch` also supports major-version docs sites and optional GitHub credentials.
 
 use crate::locate::Source;
 use crate::{cache, Dep, Eco};
@@ -28,7 +29,7 @@ pub struct Repo {
 
 /// Bump when what `fetch` downloads changes, so `lockdocs fetch` refreshes
 /// older copies (a stale copy is still used until then).
-pub const FORMAT: u32 = 2;
+pub const FORMAT: u32 = 4;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Manifest {
@@ -37,6 +38,12 @@ pub struct Manifest {
     pub format: u32,
     pub repo: String,
     pub tag: Option<String>,
+    /// Immutable package-repository commit resolved from the release tag.
+    #[serde(default)]
+    pub commit: Option<String>,
+    /// Explicit enrichment completed a docs-site lookup (including a genuine empty result).
+    #[serde(default)]
+    pub docs_sites_checked: bool,
     pub files: usize,
     pub bytes: u64,
     /// Why nothing was downloaded, when files == 0.
@@ -123,30 +130,61 @@ const DOCS_SITES: &[DocsSite] = &[
 ];
 
 /// The latest stable major of a package, from its registry.
-fn latest_major(agent: &ureq::Agent, dep: &Dep) -> Option<u64> {
+fn latest_major(agent: &Client, dep: &Dep) -> Result<Option<u64>> {
     let name = dep.name.strip_prefix("@types/").unwrap_or(&dep.name);
     let (url, pointer) = match dep.eco {
         Eco::Npm => (format!("https://registry.npmjs.org/{}/latest", name.replace('/', "%2F")), "/version"),
         Eco::Cargo => (format!("https://crates.io/api/v1/crates/{name}"), "/crate/max_stable_version"),
         Eco::PyPI => (format!("https://pypi.org/pypi/{name}/json"), "/info/version"),
-        Eco::Go => return None,
+        Eco::Go => return Ok(None),
     };
-    let mut res = agent.get(&url).call().ok()?;
+    agent.check_deadline()?;
+    let mut res = agent.get(&url).call().with_context(|| format!("latest-major lookup: {url}"))?;
+    let status = res.status().as_u16();
     let mut body = String::new();
-    res.body_mut().as_reader().take(16 << 20).read_to_string(&mut body).ok()?;
-    let v: Value = serde_json::from_str(&body).ok()?;
-    v.pointer(pointer)?.as_str()?.split('.').next()?.parse().ok()
+    res.body_mut()
+        .as_reader()
+        .take((16 << 20) + 1)
+        .read_to_string(&mut body)
+        .context("latest-major response read failed")?;
+    if body.len() > 16 << 20 {
+        bail!("latest-major response exceeds 16 MB");
+    }
+    latest_major_response(status, &body, pointer)
+}
+
+/// Only a genuine missing registry record is an empty lookup. Network, HTTP,
+/// malformed JSON and invalid version responses must leave enrichment retryable.
+fn latest_major_response(status: u16, body: &str, pointer: &str) -> Result<Option<u64>> {
+    if status == 404 {
+        return Ok(None);
+    }
+    if status != 200 {
+        bail!("latest-major registry lookup failed: HTTP {status}");
+    }
+    let v: Value = serde_json::from_str(body).context("invalid latest-major registry JSON")?;
+    let version = v.pointer(pointer).and_then(Value::as_str).context("latest-major response missing version")?;
+    let major = version
+        .split('.')
+        .next()
+        .context("latest-major response has empty version")?
+        .parse()
+        .context("latest-major response has invalid version")?;
+    Ok(Some(major))
 }
 
 /// When the package's next major was released: the commit date of its
 /// `{major+1}.0.0` tag in the package repository.
-fn next_major_date(agent: &ureq::Agent, dep: &Dep, repo: &Repo, major: u64) -> Result<Option<String>> {
+fn next_major_date(agent: &Client, dep: &Dep, repo: &Repo, major: u64) -> Result<Option<String>> {
     let next = Dep {
         version: format!("{}.0.0", major + 1),
         ..dep.clone()
     };
     for t in tag_candidates(&next) {
-        if let Some(v) = api(agent, &format!("/repos/{}/{}/commits/{}", repo.owner, repo.name, enc(&t)))? {
+        if let Some(sha) = release_commit(repo, &t, |path| api(agent, path))? {
+            let Some(v) = api(agent, &format!("/repos/{}/{}/commits/{sha}", repo.owner, repo.name))? else {
+                continue;
+            };
             if let Some(d) = v.pointer("/commit/committer/date").and_then(|d| d.as_str()) {
                 return Ok(Some(d.to_string()));
             }
@@ -165,12 +203,12 @@ struct SiteFiles {
 }
 
 /// Which files of the docs site describe `dep`'s major, if any.
-fn site_files(agent: &ureq::Agent, dep: &Dep, pkg_repo: Option<&Repo>) -> Result<Option<SiteFiles>> {
+fn site_files(agent: &Client, dep: &Dep, pkg_repo: Option<&Repo>) -> Result<Option<SiteFiles>> {
     let Some(site) = DOCS_SITES.iter().find(|s| s.eco == dep.eco && s.names.contains(&dep.name.as_str())) else {
         return Ok(None);
     };
     let major: u64 = dep.version.split('.').next().and_then(|m| m.parse().ok()).unwrap_or(0);
-    let latest = latest_major(agent, dep);
+    let latest = latest_major(agent, dep)?;
     let repo = Repo {
         owner: site.repo.0.into(),
         name: site.repo.1.into(),
@@ -276,7 +314,7 @@ fn page_file(p: &str) -> bool {
         && !p.contains("[")
 }
 
-fn download(agent: &ureq::Agent, repo: &Repo, reference: &str, files: &[(String, u64)], out: &Path) -> Result<Vec<u64>> {
+fn download(agent: &Client, repo: &Repo, reference: &str, files: &[(String, u64)], out: &Path) -> Result<Vec<u64>> {
     let pool = rayon::ThreadPoolBuilder::new().num_threads(16).build()?;
     let results: Vec<Result<u64>> = pool.install(|| {
         files
@@ -289,12 +327,16 @@ fn download(agent: &ureq::Agent, repo: &Repo, reference: &str, files: &[(String,
                     enc(reference),
                     enc_path(p)
                 );
+                agent.check_deadline()?;
                 let mut res = agent.get(&url).call()?;
                 if res.status().as_u16() != 200 {
                     bail!("HTTP {} for {p}", res.status());
                 }
                 let mut buf = Vec::new();
                 res.body_mut().as_reader().take(MAX_FILE + 1).read_to_end(&mut buf)?;
+                if buf.len() as u64 > MAX_FILE {
+                    bail!("upstream file too large: {p}");
+                }
                 let Some(rel) = crate::fetch::safe_rel(Path::new(p), false) else {
                     bail!("unsafe path {p}")
                 };
@@ -307,7 +349,16 @@ fn download(agent: &ureq::Agent, repo: &Repo, reference: &str, files: &[(String,
             })
             .collect()
     });
-    Ok(results.into_iter().filter_map(|r| r.ok()).collect())
+    download_results(results)
+}
+
+fn download_results(results: Vec<Result<u64>>) -> Result<Vec<u64>> {
+    let failed = results.iter().filter(|r| r.is_err()).count();
+    if failed > 0 {
+        let first = results.iter().find_map(|r| r.as_ref().err()).expect("failed download");
+        bail!("{failed}/{} upstream files failed to download: {first:#}", results.len());
+    }
+    results.into_iter().collect()
 }
 
 /// Parse a GitHub URL or shorthand into owner/name.
@@ -325,7 +376,8 @@ pub fn parse_github(url: &str) -> Option<(String, String)> {
     let mut it = rest.split(['/', '#', '?']).filter(|s| !s.is_empty());
     let owner = it.next()?.to_string();
     let name = it.next()?.trim_end_matches(".git").to_string();
-    if owner.is_empty() || name.is_empty() {
+    let safe = |s: &str| !s.is_empty() && s != "." && s != ".." && s.bytes().all(|b| b.is_ascii_alphanumeric() || b"-_.".contains(&b));
+    if !safe(&owner) || !safe(&name) {
         return None;
     }
     Some((owner, name))
@@ -406,6 +458,19 @@ pub fn stale(m: &Manifest) -> bool {
     m.format < FORMAT
 }
 
+/// A prior explicit enrichment is also usable by automatic and offline queries.
+pub fn needs_refresh(m: &Manifest, explicit: bool) -> bool {
+    if explicit {
+        stale(m) || !m.docs_sites_checked
+    } else {
+        !compatible(m)
+    }
+}
+
+fn compatible(m: &Manifest) -> bool {
+    m.format >= FORMAT && (m.commit.is_some() || m.site.is_some() || m.files == 0)
+}
+
 /// A previous fetch (with or without files). Never touches the network.
 pub fn cached(dep: &Dep) -> Option<(PathBuf, Manifest)> {
     let d = dir(dep);
@@ -419,23 +484,52 @@ fn token() -> Option<String> {
         .find_map(|k| std::env::var(k).ok().filter(|v| !v.is_empty()))
 }
 
-fn agent() -> ureq::Agent {
-    ureq::Agent::config_builder()
-        .timeout_global(Some(std::time::Duration::from_secs(60)))
+struct Client {
+    agent: ureq::Agent,
+    authenticated: bool,
+    deadline: Option<std::time::Instant>,
+}
+
+impl std::ops::Deref for Client {
+    type Target = ureq::Agent;
+    fn deref(&self) -> &Self::Target {
+        &self.agent
+    }
+}
+
+impl Client {
+    fn check_deadline(&self) -> Result<()> {
+        if self.deadline.is_some_and(|d| std::time::Instant::now() >= d) {
+            bail!("automatic upstream fetch time budget exhausted");
+        }
+        Ok(())
+    }
+}
+
+fn agent(automatic: bool) -> Client {
+    let agent = ureq::Agent::config_builder()
+        .timeout_global(Some(std::time::Duration::from_secs(if automatic { 10 } else { 60 })))
+        .max_redirects(if automatic { 0 } else { 10 })
         .http_status_as_error(false)
         // Renamed repositories answer with a redirect; keep the token for it.
         .redirect_auth_headers(ureq::config::RedirectAuthHeaders::SameHost)
         .user_agent(concat!("lockdocs/", env!("CARGO_PKG_VERSION"), " (+https://github.com/SylphxAI/lockdocs)"))
         .build()
-        .into()
+        .into();
+    Client {
+        agent,
+        authenticated: !automatic,
+        deadline: automatic.then(|| std::time::Instant::now() + std::time::Duration::from_secs(45)),
+    }
 }
 
 /// GitHub API GET; Ok(None) on 404.
-fn api(agent: &ureq::Agent, path: &str) -> Result<Option<Value>> {
+fn api(agent: &Client, path: &str) -> Result<Option<Value>> {
+    agent.check_deadline()?;
     let mut req = agent
         .get(&format!("https://api.github.com{path}"))
         .header("Accept", "application/vnd.github+json");
-    if let Some(t) = token() {
+    if let Some(t) = agent.authenticated.then(token).flatten() {
         req = req.header("Authorization", &format!("Bearer {t}"));
     }
     let mut res = req.call()?;
@@ -446,12 +540,47 @@ fn api(agent: &ureq::Agent, path: &str) -> Result<Option<Value>> {
     let mut body = String::new();
     res.body_mut().as_reader().take(64 << 20).read_to_string(&mut body)?;
     if status == 403 || status == 429 {
-        bail!("GitHub API rate limit (HTTP {status}); set GITHUB_TOKEN to raise it");
+        bail!("GitHub API rate limit (HTTP {status}); automatic fetch is anonymous; explicit `lockdocs fetch` can use GITHUB_TOKEN");
     }
-    if status >= 400 {
+    if status >= 300 {
         bail!("GitHub API HTTP {status} for {path}");
     }
     Ok(Some(serde_json::from_str(&body)?))
+}
+
+/// Resolve an exact tag ref, then peel at most eight annotated tag objects.
+/// The generic GET is only to make branch rejection and peeling network-free tests.
+fn release_commit(repo: &Repo, tag: &str, mut get: impl FnMut(&str) -> Result<Option<Value>>) -> Result<Option<String>> {
+    let path = format!("/repos/{}/{}/git/ref/tags/{}", repo.owner, repo.name, enc(tag));
+    let Some(reference) = get(&path)? else { return Ok(None) };
+    if reference.get("ref").and_then(Value::as_str) != Some(format!("refs/tags/{tag}").as_str()) {
+        bail!("GitHub returned a non-exact tag ref for {tag}");
+    }
+    let mut object = reference.get("object").cloned().context("tag ref has no object")?;
+    for depth in 0..=8 {
+        let sha = object
+            .get("sha")
+            .and_then(Value::as_str)
+            .filter(|s| s.len() == 40 && s.bytes().all(|b| b.is_ascii_hexdigit()))
+            .context("tag object has no immutable SHA")?
+            .to_string();
+        match object.get("type").and_then(Value::as_str) {
+            Some("commit") => return Ok(Some(sha)),
+            Some("tag") => {
+                if depth == 8 {
+                    bail!("release tag exceeds annotated-tag peel limit");
+                }
+                let path = format!("/repos/{}/{}/git/tags/{sha}", repo.owner, repo.name);
+                object = get(&path)?
+                    .context("annotated tag object unavailable")?
+                    .get("object")
+                    .cloned()
+                    .context("annotated tag has no object")?;
+            }
+            _ => bail!("release tag does not point to a commit"),
+        }
+    }
+    bail!("release tag exceeds annotated-tag peel limit")
 }
 
 fn enc(s: &str) -> String {
@@ -498,7 +627,7 @@ struct Item {
     size: u64,
 }
 
-fn tree(agent: &ureq::Agent, repo: &Repo, sha_or_ref: &str, recursive: bool) -> Result<Option<Vec<Item>>> {
+fn tree(agent: &Client, repo: &Repo, sha_or_ref: &str, recursive: bool) -> Result<Option<Vec<Item>>> {
     let q = if recursive { "?recursive=1" } else { "" };
     let Some(v) = api(agent, &format!("/repos/{}/{}/git/trees/{}{q}", repo.owner, repo.name, enc(sha_or_ref)))? else {
         return Ok(None);
@@ -551,16 +680,98 @@ fn is_lang(s: &str) -> bool {
 
 /// Download the docs folders of `dep`'s repository at the pinned version's tag.
 pub fn fetch(dep: &Dep, src: &Source) -> Result<Manifest> {
+    fetch_with(dep, src, false)
+}
+
+/// Anonymous, bounded first-use enrichment; never substitutes a major docs site.
+pub fn fetch_automatic(dep: &Dep, src: &Source) -> Result<Manifest> {
+    fetch_with(dep, src, true)
+}
+
+struct FetchGuard {
+    lock: PathBuf,
+    staging: PathBuf,
+}
+impl Drop for FetchGuard {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.staging);
+        let _ = std::fs::remove_file(&self.lock);
+    }
+}
+
+fn publish(out: &Path, target: &Path, m: &Manifest) -> Result<()> {
+    std::fs::write(out.join(".lockdocs-upstream.json"), serde_json::to_string(m)?)?;
+    let backup = target.with_file_name(format!(
+        "{}.previous-{}",
+        target.file_name().context("cache name")?.to_string_lossy(),
+        std::process::id()
+    ));
+    let had_prior = target.exists();
+    if had_prior {
+        if backup.exists() {
+            bail!("previous cache backup already exists; refusing to overwrite it");
+        }
+        std::fs::rename(target, &backup)?;
+    }
+    if let Err(e) = std::fs::rename(out, target) {
+        if had_prior {
+            let _ = std::fs::rename(&backup, target);
+        }
+        return Err(e.into());
+    }
+    if had_prior {
+        let _ = std::fs::remove_dir_all(backup);
+    }
+    Ok(())
+}
+
+fn fetch_with(dep: &Dep, src: &Source, automatic: bool) -> Result<Manifest> {
+    crate::fetch::require_registry_origin(dep)?;
+    enrich_cached(cached(dep), !automatic, || fetch_attempt(dep, src, automatic))
+}
+
+fn enrich_cached(prior: Option<(PathBuf, Manifest)>, explicit: bool, attempt: impl FnOnce() -> Result<Manifest>) -> Result<Manifest> {
+    if let Some((_, m)) = prior.as_ref().filter(|(_, m)| !needs_refresh(m, explicit)) {
+        return Ok(m.clone());
+    }
+    match attempt() {
+        Ok(m) => Ok(m),
+        Err(e) => match prior.filter(|(_, m)| compatible(m)) {
+            Some((_, mut m)) => {
+                m.note = Some(format!("upstream refresh failed: {e:#}; previous complete cache retained"));
+                Ok(m)
+            }
+            None => Err(e),
+        },
+    }
+}
+
+fn fetch_attempt(dep: &Dep, src: &Source, automatic: bool) -> Result<Manifest> {
     let repo = repo_of(dep, src).context("no GitHub repository in the package metadata")?;
-    let out = dir(dep);
-    let _ = std::fs::remove_dir_all(&out);
+    let target = dir(dep);
+    let parent = target.parent().context("upstream cache parent")?;
+    std::fs::create_dir_all(parent)?;
+    let stem = target.file_name().context("upstream cache name")?.to_string_lossy();
+    let lock = target.with_file_name(format!("{stem}.fetch-lock"));
+    std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&lock)
+        .context("upstream fetch already in progress (or an interrupted fetch left its lock; use cache clean)")?;
+    let out = target.with_file_name(format!("{stem}.staging-{}", std::process::id()));
+    let _guard = FetchGuard { lock, staging: out.clone() };
     std::fs::create_dir_all(&out)?;
-    let agent = agent();
+    let agent = agent(automatic);
     let label = format!("github.com/{}/{}", repo.owner, repo.name);
     let mut tag = None;
     let mut root = None;
+    let mut commit = None;
     for t in tag_candidates(dep) {
-        if let Some(items) = tree(&agent, &repo, &t, false)? {
+        let Some(sha) = release_commit(&repo, &t, |path| api(&agent, path))? else {
+            continue;
+        };
+        if let Some(items) = tree(&agent, &repo, &sha, false)? {
+            commit = Some(sha.to_string());
             tag = Some(t);
             root = Some(items);
             break;
@@ -571,13 +782,15 @@ pub fn fetch(dep: &Dep, src: &Source) -> Result<Manifest> {
             format: FORMAT,
             repo: label,
             tag: None,
+            commit: None,
+            docs_sites_checked: !automatic,
             files: 0,
             bytes: 0,
             note: Some(format!("no git tag found for {}", dep.version)),
             site: None,
             pages: Vec::new(),
         };
-        match site_files(&agent, dep, Some(&repo)) {
+        match if automatic { Ok(None) } else { site_files(&agent, dep, Some(&repo)) } {
             Ok(Some(site)) => {
                 let (n, bytes, pages) = download_site(&agent, &site, &out)?;
                 if n > 0 {
@@ -589,9 +802,9 @@ pub fn fetch(dep: &Dep, src: &Source) -> Result<Manifest> {
                 }
             }
             Ok(None) => {}
-            Err(e) => m.note = Some(format!("{}; docs site skipped: {e:#}", m.note.unwrap_or_default())),
+            Err(e) => return Err(e.context("docs-site selection failed")),
         }
-        std::fs::write(out.join(".lockdocs-upstream.json"), serde_json::to_string(&m)?)?;
+        publish(&out, &target, &m)?;
         return Ok(m);
     };
     // Find docs roots: top-level docs dirs, and docs dirs one or two levels
@@ -668,19 +881,20 @@ pub fn fetch(dep: &Dep, src: &Source) -> Result<Manifest> {
     files.dedup();
     let mut total = 0u64;
     files.retain(|(_, s)| {
+        if *s > MAX_FILE || total.saturating_add(*s) > MAX_BYTES {
+            return false;
+        }
         total += s;
-        total <= MAX_BYTES
+        true
     });
     files.truncate(MAX_FILES);
-    let ok = download(&agent, &repo, &tag, &files, &out)?;
-    let failed = files.len() - ok.len();
+    let ok = download(&agent, &repo, commit.as_deref().context("missing release commit")?, &files, &out)?;
     // A separate docs-site repository, when the package keeps its docs there.
     let mut site = None;
     let mut site_n = 0usize;
     let mut site_bytes = 0u64;
     let mut pages = Vec::new();
-    let mut site_err = None;
-    match site_files(&agent, dep, Some(&repo)) {
+    match if automatic { Ok(None) } else { site_files(&agent, dep, Some(&repo)) } {
         Ok(Some(s)) => {
             (site_n, site_bytes, pages) = download_site(&agent, &s, &out)?;
             if site_n > 0 {
@@ -688,30 +902,30 @@ pub fn fetch(dep: &Dep, src: &Source) -> Result<Manifest> {
             }
         }
         Ok(None) => {}
-        Err(e) => site_err = Some(format!("docs site skipped: {e:#}")),
+        Err(e) => return Err(e.context("docs-site selection failed")),
     }
     let m = Manifest {
         format: FORMAT,
         repo: label,
         tag: Some(tag),
+        commit,
+        docs_sites_checked: !automatic,
         files: ok.len() + site_n,
         bytes: ok.iter().sum::<u64>() + site_bytes,
         note: if ok.is_empty() && site_n == 0 {
             Some("no docs folder at that tag".into())
-        } else if failed > 0 {
-            Some(format!("{failed} files failed to download"))
         } else {
-            site_err
+            None
         },
         site,
         pages,
     };
-    std::fs::write(out.join(".lockdocs-upstream.json"), serde_json::to_string(&m)?)?;
+    publish(&out, &target, &m)?;
     Ok(m)
 }
 
 /// Download a docs site's files into `<out>/<site repo name>/`: (files, bytes, page paths).
-fn download_site(agent: &ureq::Agent, site: &SiteFiles, out: &Path) -> Result<(usize, u64, Vec<String>)> {
+fn download_site(agent: &Client, site: &SiteFiles, out: &Path) -> Result<(usize, u64, Vec<String>)> {
     let dst = out.join(&site.repo.name);
     let docs = download(agent, &site.repo, &site.reference, &site.files, &dst)?;
     let got = download(agent, &site.repo, &site.reference, &site.pages, &dst)?;
@@ -731,6 +945,189 @@ fn download_site(agent: &ureq::Agent, site: &SiteFiles, out: &Path) -> Result<(u
 #[cfg(test)]
 mod tests {
     use super::*;
+    fn manifest() -> Manifest {
+        Manifest {
+            format: FORMAT,
+            repo: "github.com/o/r".into(),
+            tag: Some("v1.2.3".into()),
+            commit: Some("0123456789abcdef0123456789abcdef01234567".into()),
+            docs_sites_checked: false,
+            files: 1,
+            bytes: 10,
+            note: None,
+            site: None,
+            pages: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn release_ref_rejects_branch_only_and_peels_annotated_tags() {
+        let repo = Repo {
+            owner: "o".into(),
+            name: "r".into(),
+            subdir: None,
+        };
+        let sha = "0123456789abcdef0123456789abcdef01234567";
+        let mut paths = Vec::new();
+        let none = release_commit(&repo, "v1.2.3", |p| {
+            paths.push(p.to_string());
+            Ok(None)
+        })
+        .unwrap();
+        assert!(none.is_none());
+        assert_eq!(paths, vec!["/repos/o/r/git/ref/tags/v1.2.3"]);
+        let branch = release_commit(&repo, "v1.2.3", |_| {
+            Ok(Some(serde_json::json!({
+                "ref": "refs/heads/v1.2.3", "object": {"type":"commit", "sha":sha}
+            })))
+        });
+        assert!(branch.is_err());
+        let mut calls = 0;
+        let commit = release_commit(&repo, "v1.2.3", |p| {
+            calls += 1;
+            if p.contains("/git/ref/tags/") {
+                Ok(Some(serde_json::json!({"ref":"refs/tags/v1.2.3", "object":{"type":"tag", "sha":sha}})))
+            } else {
+                Ok(Some(serde_json::json!({"object":{"type":"commit", "sha":sha}})))
+            }
+        })
+        .unwrap();
+        assert_eq!(commit.as_deref(), Some(sha));
+        assert_eq!(calls, 2);
+        let mut calls = 0;
+        let cycle = release_commit(&repo, "v1.2.3", |_| {
+            calls += 1;
+            Ok(Some(serde_json::json!({"ref":"refs/tags/v1.2.3", "object":{"type":"tag", "sha":sha}})))
+        });
+        assert!(cycle.is_err());
+        assert_eq!(calls, 9); // one exact-ref lookup plus at most eight tag-object lookups
+    }
+
+    #[test]
+    fn latest_major_failures_remain_retryable_and_explicit_retry_adds_site() {
+        assert_eq!(latest_major_response(404, "not found", "/version").unwrap(), None);
+        assert_eq!(latest_major_response(200, r#"{"version":"2.3.4"}"#, "/version").unwrap(), Some(2));
+        for (status, body) in [
+            (503, "unavailable"),
+            (429, "limited"),
+            (200, "not json"),
+            (200, "{}"),
+            (200, r#"{"version":"invalid"}"#),
+        ] {
+            assert!(latest_major_response(status, body, "/version").is_err());
+        }
+        let prior = manifest();
+        let failed = enrich_cached(Some((PathBuf::new(), prior.clone())), true, || {
+            latest_major_response(503, "unavailable", "/version")?;
+            unreachable!("failed latest lookup cannot mark docs-site enrichment complete")
+        })
+        .unwrap();
+        assert_eq!(failed.files, prior.files);
+        assert!(!failed.docs_sites_checked);
+        assert!(failed.note.as_deref().unwrap().contains("HTTP 503"));
+        let retried = enrich_cached(Some((PathBuf::new(), failed)), true, || {
+            assert_eq!(latest_major_response(200, r#"{"version":"2.3.4"}"#, "/version")?, Some(2));
+            let mut enriched = prior;
+            enriched.docs_sites_checked = true;
+            enriched.site = Some("github.com/o/site@fixed (major 2)".into());
+            enriched.files += 1;
+            Ok(enriched)
+        })
+        .unwrap();
+        assert!(retried.docs_sites_checked && retried.site.is_some());
+        assert_eq!(retried.files, 2);
+        assert!(retried.note.is_none());
+    }
+
+    #[test]
+    fn legacy_candidate_commit_cache_cannot_be_trusted_online() {
+        let mut legacy = manifest();
+        legacy.format = 3;
+        legacy.docs_sites_checked = true;
+        assert!(needs_refresh(&legacy, false));
+        assert!(needs_refresh(&legacy, true));
+        let rejected = enrich_cached(Some((PathBuf::new(), legacy)), false, || Err(anyhow::anyhow!("exact tag revalidation failed")));
+        assert!(rejected.is_err());
+    }
+
+    #[test]
+    fn enrichment_policy_upgrades_once_and_preserves_opted_in_sites() {
+        let automatic = manifest();
+        assert!(needs_refresh(&automatic, true));
+        assert!(!needs_refresh(&automatic, false));
+        let mut explicit = automatic.clone();
+        explicit.docs_sites_checked = true;
+        explicit.site = Some("github.com/o/site@resolved (major-version docs)".into());
+        explicit.files = 2;
+        let upgraded = enrich_cached(Some((PathBuf::new(), automatic)), true, || Ok(explicit.clone())).unwrap();
+        assert_eq!(upgraded.files, 2);
+        for policy in [false, true] {
+            let reused = enrich_cached(Some((PathBuf::new(), upgraded.clone())), policy, || panic!("needless network refresh")).unwrap();
+            assert_eq!(reused.site, explicit.site);
+        }
+    }
+
+    #[test]
+    fn failed_downloads_are_not_empty_docs_or_published_partial_success() {
+        assert!(download_results(vec![]).unwrap().is_empty());
+        assert!(download_results(vec![Err(anyhow::anyhow!("HTTP 503"))])
+            .unwrap_err()
+            .to_string()
+            .contains("1/1"));
+        assert!(download_results(vec![Ok(10), Err(anyhow::anyhow!("HTTP 503"))])
+            .unwrap_err()
+            .to_string()
+            .contains("1/2"));
+        let old = manifest();
+        let preserved = enrich_cached(Some((PathBuf::new(), old.clone())), true, || {
+            download_results(vec![Ok(10), Err(anyhow::anyhow!("HTTP 503"))]).map(|_| unreachable!())
+        })
+        .unwrap();
+        assert_eq!(preserved.commit, old.commit);
+        assert_eq!(preserved.files, old.files);
+        assert!(!preserved.docs_sites_checked);
+        assert!(preserved.note.unwrap().contains("previous complete cache retained"));
+        assert!(enrich_cached(None, true, || Err(anyhow::anyhow!("download failed"))).is_err());
+    }
+
+    #[test]
+    fn git_origins_are_rejected_before_repository_or_tag_requests() {
+        let source = Source {
+            dir: PathBuf::new(),
+            files: None,
+            metadata: None,
+            version: "1.2.3".into(),
+            label: "checkout".into(),
+            fetched: false,
+        };
+        for (eco, from) in [(Eco::Cargo, "Cargo.lock (git)"), (Eco::PyPI, "uv.lock (git)")] {
+            let dep = Dep {
+                eco,
+                name: "git-fixture".into(),
+                version: "1.2.3".into(),
+                direct: true,
+                from: from.into(),
+            };
+            for result in [
+                fetch(&dep, &source),
+                fetch_automatic(&dep, &source),
+                crate::fetch::fetch(&dep).map(|_| manifest()),
+            ] {
+                assert!(result.unwrap_err().to_string().contains("git dependency"));
+            }
+        }
+    }
+
+    #[test]
+    fn automatic_client_is_anonymous_and_bounded() {
+        let mut client = agent(true);
+        assert!(!client.authenticated);
+        assert!(client.deadline.is_some());
+        client.deadline = Some(std::time::Instant::now());
+        assert!(client.check_deadline().is_err());
+        assert!(agent(false).authenticated);
+    }
+
     #[test]
     fn github_urls() {
         let g = |s: &str| parse_github(s).map(|(o, n)| format!("{o}/{n}"));
@@ -740,6 +1137,9 @@ mod tests {
         assert_eq!(g("github:tokio-rs/axum").as_deref(), Some("tokio-rs/axum"));
         assert_eq!(g("expressjs/express").as_deref(), Some("expressjs/express"));
         assert_eq!(g("https://gitlab.com/x/y"), None);
+        assert_eq!(g("github:../repo"), None);
+        assert_eq!(g("github:owner/.."), None);
+        assert_eq!(g("github:owner/repo%2f.."), None);
         let d = Dep {
             eco: Eco::PyPI,
             name: "sqlalchemy".into(),

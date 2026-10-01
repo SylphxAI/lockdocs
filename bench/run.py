@@ -19,7 +19,7 @@ Context7 is queried the way its MCP server does (library search, then
 context for the question) on the anonymous tier, trying the next search result
 when a library answers HTTP 404; 429s are recorded, not retried.
 """
-import json, os, subprocess, sys, time, urllib.parse, urllib.request
+import json, os, subprocess, sys, tempfile, time, urllib.parse, urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -135,15 +135,21 @@ def run_context7(q, version):
 
 
 VARIANTS = [
-    ("keyword", "lockdocs, keyword only (BM25), package files", {"LOCKDOCS_EMBED": "0", "LOCKDOCS_NO_UPSTREAM": "1"}),
-    ("hybrid", "lockdocs, hybrid (BM25 + embeddings), package files", {"LOCKDOCS_NO_UPSTREAM": "1"}),
-    ("fetched", "lockdocs, hybrid + upstream docs (after `lockdocs fetch`)", {}),
+    ("keyword", "lockdocs, keyword only (BM25), package files", {"LOCKDOCS_EMBED": "0", "LOCKDOCS_NO_UPSTREAM": "1", "LOCKDOCS_FETCH": "0"}),
+    ("hybrid", "lockdocs, hybrid (BM25 + embeddings), package files", {"LOCKDOCS_NO_UPSTREAM": "1", "LOCKDOCS_FETCH": "0"}),
+    ("first-use-default", "lockdocs, real first-use defaults (empty isolated cache, anonymous release-tag fetch)",
+     {"LOCKDOCS_FETCH": None, "LOCKDOCS_NO_UPSTREAM": None, "LOCKDOCS_EMBED": None, "LOCKDOCS_OFFLINE": None, "GITHUB_TOKEN": None, "GH_TOKEN": None}),
+    ("fetched", "lockdocs, hybrid + upstream docs (after `lockdocs fetch`)", {"LOCKDOCS_FETCH": "1"}),
 ]
 
 
 def run_lockdocs_env(binary, proj, q, env):
     old = {k: os.environ.get(k) for k in env}
-    os.environ.update(env)
+    for k, v in env.items():
+        if v is None:
+            os.environ.pop(k, None)
+        else:
+            os.environ[k] = v
     try:
         return run_lockdocs(binary, proj, q)
     finally:
@@ -191,12 +197,17 @@ def main():
     for p in projs:
         proj = os.path.join(projects, p)
         t = time.perf_counter()
-        r = subprocess.run([binary, "index", "-C", proj, "--json"], capture_output=True, text=True, env={**os.environ, "LOCKDOCS_NO_UPSTREAM": "1"})
+        r = subprocess.run([binary, "index", "-C", proj, "--json"], capture_output=True, text=True, env={**os.environ, "LOCKDOCS_NO_UPSTREAM": "1", "LOCKDOCS_FETCH": "0"})
         index[p] = {"ms": round((time.perf_counter() - t) * 1000), "report": json.loads(r.stdout) if r.returncode == 0 else r.stderr}
-    variants = [v for v in VARIANTS if do_fetch or v[0] in ("keyword", "hybrid")]
+    variants = [v for v in VARIANTS if do_fetch or v[0] in ("keyword", "hybrid", "first-use-default")]
     results = {}
     fetch = {}
+    # A real query run before prefetch, with its own initially empty supported cache.
+    # It never borrows upstream files from the explicit-fetch score.
+    first_use_cache = tempfile.TemporaryDirectory(prefix="lockdocs-first-use-")
     for name, _, env in variants:
+        if name == "first-use-default":
+            env = {**env, "LOCKDOCS_CACHE": first_use_cache.name}
         if name == "fetched" and not fetch:
             for p in projs:
                 t = time.perf_counter()
@@ -209,6 +220,7 @@ def main():
             first = text.splitlines()[0] if text else ""
             version = first.split(" · ")[0].rsplit("@", 1)[-1] if "@" in first else ""
             results[(name, q["id"])] = ({"pass": ok and code == 0, "missing": missing, "rejected": rej, "tokens": count(text), "ms": round(ms, 1)}, version)
+    first_use_cache.cleanup()
     main_variant = "fetched" if do_fetch else variants[-1][0]
     rows = []
     for q in qs:
@@ -232,6 +244,15 @@ def main():
            "context7_calls": dict(c7_state, reused=reused) if with_c7 else None, "runner": {"os": os.uname().sysname, "machine": os.uname().machine}}
     json.dump(res, open(out, "w"), indent=1)
     print(markdown(res, with_c7))
+    check_floors(summary, len(qs))
+
+
+def check_floors(summary, total):
+    if total != 105:
+        return
+    for variant, floor in [("fetched", 96), ("hybrid", 60)]:
+        if variant in summary and summary[variant]["passed"] < floor:
+            raise RuntimeError(f"{variant} regressed: {summary[variant]['passed']}/105, required >= {floor}/105")
 
 
 def agg(rs, total):
@@ -245,6 +266,13 @@ def agg(rs, total):
 
 def result_of(r, key):
     return r.get("context7", {}) if key == "context7" else r["variants"].get(key, {})
+
+
+def fetch_file_count(package):
+    """Accept the original flat fetch report and the additive manifest layout."""
+    if "files" in package:
+        return package["files"] or 0
+    return (package.get("upstream") or {}).get("files", 0)
 
 
 def markdown(res, with_c7):
@@ -290,7 +318,7 @@ def markdown(res, with_c7):
         for p, v in res["fetch"].items():
             rep = v["report"]
             if isinstance(rep, dict):
-                pk = ", ".join(f"{x['package']} {x.get('files', 0)} files" for x in rep.get("packages", []) if x.get("files"))
+                pk = ", ".join(f"{x['package']} {fetch_file_count(x)} files" for x in rep.get("packages", []) if fetch_file_count(x))
                 out.append(f"- {p}: {v['ms']} ms ({pk or 'no upstream docs'})")
             else:
                 out.append(f"- {p}: {v['ms']} ms (error)")

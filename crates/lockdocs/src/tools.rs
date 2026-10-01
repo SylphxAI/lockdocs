@@ -8,6 +8,7 @@ pub fn definitions() -> Value {
     let root =
         json!({"type": "string", "description": "Absolute path of the project (defaults to the client's workspace root or the server's working directory)."});
     let tokens = json!({"type": "integer", "description": "Answer budget in tokens (default 1200).", "minimum": 200, "maximum": 20000});
+    let offline = json!({"type": "boolean", "description": "Use only installed and cached files for this call (no package or upstream downloads)."});
     json!([
         {
             "name": "resolve",
@@ -22,14 +23,15 @@ pub fn definitions() -> Value {
         {
             "name": "docs",
             "title": "Search version-exact docs",
-            "description": "Answer a question from the docs of the exact installed version of a dependency: README, changelog, docs folder, and API reference (signatures + doc comments from .d.ts, Python, Rust and Go sources). Returns the most relevant sections within a token budget (hybrid keyword + embedding search), each cited as `package@version path:line`. Use it before using a library API you are not sure about for this version. Omit `package` to search all direct dependencies.",
+            "description": "Answer a question from the docs of the exact installed version of a dependency: README, changelog, docs folder (public release-tag docs fetched on first use unless offline), and API reference (signatures + doc comments from .d.ts, Python, Rust and Go sources). Returns the most relevant sections within a token budget (hybrid keyword + embedding search), each cited as `package@version path:line`. Use it before using a library API you are not sure about for this version. Omit `package` to search all direct dependencies.",
             "inputSchema": {"type": "object", "properties": {
                 "query": {"type": "string", "description": "What you need, in words or identifiers, e.g. \"strict object unknown keys\" or \"cookies async\"."},
                 "package": {"type": "string", "description": "Package name, optionally ecosystem- or version-qualified: zod, npm:zod, pydantic, tokio, github.com/gin-gonic/gin. Comma-separate several."},
                 "tokens": tokens,
-                "root": root
+                "root": root,
+                "offline": offline
             }, "required": ["query"]},
-            "annotations": {"readOnlyHint": true, "openWorldHint": false}
+            "annotations": {"readOnlyHint": true, "openWorldHint": true}
         },
         {
             "name": "api",
@@ -39,9 +41,10 @@ pub fn definitions() -> Value {
                 "symbol": {"type": "string", "description": "Symbol path, optionally prefixed by the package name."},
                 "package": {"type": "string", "description": "Package to look in when the symbol has no package prefix."},
                 "tokens": tokens,
-                "root": root
+                "root": root,
+                "offline": offline
             }, "required": ["symbol"]},
-            "annotations": {"readOnlyHint": true, "openWorldHint": false}
+            "annotations": {"readOnlyHint": true, "openWorldHint": true}
         }
     ])
 }
@@ -49,7 +52,12 @@ pub fn definitions() -> Value {
 pub fn call(ws: &Workspace, opts: &Options, name: &str, args: &Value, root: &Path) -> Result<Answer, String> {
     let s = |k: &str| args.get(k).and_then(|v| v.as_str()).map(str::trim).filter(|v| !v.is_empty());
     let tokens = args.get("tokens").and_then(|v| v.as_u64()).map_or(DEFAULT_TOKENS, |t| t as usize);
-    let engine = ws.engine(root, opts);
+    let mut opts = opts.clone();
+    if args.get("offline").and_then(Value::as_bool) == Some(true) {
+        opts.fetch = false;
+        opts.upstream = false;
+    }
+    let engine = ws.engine(root, &opts);
     match name {
         "resolve" => Ok(engine.resolve(s("filter"))),
         "docs" => {

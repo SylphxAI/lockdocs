@@ -23,7 +23,9 @@ newest one. That is the one job.
 
 - Local first: it runs on the developer's machine, needs no account or API
   key, and works offline after the one-time downloads.
-- Network use is opt-in and limited to public sources: package registries,
+- First-use release-tag docs are anonymous and automatic, with an explicit
+  opt-out and an offline mode. Registry downloads and major-version docs sites
+  remain opt-in. Network use is limited to public sources: package registries,
   GitHub (docs folders at a tag, and official docs-site repositories), and the
   embedding model on Hugging Face.
 - Three MCP tools only: `resolve`, `docs`, `api`. New abilities go into those

@@ -6,7 +6,7 @@
 - **Held-out questions:** 18 questions marked `held-out` are not used for tuning: they were written before the ranking changes they measure and have their own column. Held-out questions that are later used to diagnose a miss join the main set (their `history` field says so), and new ones replace them.
 - **Projects:** one project per version in [`bench/projects`](https://github.com/SylphxAI/lockdocs/tree/main/bench/projects), installed at those pins by [`bench/setup.sh`](https://github.com/SylphxAI/lockdocs/blob/main/bench/setup.sh).
 - **Grading:** an answer passes when it contains at least one string from every `expect` group (the version-correct API, in code or prose form) and none of the `reject` strings (the other version's API). Case-insensitive; the same grader for every tool.
-- **lockdocs**, default settings (1,200-token budget), in three configurations: keyword only (`LOCKDOCS_EMBED=0`) on package files; hybrid on package files (the offline default once the model is downloaded); hybrid after `lockdocs fetch` added upstream docs at each version's tag. Index and fetch times are reported separately.
+- **lockdocs**, default settings (1,200-token budget), in four configurations: keyword only (`LOCKDOCS_EMBED=0`) on package files; hybrid on package files (`LOCKDOCS_FETCH=0`, upstream disabled); real first-use defaults in an initially empty isolated `LOCKDOCS_CACHE` with fetch-policy and credential variables removed, before explicit prefetch; hybrid after explicit `lockdocs fetch` added upstream docs and major-version sites. The first-use row includes cold-download latency and anonymous rate-limit failures; it is never copied from the prefetched score. Full runs enforce at least 96/105 prefetched and 60/105 package-only hybrid. Index and fetch times are reported separately.
 - **Context7:** the anonymous API as its MCP server uses it: search the library, pick the top result and its listed version with the same major (exact when listed), then fetch context for the question. When that library answers HTTP 404, the next search result is tried, as an agent would. Rate-limit responses are recorded, not retried.
 - **Tokens:** tiktoken `o200k_base`. **Latency:** wall time per call from the same GitHub-hosted runner (for lockdocs: a fresh CLI process per question, including loading the model).
 - **Runner:** [`bench/run.py`](https://github.com/SylphxAI/lockdocs/blob/main/bench/run.py) via the [`bench` workflow](https://github.com/SylphxAI/lockdocs/actions/workflows/bench.yml). Reproduce: `bash bench/setup.sh && python3 bench/run.py target/release/lockdocs bench/projects out.json --fetch --context7`.
@@ -14,6 +14,8 @@
 ## Results
 
 <!-- results -->
+
+The historical results below predate automatic first-use enrichment; they are not a measurement of the new default. New first-use scores are emitted in the benchmark job summary and artifact.
 
 From [this run](https://github.com/SylphxAI/lockdocs/actions/runs/36204404336).
 

@@ -41,6 +41,9 @@ pub fn fetched_dir(dep: &Dep) -> PathBuf {
 
 /// A previously fetched copy, if any (never touches the network).
 pub fn cached(dep: &Dep) -> Option<Source> {
+    if is_git(dep) {
+        return None;
+    }
     let dir = fetched_dir(dep);
     if dir.join(".lockdocs-complete").is_file() {
         return Some(source_for(dep, &dir));
@@ -78,12 +81,25 @@ fn source_for(dep: &Dep, dir: &Path) -> Source {
 }
 
 /// Download and unpack `dep` if it is not cached yet.
+pub fn is_git(dep: &Dep) -> bool {
+    dep.from.ends_with("(git)")
+}
+
+/// Shared guard: a git checkout is not interchangeable with a registry release tag.
+pub fn require_registry_origin(dep: &Dep) -> Result<()> {
+    if is_git(dep) {
+        bail!(
+            "{} is a git dependency; use its resolved checkout files, not registry/release-tag docs",
+            dep.id()
+        );
+    }
+    Ok(())
+}
+
 pub fn fetch(dep: &Dep) -> Result<Source> {
+    require_registry_origin(dep)?;
     if let Some(s) = cached(dep) {
         return Ok(s);
-    }
-    if dep.from.ends_with("(git)") {
-        bail!("{} is a git dependency; run `cargo fetch` to check it out", dep.id());
     }
     let dir = fetched_dir(dep);
     let _ = std::fs::remove_dir_all(&dir);

@@ -1,6 +1,7 @@
 //! lockdocs core: read lockfiles, find each dependency's installed sources,
 //! extract API reference and prose, and answer queries with BM25 under a
-//! token budget. Everything is local unless fetching is explicitly enabled.
+//! token budget. Public release-tag docs enrich first-use queries by default;
+//! opt-out and offline controls keep installed/cached answers local.
 
 pub mod bm25;
 pub mod cache;

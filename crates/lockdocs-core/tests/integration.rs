@@ -13,7 +13,7 @@ fn engine() -> Engine {
         std::env::set_var("LOCKDOCS_NO_SYSTEM_PYTHON", "1");
     });
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests").join("fixture");
-    Engine::new(&root, Options { fetch: false })
+    Engine::new(&root, Options { fetch: false, upstream: false })
 }
 
 #[test]
@@ -84,4 +84,90 @@ fn budget_is_respected() {
         lockdocs_core::est_tokens(&a.text),
         a.text
     );
+}
+
+#[test]
+fn first_use_reports_unavailable_upstream_and_reuses_note() {
+    let e = engine();
+    let root = e.root().to_path_buf();
+    let e = Engine::new(&root, Options { fetch: false, upstream: true });
+    for _ in 0..2 {
+        let a = e.docs(Some("tiny-schema"), "reject unknown keys", 1500).unwrap();
+        assert!(a.text.contains("upstream docs fetch failed"), "{}", a.text);
+        assert_eq!(a.json["provenance"][0]["requested_version"], "1.2.0");
+        assert!(a.json["provenance"][0]["note"].as_str().unwrap().contains("no GitHub repository"));
+    }
+    let broad = e.docs(None, "reject unknown keys", 1200).unwrap();
+    assert!(
+        broad.text.contains("fallback notes") && broad.text.contains("Fallback tiny-schema@1.2.0"),
+        "{}",
+        broad.text
+    );
+    assert!(lockdocs_core::est_tokens(&broad.text) <= 1230, "{}", broad.text);
+    for hit in broad.json["hits"].as_array().unwrap() {
+        assert!(hit.get("provenance").is_none());
+    }
+    let offline = engine().docs(Some("tiny-schema"), "reject unknown keys", 1500).unwrap();
+    assert!(offline.json["provenance"][0]["note"].is_null());
+}
+
+#[test]
+fn pinned_upstream_cache_is_reused_online_and_offline_with_provenance() {
+    let _ = engine(); // initialize the isolated test cache
+    let root = std::env::temp_dir().join(format!("lockdocs-cached-provenance-{}", std::process::id()));
+    let dep = lockdocs_core::Dep {
+        eco: lockdocs_core::Eco::Npm,
+        name: "cached-provenance-fixture".into(),
+        version: "1.2.3".into(),
+        direct: true,
+        from: "package-lock.json".into(),
+    };
+    let src = root.join("node_modules").join(&dep.name);
+    std::fs::create_dir_all(&src).unwrap();
+    // No repository metadata: any mistaken refresh would fail instead of contacting GitHub.
+    std::fs::write(src.join("package.json"), r#"{"name":"cached-provenance-fixture","version":"1.2.3"}"#).unwrap();
+    let cache = lockdocs_core::upstream::dir(&dep);
+    std::fs::create_dir_all(cache.join("docs")).unwrap();
+    std::fs::write(cache.join("docs/guide.md"), "# Pinned guide\n\nUse release_only_api to reject unknown keys.\n").unwrap();
+    let manifest = serde_json::json!({
+        "format": lockdocs_core::upstream::FORMAT,
+        "repo": "github.com/example/pinned", "tag": "v1.2.3",
+        "commit": "0123456789abcdef0123456789abcdef01234567",
+        "files": 1, "bytes": 73, "note": null, "site": "github.com/example/site@fixed (major docs)", "pages": [], "docs_sites_checked": true,
+    });
+    std::fs::write(cache.join(".lockdocs-upstream.json"), manifest.to_string()).unwrap();
+    for opts in [
+        Options { fetch: true, upstream: true },
+        Options { fetch: false, upstream: true },
+        Options { fetch: false, upstream: false },
+    ] {
+        let mut e = Engine::new(&root, opts);
+        e.project.deps = vec![dep.clone()];
+        let a = e.docs(Some(&dep.name), "reject unknown keys", 1500).unwrap();
+        assert!(a.text.contains("release_only_api") && a.text.contains("upstream:docs/guide.md"), "{}", a.text);
+        assert_eq!(a.json["provenance"][0]["upstream"]["commit"], manifest["commit"]);
+        assert_eq!(a.json["provenance"][0]["upstream"]["site"], manifest["site"]);
+        assert_eq!(a.json["provenance"][0]["requested_version"], "1.2.3");
+    }
+    // A format-3 commit candidate was resolved through /commits/{candidate},
+    // which could have been a branch. Online use cannot silently trust it.
+    let mut legacy = manifest.clone();
+    legacy["format"] = serde_json::json!(3);
+    std::fs::write(cache.join(".lockdocs-upstream.json"), legacy.to_string()).unwrap();
+    let mut online = Engine::new(&root, Options { fetch: false, upstream: true });
+    online.project.deps = vec![dep.clone()];
+    let rejected = online.docs(Some(&dep.name), "reject unknown keys", 1500).unwrap();
+    assert!(rejected.json["provenance"][0]["upstream"].is_null());
+    assert!(rejected.text.contains("upstream docs fetch failed"));
+    assert!(!rejected.text.contains("release_only_api"));
+    // Failed revalidation does not destroy the disk cache. Explicitly offline
+    // callers may read it, with its unverified provenance clearly disclosed.
+    let mut offline = Engine::new(&root, Options { fetch: false, upstream: false });
+    offline.project.deps = vec![dep];
+    let fallback = offline.docs(Some("cached-provenance-fixture"), "reject unknown keys", 1500).unwrap();
+    assert!(fallback.text.contains("release_only_api") && fallback.text.contains("offline fallback"));
+    assert!(fallback.text.contains("may have been a branch"));
+    assert_eq!(fallback.json["provenance"][0]["upstream"]["format"], 3);
+    let _ = std::fs::remove_dir_all(&root);
+    let _ = std::fs::remove_dir_all(&cache);
 }

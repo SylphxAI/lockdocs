@@ -4,36 +4,50 @@
 
 CI uses the shared brand action pinned to `a6c81b4bcda66bf624f0a68e25e63b3c0ed043eb`.
 The masters, tokens, pixel grids and provenance remain in this repository;
-existing assets are unchanged by moving the generator. To regenerate locally,
-prepare the script from the same pin (run from the repository root):
+existing assets are unchanged by moving the generator. From the repository
+root, run this self-contained recipe. Select `OPERATION=write` to regenerate
+and verify, `OPERATION=check` to verify only, or `OPERATION=resnap` to
+intentionally redraw the small favicon grids, regenerate and verify.
 
 ```sh
-BRAND_SCRIPT="$(mktemp)"
-curl --fail --location --output "$BRAND_SCRIPT" \
-  "https://raw.githubusercontent.com/SylphxAI/.github/a6c81b4bcda66bf624f0a68e25e63b3c0ed043eb/.github/actions/brand/build.py"
-python3 -m pip install pillow numpy resvg-py
-python3 "$BRAND_SCRIPT" --brand-dir "$PWD/brand" --root "$PWD"
-python3 "$BRAND_SCRIPT" --brand-dir "$PWD/brand" --root "$PWD" --check
-rm "$BRAND_SCRIPT"
+(
+  set -eu
+  OPERATION=write # Choose write, check or resnap before running.
+  BRAND_SCRIPT="$(mktemp)"
+  trap 'rm -f "$BRAND_SCRIPT"' EXIT
+  curl --fail --location --output "$BRAND_SCRIPT" \
+    "https://raw.githubusercontent.com/SylphxAI/.github/a6c81b4bcda66bf624f0a68e25e63b3c0ed043eb/.github/actions/brand/build.py"
+  case "$OPERATION" in
+    check) set -- --check ;;
+    write) set -- ;;
+    resnap) set -- --resnap ;;
+    *) echo "Unknown brand operation: $OPERATION" >&2; exit 1 ;;
+  esac
+  if [ "$OPERATION" != check ]; then
+    python3 -m pip install pillow numpy resvg-py
+  fi
+  python3 "$BRAND_SCRIPT" --brand-dir "$PWD/brand" --root "$PWD" "$@"
+  if [ "$OPERATION" != check ]; then
+    python3 "$BRAND_SCRIPT" --brand-dir "$PWD/brand" --root "$PWD" --check
+  fi
+)
 ```
 
-Add `--resnap` only when intentionally redrawing the small favicon grids.
-Check mode needs only Python 3 and does not regenerate files. The commands below
-assume `BRAND_SCRIPT` points to this pinned script. Generated-file comments that
-name `brand/build.py` describe the historical generator; they are preserved to
-keep the asset bytes and hashes unchanged.
+Check mode needs only Python 3 and does not regenerate files. Each invocation
+prepares and cleans up its own script; later references select an operation in
+this recipe, rather than reusing its temporary path. A download, dependency,
+regeneration or verification failure stops the recipe with a nonzero status.
+Generated-file comments that name `brand/build.py` describe the historical
+generator; they are preserved to keep the asset bytes and hashes unchanged.
 
 This folder is the source of truth for the lockdocs mark, its small sizes, its
 app icon, its colours and its type. Every surface copies from it — `brand.json`
 lists which file each surface is a copy of — and nothing draws its own.
 [shared generator](https://github.com/SylphxAI/.github/tree/a6c81b4bcda66bf624f0a68e25e63b3c0ed043eb/.github/actions/brand) rebuilds every derived file from the masters in `svg/`:
 
-```bash
-pip install pillow numpy resvg-py
-python3 "$BRAND_SCRIPT" --brand-dir "$PWD/brand" --root "$PWD"            # regenerate (favicon, app icons, tokens.css, provenance)
-python3 "$BRAND_SCRIPT" --brand-dir "$PWD/brand" --root "$PWD" --resnap   # also redraw the 16/32 px grids from the master
-python3 "$BRAND_SCRIPT" --brand-dir "$PWD/brand" --root "$PWD" --check    # verify hashes and surface copies (CI runs this; stdlib only)
-```
+Use the [shared recipe](#shared-generator): select `OPERATION=write` to
+regenerate, `OPERATION=resnap` to redraw grids as well, or `OPERATION=check`
+to verify hashes and surface copies.
 
 ## Name
 
@@ -133,7 +147,7 @@ alone — for anything that crops or masks, use the full-bleed `lockdocs-maskabl
 | `docs/public/favicon.svg` | `favicon/favicon.svg` |
 | `docs/public/favicon.ico` | `favicon/favicon.ico` |
 
-`python3 "$BRAND_SCRIPT" --brand-dir "$PWD/brand" --root "$PWD" --check` fails if any of these stops being a
+the [shared recipe](#shared-generator) with `OPERATION=check` fails if any of these stops being a
 byte-for-byte copy. The website files are plain copies under `docs/public/`, so
 a regenerated icon is picked up by the next docs build and deploy; the deploy
 workflow runs on changes under `docs/`.

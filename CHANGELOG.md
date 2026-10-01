@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **First-use fetch no longer depends on GitHub's REST API quota.** Upstream docs are found with `git ls-remote`-style tag lookups and read from one streamed `codeload.github.com` tarball per repository, filtered to docs paths, instead of the REST tree and per-file requests (60 per hour per IP anonymously; 6 of 10 benchmark projects failed behind a shared IP). Cold-cache, no token: 10/10 on the 10-question version set, no 403, 1-5 GitHub connections per project instead of 2-28. `upstream::FORMAT` is 5. A missing tag error lists the tag names tried.
+
 ## 0.4.0
 
 - **Useful docs on first use.** `docs` and `api` now automatically add public upstream docs for the requested release, anonymously. The existing fetcher resolves exact `refs/tags/` refs, rejects same-named branches, and peels annotated tags to an immutable commit before downloading bounded docs. Missing registry packages and major-version website docs remain explicit opt-in.

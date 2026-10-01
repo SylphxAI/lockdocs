@@ -268,6 +268,13 @@ def result_of(r, key):
     return r.get("context7", {}) if key == "context7" else r["variants"].get(key, {})
 
 
+def fetch_file_count(package):
+    """Accept the original flat fetch report and the additive manifest layout."""
+    if "files" in package:
+        return package["files"] or 0
+    return (package.get("upstream") or {}).get("files", 0)
+
+
 def markdown(res, with_c7):
     s = res["summary"]
     cols = [(n, label) for n, label in res.get("variants", [["lockdocs", "lockdocs"]])]
@@ -311,7 +318,7 @@ def markdown(res, with_c7):
         for p, v in res["fetch"].items():
             rep = v["report"]
             if isinstance(rep, dict):
-                pk = ", ".join(f"{x['package']} {x.get('files', 0)} files" for x in rep.get("packages", []) if x.get("files"))
+                pk = ", ".join(f"{x['package']} {fetch_file_count(x)} files" for x in rep.get("packages", []) if fetch_file_count(x))
                 out.append(f"- {p}: {v['ms']} ms ({pk or 'no upstream docs'})")
             else:
                 out.append(f"- {p}: {v['ms']} ms (error)")

@@ -130,19 +130,47 @@ const DOCS_SITES: &[DocsSite] = &[
 ];
 
 /// The latest stable major of a package, from its registry.
-fn latest_major(agent: &Client, dep: &Dep) -> Option<u64> {
+fn latest_major(agent: &Client, dep: &Dep) -> Result<Option<u64>> {
     let name = dep.name.strip_prefix("@types/").unwrap_or(&dep.name);
     let (url, pointer) = match dep.eco {
         Eco::Npm => (format!("https://registry.npmjs.org/{}/latest", name.replace('/', "%2F")), "/version"),
         Eco::Cargo => (format!("https://crates.io/api/v1/crates/{name}"), "/crate/max_stable_version"),
         Eco::PyPI => (format!("https://pypi.org/pypi/{name}/json"), "/info/version"),
-        Eco::Go => return None,
+        Eco::Go => return Ok(None),
     };
-    let mut res = agent.get(&url).call().ok()?;
+    agent.check_deadline()?;
+    let mut res = agent.get(&url).call().with_context(|| format!("latest-major lookup: {url}"))?;
+    let status = res.status().as_u16();
     let mut body = String::new();
-    res.body_mut().as_reader().take(16 << 20).read_to_string(&mut body).ok()?;
-    let v: Value = serde_json::from_str(&body).ok()?;
-    v.pointer(pointer)?.as_str()?.split('.').next()?.parse().ok()
+    res.body_mut()
+        .as_reader()
+        .take((16 << 20) + 1)
+        .read_to_string(&mut body)
+        .context("latest-major response read failed")?;
+    if body.len() > 16 << 20 {
+        bail!("latest-major response exceeds 16 MB");
+    }
+    latest_major_response(status, &body, pointer)
+}
+
+/// Only a genuine missing registry record is an empty lookup. Network, HTTP,
+/// malformed JSON and invalid version responses must leave enrichment retryable.
+fn latest_major_response(status: u16, body: &str, pointer: &str) -> Result<Option<u64>> {
+    if status == 404 {
+        return Ok(None);
+    }
+    if status != 200 {
+        bail!("latest-major registry lookup failed: HTTP {status}");
+    }
+    let v: Value = serde_json::from_str(body).context("invalid latest-major registry JSON")?;
+    let version = v.pointer(pointer).and_then(Value::as_str).context("latest-major response missing version")?;
+    let major = version
+        .split('.')
+        .next()
+        .context("latest-major response has empty version")?
+        .parse()
+        .context("latest-major response has invalid version")?;
+    Ok(Some(major))
 }
 
 /// When the package's next major was released: the commit date of its
@@ -180,7 +208,7 @@ fn site_files(agent: &Client, dep: &Dep, pkg_repo: Option<&Repo>) -> Result<Opti
         return Ok(None);
     };
     let major: u64 = dep.version.split('.').next().and_then(|m| m.parse().ok()).unwrap_or(0);
-    let latest = latest_major(agent, dep);
+    let latest = latest_major(agent, dep)?;
     let repo = Repo {
         owner: site.repo.0.into(),
         name: site.repo.1.into(),
@@ -440,7 +468,7 @@ pub fn needs_refresh(m: &Manifest, explicit: bool) -> bool {
 }
 
 fn compatible(m: &Manifest) -> bool {
-    m.format >= 3 && (m.commit.is_some() || m.site.is_some() || m.files == 0)
+    m.format >= FORMAT && (m.commit.is_some() || m.site.is_some() || m.files == 0)
 }
 
 /// A previous fetch (with or without files). Never touches the network.
@@ -973,6 +1001,53 @@ mod tests {
         });
         assert!(cycle.is_err());
         assert_eq!(calls, 9); // one exact-ref lookup plus at most eight tag-object lookups
+    }
+
+    #[test]
+    fn latest_major_failures_remain_retryable_and_explicit_retry_adds_site() {
+        assert_eq!(latest_major_response(404, "not found", "/version").unwrap(), None);
+        assert_eq!(latest_major_response(200, r#"{"version":"2.3.4"}"#, "/version").unwrap(), Some(2));
+        for (status, body) in [
+            (503, "unavailable"),
+            (429, "limited"),
+            (200, "not json"),
+            (200, "{}"),
+            (200, r#"{"version":"invalid"}"#),
+        ] {
+            assert!(latest_major_response(status, body, "/version").is_err());
+        }
+        let prior = manifest();
+        let failed = enrich_cached(Some((PathBuf::new(), prior.clone())), true, || {
+            latest_major_response(503, "unavailable", "/version")?;
+            unreachable!("failed latest lookup cannot mark docs-site enrichment complete")
+        })
+        .unwrap();
+        assert_eq!(failed.files, prior.files);
+        assert!(!failed.docs_sites_checked);
+        assert!(failed.note.as_deref().unwrap().contains("HTTP 503"));
+        let retried = enrich_cached(Some((PathBuf::new(), failed)), true, || {
+            assert_eq!(latest_major_response(200, r#"{"version":"2.3.4"}"#, "/version")?, Some(2));
+            let mut enriched = prior;
+            enriched.docs_sites_checked = true;
+            enriched.site = Some("github.com/o/site@fixed (major 2)".into());
+            enriched.files += 1;
+            Ok(enriched)
+        })
+        .unwrap();
+        assert!(retried.docs_sites_checked && retried.site.is_some());
+        assert_eq!(retried.files, 2);
+        assert!(retried.note.is_none());
+    }
+
+    #[test]
+    fn legacy_candidate_commit_cache_cannot_be_trusted_online() {
+        let mut legacy = manifest();
+        legacy.format = 3;
+        legacy.docs_sites_checked = true;
+        assert!(needs_refresh(&legacy, false));
+        assert!(needs_refresh(&legacy, true));
+        let rejected = enrich_cached(Some((PathBuf::new(), legacy)), false, || Err(anyhow::anyhow!("exact tag revalidation failed")));
+        assert!(rejected.is_err());
     }
 
     #[test]

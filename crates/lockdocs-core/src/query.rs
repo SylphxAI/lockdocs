@@ -69,6 +69,12 @@ enum Resolved {
     Missing(Dep, String),
 }
 
+/// Keep the original flat fields for CLI consumers; richer provenance is additive.
+fn fetch_report(dep: &Dep, status: &upstream::Manifest) -> Value {
+    json!({"package": dep.id(), "repo": status.repo, "tag": status.tag,
+        "files": status.files, "note": status.note, "upstream": status})
+}
+
 fn provenance(ready: &[ReadyPkg]) -> Vec<Value> {
     ready
         .iter()
@@ -294,7 +300,16 @@ impl Engine {
         }
         let cached = upstream::cached(dep);
         if let Some(c) = cached.as_ref().filter(|(_, m)| !enabled || !upstream::needs_refresh(m, self.opts.fetch)) {
-            return (Some(c.clone()), c.1.note.clone());
+            let note = if upstream::needs_refresh(&c.1, false) {
+                Some(format!(
+                    "offline fallback: legacy upstream cache format {} has not been exact-tag revalidated; its old commit candidate may have been a branch{}",
+                    c.1.format,
+                    c.1.note.as_ref().map(|n| format!("; {n}")).unwrap_or_default()
+                ))
+            } else {
+                c.1.note.clone()
+            };
+            return (Some(c.clone()), note);
         }
         if enabled {
             let result = if self.opts.fetch {
@@ -383,7 +398,7 @@ impl Engine {
                 (
                     d.clone(),
                     if let Some(note) = &status.note { format!("{line}; {note}") } else { line },
-                    json!({"package": d.id(), "upstream": status}),
+                    fetch_report(d, &status),
                 )
             })
             .collect();
@@ -1587,6 +1602,28 @@ pub fn dep_key(d: &Dep) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn fetch_report_preserves_flat_counts_and_adds_full_provenance() {
+        let dep = Dep {
+            eco: Eco::Cargo,
+            name: "axum".into(),
+            version: "0.7.9".into(),
+            direct: true,
+            from: "Cargo.lock".into(),
+        };
+        let status: upstream::Manifest = serde_json::from_value(json!({
+            "format": upstream::FORMAT, "repo": "github.com/tokio-rs/axum", "tag": "axum-v0.7.9",
+            "commit": "0123456789abcdef0123456789abcdef01234567", "files": 20, "bytes": 100, "note": null,
+        }))
+        .unwrap();
+        let report = fetch_report(&dep, &status);
+        assert_eq!(report["files"], 20);
+        assert_eq!(report["files"], report["upstream"]["files"]);
+        assert_eq!(report["tag"], report["upstream"]["tag"]);
+        assert_eq!(report["repo"], report["upstream"]["repo"]);
+        assert!(report.get("note").is_some());
+    }
 
     #[test]
     fn upstream_is_default_with_explicit_opt_out() {

@@ -159,8 +159,8 @@ fn cache_path(dep: &Dep, src: &Source, types: Option<&Path>, up: Option<&(PathBu
     let up_key = up
         .map(|(_, m)| {
             format!(
-                "{}@{:?}:{}:{:?}:{:?}:{:?}:{}",
-                m.repo, m.tag, m.files, m.site, m.commit, m.note, m.docs_sites_checked
+                "{}@{:?}:{}:{:?}:{:?}:{:?}:{}:{}",
+                m.repo, m.tag, m.files, m.site, m.commit, m.note, m.docs_sites_checked, m.format
             )
         })
         .unwrap_or_default();

@@ -24,6 +24,21 @@ class BenchmarkTests(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 runner.check_floors({variant: {"passed": score}}, 105)
 
+    def test_fetch_formatter_preserves_flat_and_nested_file_counts(self):
+        for package in [
+            {"package": "axum@0.7.9", "files": 20},
+            {"package": "axum@0.7.9", "upstream": {"files": 20}},
+            {"package": "axum@0.7.9", "files": 20, "upstream": {"files": 20}},
+        ]:
+            self.assertEqual(runner.fetch_file_count(package), 20)
+            result = {"tokenizer": "test", "runner": {"os": "Test", "machine": "test"},
+                      "rows": [], "summary": {}, "variants": [], "index": {},
+                      "fetch": {"axum07": {"ms": 1, "report": {"packages": [package]}}}}
+            formatted = runner.markdown(result, False)
+            self.assertIn("axum@0.7.9 20 files", formatted)
+            self.assertNotIn("no upstream docs", formatted)
+        self.assertEqual(runner.fetch_file_count({"files": 0, "upstream": {"files": 20}}), 0)
+
     def test_first_use_has_own_empty_cache_and_no_opt_in(self):
         with tempfile.TemporaryDirectory(prefix="lockdocs-bench-test-") as tmp:
             root = Path(tmp)

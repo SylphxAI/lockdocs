@@ -149,6 +149,25 @@ fn pinned_upstream_cache_is_reused_online_and_offline_with_provenance() {
         assert_eq!(a.json["provenance"][0]["upstream"]["site"], manifest["site"]);
         assert_eq!(a.json["provenance"][0]["requested_version"], "1.2.3");
     }
+    // A format-3 commit candidate was resolved through /commits/{candidate},
+    // which could have been a branch. Online use cannot silently trust it.
+    let mut legacy = manifest.clone();
+    legacy["format"] = serde_json::json!(3);
+    std::fs::write(cache.join(".lockdocs-upstream.json"), legacy.to_string()).unwrap();
+    let mut online = Engine::new(&root, Options { fetch: false, upstream: true });
+    online.project.deps = vec![dep.clone()];
+    let rejected = online.docs(Some(&dep.name), "reject unknown keys", 1500).unwrap();
+    assert!(rejected.json["provenance"][0]["upstream"].is_null());
+    assert!(rejected.text.contains("upstream docs fetch failed"));
+    assert!(!rejected.text.contains("release_only_api"));
+    // Failed revalidation does not destroy the disk cache. Explicitly offline
+    // callers may read it, with its unverified provenance clearly disclosed.
+    let mut offline = Engine::new(&root, Options { fetch: false, upstream: false });
+    offline.project.deps = vec![dep];
+    let fallback = offline.docs(Some("cached-provenance-fixture"), "reject unknown keys", 1500).unwrap();
+    assert!(fallback.text.contains("release_only_api") && fallback.text.contains("offline fallback"));
+    assert!(fallback.text.contains("may have been a branch"));
+    assert_eq!(fallback.json["provenance"][0]["upstream"]["format"], 3);
     let _ = std::fs::remove_dir_all(&root);
     let _ = std::fs::remove_dir_all(&cache);
 }

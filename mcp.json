@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "lockdocs": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@sylphx/lockdocs",
+        "mcp"
+      ]
+    }
+  }
+}

@@ -14,6 +14,7 @@ export default defineConfig({
   // Product vision and capability table are for maintainers, not site pages.
   srcExclude: ['vision.md', 'capabilities.md'],
   lastUpdated: true,
+  markdown: { theme: { light: 'github-light', dark: 'github-dark-default' } },
   sitemap: { hostname: url },
   head: [
     // The icons are copies of the brand home's files (brand/svg, brand/favicon).
@@ -22,13 +23,19 @@ export default defineConfig({
     ['meta', { name: 'theme-color', content: tokens.color.bg.$value }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:site_name', content: 'lockdocs' }],
-    ['meta', { property: 'og:image', content: `${url}img/demo.gif` }],
+    ['meta', { property: 'og:image', content: `${url}og.png` }],
+    ['meta', { property: 'og:image:width', content: '1200' }],
+    ['meta', { property: 'og:image:height', content: '630' }],
+    ['meta', { property: 'og:image:alt', content: 'lockdocs: the docs for the version you actually installed' }],
+    ['meta', { name: 'twitter:image', content: `${url}og.png` }],
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
   ],
   // Each page names its own URL, so search engines index every page, not just the home page.
   transformPageData(pageData) {
     const pageUrl = url + pageData.relativePath.replace(/(^|\/)index\.md$/, '$1').replace(/\.md$/, '')
-    const pageTitle = pageData.frontmatter.title ?? (pageData.title || 'lockdocs')
+    const pageTitle = pageData.frontmatter.layout === 'home'
+      ? 'lockdocs — exact-version library docs for AI agents, from your lockfile'
+      : (pageData.frontmatter.title ?? (pageData.title || 'lockdocs'))
     const pageDesc = pageData.frontmatter.description ?? desc
     pageData.frontmatter.head ??= []
     pageData.frontmatter.head.push(
@@ -39,7 +46,8 @@ export default defineConfig({
     )
   },
   themeConfig: {
-    logo: { src: '/logo.svg', alt: 'lockdocs' },
+    logo: { src: '/logo.svg', alt: '' },
+    lastUpdated: { formatOptions: { dateStyle: 'medium' } },
     nav: [
       { text: 'Quickstart', link: '/guide/quickstart' },
       { text: 'Tools', link: '/reference/tools' },
@@ -67,6 +75,16 @@ export default defineConfig({
     socialLinks: [{ icon: 'github', link: 'https://github.com/SylphxAI/lockdocs' }],
     editLink: { pattern: 'https://github.com/SylphxAI/lockdocs/edit/main/docs/:path' },
     search: { provider: 'local' },
-    footer: { message: 'MIT licensed · local, offline, no API key', copyright: '© Sylphx' },
+    sylphx: {
+      product: 'lockdocs',
+      license: 'https://github.com/SylphxAI/lockdocs/blob/main/LICENSE',
+      links: [
+        { text: 'Quickstart', href: '/guide/quickstart' },
+        { text: 'Benchmarks', href: '/benchmarks' },
+        { text: 'Changelog', href: 'https://github.com/SylphxAI/lockdocs/blob/main/CHANGELOG.md' },
+        { text: 'GitHub', href: 'https://github.com/SylphxAI/lockdocs' },
+        { text: 'npm', href: 'https://www.npmjs.com/package/@sylphx/lockdocs' },
+      ],
+    },
   },
 })

@@ -15,9 +15,9 @@ npm · PyPI · crates.io · Go. MCP server + CLI in one Rust binary. No account,
 
 [Docs](https://sylphxai.github.io/lockdocs/) · [Quickstart](#quickstart) · [Tools](#what-your-agent-gets) · [Benchmarks](#benchmarks) · [Compare](#how-it-compares) · [How it works](#how-it-works)
 
-<img src="docs/public/img/demo.gif" alt="lockdocs demo: the same question about zod in a zod 3 project and a zod 4 project gets .strict() and z.strictObject() respectively, each cited to the installed file and line" width="100%">
+<img src="docs/public/img/demo.gif" alt="lockdocs demo: the same question in a Next.js 14 and a Next.js 15 project, then pydantic 1.10.18 answers BaseModel.dict() and pydantic 2.9.2 answers model_dump(), each cited to the installed file and line" width="100%">
 
-<sub>A real terminal: one question, two projects. The zod 3 project gets `.strict()`, the zod 4 project gets `z.strictObject()`, each cited to `package@version file:line`.</sub>
+<sub>A real terminal: one question, two installs. pydantic 1.10.18 answers `BaseModel.dict()` (`pydantic/main.py:427`), pydantic 2.9.2 answers `model_dump()` (`pydantic/main.py:352`). It opens with Next.js 14 vs 15 `cookies()`.</sub>
 
 </div>
 
@@ -171,18 +171,18 @@ Registry package downloads remain opt-in; default upstream enrichment uses insta
 ## Benchmarks
 
 <!-- bench:start -->
-105 questions whose correct answer depends on the version, over 15 libraries (zod, Next.js, React Router, pydantic, axum, tokio, Tailwind CSS, ESLint, Prisma, React, Vite, Express, SQLAlchemy, Django, FastAPI), each asked in a real project with that version installed. An answer passes when it contains the version-correct API and none of the other version's. Same questions and grader against Context7's anonymous API, on a GitHub-hosted runner ([run](https://github.com/SylphxAI/lockdocs/actions/runs/36204404336)):
+105 questions whose correct answer depends on the version, over 15 libraries (zod, Next.js, React Router, pydantic, axum, tokio, Tailwind CSS, ESLint, Prisma, React, Vite, Express, SQLAlchemy, Django, FastAPI), each asked in a real project with that version installed. An answer passes when it contains the version-correct API and none of the other version's. Same questions and grader against Context7's anonymous API, on a GitHub-hosted runner ([run](https://github.com/SylphxAI/lockdocs/actions/runs/36804076600)):
 
 | | correct | older majors | newer majors | tokio | held-out | median tokens | median latency |
 |---|---|---|---|---|---|---|---|
-| lockdocs + `lockdocs fetch` | 96/105 | 38/45 | 53/55 | 5/5 | 16/18 | 866 | 97 ms |
-| lockdocs, package files only | 60/105 | 27/45 | 29/55 | 4/5 | 6/18 | 903 | 52 ms |
+| lockdocs, default first use | 70/105 | 28/45 | 38/55 | 4/5 | 10/18 | 894 | 185 ms |
+| lockdocs + `lockdocs fetch` | 96/105 | 38/45 | 53/55 | 5/5 | 16/18 | 880 | 58 ms |
 | Context7 (anonymous) | 77/105 | 19/45 | 53/55 | 5/5 | 15/18 | 908 | 2,583 ms |
 <!-- bench:end -->
 
 - **Where versions matter most, lockdocs wins by 2x** (38/45 vs 19/45 on older majors). Context7 often answers with the newest API (pydantic 1 questions get pydantic 2 answers).
 - **Tied on the newest majors (53/55 each) and on tokio (5/5 each); ahead on held-out questions (16/18 vs 15/18)**, which were written before the ranking changes they measure and not used for tuning.
-- **~27x faster, fewer tokens, no quota.** lockdocs latency is a fresh CLI process per question; `lockdocs fetch` is a one-time download per project.
+- **~44x faster, fewer tokens, no quota.** lockdocs latency is a fresh CLI process per question; `lockdocs fetch` is a one-time download per project.
 
 Method, questions, per-question results and scripts: [benchmark page](https://sylphxai.github.io/lockdocs/benchmarks) and [`bench/`](bench/).
 

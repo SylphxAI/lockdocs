@@ -196,6 +196,8 @@ lockdocs reads files on your machine and answers over stdio. Network use: the em
 More from Sylphx: https://sylphx.com/open-source
 <!-- /generated:also-from -->
 
+- [**Sylphx apps**](https://sylphx.com/apps): Apps and tools from Sylphx.
+
 ## Star history
 
 [![Star History Chart](https://api.star-history.com/svg?repos=SylphxAI/lockdocs&type=Date)](https://star-history.com/#SylphxAI/lockdocs&Date)

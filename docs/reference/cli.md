@@ -18,8 +18,11 @@ lockdocs version
 | `-C`, `--root <dir>` | Project directory (default: current) |
 | `--pkg <package>` | Package for `docs` / `api` |
 | `--tokens <n>` | Answer budget (default 1200) |
-| `--fetch` | Allow downloads during queries (missing packages, upstream docs) |
+| `--fetch` | Also allow exact registry packages and major-version docs sites during queries |
+| `--no-fetch` | Disable query package/docs downloads; cached docs remain usable |
 | `--offline` | Never download, not even the embedding model |
 | `--json` | Machine-readable output |
 
 Exit code 1 with a message on stderr when a package is not a dependency or not installed.
+
+Public release-tag docs are fetched anonymously on first `docs` / `api` use by default. `LOCKDOCS_FETCH=0` opts out; `LOCKDOCS_OFFLINE=1` also disables the embedding model download.

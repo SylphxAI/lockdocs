@@ -154,7 +154,9 @@ pub fn embed_text(e: &Entry) -> String {
 }
 
 fn cache_path(dep: &Dep, src: &Source, types: Option<&Path>, up: Option<&(PathBuf, Manifest)>, embed: &str) -> PathBuf {
-    let up_key = up.map(|(_, m)| format!("{}@{:?}:{}:{:?}", m.repo, m.tag, m.files, m.site)).unwrap_or_default();
+    let up_key = up
+        .map(|(_, m)| format!("{}@{:?}:{}:{:?}:{:?}", m.repo, m.tag, m.files, m.site, m.commit))
+        .unwrap_or_default();
     let key = cache::hash(&[
         embed,
         &up_key,
@@ -210,9 +212,16 @@ pub fn build(dep: &Dep, src: &Source, root: &Path, up: Option<&(PathBuf, Manifes
         head,
         head_lens,
         build_ms: t.elapsed().as_millis() as u64,
-        upstream: up
-            .filter(|(_, m)| m.files > 0)
-            .map(|(_, m)| format!("{}@{} ({} files)", m.repo, m.tag.as_deref().unwrap_or("?"), m.files)),
+        upstream: up.filter(|(_, m)| m.files > 0).map(|(_, m)| {
+            format!(
+                "{}@{}{}{} ({} files)",
+                m.repo,
+                m.tag.as_deref().unwrap_or("?"),
+                m.commit.as_ref().map(|c| format!(" commit {c}")).unwrap_or_default(),
+                m.site.as_ref().map(|s| format!(" + docs site {s}")).unwrap_or_default(),
+                m.files
+            )
+        }),
         embed: if model.is_some() { embed::MODEL_ID.to_string() } else { String::new() },
         vecs,
     }

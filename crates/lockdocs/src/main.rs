@@ -33,9 +33,10 @@ Options:
   -C, --root <dir>      Project directory (default: current directory)
   --pkg <package>       Package for docs/api: zod, npm:zod, pydantic@2.9.2, tokio
   --tokens <n>          Answer budget in tokens (default 1200)
-  --fetch               Allow downloads during queries: missing packages and upstream docs
-                        (cached; also LOCKDOCS_FETCH=1). Without it, only `lockdocs fetch`
-                        and the one-time model download use the network
+  --fetch               Also download missing exact packages and major-version docs sites
+                        (cached; also LOCKDOCS_FETCH=1)
+  --no-fetch            Disable query downloads (also LOCKDOCS_FETCH=0)
+                        Public release-tag docs download on first use by default
   --offline             Never download (not even the embedding model)
   --json                Machine-readable output
 
@@ -100,8 +101,12 @@ impl Args {
         if self.on("fetch") {
             o.fetch = true;
         }
-        if self.on("offline") {
+        if self.on("fetch") {
+            o.upstream = true;
+        }
+        if self.on("no-fetch") || self.flag("fetch") == Some("false") || self.on("offline") || std::env::var("LOCKDOCS_OFFLINE").is_ok_and(|v| v != "0") {
             o.fetch = false;
+            o.upstream = false;
         }
         o
     }
@@ -193,6 +198,9 @@ fn run() -> Result<()> {
         }
         "cache" => cache(&args),
         "fetch" | "pull" => {
+            if args.on("offline") || std::env::var("LOCKDOCS_OFFLINE").is_ok_and(|v| v != "0") {
+                bail!("fetch cannot download with --offline; use docs/api to read cached files");
+            }
             let p = if args.positional.is_empty() { None } else { Some(args.positional.join(",")) };
             print(engine().fetch_all(p.as_deref().or(args.pkg())).map_err(anyhow::Error::msg)?, json)
         }
@@ -251,4 +259,17 @@ fn cache(args: &Args) -> Result<()> {
         bytes as f64 / 1_048_576.0
     );
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn offline_and_opt_out_override_fetch() {
+        for flag in ["--offline", "--no-fetch", "--fetch=false"] {
+            let args = Args::parse(vec!["--fetch".into(), flag.into()]);
+            let opts = args.opts();
+            assert!(!opts.fetch && !opts.upstream);
+        }
+    }
 }

@@ -24,17 +24,28 @@ const HEAD_WEIGHT: f32 = 0.25;
 /// Cross-dependency searches index at most this many direct dependencies.
 const MAX_PACKAGES: usize = 80;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Options {
     /// Allow downloading exact versions that are not installed.
     pub fetch: bool,
+    /// Anonymous release-tag docs on first use; independent of registry downloads.
+    pub upstream: bool,
 }
 
 impl Default for Options {
     fn default() -> Self {
-        let fetch = std::env::var("LOCKDOCS_FETCH").is_ok_and(|v| matches!(v.as_str(), "1" | "true" | "yes"));
-        Options { fetch }
+        let mut fetch = std::env::var("LOCKDOCS_FETCH").is_ok_and(|v| matches!(v.as_str(), "1" | "true" | "yes"));
+        let mut upstream = automatic_upstream(std::env::var("LOCKDOCS_FETCH").ok().as_deref(), std::env::var("LOCKDOCS_NO_UPSTREAM").is_ok());
+        if std::env::var("LOCKDOCS_OFFLINE").is_ok_and(|v| v != "0") {
+            fetch = false;
+            upstream = false;
+        }
+        Options { fetch, upstream }
     }
+}
+
+fn automatic_upstream(fetch: Option<&str>, disabled: bool) -> bool {
+    !disabled && !fetch.is_some_and(|v| matches!(v, "0" | "false" | "no"))
 }
 
 pub struct Answer {
@@ -46,6 +57,7 @@ pub struct Engine {
     pub project: Project,
     opts: Options,
     indexes: Mutex<HashMap<String, Arc<PackageIndex>>>,
+    upstream_notes: Mutex<HashMap<String, String>>,
 }
 
 /// An indexed package, the dependency it answers for, and a drift note.
@@ -55,6 +67,18 @@ type ReadyPkg = (Arc<PackageIndex>, Dep, Option<String>);
 enum Resolved {
     Ready(Arc<PackageIndex>, Dep, Option<String>),
     Missing(Dep, String),
+}
+
+fn provenance(ready: &[ReadyPkg]) -> Vec<Value> {
+    ready
+        .iter()
+        .map(|(idx, dep, note)| {
+            json!({
+                "package": idx.id(), "requested_version": dep.version, "source": idx.source,
+                "registry_fetched": idx.fetched, "upstream": idx.upstream, "note": note,
+            })
+        })
+        .collect()
 }
 
 fn lang(eco: Eco) -> &'static str {
@@ -125,6 +149,7 @@ impl Engine {
             project: Project::load(root),
             opts,
             indexes: Mutex::new(HashMap::new()),
+            upstream_notes: Mutex::new(HashMap::new()),
         }
     }
 
@@ -159,21 +184,13 @@ impl Engine {
             }
         }
         if let Some(s) = local {
-            let note = format!(
-                "{} pins {}@{}, but {} has {}; showing the installed {}. Reinstall to sync{}.",
+            return Err(format!(
+                "{} pins {}, but {} has {}; refusing to substitute the installed version. Reinstall to sync, or enable exact registry fetching (--fetch).",
                 dep.from,
-                dep.name,
-                dep.version,
+                dep.id(),
                 s.label,
-                s.version,
-                s.version,
-                if self.opts.fetch {
-                    ""
-                } else {
-                    ", or enable fetching (--fetch / LOCKDOCS_FETCH=1) to read the pinned version"
-                }
-            );
-            return Ok((s, Some(note)));
+                s.version
+            ));
         }
         let how = match dep.eco {
             Eco::Npm => "run your package manager's install",
@@ -190,15 +207,28 @@ impl Engine {
 
     fn index(&self, dep: &Dep) -> Resolved {
         match self.source(dep) {
-            Ok((src, note)) => {
+            Ok((src, mut note)) => {
                 let key = format!("{}:{}@{}:{}", dep.eco, dep.name, src.version, src.dir.display());
                 if let Some(i) = self.indexes.lock().unwrap().get(&key) {
                     // Rebuild once the embedding model has arrived.
                     if !i.embed.is_empty() || embed::get().is_none() {
+                        if let Some(n) = self.upstream_notes.lock().unwrap().get(&dep.id()) {
+                            note = Some(match note {
+                                Some(old) => format!("{old} {n}"),
+                                None => n.clone(),
+                            });
+                        }
                         return Resolved::Ready(i.clone(), dep.clone(), note);
                     }
                 }
-                let up = self.upstream(dep, &src);
+                let (up, up_note) = self.upstream(dep, &src);
+                if let Some(n) = up_note {
+                    self.upstream_notes.lock().unwrap().insert(dep.id(), n.clone());
+                    note = Some(match note {
+                        Some(old) => format!("{old} {n}"),
+                        None => n,
+                    });
+                }
                 let idx = Arc::new(index::load_or_build(dep, &src, &self.project.root, up.as_ref()));
                 self.indexes.lock().unwrap().insert(key, idx.clone());
                 Resolved::Ready(idx, dep.clone(), note)
@@ -209,19 +239,42 @@ impl Engine {
 
     /// Upstream docs for this exact version: a cached copy, or (when fetching
     /// is enabled) a one-time download.
-    fn upstream(&self, dep: &Dep, src: &Source) -> Option<(PathBuf, upstream::Manifest)> {
+    fn upstream(&self, dep: &Dep, src: &Source) -> (Option<(PathBuf, upstream::Manifest)>, Option<String>) {
         if src.version != dep.version || std::env::var("LOCKDOCS_NO_UPSTREAM").is_ok() {
-            return None;
+            return (None, None);
+        }
+        let enabled = self.opts.fetch || self.opts.upstream;
+        if dep.from.ends_with("(git)") {
+            return (
+                None,
+                enabled.then(|| "upstream docs skipped: git dependency's resolved commit is not a release tag; using its checkout files".into()),
+            );
         }
         let cached = upstream::cached(dep);
-        if let Some(c) = cached.as_ref().filter(|(_, m)| !(self.opts.fetch && upstream::stale(m))) {
-            return Some(c.clone());
+        if let Some(c) = cached
+            .as_ref()
+            .filter(|(_, m)| !enabled || (!upstream::stale(m) && (self.opts.fetch || (m.site.is_none() && (m.commit.is_some() || m.files == 0)))))
+        {
+            return (Some(c.clone()), c.1.note.clone());
         }
-        if self.opts.fetch && upstream::repo_of(dep, src).is_some() {
-            let _ = upstream::fetch(dep, src);
-            return upstream::cached(dep);
+        if enabled {
+            if upstream::repo_of(dep, src).is_none() {
+                return (
+                    None,
+                    Some("upstream docs unavailable: no GitHub repository in package metadata; using package files".into()),
+                );
+            }
+            let result = if self.opts.fetch {
+                upstream::fetch(dep, src)
+            } else {
+                upstream::fetch_automatic(dep, src)
+            };
+            return match result {
+                Ok(m) => (Some((upstream::dir(dep), m.clone())), m.note.clone()),
+                Err(e) => (None, Some(format!("upstream docs fetch failed: {e:#}; using package files"))),
+            };
         }
-        None
+        (None, None)
     }
 
     /// `lockdocs fetch`: download what makes answers complete, once: missing
@@ -453,7 +506,7 @@ impl Engine {
             if let Some(n) = note {
                 text.push_str(&format!("    note: {n}\n"));
             }
-            items.push(json!({"package": idx.id(), "ecosystem": idx.eco.as_str(), "symbols": symbols, "sections": idx.entries.len() - symbols, "source": idx.source, "build_ms": idx.build_ms}));
+            items.push(json!({"package": idx.id(), "ecosystem": idx.eco.as_str(), "symbols": symbols, "sections": idx.entries.len() - symbols, "source": idx.source, "upstream": idx.upstream, "note": note, "build_ms": idx.build_ms}));
         }
         for (d, e) in &missing {
             text.push_str(&format!("  {:<40} missing: {e}\n", d.id()));
@@ -625,7 +678,7 @@ impl Engine {
             if !used_pkgs.contains(&idx.id()) {
                 used_pkgs.push(idx.id());
             }
-            hits_json.push(json!({"package": idx.id(), "kind": e.kind.as_str(), "path": e.path, "file": e.file, "line": e.line, "score": score}));
+            hits_json.push(json!({"provenance": provenance(&ready), "package": idx.id(), "kind": e.kind.as_str(), "path": e.path, "file": e.file, "line": e.line, "score": score}));
         }
         if out.blocks == 0 {
             out.push_raw(&format!(
@@ -647,7 +700,7 @@ impl Engine {
             }
         }
         Ok(Answer {
-            json: json!({"query": q, "packages": ready.iter().map(|r| r.0.id()).collect::<Vec<_>>(), "hits": hits_json, "tokens": est_tokens(&out.text)}),
+            json: json!({"query": q, "packages": ready.iter().map(|r| r.0.id()).collect::<Vec<_>>(), "hits": hits_json, "provenance": provenance(&ready), "tokens": est_tokens(&out.text)}),
             text: out.text,
         })
     }
@@ -656,6 +709,9 @@ impl Engine {
         let mut out = Pack::new(tokens);
         for (idx, dep, note) in ready {
             out.push_raw(&format!("{} · {} · {} · pinned in {}\n", idx.id(), idx.eco, idx.source, dep.from));
+            if let Some(u) = &idx.upstream {
+                out.push_raw(&format!("Upstream: {u}\n"));
+            }
             if let Some(n) = note {
                 out.push_raw(&format!("Note: {n}\n"));
             }
@@ -689,7 +745,7 @@ impl Engine {
             }
         }
         Answer {
-            json: json!({"packages": ready.iter().map(|r| r.0.id()).collect::<Vec<_>>(), "tokens": est_tokens(&out.text)}),
+            json: json!({"packages": ready.iter().map(|r| r.0.id()).collect::<Vec<_>>(), "provenance": provenance(ready), "tokens": est_tokens(&out.text)}),
             text: out.text,
         }
     }
@@ -770,6 +826,9 @@ impl Engine {
                 format!(" · pinned in {}", dep.from)
             }
         ));
+        if let Some(u) = &idx.upstream {
+            out.push_raw(&format!("Upstream: {u}\n"));
+        }
         if let Some(n) = note {
             out.push_raw(&format!("Note: {n}\n"));
         }
@@ -839,7 +898,7 @@ impl Engine {
         }
         Ok(Answer {
             json: json!({
-                "package": idx.id(), "kind": best.kind.as_str(), "path": best.path, "signature": best.sig, "doc": best.doc,
+                "provenance": provenance(&ready), "package": idx.id(), "kind": best.kind.as_str(), "path": best.path, "signature": best.sig, "doc": best.doc,
                 "file": best.file, "line": best.line, "members": members_json, "tokens": est_tokens(&out.text),
             }),
             text: out.text,
@@ -1472,7 +1531,7 @@ impl Workspace {
         let stamp = lock_stamp(&root);
         let mut m = self.engines.lock().unwrap();
         if let Some((s, e)) = m.get(&root) {
-            if *s == stamp {
+            if *s == stamp && e.opts == *opts {
                 return e.clone();
             }
         }
@@ -1490,6 +1549,28 @@ pub fn dep_key(d: &Dep) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn upstream_is_default_with_explicit_opt_out() {
+        assert!(automatic_upstream(None, false));
+        assert!(automatic_upstream(Some("1"), false));
+        for value in ["0", "false", "no"] {
+            assert!(!automatic_upstream(Some(value), false));
+        }
+        assert!(!automatic_upstream(None, true));
+    }
+
+    #[test]
+    fn workspace_does_not_reuse_network_policy() {
+        let ws = Workspace::default();
+        let root = std::env::temp_dir();
+        let online = Options { fetch: false, upstream: true };
+        let offline = Options { fetch: false, upstream: false };
+        let a = ws.engine(&root, &online);
+        let b = ws.engine(&root, &offline);
+        assert!(!Arc::ptr_eq(&a, &b));
+        assert!(!b.opts.upstream);
+    }
 
     #[test]
     fn old_upgrade_guides_and_deprecated_pages() {

@@ -13,7 +13,7 @@ fn engine() -> Engine {
         std::env::set_var("LOCKDOCS_NO_SYSTEM_PYTHON", "1");
     });
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests").join("fixture");
-    Engine::new(&root, Options { fetch: false })
+    Engine::new(&root, Options { fetch: false, upstream: false })
 }
 
 #[test]
@@ -84,4 +84,19 @@ fn budget_is_respected() {
         lockdocs_core::est_tokens(&a.text),
         a.text
     );
+}
+
+#[test]
+fn first_use_reports_unavailable_upstream_and_reuses_note() {
+    let e = engine();
+    let root = e.root().to_path_buf();
+    let e = Engine::new(&root, Options { fetch: false, upstream: true });
+    for _ in 0..2 {
+        let a = e.docs(Some("tiny-schema"), "reject unknown keys", 1500).unwrap();
+        assert!(a.text.contains("upstream docs unavailable"), "{}", a.text);
+        assert_eq!(a.json["provenance"][0]["requested_version"], "1.2.0");
+        assert!(a.json["provenance"][0]["note"].as_str().unwrap().contains("no GitHub repository"));
+    }
+    let offline = engine().docs(Some("tiny-schema"), "reject unknown keys", 1500).unwrap();
+    assert!(offline.json["provenance"][0]["note"].is_null());
 }

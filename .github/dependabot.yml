@@ -1,17 +1,15 @@
 # bench/projects pins old library versions on purpose (the benchmark compares
 # versions; they are installed with --ignore-scripts on CI runners and never
 # shipped), and the test fixtures are fake packages: keep both out of updates.
+# No pip ecosystem: the only requirements.txt files are under bench/projects.
 version: 2
 updates:
-  - package-ecosystem: npm
+  # bun.lock is read by the `bun` updater; `npm` cannot update it and fails the job.
+  - package-ecosystem: bun
     directory: "/"
     exclude-paths: ["bench/projects/**", "crates/lockdocs-core/tests/**"]
     schedule: { interval: monthly }
   - package-ecosystem: cargo
-    directory: "/"
-    exclude-paths: ["bench/projects/**", "crates/lockdocs-core/tests/**"]
-    schedule: { interval: monthly }
-  - package-ecosystem: pip
     directory: "/"
     exclude-paths: ["bench/projects/**", "crates/lockdocs-core/tests/**"]
     schedule: { interval: monthly }

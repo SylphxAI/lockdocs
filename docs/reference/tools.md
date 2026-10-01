@@ -41,4 +41,4 @@ Returns the best match (following re-exports), other declarations in the same fi
 
 Add `"format": "json"` to any call for structured output.
 
-Structured docs/api answers include `provenance`: the requested version, actual package source, registry-fetch flag, upstream repository/tag/commit label, and any fetch failure note. Text answers include the same source and failure notes. Failed enrichment falls back only to the requested package version, never latest.
+Structured docs/api answers include `provenance`: the requested version, actual package source, registry-fetch flag, the upstream manifest (repository, tag, immutable commit, counts and notes), its display label, and any fetch failure note. Text answers include the same source and failure notes. Failed enrichment falls back only to the requested package version, never latest.

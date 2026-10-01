@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 /// Bump when extraction or the on-disk format changes.
-pub const FORMAT: u32 = 9;
+pub const FORMAT: u32 = 10;
 
 #[derive(Serialize, Deserialize)]
 pub struct PackageIndex {
@@ -33,6 +33,8 @@ pub struct PackageIndex {
     pub build_ms: u64,
     /// `github.com/o/r@tag (N files)` when upstream docs are included.
     pub upstream: Option<String>,
+    /// Fetch manifest used by this index, including immutable commit and failure notes.
+    pub upstream_provenance: Option<Manifest>,
     /// Embedding model id, or empty for keyword-only.
     pub embed: String,
     /// One embedding per entry (empty without a model).
@@ -222,6 +224,7 @@ pub fn build(dep: &Dep, src: &Source, root: &Path, up: Option<&(PathBuf, Manifes
                 m.files
             )
         }),
+        upstream_provenance: up.map(|(_, m)| m.clone()),
         embed: if model.is_some() { embed::MODEL_ID.to_string() } else { String::new() },
         vecs,
     }

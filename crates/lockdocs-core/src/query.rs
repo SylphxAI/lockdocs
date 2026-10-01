@@ -75,7 +75,7 @@ fn provenance(ready: &[ReadyPkg]) -> Vec<Value> {
         .map(|(idx, dep, note)| {
             json!({
                 "package": idx.id(), "requested_version": dep.version, "source": idx.source,
-                "registry_fetched": idx.fetched, "upstream": idx.upstream, "note": note,
+                "registry_fetched": idx.fetched, "upstream": idx.upstream_provenance, "upstream_label": idx.upstream, "note": note,
             })
         })
         .collect()
@@ -176,11 +176,7 @@ impl Engine {
         if self.opts.fetch {
             match fetch::fetch(dep) {
                 Ok(s) => return Ok((s, None)),
-                Err(e) => {
-                    if local.is_none() {
-                        return Err(format!("{} is pinned but not installed, and fetching failed: {e:#}", dep.id()));
-                    }
-                }
+                Err(e) => return Err(format!("{}: exact registry fetching failed: {e:#}; no other version substituted", dep.id())),
             }
         }
         if let Some(s) = local {

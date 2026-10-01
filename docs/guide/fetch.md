@@ -4,7 +4,7 @@ lockdocs starts with installed package files and automatically adds public relea
 
 ## First-use defaults and controls
 
-The query's selected packages are enriched, not every dependency in the project. The existing upstream fetcher reads the repository from package metadata, resolves a candidate tag for exactly the requested version to a full immutable commit, then reads only that commit's docs. Automatic fetches are anonymous: ambient `GITHUB_TOKEN` and `GH_TOKEN` are not read. They do not use major-version docs sites or fall back to a default branch/latest version.
+The query's selected packages are enriched, not every dependency in the project. The existing upstream fetcher reads the repository from package metadata, resolves a candidate tag for exactly the requested version to a full immutable commit, then reads only that commit's docs. Automatic fetches are anonymous: ambient `GITHUB_TOKEN` and `GH_TOKEN` are not read. Git dependencies use their checkout files rather than guessing a release tag for their resolved commit. Automatic fetches do not use major-version docs sites or fall back to a default branch/latest version.
 
 - `--no-fetch` or `LOCKDOCS_FETCH=0`: no query package/upstream downloads; installed and cached docs still work. The model has its own policy.
 - `--offline` or `LOCKDOCS_OFFLINE=1`: no downloads, including the embedding model. `fetch --offline` is rejected.
@@ -12,7 +12,7 @@ The query's selected packages are enriched, not every dependency in the project.
 - `LOCKDOCS_NO_UPSTREAM=1`: package-only answers, even if upstream docs are cached.
 - `--fetch` or `LOCKDOCS_FETCH=1`: explicitly enable missing registry packages and major-version docs-site enrichment too.
 
-Automatic upstream work has a 45-second scheduling budget per package and a 10-second timeout per request (an in-flight request may finish after the scheduling deadline), no redirects, at most 2,500 files / 40 MB of advertised content and a 2 MB per-file limit, with 16 downloads in flight. Failed or missing enrichment is reported in text and structured `provenance`; answers retain the requested version's package files. Successful caches include repository, release tag, immutable commit, file counts and partial-download notes. Later queries reuse them without network. A failed fetch preserves the previous complete cache; concurrent fetches fail without waiting. An interrupted process can leave a fetch lock; `lockdocs cache clean` removes it.
+Automatic upstream work has a 45-second scheduling budget per package and a 10-second timeout per request (an in-flight request may finish after the scheduling deadline), no redirects, at most 2,500 files / 40 MB of advertised content and a 2 MB per-file limit, with 16 downloads in flight. Failed or missing enrichment is reported in text and structured `provenance`; answers retain the requested version's package files. Successful caches include repository, release tag, immutable commit, file counts and partial-download notes. Later queries reuse them without network. A failed download preserves the previous complete cache; concurrent fetches fail without waiting. An interrupted process can leave a fetch lock; `lockdocs cache clean` removes it.
 
 Network requests reveal the public repository/version/file being fetched, not the question or project contents. Anonymous GitHub limits can stop a cold multi-package session; failures are reported, not retried within an indexed MCP session.
 

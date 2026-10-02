@@ -36,7 +36,12 @@ version you pinned.
 
 <p v-if="$site.themeConfig.pro.checkoutUrl"><a :href="$site.themeConfig.pro.checkoutUrl">Buy lockdocs Pro</a></p>
 
-Already bought? Run `lockdocs licence activate <token>`, or set
-`LOCKDOCS_LICENCE_TOKEN` in CI.
+Already bought? Run `lockdocs licence activate <token>` (it verifies the token
+offline and stores it for you), or set `LOCKDOCS_LICENCE_TOKEN` in CI. Check it
+with `lockdocs licence status`, which shows where the token was read and warns
+"expires in N days" during the last 30 days; the upgrade report adds a renewal
+line then too. Without a valid licence `lockdocs upgrade` exits 3, and an agent
+calling `upgrade_to` gets a normal answer saying the report is part of lockdocs
+Pro, with the link.
 
 Everything free in lockdocs stays free, under MIT.

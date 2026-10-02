@@ -2,6 +2,8 @@
 //! only the entry points listed in `docs/capabilities.md` as LD-PRO-* call
 //! `require`, and a free call never reaches it.
 
+use std::time::Duration;
+
 use mcp_kit::licence::{self, Licence, LicencePolicy, ProRequired};
 
 /// Marker for the key list below. No token verifies while it is the only entry.
@@ -14,6 +16,7 @@ pub const KEY_PLACEHOLDER: &str = "PLACEHOLDER-lockdocs-pro-issuer-public-key-no
 /// so every token is invalid and nothing Pro unlocks.
 pub const POLICY: LicencePolicy<'static> = LicencePolicy {
     product: "lockdocs",
+    tier: "Pro",
     require_product: true,
     accepted_plans: &["pro"],
     public_keys: &[KEY_PLACEHOLDER],
@@ -28,6 +31,14 @@ pub const UPGRADE_REPORT: &str = "Upgrade report";
 /// Gate one Pro feature against a policy.
 pub fn require(policy: &LicencePolicy, feature: &str) -> Result<Licence, ProRequired> {
     licence::require(policy, feature)
+}
+
+/// A renewal line for a licence in its last 30 days, else `None`. The upgrade
+/// report appends it so a lapsing seat is noticed before it stops working.
+pub fn renewal_note(policy: &LicencePolicy, licence: &Licence) -> Option<String> {
+    licence
+        .expires_soon(Duration::from_secs(30 * 24 * 3600))
+        .then(|| format!("Your lockdocs Pro licence expires soon. Renew: {}", policy.upgrade_url))
 }
 
 #[cfg(test)]

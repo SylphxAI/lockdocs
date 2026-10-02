@@ -61,13 +61,21 @@ impl App for Lockdocs {
     /// `upgrade_to`) needs a licence; without one the answer is a normal result
     /// with `structuredContent.pro_required`, never an error.
     fn call_result(&self, name: &str, args: &Value, call: &Call) -> CallToolResult {
+        let mut note = None;
         if tools::is_upgrade(name, args) {
-            if let Err(required) = pro::require(&self.policy, pro::UPGRADE_REPORT) {
-                return licence::required_result(&required);
+            match pro::require(&self.policy, pro::UPGRADE_REPORT) {
+                Ok(licence) => note = pro::renewal_note(&self.policy, &licence),
+                Err(required) => return licence::required_result(&required),
             }
         }
         match self.call(name, args, call) {
-            Ok(text) => CallToolResult::success(vec![ContentBlock::text(text)]),
+            Ok(mut text) => {
+                if let Some(n) = note {
+                    text.push_str("\n\n");
+                    text.push_str(&n);
+                }
+                CallToolResult::success(vec![ContentBlock::text(text)])
+            }
             Err(text) => CallToolResult::error(vec![ContentBlock::text(text)]),
         }
     }
@@ -188,6 +196,7 @@ mod tests {
             env_var: TEST_ENV,
             file_name: "licence-test-never-exists",
             upgrade_url: "https://example.com/pro",
+            tier: "Pro",
         };
         let a = app(policy);
         let upgrade = json!({"query": "upgrade", "package": "tiny-schema", "upgrade_to": "2.0.0", "root": root});

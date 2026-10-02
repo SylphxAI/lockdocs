@@ -228,6 +228,8 @@ lockdocs api <symbol>           Exact signature + doc comment
 lockdocs fetch [package...]     Once: upstream docs at each version's tag, missing packages, the model
 lockdocs index [package]        Build indexes ahead of time
 lockdocs cache [clean]          Show or delete the cache
+lockdocs upgrade <pkg> <ver>    Pro: API changes from the pinned version to <ver>, with your call sites
+lockdocs licence status|activate <token>   Show or activate a Pro licence (free to run)
 lockdocs setup                  Configure MCP clients (--client a,b --dry-run --remove --fetch)
 lockdocs mcp                    MCP server on stdio
 
@@ -235,6 +237,10 @@ Options: -C/--root <dir>, --pkg <package>, --tokens <n>, --fetch, --no-fetch, --
 ```
 
 Prebuilt binaries for macOS (arm64, x64), Linux glibc (x64, arm64) and Windows x64 ship through npm; each [GitHub release](https://github.com/SylphxAI/lockdocs/releases) has them too. From source: `cargo install --git https://github.com/SylphxAI/lockdocs lockdocs`.
+
+## Pro
+
+Everything above is free, under MIT. The one paid feature is the upgrade report (`lockdocs upgrade next 15.0.0`, or `upgrade_to` in the `docs` tool): which APIs you call were removed, renamed or deprecated between your pinned version and the target, with your call sites. lockdocs Pro is US$120 per seat per year. The licence is checked offline: run `lockdocs licence activate <token>` (check it with `lockdocs licence status`, which warns during the last 30 days), or set `LOCKDOCS_LICENCE_TOKEN` in CI. Details: [lockdocs Pro](https://sylphxai.github.io/lockdocs/pro).
 
 ## Privacy
 

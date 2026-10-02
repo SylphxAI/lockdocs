@@ -162,9 +162,16 @@ fn run() -> Result<()> {
         _ => None,
     };
     if cmd == "upgrade" || upgrade_target.is_some() {
-        if let Err(required) = pro::require(&pro::POLICY, pro::UPGRADE_REPORT) {
-            eprintln!("{required}");
-            std::process::exit(3);
+        match pro::require(&pro::POLICY, pro::UPGRADE_REPORT) {
+            Ok(licence) => {
+                if let Some(note) = pro::renewal_note(&pro::POLICY, &licence) {
+                    eprintln!("{note}");
+                }
+            }
+            Err(required) => {
+                eprintln!("{required}");
+                std::process::exit(3);
+            }
         }
     }
     // Query commands fetch the embedding model once (BM25-only if that fails).

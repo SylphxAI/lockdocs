@@ -196,6 +196,7 @@ mod tests {
             env_var: TEST_ENV,
             file_name: "licence-test-never-exists",
             upgrade_url: "https://example.com/pro",
+            checkout_base: None,
             tier: "Pro",
         };
         let a = app(policy);

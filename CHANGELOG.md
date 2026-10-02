@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **`lockdocs licence buy`.** Built on mcp-kit 0.6.0. It opens the Pro page; in-terminal purchase turns on when checkout is live.
+
 ## 0.6.0
 
 - **Ready for crates.io.** The two crates, `lockdocs-core` and `lockdocs`, carry full package metadata, a small `include` list, and a versioned path dependency, so `cargo publish --dry-run --locked` passes in dependency order. `cargo binstall lockdocs` downloads the matching GitHub release binary. The release workflow publishes them through crates.io trusted publishing (no token) once an owner sets `CRATES_IO_PUBLISH_ENABLED` and the trusted-publisher records exist.

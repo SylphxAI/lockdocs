@@ -22,7 +22,7 @@ path = "src/main.rs"
 anyhow = "1"
 lockdocs-core = { path = "../lockdocs-core", version = "0.6.0" }
 serde_json = "1"
-sylphx-mcp-kit = { version = "0.5.0", features = ["licence"] }
+sylphx-mcp-kit = { version = "0.6.0", features = ["licence"] }
 
 [dev-dependencies]
 base64 = "0.22"

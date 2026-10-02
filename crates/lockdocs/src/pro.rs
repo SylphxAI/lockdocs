@@ -9,6 +9,10 @@ use mcp_kit::licence::{self, Licence, LicencePolicy, ProRequired};
 /// Marker for the key list below. No token verifies while it is the only entry.
 pub const KEY_PLACEHOLDER: &str = "PLACEHOLDER-lockdocs-pro-issuer-public-key-not-issued-yet";
 
+/// Base URL of the in-terminal checkout.
+#[allow(dead_code)]
+pub const CHECKOUT_BASE: &str = "https://buy.sylphx.com";
+
 /// The lockdocs Pro licence policy.
 ///
 /// TODO(Services S1): replace `KEY_PLACEHOLDER` with the issued lockdocs-pro
@@ -24,6 +28,8 @@ pub const POLICY: LicencePolicy<'static> = LicencePolicy {
     file_name: "licence",
     // Published pricing page (docs/pro.md). The price itself is `docs/pricing.json`.
     upgrade_url: "https://sylphxai.github.io/lockdocs/pro",
+    // set when buy.sylphx.com serves /api/v1/claims and a Money sandbox token passes activate
+    checkout_base: None,
 };
 
 pub const UPGRADE_REPORT: &str = "Upgrade report";

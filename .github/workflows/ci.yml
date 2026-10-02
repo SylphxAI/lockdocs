@@ -12,7 +12,7 @@ permissions:
 
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.event.merge_group.head_sha || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   plain-language:
@@ -43,11 +43,35 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
+    # Not skipped at job level: a skipped matrix job reports an unexpanded
+    # name and would leave the required `test (<os>)` checks pending. Instead
+    # the job always runs and its heavy steps are skipped for pull requests
+    # that touch only files no test reads.
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
+      - uses: dorny/paths-filter@0e4a8c6effa4802afeda77dc8d303f8176d7dfad # v3.0.4
+        id: c
+        if: github.event_name == 'pull_request'
+        with:
+          predicate-quantifier: every
+          filters: |
+            code:
+              - '**'
+              - '!.github/ISSUE_TEMPLATE/**'
+              - '!LICENSE'
+              - '!CHANGELOG.md'
+              - '!CONTRIBUTING.md'
+              - '!SECURITY.md'
       - uses: actions/checkout@v7
+        if: github.event_name != 'pull_request' || steps.c.outputs.code != 'false'
       - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+        if: github.event_name != 'pull_request' || steps.c.outputs.code != 'false'
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+        if: github.event_name != 'pull_request' || steps.c.outputs.code != 'false'
       - run: cargo test --workspace --locked
+        if: github.event_name != 'pull_request' || steps.c.outputs.code != 'false'
 
   checks:
     name: manifests, smoke, docs

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.6.0
 
 - **Ready for crates.io.** The two crates, `lockdocs-core` and `lockdocs`, carry full package metadata, a small `include` list, and a versioned path dependency, so `cargo publish --dry-run --locked` passes in dependency order. `cargo binstall lockdocs` downloads the matching GitHub release binary. The release workflow publishes them through crates.io trusted publishing (no token) once an owner sets `CRATES_IO_PUBLISH_ENABLED` and the trusted-publisher records exist.
 - **Hybrid search is no longer worse than keyword search.** The fusion is now keyword-first: on package files weighted reciprocal rank (90% keyword ranking with all docs boosts, 10% embedding ranking) replaces the min-max score mix that let the embedding outvote exact API-name matches; when upstream docs are indexed the normalized score mix is kept (rank-only fusion buried pages like tokio's select.md, 91 vs 96 of 105 fetched). The embedding is skipped when one entry leads by at least 2x. On the 105-question benchmark (package files, no upstream) hybrid goes from 60 to 64 of 105 against 59 for keyword-only, with the held-out set at 8/18 (was 6/18, keyword 8/18).

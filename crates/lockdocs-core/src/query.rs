@@ -23,6 +23,8 @@ const RELEVANCE_FLOOR: f32 = 0.3;
 const DENSE_WEIGHT: f32 = 0.1;
 /// Reciprocal-rank constant: `1 / (RRF_K + rank)`.
 const RRF_K: f32 = 10.0;
+/// Share of the embedding in the score mix used when upstream docs are indexed.
+const DOCS_DENSE_WEIGHT: f32 = 0.45;
 /// Embedding candidates considered per query.
 const DENSE_POOL: usize = 300;
 /// The keyword leader is final when it scores at least this many times the
@@ -1120,6 +1122,7 @@ fn hybrid_rank(
     };
     // Embedding rank of each entry among the 300 nearest to the query.
     let mut dense_rank: HashMap<usize, usize> = HashMap::new();
+    let mut dense_cos: HashMap<usize, f32> = HashMap::new();
     if let Some(qv) = &qv {
         let mut sims: Vec<(usize, f32)> = refs
             .par_iter()
@@ -1129,6 +1132,11 @@ fn hybrid_rank(
         sims.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal).then(a.0.cmp(&b.0)));
         for (r, (i, _)) in sims.iter().take(DENSE_POOL).enumerate() {
             dense_rank.insert(*i, r);
+        }
+        let cmax = sims.first().map_or(1.0, |s| s.1);
+        let floor = sims.get(300).map_or(0.0, |s| s.1);
+        for (i, c) in sims.iter().take(300) {
+            dense_cos.insert(*i, ((c - floor) / (cmax - floor).max(1e-6)).max(0.0));
         }
         if debug {
             for (i, c) in sims.iter().take(10) {
@@ -1140,11 +1148,28 @@ fn hybrid_rank(
     if debug {
         eprintln!("decisive={decisive} dense={}", qv.is_some());
     }
-    // Reciprocal-rank fusion, weighted towards the keyword ranking (the
-    // embedding breaks near-ties and rescues paraphrases, it cannot outvote
-    // an exact name or heading match). Scores are scaled so the best is 1.
+    // Package files only (API names and signatures): reciprocal-rank fusion
+    // weighted towards the keyword ranking, so the embedding breaks near-ties
+    // and rescues paraphrases but cannot outvote an exact name match. With
+    // upstream docs in the index the answers are prose pages, where the
+    // embedding is as reliable as keywords and score magnitudes matter (a
+    // rank-only fusion buried select.md under Graceful Shutdown): there each
+    // normalized score is mixed, as before. Scores are scaled so the best is 1.
+    let with_docs = ready.iter().any(|r| r.0.upstream.is_some());
     let rrf = |r: usize| 1.0 / (RRF_K + r as f32);
-    let mut scored: Vec<(f32, usize, usize)> = if qv.is_some() {
+    let mut scored: Vec<(f32, usize, usize)> = if qv.is_some() && with_docs {
+        let mut ids: HashSet<usize> = lex.iter().map(|l| l.0).collect();
+        ids.extend(dense_cos.keys().copied());
+        let lexm: HashMap<usize, f32> = fused.iter().map(|(&i, &(b, h))| (i, (1.0 - HEAD_WEIGHT) * b + HEAD_WEIGHT * h)).collect();
+        ids.into_iter()
+            .map(|i| {
+                let (pi, ei) = refs[i];
+                let l = lexm.get(&i).copied().unwrap_or(0.0);
+                let d = dense_cos.get(&i).copied().unwrap_or(0.0);
+                (((1.0 - DOCS_DENSE_WEIGHT) * l + DOCS_DENSE_WEIGHT * d) * weight(i), pi, ei)
+            })
+            .collect()
+    } else if qv.is_some() {
         let mut ids: HashSet<usize> = lex.iter().map(|l| l.0).collect();
         ids.extend(dense_rank.keys().copied());
         let lex_rank: HashMap<usize, usize> = lex.iter().enumerate().map(|(r, l)| (l.0, r)).collect();

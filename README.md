@@ -7,19 +7,40 @@
 Reads your lockfile. Answers from the docs and type declarations of the exact version you installed.<br>
 npm · PyPI · crates.io · Go. MCP server + CLI in one Rust binary. No account, no API key. MIT.
 
+```bash
+npx -y @sylphx/lockdocs setup
+```
+
 [![npm](https://mark.sylphx.com/npm/v/@sylphx/lockdocs?color=7c9cff&label=npm)](https://www.npmjs.com/package/@sylphx/lockdocs)
+[![npm downloads](https://mark.sylphx.com/npm/dm/@sylphx/lockdocs?color=7c9cff&label=downloads)](https://www.npmjs.com/package/@sylphx/lockdocs)
 [![CI](https://github.com/SylphxAI/lockdocs/actions/workflows/ci.yml/badge.svg)](https://github.com/SylphxAI/lockdocs/actions/workflows/ci.yml)
 [![MCP Registry](https://mark.sylphx.com/badge/MCP%20Registry-io.github.SylphxAI%2Flockdocs-42d6a4)](https://registry.modelcontextprotocol.io/)
-[![License: MIT](https://mark.sylphx.com/badge/license-MIT-ffb454)](LICENSE)
-<!-- repomap:agent-ready -->[![agent-ready 94/100](https://mark.sylphx.com/badge/agent--ready-94%2F100-brightgreen)](https://github.com/SylphxAI/repomap#agent-readiness-score)<!-- /repomap:agent-ready -->
+[![License: MIT](https://mark.sylphx.com/badge/license-MIT-ffb454)](https://github.com/SylphxAI/lockdocs/blob/main/LICENSE) <!-- repomap:agent-ready -->[![agent-ready 94/100](https://mark.sylphx.com/badge/agent--ready-94%2F100-brightgreen)](https://github.com/SylphxAI/repomap#agent-readiness-score)<!-- /repomap:agent-ready -->
 
-[Docs](https://sylphxai.github.io/lockdocs/) · [Quickstart](#quickstart) · [Tools](#what-your-agent-gets) · [Benchmarks](#benchmarks) · [Compare](#how-it-compares) · [How it works](#how-it-works)
+[Docs](https://sylphxai.github.io/lockdocs/) · [Quickstart](https://github.com/SylphxAI/lockdocs#quickstart) · [Tools](https://github.com/SylphxAI/lockdocs#what-your-agent-gets) · [Benchmarks](https://github.com/SylphxAI/lockdocs#benchmarks) · [Compare](https://github.com/SylphxAI/lockdocs#how-it-compares) · [How it works](https://github.com/SylphxAI/lockdocs#how-it-works)
 
-<img src="docs/public/img/demo.gif" alt="lockdocs demo: the same question in a Next.js 14 and a Next.js 15 project, then pydantic 1.10.18 answers BaseModel.dict() and pydantic 2.9.2 answers model_dump(), each cited to the installed file and line" width="100%">
+<img src="https://raw.githubusercontent.com/SylphxAI/lockdocs/main/docs/public/img/demo.gif" alt="lockdocs demo: the same question in a Next.js 14 and a Next.js 15 project, then pydantic 1.10.18 answers BaseModel.dict() and pydantic 2.9.2 answers model_dump(), each cited to the installed file and line" width="100%">
 
 <sub>A real terminal: one question, two installs. pydantic 1.10.18 answers `BaseModel.dict()` (`pydantic/main.py:427`), pydantic 2.9.2 answers `model_dump()` (`pydantic/main.py:352`). It opens with Next.js 14 vs 15 `cookies()`.</sub>
 
 </div>
+
+## See it work
+
+Ask for the exact signature of `BaseModel.model_dump` in a project that pins pydantic 2.9.2 (the run in the demo above):
+
+```text
+$ lockdocs api BaseModel.model_dump --tokens 300
+pydantic@2.9.2 · pypi · .venv/lib/python3.12/site-packages · pinned in uv.lock
+
+### pydantic.main.BaseModel.model_dump (method) — pydantic@2.9.2 pydantic/main.py:352
+def model_dump(self, *, mode: Literal['json', 'python'] | str = 'python', include: IncEx | None = None, …) -> dict[str, Any]
+Usage docs: https://docs.pydantic.dev/2.9/concepts/serialization/#modelmodel_dump
+
+Generate a dictionary representation of the model, optionally specifying which fields to include or exclude.
+```
+
+The same call in a pydantic 1 project answers that pydantic 1.10.18 has no `model_dump`, and shows the closest documentation instead.
 
 ## Quickstart
 
@@ -27,7 +48,7 @@ npm · PyPI · crates.io · Go. MCP server + CLI in one Rust binary. No account,
 npx -y @sylphx/lockdocs setup     # add lockdocs to Claude Code, Codex, Cursor, VS Code, Claude Desktop, Windsurf, Gemini CLI
 ```
 
-That's it. `setup` detects the clients you have, writes their MCP config, and prints every change. Run it again and nothing changes. Then ask your agent something like *"Use lockdocs: how do I reject unknown keys with the zod we use?"*
+That's it. Using Claude Code only? `claude mcp add lockdocs -- npx -y @sylphx/lockdocs mcp`. `setup` detects the clients you have, writes their MCP config, and prints every change. Run it again and nothing changes. Then ask your agent something like *"Use lockdocs: how do I reject unknown keys with the zod we use?"*
 
 From a terminal, inside any project:
 
@@ -134,21 +155,6 @@ Three tools, cheap enough to call before every unfamiliar API:
 | `docs` | "How do I reject unknown keys?" (optionally `package: "zod"`) | The most relevant README, changelog and API sections of the installed version, within budget, each cited `zod@4.1.5 v4/classic/schemas.d.ts:453` |
 | `api` | `z.object`, `tokio::spawn`, `BaseModel.model_dump`, `gin.Context.JSON` | The exact signature and doc comment, overloads, members of a class/interface/struct/trait, and other matches |
 
-Example, in a pydantic 2 project:
-
-```text
-$ lockdocs api BaseModel.model_dump --tokens 300
-pydantic@2.9.2 · pypi · .venv/lib/python3.12/site-packages · pinned in uv.lock
-
-### pydantic.main.BaseModel.model_dump (method) — pydantic@2.9.2 pydantic/main.py:352
-def model_dump(self, *, mode: Literal['json', 'python'] | str = 'python', include: IncEx | None = None, …) -> dict[str, Any]
-Usage docs: https://docs.pydantic.dev/2.9/concepts/serialization/#modelmodel_dump
-
-Generate a dictionary representation of the model, optionally specifying which fields to include or exclude.
-```
-
-The same call in a pydantic 1 project answers that pydantic 1.10.18 has no `model_dump`, and shows the closest documentation instead.
-
 ## Ecosystems
 
 | Ecosystem | Versions from | Docs read from | API reference |
@@ -184,7 +190,7 @@ Registry package downloads remain opt-in; default upstream enrichment uses insta
 - **Tied on the newest majors (53/55 each) and on tokio (5/5 each); ahead on held-out questions (16/18 vs 15/18)**, which were written before the ranking changes they measure and not used for tuning.
 - **Faster, fewer tokens, no quota.** Median 58 ms per question after `lockdocs fetch` (185 ms on first use), a fresh CLI process each time. Context7's hosted API took a median 2,583 ms in the earlier runs its reused answers come from.
 
-Method, questions, per-question results and scripts: [benchmark page](https://sylphxai.github.io/lockdocs/benchmarks) and [`bench/`](bench/).
+Method, questions, per-question results and scripts: [benchmark page](https://sylphxai.github.io/lockdocs/benchmarks) and [`bench/`](https://github.com/SylphxAI/lockdocs/tree/main/bench).
 
 ## How it compares
 
@@ -249,6 +255,10 @@ More from Sylphx: https://sylphx.com/open-source
 
 [![Star History Chart](https://api.star-history.com/svg?repos=SylphxAI/lockdocs&type=Date)](https://star-history.com/#SylphxAI/lockdocs&Date)
 
-## License
+## Support
 
-MIT © Sylphx
+Questions, a bug, or a team rollout? Email [hi@sylphx.com](mailto:hi@sylphx.com) or [open an issue](https://github.com/SylphxAI/lockdocs/issues).
+
+---
+
+MIT licence. © Sylphx Limited, registered in England and Wales, company no. 16438428. Registered office: 128 City Road, London EC1V 2NX, United Kingdom. Email [hi@sylphx.com](mailto:hi@sylphx.com). [Privacy](https://sylphx.com/legal/privacy) · [Terms](https://sylphx.com/legal/terms) · [sylphx.com](https://sylphx.com)

@@ -17,8 +17,19 @@ use std::sync::{Arc, Mutex};
 pub const DEFAULT_TOKENS: usize = 1200;
 /// Results scoring below this fraction of the best are left out (after 3).
 const RELEVANCE_FLOOR: f32 = 0.3;
-/// Share of the fused score from the embedding similarity.
-const DENSE_WEIGHT: f32 = 0.45;
+/// Share of the fused rank score from the embedding ranking; the rest is the
+/// keyword ranking. Small on purpose: measured on the 105-question benchmark,
+/// anything above ~0.15 lets the embedding outvote exact API-name matches.
+const DENSE_WEIGHT: f32 = 0.1;
+/// Reciprocal-rank constant: `1 / (RRF_K + rank)`.
+const RRF_K: f32 = 10.0;
+/// Share of the embedding in the score mix used when upstream docs are indexed.
+const DOCS_DENSE_WEIGHT: f32 = 0.45;
+/// Embedding candidates considered per query.
+const DENSE_POOL: usize = 300;
+/// The keyword leader is final when it scores at least this many times the
+/// runner-up (after boosts); the embedding is not even looked at.
+const DECISIVE_RATIO: f32 = 2.0;
 /// Share of the keyword score from headings and first sentences.
 const HEAD_WEIGHT: f32 = 0.25;
 /// Cross-dependency searches index at most this many direct dependencies.
@@ -257,7 +268,7 @@ impl Engine {
                 let key = format!("{}:{}@{}:{}", dep.eco, dep.name, src.version, src.dir.display());
                 if let Some(i) = self.indexes.lock().unwrap().get(&key) {
                     // Rebuild once the embedding model has arrived.
-                    if !i.embed.is_empty() || embed::get().is_none() {
+                    if !i.embed.is_empty() || !embed::available() {
                         if let Some(n) = self.upstream_notes.lock().unwrap().get(&dep.id()) {
                             note = Some(match note {
                                 Some(old) => format!("{old} {n}"),
@@ -1056,8 +1067,9 @@ fn api_words(ready: &[ReadyPkg], q: &str) -> Vec<String> {
     out
 }
 
-/// BM25 and embedding similarity fused (each normalized to its best hit),
-/// then docs-specific boosts, then deprecation redirects ("use X instead")
+/// Keyword ranking (BM25 over text and headings, then docs-specific boosts)
+/// first; when no entry clearly leads, the embedding ranking is fused in by
+/// weighted reciprocal rank. Then deprecation redirects ("use X instead")
 /// lift the API they point to. Returns (score, package, entry), best first.
 fn hybrid_rank(
     ready: &[ReadyPkg],
@@ -1068,8 +1080,8 @@ fn hybrid_rank(
     idents: &[String],
     changes: bool,
 ) -> Vec<(f32, usize, usize)> {
-    // (full-text BM25, heading BM25, dense), each normalized to its best hit.
-    let mut fused: HashMap<usize, (f32, f32, f32)> = HashMap::new();
+    // (full-text BM25, heading BM25), each normalized to its best hit.
+    let mut fused: HashMap<usize, (f32, f32)> = HashMap::new();
     let expanded = bm25::expand(qterms);
     let bm_hits = bm.search_weighted(&expanded);
     let bmax = bm_hits.first().map_or(1.0, |h| h.score).max(1e-6);
@@ -1082,59 +1094,106 @@ fn hybrid_rank(
     for h in h_hits.iter().take(1500) {
         fused.entry(h.doc as usize).or_default().1 = h.score / hmax;
     }
-    let dense_w = std::env::var("LOCKDOCS_DENSE_WEIGHT").ok().and_then(|v| v.parse().ok()).unwrap_or(DENSE_WEIGHT);
-    let qv = if ready.iter().all(|r| !r.0.vecs.is_empty()) {
-        embed::get().and_then(|m| m.embed(q))
+    let dense_w: f32 = std::env::var("LOCKDOCS_DENSE_WEIGHT").ok().and_then(|v| v.parse().ok()).unwrap_or(DENSE_WEIGHT);
+    // Query words that are rare in these packages; common ones ("futures" in
+    // tokio) say little about which entry is meant.
+    let n = refs.len().max(1) as f32;
+    let rare: Vec<String> = qterms.iter().filter(|t| (bm.df(t) as f32) < n * 0.03).cloned().collect();
+    let weight = |i: usize| {
+        let (pi, ei) = refs[i];
+        let e = &ready[pi].0.entries[ei];
+        boost(e, idents, changes, major_of(&ready[pi].0.version)) * name_hit(e, &rare)
+    };
+    // Keyword ranking first, with the docs-specific boosts: this is what the
+    // answer is built on.
+    let mut lex: Vec<(usize, f32)> = fused.iter().map(|(&i, &(b, h))| (i, ((1.0 - head_w) * b + head_w * h) * weight(i))).collect();
+    lex.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal).then(a.0.cmp(&b.0)));
+    // A clear leader needs no second opinion: skip the embedding entirely.
+    let decisive = match (lex.first(), lex.get(1)) {
+        (Some(t), Some(s)) => t.1 >= s.1 * DECISIVE_RATIO,
+        (Some(_), None) => true,
+        _ => false,
+    };
+    let debug = std::env::var("LOCKDOCS_DEBUG").is_ok();
+    let qv = if !decisive && dense_w > 0.0 && ready.iter().all(|r| !r.0.vecs.is_empty()) {
+        embed::query_model().and_then(|m| m.embed(q))
     } else {
         None
     };
+    // Embedding rank of each entry among the 300 nearest to the query.
+    let mut dense_rank: HashMap<usize, usize> = HashMap::new();
+    let mut dense_cos: HashMap<usize, f32> = HashMap::new();
     if let Some(qv) = &qv {
         let mut sims: Vec<(usize, f32)> = refs
             .par_iter()
             .enumerate()
             .map(|(i, &(pi, ei))| (i, embed::cosine(qv, &ready[pi].0.vecs[ei])))
             .collect();
-        sims.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+        sims.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal).then(a.0.cmp(&b.0)));
+        for (r, (i, _)) in sims.iter().take(DENSE_POOL).enumerate() {
+            dense_rank.insert(*i, r);
+        }
         let cmax = sims.first().map_or(1.0, |s| s.1);
         let floor = sims.get(300).map_or(0.0, |s| s.1);
-        if std::env::var("LOCKDOCS_DEBUG").is_ok() {
-            eprintln!("dense cmax={cmax:.3} floor={floor:.3}");
-            for (rank, (i, c)) in sims.iter().enumerate() {
-                let (pi, ei) = refs[*i];
-                if rank < 10 {
-                    eprintln!("dense rank {rank} cos={c:.3} {}", ready[pi].0.entries[ei].path);
-                }
-            }
-        }
         for (i, c) in sims.iter().take(300) {
-            fused.entry(*i).or_default().2 = ((c - floor) / (cmax - floor).max(1e-6)).max(0.0);
+            dense_cos.insert(*i, ((c - floor) / (cmax - floor).max(1e-6)).max(0.0));
+        }
+        if debug {
+            for (i, c) in sims.iter().take(10) {
+                let (pi, ei) = refs[*i];
+                eprintln!("dense cos={c:.3} {}", ready[pi].0.entries[ei].path);
+            }
         }
     }
-    let w = if qv.is_some() { dense_w } else { 0.0 };
-    // Query words that are rare in these packages; common ones ("futures" in
-    // tokio) say little about which entry is meant.
-    let n = refs.len().max(1) as f32;
-    let rare: Vec<String> = qterms.iter().filter(|t| (bm.df(t) as f32) < n * 0.03).cloned().collect();
-    let debug = std::env::var("LOCKDOCS_DEBUG").is_ok();
-    let mut scored: Vec<(f32, usize, usize)> = fused
-        .into_iter()
-        .map(|(i, (b, h, d))| {
-            let (pi, ei) = refs[i];
-            let e = &ready[pi].0.entries[ei];
-            let lexical = (1.0 - head_w) * b + head_w * h;
-            let major = major_of(&ready[pi].0.version);
-            let s = ((1.0 - w) * lexical + w * d) * boost(e, idents, changes, major) * name_hit(e, &rare);
-            if debug && s > 0.3 {
-                eprintln!(
-                    "{s:.3} bm={b:.3} head={h:.3} dense={d:.3} boost={:.2} name={:.2} {}",
-                    boost(e, idents, changes, major),
-                    name_hit(e, &rare),
-                    e.path
-                );
-            }
-            (s, pi, ei)
-        })
-        .collect();
+    if debug {
+        eprintln!("decisive={decisive} dense={}", qv.is_some());
+    }
+    // Package files only (API names and signatures): reciprocal-rank fusion
+    // weighted towards the keyword ranking, so the embedding breaks near-ties
+    // and rescues paraphrases but cannot outvote an exact name match. With
+    // upstream docs in the index the answers are prose pages, where the
+    // embedding is as reliable as keywords and score magnitudes matter (a
+    // rank-only fusion buried select.md under Graceful Shutdown): there each
+    // normalized score is mixed, as before. Scores are scaled so the best is 1.
+    let with_docs = ready.iter().any(|r| r.0.upstream.is_some());
+    let rrf = |r: usize| 1.0 / (RRF_K + r as f32);
+    let mut scored: Vec<(f32, usize, usize)> = if qv.is_some() && with_docs {
+        let mut ids: HashSet<usize> = lex.iter().map(|l| l.0).collect();
+        ids.extend(dense_cos.keys().copied());
+        let lexm: HashMap<usize, f32> = fused.iter().map(|(&i, &(b, h))| (i, (1.0 - head_w) * b + head_w * h)).collect();
+        ids.into_iter()
+            .map(|i| {
+                let (pi, ei) = refs[i];
+                let l = lexm.get(&i).copied().unwrap_or(0.0);
+                let d = dense_cos.get(&i).copied().unwrap_or(0.0);
+                (((1.0 - DOCS_DENSE_WEIGHT) * l + DOCS_DENSE_WEIGHT * d) * weight(i), pi, ei)
+            })
+            .collect()
+    } else if qv.is_some() {
+        let mut ids: HashSet<usize> = lex.iter().map(|l| l.0).collect();
+        ids.extend(dense_rank.keys().copied());
+        let lex_rank: HashMap<usize, usize> = lex.iter().enumerate().map(|(r, l)| (l.0, r)).collect();
+        ids.into_iter()
+            .map(|i| {
+                let l = lex_rank.get(&i).map_or(0.0, |&r| rrf(r));
+                let d = dense_rank.get(&i).map_or(0.0, |&r| rrf(r));
+                let (pi, ei) = refs[i];
+                ((1.0 - dense_w) * l + dense_w * d, pi, ei)
+            })
+            .collect()
+    } else {
+        lex.iter().map(|&(i, s)| (s, refs[i].0, refs[i].1)).collect()
+    };
+    if qv.is_some() {
+        let top = scored.iter().map(|s| s.0).fold(0.0f32, f32::max).max(1e-9);
+        scored.iter_mut().for_each(|s| s.0 /= top);
+    }
+    if debug {
+        scored.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
+        for (s, pi, ei) in scored.iter().take(10) {
+            eprintln!("{s:.3} {}", ready[*pi].0.entries[*ei].path);
+        }
+    }
     scored.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
     // Deprecation redirects among the top results.
     let mut lifted: Vec<(f32, usize, String)> = Vec::new();

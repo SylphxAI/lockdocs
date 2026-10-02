@@ -140,6 +140,8 @@ VARIANTS = [
     ("first-use-default", "lockdocs, real first-use defaults (empty isolated cache, anonymous release-tag fetch)",
      {"LOCKDOCS_FETCH": None, "LOCKDOCS_NO_UPSTREAM": None, "LOCKDOCS_EMBED": None, "LOCKDOCS_OFFLINE": None, "GITHUB_TOKEN": None, "GH_TOKEN": None}),
     ("fetched", "lockdocs, hybrid + upstream docs (after `lockdocs fetch`)", {"LOCKDOCS_FETCH": "1"}),
+    # After "fetched": it reuses the docs that variant's prefetch cached.
+    ("fetched-keyword", "lockdocs, keyword only (BM25) + upstream docs", {"LOCKDOCS_EMBED": "0", "LOCKDOCS_FETCH": "1"}),
 ]
 
 
@@ -250,9 +252,17 @@ def main():
 def check_floors(summary, total):
     if total != 105:
         return
-    for variant, floor in [("fetched", 96), ("hybrid", 60)]:
+    for variant, floor in [("fetched", 96), ("hybrid", 62)]:
         if variant in summary and summary[variant]["passed"] < floor:
             raise RuntimeError(f"{variant} regressed: {summary[variant]['passed']}/105, required >= {floor}/105")
+    # Hybrid retrieval exists to beat keyword search; if it scores lower on the
+    # same docs, the fusion is hurting and the job fails.
+    for hybrid, keyword in [("hybrid", "keyword"), ("fetched", "fetched-keyword")]:
+        if hybrid in summary and keyword in summary and summary[hybrid]["passed"] < summary[keyword]["passed"]:
+            raise RuntimeError(
+                f"{hybrid} ({summary[hybrid]['passed']}/105) scores below {keyword} ({summary[keyword]['passed']}/105): "
+                "embedding fusion must never lose to keyword-only search"
+            )
 
 
 def agg(rs, total):

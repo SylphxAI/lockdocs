@@ -786,7 +786,9 @@ fn codeload_once(agent: &Client, repo: &Repo, reference: &str, with_token: bool)
             if remaining < std::time::Duration::from_secs(5) {
                 bail!("too little of the automatic time budget left for an archive download");
             }
-            remaining.saturating_sub(std::time::Duration::from_secs(15)).max(std::time::Duration::from_secs(1))
+            remaining
+                .saturating_sub(std::time::Duration::from_secs(15))
+                .max(std::time::Duration::from_secs(1))
         }
         None => std::time::Duration::from_secs(600),
     };
@@ -1565,7 +1567,12 @@ mod tests {
                 let line = head.lines().next().unwrap_or("").to_string();
                 let path = line.split(' ').nth(1).unwrap_or("").to_string();
                 let authed = head.to_ascii_lowercase().contains("\r\nauthorization:");
-                log.lock().unwrap().push(format!("{} {}{}", line.split(' ').next().unwrap_or(""), path, if authed { " AUTH" } else { "" }));
+                log.lock().unwrap().push(format!(
+                    "{} {}{}",
+                    line.split(' ').next().unwrap_or(""),
+                    path,
+                    if authed { " AUTH" } else { "" }
+                ));
                 let json = |v: serde_json::Value| (200, "application/json", v.to_string().into_bytes());
                 let (status, ctype, body): (u16, &str, Vec<u8>) = if path.ends_with("/git-upload-pack") && authed && codeload == Codeload::BadToken {
                     (401, "text/plain", Vec::new())
@@ -1733,7 +1740,9 @@ mod tests {
         let e = with_token(|| format!("{:#}", list_refs(&authed_client(&f), &repo(None), &["refs/tags/v1.2.3".into()]).unwrap_err()));
         assert!(e.contains("rejected GITHUB_TOKEN") && e.contains("401"), "{e}");
         // Anonymous requests never send the header, so the same server answers normally.
-        assert!(list_refs(&client(&f, MAX_ARCHIVE), &repo(None), &["refs/tags/v1.2.3".into()]).unwrap().is_some());
+        assert!(list_refs(&client(&f, MAX_ARCHIVE), &repo(None), &["refs/tags/v1.2.3".into()])
+            .unwrap()
+            .is_some());
     }
 
     #[test]

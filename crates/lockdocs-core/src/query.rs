@@ -304,7 +304,11 @@ impl Engine {
                 Some(format!(
                     "offline fallback: upstream cache format {} has not been exact-tag revalidated{}{}",
                     c.1.format,
-                    if c.1.format < 4 { "; its old commit candidate may have been a branch" } else { "" },
+                    if c.1.format < 4 {
+                        "; its old commit candidate may have been a branch"
+                    } else {
+                        ""
+                    },
                     c.1.note.as_ref().map(|n| format!("; {n}")).unwrap_or_default()
                 ))
             } else {

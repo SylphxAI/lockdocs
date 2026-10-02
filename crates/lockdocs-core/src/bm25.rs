@@ -140,7 +140,11 @@ pub fn tf(parts: &[(&str, u16)]) -> (Vec<(String, u16)>, u32) {
     let mut len = 0u32;
     for (text, w) in parts {
         // Cap very long bodies; the head carries the signal.
-        let text = if text.len() > 16 * 1024 { &text[..floor_char(text, 16 * 1024)] } else { text };
+        let text = if text.len() > 16 * 1024 {
+            &text[..mcp_kit::search::floor_char(text, 16 * 1024)]
+        } else {
+            text
+        };
         for t in terms(text) {
             let e = m.entry(t).or_insert(0);
             *e = e.saturating_add(*w);
@@ -150,13 +154,6 @@ pub fn tf(parts: &[(&str, u16)]) -> (Vec<(String, u16)>, u32) {
     let mut v: Vec<(String, u16)> = m.into_iter().collect();
     v.sort();
     (v, len.max(1))
-}
-
-fn floor_char(s: &str, mut i: usize) -> usize {
-    while i > 0 && !s.is_char_boundary(i) {
-        i -= 1;
-    }
-    i
 }
 
 #[derive(Default)]

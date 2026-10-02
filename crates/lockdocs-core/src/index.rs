@@ -238,7 +238,7 @@ pub fn build(dep: &Dep, src: &Source, root: &Path, up: Option<&(PathBuf, Manifes
 /// Load from the disk cache, or build and store.
 pub fn load_or_build(dep: &Dep, src: &Source, root: &Path, up: Option<&(PathBuf, Manifest)>) -> PackageIndex {
     let types = types_pkg(dep, root);
-    let embed_id = if embed::get().is_some() { embed::MODEL_ID } else { "" };
+    let embed_id = if embed::available() { embed::MODEL_ID } else { "" };
     let path = cache_path(dep, src, types.as_deref(), up, embed_id);
     if let Ok(bytes) = std::fs::read(&path) {
         if let Ok(idx) = postcard::from_bytes::<PackageIndex>(&bytes) {

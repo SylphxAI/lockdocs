@@ -18,11 +18,22 @@ spec.loader.exec_module(runner)
 
 class BenchmarkTests(unittest.TestCase):
     def test_floors_apply_only_to_full_suite(self):
-        runner.check_floors({"fetched": {"passed": 96}, "hybrid": {"passed": 60}}, 105)
+        runner.check_floors({"fetched": {"passed": 96}, "hybrid": {"passed": 62}}, 105)
         runner.check_floors({"fetched": {"passed": 0}}, 1)
-        for variant, score in [("fetched", 95), ("hybrid", 59)]:
+        for variant, score in [("fetched", 95), ("hybrid", 61)]:
             with self.assertRaises(RuntimeError):
                 runner.check_floors({variant: {"passed": score}}, 105)
+
+    def test_hybrid_never_scores_below_keyword(self):
+        ok = {"keyword": {"passed": 62}, "hybrid": {"passed": 62}, "fetched-keyword": {"passed": 96}, "fetched": {"passed": 97}}
+        runner.check_floors(ok, 105)
+        runner.check_floors({"keyword": {"passed": 70}, "hybrid": {"passed": 69}}, 1)  # partial runs are not gated
+        for bad in [
+            {"keyword": {"passed": 63}, "hybrid": {"passed": 62}},
+            {"fetched-keyword": {"passed": 98}, "fetched": {"passed": 97}},
+        ]:
+            with self.assertRaises(RuntimeError):
+                runner.check_floors(bad, 105)
 
     def test_fetch_formatter_preserves_flat_and_nested_file_counts(self):
         for package in [

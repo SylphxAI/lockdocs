@@ -289,10 +289,10 @@ fn site_docs(agent: &Client, dep: &Dep, pkg_repo: Option<&Repo>, out: &Path) -> 
                 }
             }
         }
-        Err(_) => {
+        Err(e) => {
             // Over the cap or codeload failed: read this docs site file by file.
             let _ = std::fs::remove_dir_all(&dst);
-            let Some(items) = tree(agent, &repo, &reference, true)? else {
+            let Some(items) = tree(agent, &repo, &reference, true).with_context(|| format!("codeload path failed ({e:#}); per-file fallback failed"))? else {
                 return Ok(None);
             };
             let wanted: Vec<(String, u64)> = items
@@ -300,7 +300,7 @@ fn site_docs(agent: &Client, dep: &Dep, pkg_repo: Option<&Repo>, out: &Path) -> 
                 .filter(|i| i.kind == "blob" && i.size <= MAX_FILE)
                 .filter_map(|i| keep(&i.path).map(|_| (i.path.clone(), i.size)))
                 .collect();
-            let ok = download(agent, &repo, &reference, &wanted, &dst)?;
+            let ok = download(agent, &repo, &reference, &wanted, &dst).with_context(|| format!("codeload path failed ({e:#}); per-file fallback failed"))?;
             files = ok.len();
             bytes = ok.iter().sum();
             pages = wanted
@@ -458,8 +458,13 @@ pub fn needs_refresh(m: &Manifest, explicit: bool) -> bool {
     }
 }
 
+/// Oldest cache format whose commit was resolved from an exact release tag.
+/// Newer formats only differ in how the files were downloaded, so automatic
+/// and offline queries keep trusting them; `stale` still lets a fetch refresh.
+const MIN_TRUSTED_FORMAT: u32 = 4;
+
 fn compatible(m: &Manifest) -> bool {
-    m.format >= FORMAT && (m.commit.is_some() || m.site.is_some() || m.files == 0)
+    m.format >= MIN_TRUSTED_FORMAT && (m.commit.is_some() || m.site.is_some() || m.files == 0)
 }
 
 /// A previous fetch (with or without files). Never touches the network.
@@ -535,7 +540,7 @@ fn agent(automatic: bool) -> Client {
         authenticated: !automatic,
         deadline: automatic.then(|| std::time::Instant::now() + std::time::Duration::from_secs(45)),
         hosts: Hosts::github(),
-        max_archive: MAX_ARCHIVE,
+        max_archive: if automatic { MAX_ARCHIVE_AUTOMATIC } else { MAX_ARCHIVE },
     }
 }
 
@@ -676,11 +681,22 @@ fn list_refs(agent: &Client, repo: &Repo, prefixes: &[String]) -> Result<Option<
         .header("Content-Type", "application/x-git-upload-pack-request")
         .header("Accept", "application/x-git-upload-pack-result")
         .header("Git-Protocol", "version=2");
-    if let Some(t) = agent.authenticated.then(token).flatten() {
-        req = req.header("Authorization", &basic(&t));
-    }
+    let sent_token = match agent.authenticated.then(token).flatten() {
+        Some(t) => {
+            req = req.header("Authorization", &basic(&t));
+            true
+        }
+        None => false,
+    };
     let mut res = req.send(&ls_refs_request(prefixes)[..])?;
     let status = res.status().as_u16();
+    if status == 401 && sent_token {
+        bail!(
+            "GitHub rejected GITHUB_TOKEN/GH_TOKEN for {}/{} (HTTP 401); refresh or unset it",
+            repo.owner,
+            repo.name
+        );
+    }
     if status == 404 || status == 401 {
         return Ok(None);
     }
@@ -704,6 +720,9 @@ pub fn downloaded_bytes() -> u64 {
 /// bigger one is not downloaded whole: the repository falls back to per-file
 /// requests (see the measurements in the PR for the choice).
 const MAX_ARCHIVE: u64 = 150 << 20;
+
+/// The cap for the automatic (anonymous, 45 s budget) mode.
+const MAX_ARCHIVE_AUTOMATIC: u64 = 64 << 20;
 
 /// Counts compressed bytes and stops the stream (with an error) past `cap`.
 struct Capped<R> {
@@ -748,16 +767,34 @@ impl Archive {
 /// Stream `https://codeload.github.com/<owner>/<repo>/tar.gz/<ref>` (a tag, a
 /// branch or a commit). Ok(None) on 404. Not governed by the REST API quota.
 fn codeload(agent: &Client, repo: &Repo, reference: &str) -> Result<Option<Archive>> {
+    let sent_token = agent.authenticated && token().is_some();
+    match codeload_once(agent, repo, reference, sent_token)? {
+        // A private repository the token cannot see, or a token codeload rejects:
+        // public repositories still answer an anonymous request.
+        None if sent_token => codeload_once(agent, repo, reference, false),
+        other => Ok(other),
+    }
+}
+
+fn codeload_once(agent: &Client, repo: &Repo, reference: &str, with_token: bool) -> Result<Option<Archive>> {
     agent.check_deadline()?;
     let url = format!("{}/{}/{}/tar.gz/{}", agent.hosts.codeload, repo.owner, repo.name, enc_path(reference));
-    let remaining = agent.deadline.map(|d| d.saturating_duration_since(std::time::Instant::now()));
-    let mut req = agent
-        .get(&url)
-        .config()
-        .timeout_global(Some(remaining.unwrap_or(std::time::Duration::from_secs(600))))
-        .build();
-    if let Some(t) = agent.authenticated.then(token).flatten() {
-        req = req.header("Authorization", &format!("Bearer {t}"));
+    let timeout = match agent.deadline {
+        Some(d) => {
+            let remaining = d.saturating_duration_since(std::time::Instant::now());
+            // Leave time for the per-file fallback when the stream stalls.
+            if remaining < std::time::Duration::from_secs(5) {
+                bail!("too little of the automatic time budget left for an archive download");
+            }
+            remaining.saturating_sub(std::time::Duration::from_secs(15)).max(std::time::Duration::from_secs(1))
+        }
+        None => std::time::Duration::from_secs(600),
+    };
+    let mut req = agent.get(&url).config().timeout_global(Some(timeout)).build();
+    if with_token {
+        if let Some(t) = token() {
+            req = req.header("Authorization", &format!("Bearer {t}"));
+        }
     }
     let res = req.call()?;
     match res.status().as_u16() {
@@ -770,11 +807,34 @@ fn codeload(agent: &Client, repo: &Repo, reference: &str) -> Result<Option<Archi
     Ok(Some(Archive::new(res.into_body().into_reader(), agent.max_archive)))
 }
 
+/// Most uncompressed bytes read from one archive (a gzip bomb stops here).
+const MAX_INFLATED: u64 = 2 << 30;
+
+/// Counts uncompressed bytes and stops the stream past `MAX_INFLATED`.
+struct Inflated<R> {
+    inner: R,
+    seen: u64,
+}
+impl<R: Read> Read for Inflated<R> {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        let n = self.inner.read(buf)?;
+        self.seen += n as u64;
+        if self.seen > MAX_INFLATED {
+            return Err(std::io::Error::other("archive expands past 2 GiB"));
+        }
+        Ok(n)
+    }
+}
+
 /// Stream a `.tar.gz`: for every regular file (leading `<repo>-<ref>/` folder
 /// stripped) `keep(path, size)` decides whether to read it. Files over
 /// `MAX_FILE` are never read. Kept files stop accumulating past `cap` bytes.
 fn read_tar(body: impl Read, cap: u64, mut keep: impl FnMut(&str, u64) -> bool) -> Result<Vec<(String, Vec<u8>)>> {
-    let mut archive = tar::Archive::new(flate2::read::GzDecoder::new(body));
+    let inflated = Inflated {
+        inner: flate2::read::GzDecoder::new(body),
+        seen: 0,
+    };
+    let mut archive = tar::Archive::new(inflated);
     let mut out = Vec::new();
     let mut total = 0u64;
     for entry in archive.entries().context("not a gzip tar archive")? {
@@ -784,6 +844,9 @@ fn read_tar(body: impl Read, cap: u64, mut keep: impl FnMut(&str, u64) -> bool) 
         }
         let size = entry.header().size().unwrap_or(0);
         let raw = entry.path().context("archive path")?.to_string_lossy().replace('\\', "/");
+        if raw.starts_with('/') {
+            continue;
+        }
         let Some((_, path)) = raw.split_once('/') else { continue };
         if path.is_empty() || path.split('/').any(|c| c.is_empty() || c == "." || c == "..") {
             continue;
@@ -796,6 +859,9 @@ fn read_tar(body: impl Read, cap: u64, mut keep: impl FnMut(&str, u64) -> bool) 
         entry.take(MAX_FILE + 1).read_to_end(&mut buf)?;
         total += buf.len() as u64;
         out.push((path, buf));
+        if out.len() >= MAX_FILES * 4 {
+            break;
+        }
     }
     Ok(out)
 }
@@ -1465,6 +1531,12 @@ mod tests {
     enum Codeload {
         Ok,
         Fail,
+        /// 404 when a token is sent, the archive when anonymous.
+        MissingWithAuth,
+        /// The git endpoint answers 401 when a token is sent.
+        BadToken,
+        /// Answers after a pause longer than a short deadline.
+        Slow,
     }
 
     const SHA: &str = "1111111111111111111111111111111111111111";
@@ -1492,9 +1564,12 @@ mod tests {
                 let head = String::from_utf8_lossy(&buf).to_string();
                 let line = head.lines().next().unwrap_or("").to_string();
                 let path = line.split(' ').nth(1).unwrap_or("").to_string();
-                log.lock().unwrap().push(format!("{} {}", line.split(' ').next().unwrap_or(""), path));
+                let authed = head.to_ascii_lowercase().contains("\r\nauthorization:");
+                log.lock().unwrap().push(format!("{} {}{}", line.split(' ').next().unwrap_or(""), path, if authed { " AUTH" } else { "" }));
                 let json = |v: serde_json::Value| (200, "application/json", v.to_string().into_bytes());
-                let (status, ctype, body): (u16, &str, Vec<u8>) = if path.ends_with("/git-upload-pack") {
+                let (status, ctype, body): (u16, &str, Vec<u8>) = if path.ends_with("/git-upload-pack") && authed && codeload == Codeload::BadToken {
+                    (401, "text/plain", Vec::new())
+                } else if path.ends_with("/git-upload-pack") {
                     // Drain the request body (pkt-lines end with 0000).
                     let mut body = buf.split(|_| false).next().unwrap().to_vec();
                     while !body.ends_with(b"0000") {
@@ -1515,6 +1590,12 @@ mod tests {
                     match codeload {
                         Codeload::Ok => (200, "application/gzip", archive.clone()),
                         Codeload::Fail => (500, "text/plain", b"boom".to_vec()),
+                        Codeload::MissingWithAuth if authed => (404, "text/plain", Vec::new()),
+                        Codeload::MissingWithAuth | Codeload::BadToken => (200, "application/gzip", archive.clone()),
+                        Codeload::Slow => {
+                            std::thread::sleep(std::time::Duration::from_secs(8));
+                            (200, "application/gzip", archive.clone())
+                        }
                     }
                 } else if path.starts_with("/repos/") {
                     if api_blocked {
@@ -1559,6 +1640,27 @@ mod tests {
             },
             max_archive,
         }
+    }
+
+    fn authed_client(f: &Fake) -> Client {
+        let mut c = client(f, MAX_ARCHIVE);
+        c.authenticated = true;
+        c
+    }
+
+    static ENV: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+    fn with_token<T>(f: impl FnOnce() -> T) -> T {
+        let _g = ENV.lock().unwrap_or_else(|e| e.into_inner());
+        std::env::set_var("GITHUB_TOKEN", "test-token");
+        std::env::remove_var("GH_TOKEN");
+        let r = f();
+        std::env::remove_var("GITHUB_TOKEN");
+        r
+    }
+
+    fn authed_requests(f: &Fake) -> usize {
+        f.seen.lock().unwrap().iter().filter(|l| l.ends_with(" AUTH")).count()
     }
 
     fn run_build(f: &Fake, max_archive: u64) -> (Result<Manifest>, tempfile::TempDir) {
@@ -1623,6 +1725,65 @@ mod tests {
         );
         assert_eq!((m.tag, m.files), (None, 0));
         assert_eq!(requests(&f, "/o/r/tar.gz/") + requests(&f, "/repos/"), 0);
+    }
+
+    #[test]
+    fn rejected_token_is_an_error_but_anonymous_401_is_not() {
+        let f = fake(Codeload::BadToken, false, Some("v1.2.3"));
+        let e = with_token(|| format!("{:#}", list_refs(&authed_client(&f), &repo(None), &["refs/tags/v1.2.3".into()]).unwrap_err()));
+        assert!(e.contains("rejected GITHUB_TOKEN") && e.contains("401"), "{e}");
+        // Anonymous requests never send the header, so the same server answers normally.
+        assert!(list_refs(&client(&f, MAX_ARCHIVE), &repo(None), &["refs/tags/v1.2.3".into()]).unwrap().is_some());
+    }
+
+    #[test]
+    fn codeload_404_with_a_token_retries_anonymously() {
+        let f = fake(Codeload::MissingWithAuth, false, Some("v1.2.3"));
+        let got = with_token(|| codeload(&authed_client(&f), &repo(None), SHA).unwrap());
+        assert!(got.is_some());
+        let seen = f.seen.lock().unwrap().clone();
+        let tar: Vec<_> = seen.iter().filter(|l| l.contains("/tar.gz/")).collect();
+        assert_eq!(tar.len(), 2);
+        assert!(tar[0].ends_with(" AUTH") && !tar[1].ends_with(" AUTH"), "{tar:?}");
+    }
+
+    #[test]
+    fn slow_codeload_under_a_short_deadline_falls_back_to_rest() {
+        let f = fake(Codeload::Slow, false, Some("v1.2.3"));
+        let mut c = client(&f, MAX_ARCHIVE);
+        // 17 s left: the stream gets 2 s, the rest of the budget serves the fallback.
+        c.deadline = Some(std::time::Instant::now() + std::time::Duration::from_secs(17));
+        let out = tempfile::tempdir().unwrap();
+        let m = build(&c, &dep("pkg", "1.2.3"), &repo(None), true, out.path()).unwrap();
+        assert_eq!(m.via.as_deref(), Some("rest"));
+    }
+
+    #[test]
+    fn automatic_mode_sends_no_authorization_header() {
+        let f = fake(Codeload::Ok, false, Some("v1.2.3"));
+        let a = with_token(|| {
+            let a = agent(true);
+            assert_eq!(a.max_archive, MAX_ARCHIVE_AUTOMATIC);
+            assert_eq!(agent(false).max_archive, MAX_ARCHIVE);
+            let mut c = client(&f, MAX_ARCHIVE);
+            c.authenticated = a.authenticated;
+            let out = tempfile::tempdir().unwrap();
+            build(&c, &dep("pkg", "1.2.3"), &repo(None), true, out.path()).unwrap();
+            a
+        });
+        assert!(!a.authenticated);
+        assert!(requests(&f, "/o/r/tar.gz/") == 1);
+        assert_eq!(authed_requests(&f), 0);
+    }
+
+    #[test]
+    fn explicit_mode_sends_the_token_to_git_and_codeload() {
+        let f = fake(Codeload::Ok, false, Some("v1.2.3"));
+        with_token(|| {
+            let out = tempfile::tempdir().unwrap();
+            build(&authed_client(&f), &dep("pkg", "1.2.3"), &repo(None), false, out.path()).unwrap();
+        });
+        assert!(authed_requests(&f) >= 2);
     }
 
     #[test]
@@ -1699,6 +1860,35 @@ mod tests {
     }
 
     #[test]
+    fn hardlinks_and_absolute_paths_are_skipped() {
+        let mut b = tar::Builder::new(Vec::new());
+        let mut h = tar::Header::new_gnu();
+        h.set_entry_type(tar::EntryType::Link);
+        h.set_size(0);
+        b.append_link(&mut h, "r-abc/docs/hard.md", "r-abc/README.md").unwrap();
+        let mut h = tar::Header::new_gnu();
+        h.set_size(1);
+        h.set_mode(0o644);
+        h.set_entry_type(tar::EntryType::Regular);
+        let mut raw = [0u8; 100];
+        raw[..11].copy_from_slice(b"/abs/doc.md");
+        h.as_old_mut().name = raw;
+        h.set_cksum();
+        b.append(&h, &b"x"[..]).unwrap();
+        let mut h = tar::Header::new_gnu();
+        h.set_size(1);
+        h.set_mode(0o644);
+        h.set_entry_type(tar::EntryType::Regular);
+        b.append_data(&mut h, "r-abc/docs/ok.md", &b"y"[..]).unwrap();
+        let tar = b.into_inner().unwrap();
+        let mut gz = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
+        std::io::Write::write_all(&mut gz, &tar).unwrap();
+        let tgz = gz.finish().unwrap();
+        let got = read_tar(&tgz[..], 1000, |_, _| true).unwrap();
+        assert_eq!(names(&got), vec!["docs/ok.md"]);
+    }
+
+    #[test]
     fn tar_extraction_stops_at_the_size_cap() {
         let tgz = tarball(&[("docs/a.md", &[b'a'; 600]), ("docs/b.md", &[b'b'; 600])]);
         let got = read_tar(&tgz[..], 1000, |_, _| true).unwrap();
@@ -1765,6 +1955,17 @@ mod tests {
         assert!(needs_refresh(&legacy, true));
         let rejected = enrich_cached(Some((PathBuf::new(), legacy)), false, || Err(anyhow::anyhow!("exact tag revalidation failed")));
         assert!(rejected.is_err());
+    }
+
+    #[test]
+    fn format_4_cache_is_trusted_automatically_and_refreshed_on_fetch() {
+        let mut v4 = manifest();
+        v4.format = 4;
+        v4.docs_sites_checked = true;
+        assert!(!needs_refresh(&v4, false));
+        assert!(needs_refresh(&v4, true));
+        let kept = enrich_cached(Some((PathBuf::new(), v4)), false, || Err(anyhow::anyhow!("offline"))).unwrap();
+        assert_eq!(kept.files, 1);
     }
 
     #[test]

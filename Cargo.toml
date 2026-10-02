@@ -6,6 +6,12 @@ resolver = "2"
 version = "0.5.0"
 edition = "2021"
 license = "MIT"
+authors = ["SylphxAI"]
+rust-version = "1.90"
+readme = "README.md"
+documentation = "https://sylphxai.github.io/lockdocs/"
+keywords = ["mcp", "documentation", "lockfile", "offline", "ai-agents"]
+categories = ["development-tools", "command-line-utilities"]
 repository = "https://github.com/SylphxAI/lockdocs"
 homepage = "https://sylphxai.github.io/lockdocs/"
 

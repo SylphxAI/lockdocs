@@ -6,6 +6,13 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 homepage.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme.workspace = true
+documentation.workspace = true
+keywords.workspace = true
+categories.workspace = true
+include = ["src/**", "LICENSE"]
 
 [[bin]]
 name = "lockdocs"
@@ -13,6 +20,28 @@ path = "src/main.rs"
 
 [dependencies]
 anyhow = "1"
-lockdocs-core = { path = "../lockdocs-core" }
+lockdocs-core = { path = "../lockdocs-core", version = "0.5.0" }
 serde_json = "1"
 sylphx-mcp-kit = "0.3"
+
+# Release assets are published by the shared mcp-kit release workflow as
+# lockdocs-<platform>.tar.gz (.zip on Windows) with the binary at the archive root.
+[package.metadata.binstall]
+bin-dir = "{ bin }{ binary-ext }"
+pkg-fmt = "tgz"
+
+[package.metadata.binstall.overrides.x86_64-unknown-linux-gnu]
+pkg-url = "{ repo }/releases/download/v{ version }/lockdocs-linux-x64-gnu.tar.gz"
+
+[package.metadata.binstall.overrides.aarch64-unknown-linux-gnu]
+pkg-url = "{ repo }/releases/download/v{ version }/lockdocs-linux-arm64-gnu.tar.gz"
+
+[package.metadata.binstall.overrides.aarch64-apple-darwin]
+pkg-url = "{ repo }/releases/download/v{ version }/lockdocs-darwin-arm64.tar.gz"
+
+[package.metadata.binstall.overrides.x86_64-apple-darwin]
+pkg-url = "{ repo }/releases/download/v{ version }/lockdocs-darwin-x64.tar.gz"
+
+[package.metadata.binstall.overrides.x86_64-pc-windows-msvc]
+pkg-url = "{ repo }/releases/download/v{ version }/lockdocs-win32-x64-msvc.zip"
+pkg-fmt = "zip"

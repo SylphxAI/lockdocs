@@ -18,3 +18,5 @@ is in [vision.md](vision.md).
 | LD-CLI | Command line with the same queries, plus `index`, `fetch` and `setup` | supported | crates/lockdocs/src/main.rs, crates/lockdocs/src/setup.rs | LD-SEARCH |
 | LD-NPM | npm launcher and native binaries for five platforms | supported | packages/lockdocs, packages/npm | LD-CLI |
 | LD-BENCH | Version-sensitive benchmark against Context7, run on GitHub-hosted runners | supported | bench/run.py, bench/questions.json, .github/workflows/bench.yml | LD-CLI |
+| LD-PRO-LICENCE | lockdocs Pro licence: offline token check, `licence status/activate`, the `pro_required` answer | supported | crates/lockdocs/src/pro.rs | |
+| LD-PRO-UPGRADE | Pro: upgrade report, an API diff from the pinned version to a target, limited to the symbols the project calls, with call sites | supported | crates/lockdocs-core/src/upgrade.rs | LD-REGISTRY-FETCH, LD-EXTRACT, LD-PRO-LICENCE |

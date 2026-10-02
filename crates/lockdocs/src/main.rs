@@ -1,4 +1,5 @@
 mod mcp;
+mod pro;
 mod setup;
 mod tools;
 
@@ -26,6 +27,10 @@ Commands:
                         version's git tag, missing packages, and the embedding model
   index [package]       Build the indexes ahead of time and show what they hold
   cache [clean]         Show or delete the cache (indexes and fetched packages)
+  upgrade <pkg> <ver>   Pro: API changes from the pinned version to <ver>, limited to what this
+                        project calls, with call sites (also: docs --pkg <pkg> --upgrade-to <ver>)
+  licence status|activate <token>
+                        Show or activate a lockdocs Pro licence (free to run)
   mcp                   Run the MCP server on stdio (default when stdin is not a terminal)
   version               Print the version
 
@@ -57,7 +62,7 @@ impl Args {
     fn parse(raw: Vec<String>) -> Args {
         let mut positional = Vec::new();
         let mut flags = HashMap::new();
-        let takes_value = ["root", "C", "pkg", "package", "tokens", "client"];
+        let takes_value = ["root", "C", "pkg", "package", "tokens", "client", "upgrade-to"];
         let mut it = raw.into_iter();
         while let Some(a) = it.next() {
             if a == "--" {
@@ -146,11 +151,42 @@ fn run() -> Result<()> {
         raw.insert(0, "mcp".into());
     }
     let cmd = raw.remove(0);
+    if cmd == "licence" || cmd == "license" {
+        std::process::exit(mcp_kit::licence::run_cli(&pro::POLICY, &raw));
+    }
     let args = Args::parse(raw);
+    // The Pro gate runs before any download or index work. Exit code 3: Pro required.
+    let upgrade_target = match cmd.as_str() {
+        "upgrade" => args.positional.get(1).map(String::as_str),
+        "docs" | "search" => args.flag("upgrade-to"),
+        _ => None,
+    };
+    if cmd == "upgrade" || upgrade_target.is_some() {
+        if let Err(required) = pro::require(&pro::POLICY, pro::UPGRADE_REPORT) {
+            eprintln!("{required}");
+            std::process::exit(3);
+        }
+    }
     // Query commands fetch the embedding model once (BM25-only if that fails).
     if !matches!(
         cmd.as_str(),
-        "mcp" | "serve" | "help" | "--help" | "-h" | "version" | "--version" | "-V" | "setup" | "cache" | "resolve" | "versions" | "deps" | "fetch" | "pull"
+        "mcp"
+            | "serve"
+            | "help"
+            | "--help"
+            | "-h"
+            | "version"
+            | "--version"
+            | "-V"
+            | "setup"
+            | "cache"
+            | "resolve"
+            | "versions"
+            | "deps"
+            | "fetch"
+            | "pull"
+            | "licence"
+            | "license"
     ) {
         ensure_model(args.on("offline"));
     }
@@ -178,6 +214,23 @@ fn run() -> Result<()> {
         }
         "setup" => setup::run(&args.flags),
         "resolve" | "versions" | "deps" => print(engine().resolve(args.positional.first().map(|s| s.as_str())), json),
+        "upgrade" => {
+            let (Some(pkg), Some(target)) = (args.positional.first(), upgrade_target) else {
+                bail!("usage: lockdocs upgrade <package> <target version>");
+            };
+            print(engine().upgrade_report(pkg, target, args.tokens()).map_err(anyhow::Error::msg)?, json)
+        }
+        "docs" | "search" if upgrade_target.is_some() => {
+            let Some(pkg) = args.pkg() else {
+                bail!("usage: lockdocs docs --pkg <package> --upgrade-to <version>");
+            };
+            print(
+                engine()
+                    .upgrade_report(pkg, upgrade_target.unwrap_or_default(), args.tokens())
+                    .map_err(anyhow::Error::msg)?,
+                json,
+            )
+        }
         "docs" | "search" => {
             let q = args.positional.join(" ");
             if q.trim().is_empty() && args.pkg().is_none() {

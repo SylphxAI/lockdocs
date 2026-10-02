@@ -21,19 +21,31 @@ newest one. That is the one job.
 
 ## Boundaries
 
-- Local first: it runs on the developer's machine, needs no account or API
-  key, and works offline after the one-time downloads.
+- Local first: it runs on the developer's machine, needs no account, and works
+  offline after the one-time downloads. The free product needs no key of any
+  kind; lockdocs Pro is unlocked by a licence token that is verified offline,
+  never by an account or a call to us.
 - First-use release-tag docs are anonymous and automatic, with an explicit
   opt-out and an offline mode. Registry downloads and major-version docs sites
-  remain opt-in. Network use is limited to public sources: package registries,
-  GitHub (docs folders at a tag, and official docs-site repositories), and the
-  embedding model on Hugging Face.
-- Three MCP tools only: `resolve`, `docs`, `api`. New abilities go into those
-  tools, not into more tools.
+  remain opt-in. Without Pro, network use is limited to public sources: package
+  registries, GitHub (docs folders at a tag, and official docs-site
+  repositories), and the embedding model on Hugging Face. With Pro, lockdocs
+  also reads the private registries and git hosts the user has configured, with
+  the user's own credentials, sent only to the host they belong to.
+- Three MCP tools only: `resolve`, `docs`, `api`. New abilities, Pro included,
+  go into those tools, not into more tools.
 - Four ecosystems: npm, PyPI, Cargo and Go. A new ecosystem needs a lockfile
   parser, a way to find installed files, and a symbol extractor.
 - No hosted index. We do not crawl or store other people's documentation on a
-  server.
+  server. Team index packs are built and stored by the customer, in the
+  customer's own registry or storage.
+
+## Free and Pro
+
+Everything lockdocs does for free stays free, under MIT. lockdocs Pro sells
+only new value for teams: private sources that are not installed, signed team
+index packs, the upgrade report, and support. A capability never moves from
+free to Pro.
 
 ## What good looks like
 

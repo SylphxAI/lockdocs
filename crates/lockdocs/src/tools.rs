@@ -27,6 +27,7 @@ pub fn definitions() -> Value {
             "inputSchema": {"type": "object", "properties": {
                 "query": {"type": "string", "description": "What you need, in words or identifiers, e.g. \"strict object unknown keys\" or \"cookies async\"."},
                 "package": {"type": "string", "description": "Package name, optionally ecosystem- or version-qualified: zod, npm:zod, pydantic, tokio, github.com/gin-gonic/gin. Comma-separate several."},
+                "upgrade_to": {"type": "string", "description": "lockdocs Pro: instead of searching, report the API changes between the pinned version of `package` and this target version (e.g. \"15.0.0\"), limited to the symbols this project calls, with call sites and migration-guide sections. `query` is ignored then. Needs `package`; the target's files must be cached, installed, or downloadable (fetching enabled)."},
                 "tokens": tokens,
                 "root": root,
                 "offline": offline
@@ -61,6 +62,10 @@ pub fn call(ws: &Workspace, opts: &Options, name: &str, args: &Value, root: &Pat
     match name {
         "resolve" => Ok(engine.resolve(s("filter"))),
         "docs" => {
+            if let Some(target) = s("upgrade_to") {
+                let pkg = s("package").or_else(|| s("library")).ok_or("`package` is required with `upgrade_to`")?;
+                return engine.upgrade_report(pkg, target, tokens);
+            }
             let q = s("query").or_else(|| s("question")).or_else(|| s("topic")).unwrap_or("");
             engine.docs(s("package").or_else(|| s("library")), q, tokens)
         }
@@ -70,4 +75,9 @@ pub fn call(ws: &Workspace, opts: &Options, name: &str, args: &Value, root: &Pat
         }
         other => Err(format!("unknown tool `{other}`; tools are resolve, docs, api")),
     }
+}
+
+/// True when this call asks for the Pro upgrade report instead of a search.
+pub fn is_upgrade(name: &str, args: &Value) -> bool {
+    name == "docs" && args.get("upgrade_to").and_then(Value::as_str).is_some_and(|v| !v.trim().is_empty())
 }

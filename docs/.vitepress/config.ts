@@ -46,6 +46,10 @@ export default defineConfig({
     )
   },
   themeConfig: {
+    // The one place the Pro price and checkout link live (docs/pro.md reads them).
+    // `price` is replaced by the Money catalog value when the checkout goes live;
+    // the buy button shows only once `checkoutUrl` is set.
+    pro: { price: 'US$120', checkoutUrl: '' },
     logo: { src: '/logo.svg', alt: '' },
     lastUpdated: { formatOptions: { dateStyle: 'medium' } },
     nav: [

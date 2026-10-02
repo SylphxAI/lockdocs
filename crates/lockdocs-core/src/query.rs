@@ -684,16 +684,29 @@ impl Engine {
             Resolved::Ready(i, _, _) => i,
             Resolved::Missing(_, e) => return Err(e),
         };
-        let target_dep = Dep { eco: dep.eco, name: dep.name.clone(), version: target.to_string(), direct: false, from: "requested".into() };
+        let target_dep = Dep {
+            eco: dep.eco,
+            name: dep.name.clone(),
+            version: target.to_string(),
+            direct: false,
+            from: "requested".into(),
+        };
         let new = match self.index(&target_dep) {
             Resolved::Ready(i, _, _) => i,
             Resolved::Missing(_, e) => {
-                return Err(format!("{e}\nThe target version's files are needed to compare; add --fetch (or LOCKDOCS_FETCH=1) to download exactly {}.", target_dep.id()))
+                return Err(format!(
+                    "{e}\nThe target version's files are needed to compare; add --fetch (or LOCKDOCS_FETCH=1) to download exactly {}.",
+                    target_dep.id()
+                ))
             }
         };
         let r = crate::upgrade::report(&self.project.root, &old, &new);
         let max = tokens.clamp(200, 20000) * 3;
-        let text = if r.text.len() > max { format!("{}\n... truncated to the token budget; raise `tokens`.\n", truncate(&r.text, max)) } else { r.text };
+        let text = if r.text.len() > max {
+            format!("{}\n... truncated to the token budget; raise `tokens`.\n", truncate(&r.text, max))
+        } else {
+            r.text
+        };
         Ok(Answer { text, json: r.json })
     }
 

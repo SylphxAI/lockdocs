@@ -1160,7 +1160,7 @@ fn hybrid_rank(
     let mut scored: Vec<(f32, usize, usize)> = if qv.is_some() && with_docs {
         let mut ids: HashSet<usize> = lex.iter().map(|l| l.0).collect();
         ids.extend(dense_cos.keys().copied());
-        let lexm: HashMap<usize, f32> = fused.iter().map(|(&i, &(b, h))| (i, (1.0 - HEAD_WEIGHT) * b + HEAD_WEIGHT * h)).collect();
+        let lexm: HashMap<usize, f32> = fused.iter().map(|(&i, &(b, h))| (i, (1.0 - head_w) * b + head_w * h)).collect();
         ids.into_iter()
             .map(|i| {
                 let (pi, ei) = refs[i];

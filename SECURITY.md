@@ -11,11 +11,18 @@ Do not open public issues for sensitive reports.
 - lockdocs reads lockfiles and installed package files. Its network use is:
   the embedding model, downloaded once from huggingface.co at a pinned
   revision and checked against a pinned SHA-256 (disable with
-  `LOCKDOCS_EMBED=0` or `--offline`); and, only with `lockdocs fetch`,
-  `--fetch` or `LOCKDOCS_FETCH=1`, package archives from the registries below
-  and docs files from api.github.com / raw.githubusercontent.com (a
-  `GITHUB_TOKEN` in the environment is sent to api.github.com only). No
-  project data is ever sent: requests name public packages and versions.
+  `LOCKDOCS_EMBED=0` or `--offline`); anonymous GitHub requests on the first
+  query that needs them (since 0.4.0; disable with `--no-fetch` or
+  `LOCKDOCS_FETCH=0`): a git tag lookup on github.com and one tarball per
+  repository from codeload.github.com for public docs at the resolved release
+  commit, falling back to api.github.com / raw.githubusercontent.com file by
+  file when the archive is too large or the download fails; and, only with
+  `lockdocs fetch`, `--fetch` or `LOCKDOCS_FETCH=1`, package archives from the
+  registries below and docs-site files from GitHub (a `GITHUB_TOKEN` /
+  `GH_TOKEN` in the environment is sent to api.github.com only, and only for
+  these explicit fetches; it is never sent to github.com, codeload.github.com
+  or raw.githubusercontent.com, and never on automatic requests). No project data is ever
+  sent: requests name public packages, versions and file paths.
 - With fetching enabled it downloads only the exact package versions requested,
   from registry.npmjs.org, pypi.org / files.pythonhosted.org, static.crates.io
   and proxy.golang.org, over HTTPS. Archives are unpacked with path checks (no

@@ -302,8 +302,13 @@ impl Engine {
         if let Some(c) = cached.as_ref().filter(|(_, m)| !enabled || !upstream::needs_refresh(m, self.opts.fetch)) {
             let note = if upstream::needs_refresh(&c.1, false) {
                 Some(format!(
-                    "offline fallback: legacy upstream cache format {} has not been exact-tag revalidated; its old commit candidate may have been a branch{}",
+                    "offline fallback: upstream cache format {} has not been exact-tag revalidated{}{}",
                     c.1.format,
+                    if c.1.format < 4 {
+                        "; its old commit candidate may have been a branch"
+                    } else {
+                        ""
+                    },
                     c.1.note.as_ref().map(|n| format!("; {n}")).unwrap_or_default()
                 ))
             } else {

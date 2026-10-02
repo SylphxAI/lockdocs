@@ -29,7 +29,7 @@ pub struct Repo {
 
 /// Bump when what `fetch` downloads changes, so `lockdocs fetch` refreshes
 /// older copies (a stale copy is still used until then).
-pub const FORMAT: u32 = 4;
+pub const FORMAT: u32 = 5;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Manifest {
@@ -54,6 +54,10 @@ pub struct Manifest {
     /// Docs pages written as JS/TSX components, relative to the cache folder.
     #[serde(default)]
     pub pages: Vec<String>,
+    /// How the package repository was read: `codeload` (one tarball) or `rest`
+    /// (the per-file fallback, after a codeload failure or an over-size archive).
+    #[serde(default)]
+    pub via: Option<String>,
 }
 
 /// Packages whose docs live in a separate website repository. Paths with
@@ -133,7 +137,7 @@ const DOCS_SITES: &[DocsSite] = &[
 fn latest_major(agent: &Client, dep: &Dep) -> Result<Option<u64>> {
     let name = dep.name.strip_prefix("@types/").unwrap_or(&dep.name);
     let (url, pointer) = match dep.eco {
-        Eco::Npm => (format!("https://registry.npmjs.org/{}/latest", name.replace('/', "%2F")), "/version"),
+        Eco::Npm => (format!("{}/{}/latest", agent.hosts.npm, name.replace('/', "%2F")), "/version"),
         Eco::Cargo => (format!("https://crates.io/api/v1/crates/{name}"), "/crate/max_stable_version"),
         Eco::PyPI => (format!("https://pypi.org/pypi/{name}/json"), "/info/version"),
         Eco::Go => return Ok(None),
@@ -180,30 +184,34 @@ fn next_major_date(agent: &Client, dep: &Dep, repo: &Repo, major: u64) -> Result
         version: format!("{}.0.0", major + 1),
         ..dep.clone()
     };
-    for t in tag_candidates(&next) {
-        if let Some(sha) = release_commit(repo, &t, |path| api(agent, path))? {
-            let Some(v) = api(agent, &format!("/repos/{}/{}/commits/{sha}", repo.owner, repo.name))? else {
-                continue;
-            };
-            if let Some(d) = v.pointer("/commit/committer/date").and_then(|d| d.as_str()) {
-                return Ok(Some(d.to_string()));
-            }
-        }
-    }
-    Ok(None)
+    let candidates = tag_candidates(&next);
+    let Some(refs) = list_refs(agent, repo, &tag_prefixes(&candidates))? else {
+        return Ok(None);
+    };
+    let Some((_, sha)) = pick_release(&candidates, &refs) else {
+        return Ok(None);
+    };
+    // The one place that still needs a commit date, which only the REST API gives.
+    let Some(v) = api(agent, &format!("/repos/{}/{}/commits/{sha}", repo.owner, repo.name))? else {
+        return Ok(None);
+    };
+    Ok(v.pointer("/commit/committer/date").and_then(|d| d.as_str()).map(String::from))
 }
 
-/// Repository, git ref (branch or commit), label, docs files and page files of a docs site.
-struct SiteFiles {
-    repo: Repo,
-    reference: String,
+/// Files read from an archive: path and content.
+type Docs = Vec<(String, Vec<u8>)>;
+
+/// What a docs site contributed: label, files written, bytes, page paths.
+struct SiteDocs {
     label: String,
-    files: Vec<(String, u64)>,
-    pages: Vec<(String, u64)>,
+    files: usize,
+    bytes: u64,
+    pages: Vec<String>,
 }
 
-/// Which files of the docs site describe `dep`'s major, if any.
-fn site_files(agent: &Client, dep: &Dep, pkg_repo: Option<&Repo>) -> Result<Option<SiteFiles>> {
+/// Download the files of the docs site that describe `dep`'s major into
+/// `<out>/<site repo name>/`, if any.
+fn site_docs(agent: &Client, dep: &Dep, pkg_repo: Option<&Repo>, out: &Path) -> Result<Option<SiteDocs>> {
     let Some(site) = DOCS_SITES.iter().find(|s| s.eco == dep.eco && s.names.contains(&dep.name.as_str())) else {
         return Ok(None);
     };
@@ -220,18 +228,15 @@ fn site_files(agent: &Client, dep: &Dep, pkg_repo: Option<&Repo>) -> Result<Opti
     let mut reference = site.branch.to_string();
     let mut how = String::from("current docs; your major is the latest");
     let mut current = is_latest;
-    let mut items = None;
     if !is_latest && latest.is_some() && (!site.current.is_empty() || !site.pages.is_empty()) {
-        for b in [format!("v{major}"), format!("{major}.x")] {
-            if let Some(t) = tree(agent, &repo, &b, true)? {
-                reference = b.clone();
-                how = format!("branch {b} for major {major}");
-                items = Some(t);
-                current = true;
-                break;
-            }
-        }
-        if items.is_none() && site.before_next_major {
+        let branches = [format!("v{major}"), format!("{major}.x")];
+        let found = list_refs(agent, &repo, &branches.iter().map(|b| format!("refs/heads/{b}")).collect::<Vec<_>>())?;
+        let branch = found.and_then(|refs| branches.iter().find(|b| refs.iter().any(|r| r.name == format!("refs/heads/{b}"))).cloned());
+        if let Some(b) = branch {
+            how = format!("branch {b} for major {major}");
+            reference = b;
+            current = true;
+        } else if site.before_next_major {
             if let Some(date) = pkg_repo.map(|r| next_major_date(agent, dep, r, major)).transpose()?.flatten() {
                 let path = format!(
                     "/repos/{}/{}/commits?sha={}&until={}&per_page=1",
@@ -251,14 +256,6 @@ fn site_files(agent: &Client, dep: &Dep, pkg_repo: Option<&Repo>) -> Result<Opti
     if versioned.is_empty() && !current {
         return Ok(None);
     }
-    let items = match items {
-        Some(i) => i,
-        None => match tree(agent, &repo, &reference, true)? {
-            Some(i) => i,
-            None => return Ok(None),
-        },
-    };
-    let under = |p: &str, dirs: &[String]| dirs.iter().any(|d| p.starts_with(&format!("{d}/")));
     let docs_dirs: Vec<String> = if current {
         site.current.iter().map(|d| d.to_string()).collect()
     } else {
@@ -269,17 +266,51 @@ fn site_files(agent: &Client, dep: &Dep, pkg_repo: Option<&Repo>) -> Result<Opti
     } else {
         Vec::new()
     };
-    let (mut files, mut pages) = (Vec::new(), Vec::new());
-    for i in items.iter().filter(|i| i.kind == "blob" && i.size <= MAX_FILE) {
-        let p = i.path.as_str();
-        // Versioned API pages always come from the default branch.
-        let versioned_ok = reference == site.branch && under(p, &versioned);
-        if doc_file(p) && !p.ends_with(".txt") && !later_major_file(p, major) && (versioned_ok || under(p, &docs_dirs)) {
-            files.push((p.to_string(), i.size));
-        } else if page_file(p) && under(p, &page_dirs) {
-            pages.push((p.to_string(), i.size));
+    // Versioned API pages always come from the default branch.
+    let versioned_ok = reference == site.branch;
+    let keep = |p: &str| site_kind(p, major, &versioned, versioned_ok, &docs_dirs, &page_dirs);
+    let dst = out.join(&repo.name);
+    let streamed = (|| -> Result<Option<Docs>> {
+        let Some(body) = codeload(agent, &repo, &reference)? else {
+            return Ok(None);
+        };
+        Ok(Some(read_tar(body.body, MAX_BYTES * 2, |p, _| keep(p).is_some())?))
+    })();
+    let (mut files, mut bytes, mut pages) = (0usize, 0u64, Vec::new());
+    match streamed {
+        Ok(None) => return Ok(None),
+        Ok(Some(got)) => {
+            for (p, data) in got {
+                write_file(&dst, &p, &data)?;
+                files += 1;
+                bytes += data.len() as u64;
+                if keep(&p) == Some(true) {
+                    pages.push(format!("{}/{p}", repo.name));
+                }
+            }
+        }
+        Err(e) => {
+            // Over the cap or codeload failed: read this docs site file by file.
+            let _ = std::fs::remove_dir_all(&dst);
+            let Some(items) = tree(agent, &repo, &reference, true).with_context(|| format!("codeload path failed ({e:#}); per-file fallback failed"))? else {
+                return Ok(None);
+            };
+            let wanted: Vec<(String, u64)> = items
+                .iter()
+                .filter(|i| i.kind == "blob" && i.size <= MAX_FILE)
+                .filter_map(|i| keep(&i.path).map(|_| (i.path.clone(), i.size)))
+                .collect();
+            let ok = download(agent, &repo, &reference, &wanted, &dst).with_context(|| format!("codeload path failed ({e:#}); per-file fallback failed"))?;
+            files = ok.len();
+            bytes = ok.iter().sum();
+            pages = wanted
+                .iter()
+                .filter(|(p, _)| keep(p) == Some(true))
+                .map(|(p, _)| format!("{}/{p}", repo.name))
+                .collect();
         }
     }
+    pages.sort();
     let short: String = reference.chars().take(if reference.len() == 40 { 7 } else { 40 }).collect();
     let label = format!(
         "github.com/{}/{}@{short} ({})",
@@ -287,13 +318,20 @@ fn site_files(agent: &Client, dep: &Dep, pkg_repo: Option<&Repo>) -> Result<Opti
         repo.name,
         if current { how.as_str() } else { "versioned API pages" }
     );
-    Ok(Some(SiteFiles {
-        repo,
-        reference,
-        label,
-        files,
-        pages,
-    }))
+    Ok(Some(SiteDocs { label, files, bytes, pages }))
+}
+
+/// Which docs-site files to keep: `Some(false)` a docs page, `Some(true)` a
+/// page written as a JS/TSX component, `None` skip.
+fn site_kind(p: &str, major: u64, versioned: &[String], versioned_ok: bool, docs_dirs: &[String], page_dirs: &[String]) -> Option<bool> {
+    let under = |dirs: &[String]| dirs.iter().any(|d| p.starts_with(&format!("{d}/")));
+    if doc_file(p) && !p.ends_with(".txt") && !later_major_file(p, major) && ((versioned_ok && under(versioned)) || under(docs_dirs)) {
+        Some(false)
+    } else if page_file(p) && under(page_dirs) {
+        Some(true)
+    } else {
+        None
+    }
 }
 
 /// A page about a later major than the pinned one (`v4-beta.mdx` on the v3
@@ -312,53 +350,6 @@ fn page_file(p: &str) -> bool {
         && !name.starts_with("index.ts")
         && !p.contains("/@")
         && !p.contains("[")
-}
-
-fn download(agent: &Client, repo: &Repo, reference: &str, files: &[(String, u64)], out: &Path) -> Result<Vec<u64>> {
-    let pool = rayon::ThreadPoolBuilder::new().num_threads(16).build()?;
-    let results: Vec<Result<u64>> = pool.install(|| {
-        files
-            .par_iter()
-            .map(|(p, _)| {
-                let url = format!(
-                    "https://raw.githubusercontent.com/{}/{}/{}/{}",
-                    repo.owner,
-                    repo.name,
-                    enc(reference),
-                    enc_path(p)
-                );
-                agent.check_deadline()?;
-                let mut res = agent.get(&url).call()?;
-                if res.status().as_u16() != 200 {
-                    bail!("HTTP {} for {p}", res.status());
-                }
-                let mut buf = Vec::new();
-                res.body_mut().as_reader().take(MAX_FILE + 1).read_to_end(&mut buf)?;
-                if buf.len() as u64 > MAX_FILE {
-                    bail!("upstream file too large: {p}");
-                }
-                let Some(rel) = crate::fetch::safe_rel(Path::new(p), false) else {
-                    bail!("unsafe path {p}")
-                };
-                let dst = out.join(rel);
-                if let Some(d) = dst.parent() {
-                    std::fs::create_dir_all(d)?;
-                }
-                std::fs::write(dst, &buf)?;
-                Ok(buf.len() as u64)
-            })
-            .collect()
-    });
-    download_results(results)
-}
-
-fn download_results(results: Vec<Result<u64>>) -> Result<Vec<u64>> {
-    let failed = results.iter().filter(|r| r.is_err()).count();
-    if failed > 0 {
-        let first = results.iter().find_map(|r| r.as_ref().err()).expect("failed download");
-        bail!("{failed}/{} upstream files failed to download: {first:#}", results.len());
-    }
-    results.into_iter().collect()
 }
 
 /// Parse a GitHub URL or shorthand into owner/name.
@@ -467,8 +458,13 @@ pub fn needs_refresh(m: &Manifest, explicit: bool) -> bool {
     }
 }
 
+/// Oldest cache format whose commit was resolved from an exact release tag.
+/// Newer formats only differ in how the files were downloaded, so automatic
+/// and offline queries keep trusting them; `stale` still lets a fetch refresh.
+const MIN_TRUSTED_FORMAT: u32 = 4;
+
 fn compatible(m: &Manifest) -> bool {
-    m.format >= FORMAT && (m.commit.is_some() || m.site.is_some() || m.files == 0)
+    m.format >= MIN_TRUSTED_FORMAT && (m.commit.is_some() || m.site.is_some() || m.files == 0)
 }
 
 /// A previous fetch (with or without files). Never touches the network.
@@ -484,10 +480,38 @@ fn token() -> Option<String> {
         .find_map(|k| std::env::var(k).ok().filter(|v| !v.is_empty()))
 }
 
+/// The GitHub hosts requests go to (replaced by a local server in tests).
+#[derive(Clone)]
+struct Hosts {
+    api: String,
+    git: String,
+    codeload: String,
+    raw: String,
+    npm: String,
+}
+
+impl Hosts {
+    fn github() -> Self {
+        Hosts {
+            api: "https://api.github.com".into(),
+            git: "https://github.com".into(),
+            codeload: "https://codeload.github.com".into(),
+            raw: "https://raw.githubusercontent.com".into(),
+            npm: "https://registry.npmjs.org".into(),
+        }
+    }
+}
+
 struct Client {
     agent: ureq::Agent,
     authenticated: bool,
+    /// Future Pro "private sources" hook: when true, the token is also sent to
+    /// the git and codeload hosts. Always false today (see `source_auth`).
+    credentialed_sources: bool,
     deadline: Option<std::time::Instant>,
+    hosts: Hosts,
+    /// Largest compressed archive streamed from one repository.
+    max_archive: u64,
 }
 
 impl std::ops::Deref for Client {
@@ -511,7 +535,7 @@ fn agent(automatic: bool) -> Client {
         .timeout_global(Some(std::time::Duration::from_secs(if automatic { 10 } else { 60 })))
         .max_redirects(if automatic { 0 } else { 10 })
         .http_status_as_error(false)
-        // Renamed repositories answer with a redirect; keep the token for it.
+        // Renamed repositories answer with a redirect; the REST token follows it on the same host only.
         .redirect_auth_headers(ureq::config::RedirectAuthHeaders::SameHost)
         .user_agent(concat!("lockdocs/", env!("CARGO_PKG_VERSION"), " (+https://github.com/SylphxAI/lockdocs)"))
         .build()
@@ -519,16 +543,27 @@ fn agent(automatic: bool) -> Client {
     Client {
         agent,
         authenticated: !automatic,
+        credentialed_sources: false,
         deadline: automatic.then(|| std::time::Instant::now() + std::time::Duration::from_secs(45)),
+        hosts: Hosts::github(),
+        max_archive: if automatic { MAX_ARCHIVE_AUTOMATIC } else { MAX_ARCHIVE },
+    }
+}
+
+impl Client {
+    /// The token for the git smart-HTTP, codeload and raw hosts. Free lockdocs
+    /// sends no credential to any of them; only the future Pro "private
+    /// sources" path sets `credentialed_sources`. The REST API alone gets the
+    /// token on explicit fetch (see `api`).
+    fn source_auth(&self) -> Option<String> {
+        (self.authenticated && self.credentialed_sources).then(token).flatten()
     }
 }
 
 /// GitHub API GET; Ok(None) on 404.
 fn api(agent: &Client, path: &str) -> Result<Option<Value>> {
     agent.check_deadline()?;
-    let mut req = agent
-        .get(&format!("https://api.github.com{path}"))
-        .header("Accept", "application/vnd.github+json");
+    let mut req = agent.get(&format!("{}{path}", agent.hosts.api)).header("Accept", "application/vnd.github+json");
     if let Some(t) = agent.authenticated.then(token).flatten() {
         req = req.header("Authorization", &format!("Bearer {t}"));
     }
@@ -548,39 +583,594 @@ fn api(agent: &Client, path: &str) -> Result<Option<Value>> {
     Ok(Some(serde_json::from_str(&body)?))
 }
 
-/// Resolve an exact tag ref, then peel at most eight annotated tag objects.
-/// The generic GET is only to make branch rejection and peeling network-free tests.
-fn release_commit(repo: &Repo, tag: &str, mut get: impl FnMut(&str) -> Result<Option<Value>>) -> Result<Option<String>> {
-    let path = format!("/repos/{}/{}/git/ref/tags/{}", repo.owner, repo.name, enc(tag));
-    let Some(reference) = get(&path)? else { return Ok(None) };
-    if reference.get("ref").and_then(Value::as_str) != Some(format!("refs/tags/{tag}").as_str()) {
-        bail!("GitHub returned a non-exact tag ref for {tag}");
+/// A ref advertised by `git ls-remote`: full name, object id, and the commit
+/// an annotated tag peels to.
+#[derive(Debug, Clone, PartialEq)]
+struct GitRef {
+    name: String,
+    oid: String,
+    peeled: Option<String>,
+}
+
+fn pkt_line(out: &mut Vec<u8>, s: &str) {
+    out.extend_from_slice(format!("{:04x}", s.len() + 4).as_bytes());
+    out.extend_from_slice(s.as_bytes());
+}
+
+/// Body of a protocol-v2 `ls-refs` command limited to `prefixes`.
+fn ls_refs_request(prefixes: &[String]) -> Vec<u8> {
+    let mut out = Vec::new();
+    pkt_line(&mut out, "command=ls-refs\n");
+    out.extend_from_slice(b"0001");
+    pkt_line(&mut out, "peel\n");
+    for p in prefixes {
+        pkt_line(&mut out, &format!("ref-prefix {p}\n"));
     }
-    let mut object = reference.get("object").cloned().context("tag ref has no object")?;
-    for depth in 0..=8 {
-        let sha = object
-            .get("sha")
-            .and_then(Value::as_str)
-            .filter(|s| s.len() == 40 && s.bytes().all(|b| b.is_ascii_hexdigit()))
-            .context("tag object has no immutable SHA")?
-            .to_string();
-        match object.get("type").and_then(Value::as_str) {
-            Some("commit") => return Ok(Some(sha)),
-            Some("tag") => {
-                if depth == 8 {
-                    bail!("release tag exceeds annotated-tag peel limit");
-                }
-                let path = format!("/repos/{}/{}/git/tags/{sha}", repo.owner, repo.name);
-                object = get(&path)?
-                    .context("annotated tag object unavailable")?
-                    .get("object")
-                    .cloned()
-                    .context("annotated tag has no object")?;
+    out.extend_from_slice(b"0000");
+    out
+}
+
+/// Parse an `ls-refs` response (pkt-lines: `<oid> <name>[ peeled:<oid>]`).
+fn parse_ls_refs(mut b: &[u8]) -> Result<Vec<GitRef>> {
+    let mut refs = Vec::new();
+    while b.len() >= 4 {
+        let len = std::str::from_utf8(&b[..4])
+            .ok()
+            .and_then(|h| usize::from_str_radix(h, 16).ok())
+            .context("malformed git response")?;
+        if len < 4 {
+            // flush (0000), delimiter (0001), response end (0002)
+            b = &b[4..];
+            if len == 0 {
+                break;
             }
-            _ => bail!("release tag does not point to a commit"),
+            continue;
+        }
+        if b.len() < len {
+            bail!("truncated git response");
+        }
+        let line = String::from_utf8_lossy(&b[4..len]);
+        b = &b[len..];
+        let line = line.trim_end_matches('\n');
+        if let Some(e) = line.strip_prefix("ERR ") {
+            bail!("git server error: {e}");
+        }
+        let mut parts = line.split(' ');
+        let (Some(oid), Some(name)) = (parts.next(), parts.next()) else {
+            continue;
+        };
+        let peeled = parts.find_map(|a| a.strip_prefix("peeled:")).map(String::from);
+        refs.push(GitRef {
+            name: name.to_string(),
+            oid: oid.to_string(),
+            peeled,
+        });
+    }
+    Ok(refs)
+}
+
+fn is_object_id(s: &str) -> bool {
+    (s.len() == 40 || s.len() == 64) && s.bytes().all(|b| b.is_ascii_hexdigit())
+}
+
+fn tag_prefixes(candidates: &[String]) -> Vec<String> {
+    candidates.iter().map(|t| format!("refs/tags/{t}")).collect()
+}
+
+/// The first candidate tag that exists exactly, with the immutable commit it
+/// points to (annotated tags are peeled by the server).
+fn pick_release(candidates: &[String], refs: &[GitRef]) -> Option<(String, String)> {
+    candidates.iter().find_map(|t| {
+        let name = format!("refs/tags/{t}");
+        let r = refs.iter().find(|r| r.name == name)?;
+        let sha = r.peeled.as_deref().unwrap_or(&r.oid);
+        is_object_id(sha).then(|| (t.clone(), sha.to_string()))
+    })
+}
+
+/// Basic credentials for GitHub's git endpoints (`x-access-token:<token>`).
+fn basic(token: &str) -> String {
+    const T: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let input = format!("x-access-token:{token}");
+    let mut out = String::new();
+    for c in input.as_bytes().chunks(3) {
+        let n = (u32::from(c[0]) << 16) | (u32::from(*c.get(1).unwrap_or(&0)) << 8) | u32::from(*c.get(2).unwrap_or(&0));
+        for i in 0..4 {
+            if i <= c.len() {
+                out.push(T[((n >> (18 - 6 * i)) & 63) as usize] as char);
+            } else {
+                out.push('=');
+            }
         }
     }
-    bail!("release tag exceeds annotated-tag peel limit")
+    format!("Basic {out}")
+}
+
+/// Refs under `prefixes` of a repository over the git smart-HTTP protocol (what
+/// `git ls-remote` does). It is not governed by the REST API quota. Ok(None)
+/// when the repository does not exist or is private.
+fn list_refs(agent: &Client, repo: &Repo, prefixes: &[String]) -> Result<Option<Vec<GitRef>>> {
+    agent.check_deadline()?;
+    let url = format!("{}/{}/{}.git/git-upload-pack", agent.hosts.git, repo.owner, repo.name);
+    let mut req = agent
+        .post(&url)
+        .header("Content-Type", "application/x-git-upload-pack-request")
+        .header("Accept", "application/x-git-upload-pack-result")
+        .header("Git-Protocol", "version=2");
+    let sent_token = match agent.source_auth() {
+        Some(t) => {
+            req = req.header("Authorization", &basic(&t));
+            true
+        }
+        None => false,
+    };
+    let mut res = req.send(&ls_refs_request(prefixes)[..])?;
+    let status = res.status().as_u16();
+    if status == 401 && sent_token {
+        bail!(
+            "GitHub rejected GITHUB_TOKEN/GH_TOKEN for {}/{} (HTTP 401); refresh or unset it",
+            repo.owner,
+            repo.name
+        );
+    }
+    if status == 404 || status == 401 {
+        return Ok(None);
+    }
+    if status >= 300 {
+        bail!("git refs for {}/{}: HTTP {status}", repo.owner, repo.name);
+    }
+    let mut body = Vec::new();
+    res.body_mut().as_reader().take(64 << 20).read_to_end(&mut body)?;
+    Ok(Some(parse_ls_refs(&body)?))
+}
+
+/// Compressed bytes downloaded from codeload by this process (for reporting).
+static DOWNLOADED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Compressed archive bytes downloaded by this process so far.
+pub fn downloaded_bytes() -> u64 {
+    DOWNLOADED.load(std::sync::atomic::Ordering::Relaxed)
+}
+
+/// Largest compressed archive streamed from one repository by default. A
+/// bigger one is not downloaded whole: the repository falls back to per-file
+/// requests (see the measurements in the PR for the choice).
+const MAX_ARCHIVE: u64 = 150 << 20;
+
+/// The cap for the automatic (anonymous, 45 s budget) mode.
+const MAX_ARCHIVE_AUTOMATIC: u64 = 64 << 20;
+
+/// Counts compressed bytes and stops the stream (with an error) past `cap`.
+struct Capped<R> {
+    inner: R,
+    seen: u64,
+    cap: u64,
+    exceeded: std::sync::Arc<std::sync::atomic::AtomicBool>,
+}
+impl<R: Read> Read for Capped<R> {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        let n = self.inner.read(buf)?;
+        self.seen += n as u64;
+        DOWNLOADED.fetch_add(n as u64, std::sync::atomic::Ordering::Relaxed);
+        if self.seen > self.cap {
+            self.exceeded.store(true, std::sync::atomic::Ordering::Relaxed);
+            return Err(std::io::Error::other("archive exceeds the download cap"));
+        }
+        Ok(n)
+    }
+}
+
+/// An archive stream plus whether it was cut for being over the cap.
+struct Archive {
+    body: Box<dyn Read>,
+    exceeded: std::sync::Arc<std::sync::atomic::AtomicBool>,
+}
+impl Archive {
+    fn new(body: impl Read + 'static, cap: u64) -> Self {
+        let exceeded = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        Archive {
+            body: Box::new(Capped {
+                inner: body,
+                seen: 0,
+                cap,
+                exceeded: exceeded.clone(),
+            }),
+            exceeded,
+        }
+    }
+}
+
+/// Stream `https://codeload.github.com/<owner>/<repo>/tar.gz/<ref>` (a tag, a
+/// branch or a commit). Ok(None) on 404. Not governed by the REST API quota.
+fn codeload(agent: &Client, repo: &Repo, reference: &str) -> Result<Option<Archive>> {
+    let sent_token = agent.source_auth().is_some();
+    match codeload_once(agent, repo, reference, sent_token)? {
+        // Only reachable on the future credentialed path: a token codeload does not
+        // accept falls back to an anonymous request, which public repositories answer.
+        None if sent_token => codeload_once(agent, repo, reference, false),
+        other => Ok(other),
+    }
+}
+
+fn codeload_once(agent: &Client, repo: &Repo, reference: &str, with_token: bool) -> Result<Option<Archive>> {
+    agent.check_deadline()?;
+    let url = format!("{}/{}/{}/tar.gz/{}", agent.hosts.codeload, repo.owner, repo.name, enc_path(reference));
+    let timeout = match agent.deadline {
+        Some(d) => {
+            let remaining = d.saturating_duration_since(std::time::Instant::now());
+            // Leave time for the per-file fallback when the stream stalls.
+            if remaining < std::time::Duration::from_secs(5) {
+                bail!("too little of the automatic time budget left for an archive download");
+            }
+            remaining
+                .saturating_sub(std::time::Duration::from_secs(15))
+                .max(std::time::Duration::from_secs(1))
+        }
+        None => std::time::Duration::from_secs(600),
+    };
+    let mut req = agent.get(&url).config().timeout_global(Some(timeout)).build();
+    if with_token {
+        if let Some(t) = agent.source_auth() {
+            req = req.header("Authorization", &format!("Bearer {t}"));
+        }
+    }
+    let res = req.call()?;
+    match res.status().as_u16() {
+        200 => {}
+        404 => return Ok(None),
+        s @ (301 | 302 | 307 | 308) => bail!("{}/{} moved (HTTP {s}); update the package's repository URL", repo.owner, repo.name),
+        s @ (403 | 429) => bail!("codeload.github.com refused {}/{} (HTTP {s})", repo.owner, repo.name),
+        s => bail!("codeload.github.com HTTP {s} for {}/{}@{reference}", repo.owner, repo.name),
+    }
+    Ok(Some(Archive::new(res.into_body().into_reader(), agent.max_archive)))
+}
+
+/// Most uncompressed bytes read from one archive (a gzip bomb stops here).
+const MAX_INFLATED: u64 = 2 << 30;
+
+/// Counts uncompressed bytes and stops the stream past `MAX_INFLATED`.
+struct Inflated<R> {
+    inner: R,
+    seen: u64,
+}
+impl<R: Read> Read for Inflated<R> {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        let n = self.inner.read(buf)?;
+        self.seen += n as u64;
+        if self.seen > MAX_INFLATED {
+            return Err(std::io::Error::other("archive expands past 2 GiB"));
+        }
+        Ok(n)
+    }
+}
+
+/// Stream a `.tar.gz`: for every regular file (leading `<repo>-<ref>/` folder
+/// stripped) `keep(path, size)` decides whether to read it. Files over
+/// `MAX_FILE` are never read. Kept files stop accumulating past `cap` bytes.
+fn read_tar(body: impl Read, cap: u64, mut keep: impl FnMut(&str, u64) -> bool) -> Result<Vec<(String, Vec<u8>)>> {
+    let inflated = Inflated {
+        inner: flate2::read::GzDecoder::new(body),
+        seen: 0,
+    };
+    let mut archive = tar::Archive::new(inflated);
+    let mut out = Vec::new();
+    let mut total = 0u64;
+    for entry in archive.entries().context("not a gzip tar archive")? {
+        let entry = entry.context("corrupt or truncated archive")?;
+        if !entry.header().entry_type().is_file() {
+            continue;
+        }
+        let size = entry.header().size().unwrap_or(0);
+        let raw = entry.path().context("archive path")?.to_string_lossy().replace('\\', "/");
+        if raw.starts_with('/') {
+            continue;
+        }
+        let Some((_, path)) = raw.split_once('/') else { continue };
+        if path.is_empty() || path.split('/').any(|c| c.is_empty() || c == "." || c == "..") {
+            continue;
+        }
+        let path = path.to_string();
+        if !keep(&path, size) || size > MAX_FILE || total.saturating_add(size) > cap {
+            continue;
+        }
+        let mut buf = Vec::with_capacity(size as usize);
+        entry.take(MAX_FILE + 1).read_to_end(&mut buf)?;
+        total += buf.len() as u64;
+        out.push((path, buf));
+        if out.len() >= MAX_FILES * 4 {
+            break;
+        }
+    }
+    Ok(out)
+}
+
+fn write_file(root: &Path, p: &str, data: &[u8]) -> Result<()> {
+    let Some(rel) = crate::fetch::safe_rel(Path::new(p), false) else {
+        bail!("unsafe path {p}")
+    };
+    let dst = root.join(rel);
+    if let Some(d) = dst.parent() {
+        std::fs::create_dir_all(d)?;
+    }
+    std::fs::write(dst, data)?;
+    Ok(())
+}
+
+/// Which files of a package repository to keep. A docs root is a `docs`-like
+/// folder at the top, or one or two levels inside wrapper folders (monorepos
+/// keep them there); README/CHANGELOG-like files sit at the top or in the
+/// package's own folder.
+struct PkgScan {
+    short: String,
+    sub_base: String,
+    subdir: Option<String>,
+    roots: std::collections::BTreeSet<String>,
+    langs: std::collections::BTreeMap<String, std::collections::BTreeSet<String>>,
+    /// (full path, docs root it sits in, path inside that root, is a README-like file)
+    cands: Vec<(String, Option<String>, String, bool)>,
+}
+
+impl PkgScan {
+    fn new(dep: &Dep, repo: &Repo) -> Self {
+        PkgScan {
+            short: dep.name.rsplit('/').next().unwrap_or(&dep.name).to_ascii_lowercase(),
+            sub_base: repo.subdir.as_deref().and_then(|s| s.rsplit('/').next()).unwrap_or("").to_ascii_lowercase(),
+            subdir: repo.subdir.clone(),
+            roots: Default::default(),
+            langs: Default::default(),
+            cands: Vec::new(),
+        }
+    }
+
+    /// Number of leading folders that form the docs root of `dirs`, if any.
+    fn root_len(&self, dirs: &[&str]) -> Option<usize> {
+        for (i, d) in dirs.iter().take(3).enumerate() {
+            let name = d.to_ascii_lowercase();
+            if DOC_ROOTS.contains(&name.as_str()) {
+                return Some(i + 1);
+            }
+            // Only wanted folders are opened to look further down.
+            let full = dirs[..=i].join("/");
+            let wanted = WRAPPERS.contains(&name.as_str())
+                || (i >= 1 && (name == self.short || name == self.sub_base || name.contains("docs")))
+                || self.subdir.as_deref().is_some_and(|s| s == full || s.starts_with(&format!("{full}/")));
+            if i >= 2 || !wanted {
+                return None;
+            }
+        }
+        None
+    }
+
+    /// Look at one archive path; true when its content may be wanted.
+    fn observe(&mut self, path: &str, size: u64) -> bool {
+        let comps: Vec<&str> = path.split('/').collect();
+        let (file, dirs) = comps.split_last().expect("non-empty path");
+        let root = self.root_len(dirs).map(|n| dirs[..n].join("/"));
+        let mut rel_in_root = None;
+        if let Some(r) = &root {
+            self.roots.insert(r.clone());
+            let rel = &comps[r.split('/').count()..];
+            if rel.len() > 1 {
+                self.langs.entry(r.clone()).or_default().insert(rel[0].to_string());
+            }
+            rel_in_root = Some(rel.join("/"));
+        }
+        let upper = file.to_ascii_uppercase();
+        let near = dirs.is_empty() || self.subdir.as_deref() == Some(dirs.join("/").as_str());
+        let readme = near
+            && doc_file(file)
+            && ["README", "CHANGELOG", "CHANGES", "HISTORY", "MIGRAT", "UPGRAD", "RELEASE"]
+                .iter()
+                .any(|p| upper.starts_with(p));
+        let in_root = rel_in_root.as_deref().is_some_and(doc_file);
+        let wanted = size <= MAX_FILE && (readme || in_root);
+        if wanted {
+            self.cands
+                .push((path.to_string(), root.filter(|_| in_root), rel_in_root.unwrap_or_default(), readme));
+        }
+        wanted
+    }
+
+    /// Apply the root, language and size limits to what was read.
+    fn select(self, mut data: std::collections::HashMap<String, Vec<u8>>) -> Vec<(String, Vec<u8>)> {
+        let chosen: Vec<&String> = self.roots.iter().take(4).collect();
+        let mut keep: Vec<String> = Vec::new();
+        for (full, root, rel, readme) in &self.cands {
+            let in_chosen = root.as_ref().is_some_and(|r| chosen.contains(&r));
+            if !in_chosen && !readme {
+                continue;
+            }
+            if in_chosen && !readme {
+                let langs = self.langs.get(root.as_ref().expect("root"));
+                let only_en = langs.is_some_and(|l| l.iter().filter(|x| is_lang(x)).count() >= 2 && l.contains("en"));
+                let first = rel.split('/').next().unwrap_or("");
+                if only_en && rel.contains('/') && is_lang(first) && first != "en" {
+                    continue;
+                }
+            }
+            keep.push(full.clone());
+        }
+        keep.sort();
+        keep.dedup();
+        let mut total = 0u64;
+        let mut out = Vec::new();
+        for p in keep {
+            let Some(d) = data.remove(&p) else { continue };
+            if total.saturating_add(d.len() as u64) > MAX_BYTES {
+                continue;
+            }
+            total += d.len() as u64;
+            out.push((p, d));
+            if out.len() >= MAX_FILES {
+                break;
+            }
+        }
+        out
+    }
+}
+
+struct Item {
+    path: String,
+    kind: String,
+    sha: String,
+    size: u64,
+}
+
+fn tree(agent: &Client, repo: &Repo, sha_or_ref: &str, recursive: bool) -> Result<Option<Vec<Item>>> {
+    let q = if recursive { "?recursive=1" } else { "" };
+    let Some(v) = api(agent, &format!("/repos/{}/{}/git/trees/{}{q}", repo.owner, repo.name, enc(sha_or_ref)))? else {
+        return Ok(None);
+    };
+    let items = v
+        .get("tree")
+        .and_then(|t| t.as_array())
+        .map(|a| {
+            a.iter()
+                .map(|i| Item {
+                    path: i.get("path").and_then(|p| p.as_str()).unwrap_or("").to_string(),
+                    kind: i.get("type").and_then(|p| p.as_str()).unwrap_or("").to_string(),
+                    sha: i.get("sha").and_then(|p| p.as_str()).unwrap_or("").to_string(),
+                    size: i.get("size").and_then(|p| p.as_u64()).unwrap_or(0),
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    Ok(Some(items))
+}
+
+fn download(agent: &Client, repo: &Repo, reference: &str, files: &[(String, u64)], out: &Path) -> Result<Vec<u64>> {
+    let pool = rayon::ThreadPoolBuilder::new().num_threads(16).build()?;
+    let results: Vec<Result<u64>> = pool.install(|| {
+        files
+            .par_iter()
+            .map(|(p, _)| {
+                let url = format!("{}/{}/{}/{}/{}", agent.hosts.raw, repo.owner, repo.name, enc(reference), enc_path(p));
+                agent.check_deadline()?;
+                let mut res = agent.get(&url).call()?;
+                if res.status().as_u16() != 200 {
+                    bail!("HTTP {} for {p}", res.status());
+                }
+                let mut buf = Vec::new();
+                res.body_mut().as_reader().take(MAX_FILE + 1).read_to_end(&mut buf)?;
+                if buf.len() as u64 > MAX_FILE {
+                    bail!("upstream file too large: {p}");
+                }
+                let Some(rel) = crate::fetch::safe_rel(Path::new(p), false) else {
+                    bail!("unsafe path {p}")
+                };
+                let dst = out.join(rel);
+                if let Some(d) = dst.parent() {
+                    std::fs::create_dir_all(d)?;
+                }
+                std::fs::write(dst, &buf)?;
+                Ok(buf.len() as u64)
+            })
+            .collect()
+    });
+    download_results(results)
+}
+
+fn download_results(results: Vec<Result<u64>>) -> Result<Vec<u64>> {
+    let failed = results.iter().filter(|r| r.is_err()).count();
+    if failed > 0 {
+        let first = results.iter().find_map(|r| r.as_ref().err()).expect("failed download");
+        bail!("{failed}/{} upstream files failed to download: {first:#}", results.len());
+    }
+    results.into_iter().collect()
+}
+
+/// The per-file fallback for one repository: GitHub's REST tree walk plus raw
+/// file requests (subject to the REST quota). Returns files written and bytes.
+fn rest_docs(agent: &Client, dep: &Dep, repo: &Repo, commit: &str, out: &Path) -> Result<(usize, u64)> {
+    let root = tree(agent, repo, commit, false)?.context("release commit tree not found")?;
+    let short = dep.name.rsplit('/').next().unwrap_or(&dep.name).to_ascii_lowercase();
+    let sub_base = repo.subdir.as_deref().and_then(|s| s.rsplit('/').next()).unwrap_or("").to_ascii_lowercase();
+    let mut roots: Vec<(String, String)> = Vec::new(); // (path, tree sha)
+    let mut files: Vec<(String, u64)> = Vec::new();
+    let mut calls = 0;
+    let mut frontier: Vec<(String, Vec<Item>, usize)> = vec![(String::new(), root, 0)];
+    while let Some((prefix, items, depth)) = frontier.pop() {
+        for it in items {
+            let name = it.path.to_ascii_lowercase();
+            let full = if prefix.is_empty() {
+                it.path.clone()
+            } else {
+                format!("{prefix}/{}", it.path)
+            };
+            if it.kind == "blob" {
+                // Root-level (or package-level) READMEs and changelogs.
+                let upper = it.path.to_ascii_uppercase();
+                let near = depth == 0 || repo.subdir.as_deref() == Some(prefix.as_str());
+                if near
+                    && doc_file(&it.path)
+                    && ["README", "CHANGELOG", "CHANGES", "HISTORY", "MIGRAT", "UPGRAD", "RELEASE"]
+                        .iter()
+                        .any(|p| upper.starts_with(p))
+                {
+                    files.push((full, it.size));
+                }
+                continue;
+            }
+            if it.kind != "tree" {
+                continue;
+            }
+            if DOC_ROOTS.contains(&name.as_str()) {
+                roots.push((full, it.sha));
+            } else if depth < 2 && calls < 10 {
+                let wanted = WRAPPERS.contains(&name.as_str())
+                    || (depth >= 1 && (name == short || name == sub_base || name.contains("docs")))
+                    || repo.subdir.as_deref().is_some_and(|s| s == full || s.starts_with(&format!("{full}/")));
+                if wanted {
+                    calls += 1;
+                    if let Some(children) = tree(agent, repo, &it.sha, false)? {
+                        frontier.push((full, children, depth + 1));
+                    }
+                }
+            }
+        }
+    }
+    for (path, sha) in roots.iter().take(4) {
+        let Some(items) = tree(agent, repo, sha, true)? else { continue };
+        // Keep English when the docs are split by language.
+        let langs: Vec<&str> = items
+            .iter()
+            .filter(|i| i.kind == "tree" && !i.path.contains('/') && is_lang(&i.path))
+            .map(|i| i.path.as_str())
+            .collect();
+        let only_en = langs.len() >= 2 && langs.contains(&"en");
+        for i in &items {
+            if i.kind != "blob" || !doc_file(&i.path) || i.size > MAX_FILE {
+                continue;
+            }
+            if only_en {
+                let first = i.path.split('/').next().unwrap_or("");
+                if is_lang(first) && first != "en" {
+                    continue;
+                }
+            }
+            files.push((format!("{path}/{}", i.path), i.size));
+        }
+    }
+    files.sort();
+    files.dedup();
+    let mut total = 0u64;
+    files.retain(|(_, s)| {
+        if *s > MAX_FILE || total.saturating_add(*s) > MAX_BYTES {
+            return false;
+        }
+        total += s;
+        true
+    });
+    files.truncate(MAX_FILES);
+    let ok = download(agent, repo, commit, &files, out)?;
+    Ok((ok.len(), ok.iter().sum()))
+}
+
+/// Download one repository snapshot and keep its docs (see `PkgScan`).
+fn extract_pkg_docs(body: impl Read, dep: &Dep, repo: &Repo) -> Result<Vec<(String, Vec<u8>)>> {
+    let mut scan = PkgScan::new(dep, repo);
+    let data = read_tar(body, MAX_BYTES * 2, |p, size| scan.observe(p, size))?;
+    Ok(scan.select(data.into_iter().collect()))
 }
 
 fn enc(s: &str) -> String {
@@ -618,35 +1208,6 @@ pub fn tag_candidates(dep: &Dep) -> Vec<String> {
     }
     c.dedup();
     c
-}
-
-struct Item {
-    path: String,
-    kind: String,
-    sha: String,
-    size: u64,
-}
-
-fn tree(agent: &Client, repo: &Repo, sha_or_ref: &str, recursive: bool) -> Result<Option<Vec<Item>>> {
-    let q = if recursive { "?recursive=1" } else { "" };
-    let Some(v) = api(agent, &format!("/repos/{}/{}/git/trees/{}{q}", repo.owner, repo.name, enc(sha_or_ref)))? else {
-        return Ok(None);
-    };
-    let items = v
-        .get("tree")
-        .and_then(|t| t.as_array())
-        .map(|a| {
-            a.iter()
-                .map(|i| Item {
-                    path: i.get("path").and_then(|p| p.as_str()).unwrap_or("").to_string(),
-                    kind: i.get("type").and_then(|p| p.as_str()).unwrap_or("").to_string(),
-                    sha: i.get("sha").and_then(|p| p.as_str()).unwrap_or("").to_string(),
-                    size: i.get("size").and_then(|p| p.as_u64()).unwrap_or(0),
-                })
-                .collect()
-        })
-        .unwrap_or_default();
-    Ok(Some(items))
 }
 
 const DOC_ROOTS: &[&str] = &["docs", "doc", "documentation", "guide", "guides", "docs_src"];
@@ -762,22 +1323,19 @@ fn fetch_attempt(dep: &Dep, src: &Source, automatic: bool) -> Result<Manifest> {
     let _guard = FetchGuard { lock, staging: out.clone() };
     std::fs::create_dir_all(&out)?;
     let agent = agent(automatic);
+    let m = build(&agent, dep, &repo, automatic, &out)?;
+    publish(&out, &target, &m)?;
+    Ok(m)
+}
+
+/// Download the docs of `dep`'s release (and docs site) into `out`; the caller publishes.
+fn build(agent: &Client, dep: &Dep, repo: &Repo, automatic: bool, out: &Path) -> Result<Manifest> {
     let label = format!("github.com/{}/{}", repo.owner, repo.name);
-    let mut tag = None;
-    let mut root = None;
-    let mut commit = None;
-    for t in tag_candidates(dep) {
-        let Some(sha) = release_commit(&repo, &t, |path| api(&agent, path))? else {
-            continue;
-        };
-        if let Some(items) = tree(&agent, &repo, &sha, false)? {
-            commit = Some(sha.to_string());
-            tag = Some(t);
-            root = Some(items);
-            break;
-        }
-    }
-    let (Some(tag), Some(root)) = (tag, root) else {
+    let candidates = tag_candidates(dep);
+    let refs = list_refs(agent, repo, &tag_prefixes(&candidates))?;
+    let repo_unavailable = refs.is_none();
+    let release = refs.and_then(|refs| pick_release(&candidates, &refs));
+    let Some((tag, commit)) = release else {
         let mut m = Manifest {
             format: FORMAT,
             repo: label,
@@ -786,117 +1344,51 @@ fn fetch_attempt(dep: &Dep, src: &Source, automatic: bool) -> Result<Manifest> {
             docs_sites_checked: !automatic,
             files: 0,
             bytes: 0,
-            note: Some(format!("no git tag found for {}", dep.version)),
+            note: Some(format!("no git tag found for {} (tried {})", dep.version, candidates.join(", "))),
             site: None,
             pages: Vec::new(),
+            via: None,
         };
-        match if automatic { Ok(None) } else { site_files(&agent, dep, Some(&repo)) } {
+        match if automatic { Ok(None) } else { site_docs(agent, dep, Some(repo), out) } {
             Ok(Some(site)) => {
-                let (n, bytes, pages) = download_site(&agent, &site, &out)?;
-                if n > 0 {
-                    m.files = n;
-                    m.bytes = bytes;
+                if site.files > 0 {
+                    m.files = site.files;
+                    m.bytes = site.bytes;
                     m.site = Some(site.label);
-                    m.pages = pages;
+                    m.pages = site.pages;
                     m.note = None;
                 }
             }
             Ok(None) => {}
             Err(e) => return Err(e.context("docs-site selection failed")),
         }
-        publish(&out, &target, &m)?;
+        // The repository is gone, renamed or private. A docs site may still serve the
+        // docs; fail clearly only when nothing was found anywhere.
+        if repo_unavailable && !automatic && m.files == 0 {
+            bail!("{}: private repository: not supported (or the repository does not exist)", m.repo);
+        }
         return Ok(m);
     };
-    // Find docs roots: top-level docs dirs, and docs dirs one or two levels
-    // inside website/apps/packages wrappers (monorepos keep them there).
-    let short = dep.name.rsplit('/').next().unwrap_or(&dep.name).to_ascii_lowercase();
-    let sub_base = repo.subdir.as_deref().and_then(|s| s.rsplit('/').next()).unwrap_or("").to_ascii_lowercase();
-    let mut roots: Vec<(String, String)> = Vec::new(); // (path, tree sha)
-    let mut files: Vec<(String, u64)> = Vec::new();
-    let mut calls = 0;
-    let mut frontier: Vec<(String, Vec<Item>, usize)> = vec![(String::new(), root, 0)];
-    while let Some((prefix, items, depth)) = frontier.pop() {
-        for it in items {
-            let name = it.path.to_ascii_lowercase();
-            let full = if prefix.is_empty() {
-                it.path.clone()
-            } else {
-                format!("{prefix}/{}", it.path)
-            };
-            if it.kind == "blob" {
-                // Root-level (or package-level) READMEs and changelogs.
-                let upper = it.path.to_ascii_uppercase();
-                let near = depth == 0 || repo.subdir.as_deref() == Some(prefix.as_str());
-                if near
-                    && doc_file(&it.path)
-                    && ["README", "CHANGELOG", "CHANGES", "HISTORY", "MIGRAT", "UPGRAD", "RELEASE"]
-                        .iter()
-                        .any(|p| upper.starts_with(p))
-                {
-                    files.push((full, it.size));
-                }
-                continue;
-            }
-            if it.kind != "tree" {
-                continue;
-            }
-            if DOC_ROOTS.contains(&name.as_str()) {
-                roots.push((full, it.sha));
-            } else if depth < 2 && calls < 10 {
-                let wanted = WRAPPERS.contains(&name.as_str())
-                    || (depth >= 1 && (name == short || name == sub_base || name.contains("docs")))
-                    || repo.subdir.as_deref().is_some_and(|s| s == full || s.starts_with(&format!("{full}/")));
-                if wanted {
-                    calls += 1;
-                    if let Some(children) = tree(&agent, &repo, &it.sha, false)? {
-                        frontier.push((full, children, depth + 1));
-                    }
-                }
-            }
+    // One archive of the exact release commit; only the docs are kept. When the
+    // archive is over the cap or codeload fails, this repository alone is read
+    // file by file through the REST API instead.
+    let (docs_n, docs_bytes, via) = match codeload_docs(agent, dep, repo, &tag, &commit, out) {
+        Ok(r) => r,
+        Err(e) => {
+            let _ = std::fs::remove_dir_all(out);
+            std::fs::create_dir_all(out)?;
+            let (n, bytes) = rest_docs(agent, dep, repo, &commit, out).with_context(|| format!("codeload path failed ({e:#}); per-file fallback failed"))?;
+            (n, bytes, "rest")
         }
-    }
-    for (path, sha) in roots.iter().take(4) {
-        let Some(items) = tree(&agent, &repo, sha, true)? else { continue };
-        // Keep English when the docs are split by language.
-        let langs: Vec<&str> = items
-            .iter()
-            .filter(|i| i.kind == "tree" && !i.path.contains('/') && is_lang(&i.path))
-            .map(|i| i.path.as_str())
-            .collect();
-        let only_en = langs.len() >= 2 && langs.contains(&"en");
-        for i in &items {
-            if i.kind != "blob" || !doc_file(&i.path) || i.size > MAX_FILE {
-                continue;
-            }
-            if only_en {
-                let first = i.path.split('/').next().unwrap_or("");
-                if is_lang(first) && first != "en" {
-                    continue;
-                }
-            }
-            files.push((format!("{path}/{}", i.path), i.size));
-        }
-    }
-    files.sort();
-    files.dedup();
-    let mut total = 0u64;
-    files.retain(|(_, s)| {
-        if *s > MAX_FILE || total.saturating_add(*s) > MAX_BYTES {
-            return false;
-        }
-        total += s;
-        true
-    });
-    files.truncate(MAX_FILES);
-    let ok = download(&agent, &repo, commit.as_deref().context("missing release commit")?, &files, &out)?;
+    };
     // A separate docs-site repository, when the package keeps its docs there.
     let mut site = None;
     let mut site_n = 0usize;
     let mut site_bytes = 0u64;
     let mut pages = Vec::new();
-    match if automatic { Ok(None) } else { site_files(&agent, dep, Some(&repo)) } {
+    match if automatic { Ok(None) } else { site_docs(agent, dep, Some(repo), out) } {
         Ok(Some(s)) => {
-            (site_n, site_bytes, pages) = download_site(&agent, &s, &out)?;
+            (site_n, site_bytes, pages) = (s.files, s.bytes, s.pages);
             if site_n > 0 {
                 site = Some(s.label);
             }
@@ -908,38 +1400,42 @@ fn fetch_attempt(dep: &Dep, src: &Source, automatic: bool) -> Result<Manifest> {
         format: FORMAT,
         repo: label,
         tag: Some(tag),
-        commit,
+        commit: Some(commit),
         docs_sites_checked: !automatic,
-        files: ok.len() + site_n,
-        bytes: ok.iter().sum::<u64>() + site_bytes,
-        note: if ok.is_empty() && site_n == 0 {
+        files: docs_n + site_n,
+        bytes: docs_bytes + site_bytes,
+        note: if docs_n == 0 && site_n == 0 {
             Some("no docs folder at that tag".into())
         } else {
             None
         },
         site,
         pages,
+        via: Some(via.into()),
     };
-    publish(&out, &target, &m)?;
     Ok(m)
 }
 
-/// Download a docs site's files into `<out>/<site repo name>/`: (files, bytes, page paths).
-fn download_site(agent: &Client, site: &SiteFiles, out: &Path) -> Result<(usize, u64, Vec<String>)> {
-    let dst = out.join(&site.repo.name);
-    let docs = download(agent, &site.repo, &site.reference, &site.files, &dst)?;
-    let got = download(agent, &site.repo, &site.reference, &site.pages, &dst)?;
-    let pages = if got.len() == site.pages.len() {
-        site.pages.iter().map(|(p, _)| format!("{}/{p}", site.repo.name)).collect()
-    } else {
-        // Some failed: keep only the pages on disk.
-        site.pages
-            .iter()
-            .map(|(p, _)| format!("{}/{p}", site.repo.name))
-            .filter(|p| out.join(p).is_file())
-            .collect()
+/// Stream the release archive and write its docs: (files, bytes, "codeload").
+/// Errors when the archive is missing, over the cap, or unreadable.
+fn codeload_docs(agent: &Client, dep: &Dep, repo: &Repo, tag: &str, commit: &str, out: &Path) -> Result<(usize, u64, &'static str)> {
+    let Some(body) = codeload(agent, repo, commit)? else {
+        bail!("tag {tag} points to commit {commit}, but codeload.github.com has no archive for it (HTTP 404)");
     };
-    Ok((docs.len() + got.len(), docs.iter().chain(&got).sum(), pages))
+    let read = extract_pkg_docs(body.body, dep, repo);
+    let docs = match read {
+        Ok(d) => d,
+        Err(_) if body.exceeded.load(std::sync::atomic::Ordering::Relaxed) => {
+            bail!("archive is over the {} MB download cap", agent.max_archive >> 20)
+        }
+        Err(e) => return Err(e.context(format!("reading the archive of {} at {tag}", repo.name))),
+    };
+    let mut bytes = 0u64;
+    for (p, d) in &docs {
+        write_file(out, p, d)?;
+        bytes += d.len() as u64;
+    }
+    Ok((docs.len(), bytes, "codeload"))
 }
 
 #[cfg(test)]
@@ -957,50 +1453,609 @@ mod tests {
             note: None,
             site: None,
             pages: Vec::new(),
+            via: None,
         }
     }
 
-    #[test]
-    fn release_ref_rejects_branch_only_and_peels_annotated_tags() {
-        let repo = Repo {
+    fn dep(name: &str, version: &str) -> Dep {
+        Dep {
+            eco: Eco::Npm,
+            name: name.into(),
+            version: version.into(),
+            direct: true,
+            from: "x".into(),
+        }
+    }
+
+    fn repo(subdir: Option<&str>) -> Repo {
+        Repo {
             owner: "o".into(),
             name: "r".into(),
-            subdir: None,
-        };
-        let sha = "0123456789abcdef0123456789abcdef01234567";
-        let mut paths = Vec::new();
-        let none = release_commit(&repo, "v1.2.3", |p| {
-            paths.push(p.to_string());
-            Ok(None)
-        })
-        .unwrap();
-        assert!(none.is_none());
-        assert_eq!(paths, vec!["/repos/o/r/git/ref/tags/v1.2.3"]);
-        let branch = release_commit(&repo, "v1.2.3", |_| {
-            Ok(Some(serde_json::json!({
-                "ref": "refs/heads/v1.2.3", "object": {"type":"commit", "sha":sha}
-            })))
-        });
-        assert!(branch.is_err());
-        let mut calls = 0;
-        let commit = release_commit(&repo, "v1.2.3", |p| {
-            calls += 1;
-            if p.contains("/git/ref/tags/") {
-                Ok(Some(serde_json::json!({"ref":"refs/tags/v1.2.3", "object":{"type":"tag", "sha":sha}})))
-            } else {
-                Ok(Some(serde_json::json!({"object":{"type":"commit", "sha":sha}})))
+            subdir: subdir.map(String::from),
+        }
+    }
+
+    /// A small `<repo>-<ref>/...` codeload-shaped archive built in memory.
+    fn tarball(files: &[(&str, &[u8])]) -> Vec<u8> {
+        let mut b = tar::Builder::new(Vec::new());
+        for (p, data) in files {
+            let mut h = tar::Header::new_gnu();
+            h.set_size(data.len() as u64);
+            h.set_mode(0o644);
+            h.set_entry_type(tar::EntryType::Regular);
+            b.append_data(&mut h, format!("r-abc/{p}"), *data).unwrap();
+        }
+        // A symlink and a directory must never be extracted.
+        let mut h = tar::Header::new_gnu();
+        h.set_entry_type(tar::EntryType::Symlink);
+        h.set_size(0);
+        b.append_link(&mut h, "r-abc/docs/link.md", "/etc/passwd").unwrap();
+        let tar = b.into_inner().unwrap();
+        let mut gz = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
+        std::io::Write::write_all(&mut gz, &tar).unwrap();
+        gz.finish().unwrap()
+    }
+
+    fn names(v: &[(String, Vec<u8>)]) -> Vec<&str> {
+        v.iter().map(|(p, _)| p.as_str()).collect()
+    }
+
+    #[test]
+    fn ls_refs_round_trip_and_release_pick() {
+        let c1 = "1111111111111111111111111111111111111111";
+        let c2 = "2222222222222222222222222222222222222222";
+        let tagobj = "3333333333333333333333333333333333333333";
+        let req = String::from_utf8(ls_refs_request(&["refs/tags/v1.2.3".into(), "refs/tags/1.2.3".into()])).unwrap();
+        assert!(req.starts_with("0014command=ls-refs\n00010009peel\n"));
+        assert!(req.contains("0020ref-prefix refs/tags/v1.2.3\n") && req.ends_with("0000"));
+        let mut resp = String::new();
+        for l in [
+            format!("{tagobj} refs/tags/v1.2.3 peeled:{c1}\n"),
+            format!("{c2} refs/tags/v1.2.3-beta.1\n"),
+            format!("{c2} refs/tags/1.2.3\n"),
+        ] {
+            resp.push_str(&format!("{:04x}{l}", l.len() + 4));
+        }
+        resp.push_str("0000");
+        let refs = parse_ls_refs(resp.as_bytes()).unwrap();
+        assert_eq!(refs.len(), 3);
+        let cands = tag_candidates(&dep("pkg", "1.2.3"));
+        // Annotated tag: the peeled commit, never the tag object; prefix matches are not exact.
+        assert_eq!(pick_release(&cands, &refs), Some(("v1.2.3".into(), c1.into())));
+        // Candidate order decides, a lightweight tag is its own commit.
+        assert_eq!(pick_release(&["1.2.3".into(), "v1.2.3".into()], &refs), Some(("1.2.3".into(), c2.into())));
+        // Only a prefix match (a prerelease) is not a release.
+        assert_eq!(pick_release(&["v1.2.3".into()], &refs[1..2]), None);
+        assert_eq!(pick_release(&cands, &[]), None);
+        // Never a branch of the same name, and never a malformed id.
+        let branch = [GitRef {
+            name: "refs/heads/v1.2.3".into(),
+            oid: c1.into(),
+            peeled: None,
+        }];
+        assert_eq!(pick_release(&cands, &branch), None);
+        let bad = [GitRef {
+            name: "refs/tags/v1.2.3".into(),
+            oid: "xyz".into(),
+            peeled: None,
+        }];
+        assert_eq!(pick_release(&cands, &bad), None);
+        assert!(parse_ls_refs(b"0010ERR denied\n0000").is_err());
+        assert!(parse_ls_refs(b"00ffshort").is_err());
+        assert!(parse_ls_refs(b"zzzz").is_err());
+    }
+
+    /// A local stand-in for GitHub: git smart-HTTP, codeload, REST and raw.
+    /// `api_blocked` answers every REST request 403, like an exhausted quota.
+    struct Fake {
+        base: String,
+        seen: std::sync::Arc<std::sync::Mutex<Vec<String>>>,
+    }
+
+    #[derive(Clone, Copy, PartialEq)]
+    enum Codeload {
+        Ok,
+        Fail,
+        /// 404 when a token is sent, the archive when anonymous.
+        MissingWithAuth,
+        /// The git endpoint answers 401 when a token is sent.
+        BadToken,
+        /// A private repository: anonymous git answers 401 and codeload 404.
+        Private,
+        /// Like `Private`, but the package's docs site repository answers.
+        PrivateWithSite,
+        /// Answers after a pause longer than a short deadline.
+        Slow,
+    }
+
+    const SHA: &str = "1111111111111111111111111111111111111111";
+
+    fn fake(codeload: Codeload, api_blocked: bool, tag: Option<&str>) -> Fake {
+        use std::io::Write;
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let base = format!("http://{}", listener.local_addr().unwrap());
+        let seen: std::sync::Arc<std::sync::Mutex<Vec<String>>> = Default::default();
+        let log = seen.clone();
+        let tag = tag.map(String::from);
+        let site_docs_present = codeload == Codeload::PrivateWithSite;
+        let site_archive = tarball(&[("src/content/learn/a.md", b"# learn")]);
+        let archive = tarball(&[("README.md", b"# readme"), ("docs/guide.md", b"# guide"), ("src/lib.rs", b"fn x() {}")]);
+        std::thread::spawn(move || {
+            for stream in listener.incoming() {
+                let Ok(mut c) = stream else { return };
+                let mut buf = Vec::new();
+                let mut chunk = [0u8; 4096];
+                while !buf.windows(4).any(|w| w == b"\r\n\r\n") {
+                    let n = c.read(&mut chunk).unwrap_or(0);
+                    if n == 0 {
+                        break;
+                    }
+                    buf.extend_from_slice(&chunk[..n]);
+                }
+                let head_end = buf.windows(4).position(|w| w == b"\r\n\r\n").map_or(buf.len(), |i| i + 4);
+                let head = String::from_utf8_lossy(&buf[..head_end]).to_string();
+                // Always consume the request body before answering: closing a socket with unread
+                // data makes macOS and Windows reset the connection under the client.
+                let lower = head.to_ascii_lowercase();
+                let mut body_in = buf[head_end..].to_vec();
+                if lower.contains("transfer-encoding: chunked") {
+                    while !body_in.ends_with(b"0\r\n\r\n") {
+                        let n = c.read(&mut chunk).unwrap_or(0);
+                        if n == 0 {
+                            break;
+                        }
+                        body_in.extend_from_slice(&chunk[..n]);
+                    }
+                } else if let Some(len) = lower
+                    .lines()
+                    .find_map(|l| l.strip_prefix("content-length:").and_then(|v| v.trim().parse::<usize>().ok()))
+                {
+                    while body_in.len() < len {
+                        let n = c.read(&mut chunk).unwrap_or(0);
+                        if n == 0 {
+                            break;
+                        }
+                        body_in.extend_from_slice(&chunk[..n]);
+                    }
+                }
+                let line = head.lines().next().unwrap_or("").to_string();
+                let path = line.split(' ').nth(1).unwrap_or("").to_string();
+                let authed = head.to_ascii_lowercase().contains("\r\nauthorization:");
+                log.lock().unwrap().push(format!(
+                    "{} {}{}",
+                    line.split(' ').next().unwrap_or(""),
+                    path,
+                    if authed { " AUTH" } else { "" }
+                ));
+                let json = |v: serde_json::Value| (200, "application/json", v.to_string().into_bytes());
+                let (status, ctype, body): (u16, &str, Vec<u8>) = if path.ends_with("/git-upload-pack")
+                    && (matches!(codeload, Codeload::Private | Codeload::PrivateWithSite) || (authed && codeload == Codeload::BadToken))
+                {
+                    (401, "text/plain", Vec::new())
+                } else if path.ends_with("/git-upload-pack") {
+                    let mut resp = String::new();
+                    if let Some(t) = &tag {
+                        let l = format!("{SHA} refs/tags/{t}\n");
+                        resp.push_str(&format!("{:04x}{l}", l.len() + 4));
+                    }
+                    resp.push_str("0000");
+                    (200, "application/x-git-upload-pack-result", resp.into_bytes())
+                } else if path.starts_with("/o/r/tar.gz/") {
+                    match codeload {
+                        Codeload::Ok => (200, "application/gzip", archive.clone()),
+                        Codeload::Private | Codeload::PrivateWithSite => (404, "text/plain", Vec::new()),
+                        Codeload::Fail => (500, "text/plain", b"boom".to_vec()),
+                        Codeload::MissingWithAuth if authed => (404, "text/plain", Vec::new()),
+                        Codeload::MissingWithAuth | Codeload::BadToken => (200, "application/gzip", archive.clone()),
+                        Codeload::Slow => {
+                            std::thread::sleep(std::time::Duration::from_secs(8));
+                            (200, "application/gzip", archive.clone())
+                        }
+                    }
+                } else if path.starts_with("/repos/") {
+                    if api_blocked {
+                        (403, "application/json", br#"{"message":"API rate limit exceeded"}"#.to_vec())
+                    } else if path.contains("/git/trees/docs-sha") {
+                        json(serde_json::json!({"tree":[{"path":"guide.md","type":"blob","sha":"b2","size":7}]}))
+                    } else if path.contains("/git/trees/") {
+                        json(serde_json::json!({"tree":[
+                            {"path":"README.md","type":"blob","sha":"b1","size":8},
+                            {"path":"docs","type":"tree","sha":"docs-sha","size":0},
+                            {"path":"src","type":"tree","sha":"src-sha","size":0}]}))
+                    } else {
+                        (404, "application/json", b"{}".to_vec())
+                    }
+                } else if path == "/npm/react/latest" {
+                    json(serde_json::json!({"version":"19.0.0"}))
+                } else if path.starts_with("/reactjs/react.dev/tar.gz/") {
+                    if site_docs_present {
+                        (200, "application/gzip", site_archive.clone())
+                    } else {
+                        (404, "text/plain", Vec::new())
+                    }
+                } else if path.starts_with("/raw/o/r/") {
+                    (200, "text/markdown", b"# raw".to_vec())
+                } else {
+                    (404, "text/plain", Vec::new())
+                };
+                let _ = write!(
+                    c,
+                    "HTTP/1.1 {status} X\r\nContent-Type: {ctype}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+                    body.len()
+                );
+                let _ = c.write_all(&body);
+                let _ = c.flush();
+                let _ = c.shutdown(std::net::Shutdown::Write);
             }
-        })
-        .unwrap();
-        assert_eq!(commit.as_deref(), Some(sha));
-        assert_eq!(calls, 2);
-        let mut calls = 0;
-        let cycle = release_commit(&repo, "v1.2.3", |_| {
-            calls += 1;
-            Ok(Some(serde_json::json!({"ref":"refs/tags/v1.2.3", "object":{"type":"tag", "sha":sha}})))
         });
-        assert!(cycle.is_err());
-        assert_eq!(calls, 9); // one exact-ref lookup plus at most eight tag-object lookups
+        Fake { base, seen }
+    }
+
+    fn client(f: &Fake, max_archive: u64) -> Client {
+        let agent = ureq::Agent::config_builder().http_status_as_error(false).proxy(None).build().into();
+        Client {
+            agent,
+            authenticated: false,
+            credentialed_sources: false,
+            deadline: None,
+            hosts: Hosts {
+                api: f.base.clone(),
+                git: f.base.clone(),
+                codeload: f.base.clone(),
+                raw: format!("{}/raw", f.base),
+                npm: format!("{}/npm", f.base),
+            },
+            max_archive,
+        }
+    }
+
+    fn authed_client(f: &Fake) -> Client {
+        let mut c = client(f, MAX_ARCHIVE);
+        c.authenticated = true;
+        c
+    }
+
+    /// A client with the future credentialed-sources hook switched on.
+    fn credentialed_client(f: &Fake) -> Client {
+        let mut c = authed_client(f);
+        c.credentialed_sources = true;
+        c
+    }
+
+    static ENV: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+    fn with_token<T>(f: impl FnOnce() -> T) -> T {
+        let _g = ENV.lock().unwrap_or_else(|e| e.into_inner());
+        std::env::set_var("GITHUB_TOKEN", "test-token");
+        std::env::remove_var("GH_TOKEN");
+        let r = f();
+        std::env::remove_var("GITHUB_TOKEN");
+        r
+    }
+
+    fn authed_requests(f: &Fake) -> usize {
+        f.seen.lock().unwrap().iter().filter(|l| l.ends_with(" AUTH")).count()
+    }
+
+    fn run_build(f: &Fake, max_archive: u64) -> (Result<Manifest>, tempfile::TempDir) {
+        let out = tempfile::tempdir().unwrap();
+        let r = build(&client(f, max_archive), &dep("pkg", "1.2.3"), &repo(None), false, out.path());
+        (r, out)
+    }
+
+    fn requests(f: &Fake, prefix: &str) -> usize {
+        f.seen
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|l| l.split(' ').nth(1).unwrap_or("").starts_with(prefix))
+            .count()
+    }
+
+    #[test]
+    fn fetch_with_rest_api_blocked_succeeds_through_codeload() {
+        let f = fake(Codeload::Ok, true, Some("v1.2.3"));
+        let (m, out) = run_build(&f, MAX_ARCHIVE);
+        let m = m.unwrap();
+        assert_eq!(
+            (m.tag.as_deref(), m.commit.as_deref(), m.via.as_deref()),
+            (Some("v1.2.3"), Some(SHA), Some("codeload"))
+        );
+        assert_eq!(m.files, 2);
+        assert_eq!(std::fs::read_to_string(out.path().join("docs/guide.md")).unwrap(), "# guide");
+        assert!(!out.path().join("src").exists());
+        // Neither the REST API nor raw file requests were made.
+        assert_eq!(requests(&f, "/repos/") + requests(&f, "/raw/"), 0);
+        assert_eq!(requests(&f, &format!("/o/r/tar.gz/{SHA}")), 1);
+    }
+
+    #[test]
+    fn over_cap_archive_falls_back_to_per_file_for_that_repository() {
+        let f = fake(Codeload::Ok, false, Some("v1.2.3"));
+        let (m, out) = run_build(&f, 64);
+        let m = m.unwrap();
+        assert_eq!(m.via.as_deref(), Some("rest"));
+        assert!(m.files >= 2 && out.path().join("README.md").is_file() && out.path().join("docs/guide.md").is_file());
+        assert!(requests(&f, "/repos/") > 0 && requests(&f, "/raw/") > 0);
+    }
+
+    #[test]
+    fn codeload_failure_falls_back_and_both_failing_reports_both() {
+        let f = fake(Codeload::Fail, false, Some("v1.2.3"));
+        assert_eq!(run_build(&f, MAX_ARCHIVE).0.unwrap().via.as_deref(), Some("rest"));
+        let f = fake(Codeload::Fail, true, Some("v1.2.3"));
+        let e = format!("{:#}", run_build(&f, MAX_ARCHIVE).0.unwrap_err());
+        assert!(e.contains("codeload") && e.contains("fallback failed"), "{e}");
+    }
+
+    #[test]
+    fn missing_tag_is_a_clear_note_and_downloads_nothing() {
+        let f = fake(Codeload::Ok, true, None);
+        let m = run_build(&f, MAX_ARCHIVE).0.unwrap();
+        let note = m.note.unwrap();
+        assert!(
+            note.contains("no git tag found for 1.2.3") && note.contains("v1.2.3") && note.contains("1.2.3,"),
+            "{note}"
+        );
+        assert_eq!((m.tag, m.files), (None, 0));
+        assert_eq!(requests(&f, "/o/r/tar.gz/") + requests(&f, "/repos/"), 0);
+    }
+
+    #[test]
+    fn credentialed_hook_rejected_token_is_an_error_but_anonymous_401_is_not() {
+        let f = fake(Codeload::BadToken, false, Some("v1.2.3"));
+        let e = with_token(|| {
+            format!(
+                "{:#}",
+                list_refs(&credentialed_client(&f), &repo(None), &["refs/tags/v1.2.3".into()]).unwrap_err()
+            )
+        });
+        assert!(e.contains("rejected GITHUB_TOKEN") && e.contains("401"), "{e}");
+        // Anonymous requests never send the header, so the same server answers normally.
+        assert!(list_refs(&client(&f, MAX_ARCHIVE), &repo(None), &["refs/tags/v1.2.3".into()])
+            .unwrap()
+            .is_some());
+    }
+
+    #[test]
+    fn credentialed_hook_codeload_404_retries_anonymously() {
+        let f = fake(Codeload::MissingWithAuth, false, Some("v1.2.3"));
+        let got = with_token(|| codeload(&credentialed_client(&f), &repo(None), SHA).unwrap());
+        assert!(got.is_some());
+        let seen = f.seen.lock().unwrap().clone();
+        let tar: Vec<_> = seen.iter().filter(|l| l.contains("/tar.gz/")).collect();
+        assert_eq!(tar.len(), 2);
+        assert!(tar[0].ends_with(" AUTH") && !tar[1].ends_with(" AUTH"), "{tar:?}");
+    }
+
+    #[test]
+    fn slow_codeload_under_a_short_deadline_falls_back_to_rest() {
+        let f = fake(Codeload::Slow, false, Some("v1.2.3"));
+        let mut c = client(&f, MAX_ARCHIVE);
+        // 17 s left: the stream gets 2 s, the rest of the budget serves the fallback.
+        c.deadline = Some(std::time::Instant::now() + std::time::Duration::from_secs(17));
+        let out = tempfile::tempdir().unwrap();
+        let m = build(&c, &dep("pkg", "1.2.3"), &repo(None), true, out.path()).unwrap();
+        assert_eq!(m.via.as_deref(), Some("rest"));
+    }
+
+    #[test]
+    fn automatic_mode_sends_no_authorization_header() {
+        let f = fake(Codeload::Ok, false, Some("v1.2.3"));
+        let a = with_token(|| {
+            let a = agent(true);
+            assert_eq!(a.max_archive, MAX_ARCHIVE_AUTOMATIC);
+            assert_eq!(agent(false).max_archive, MAX_ARCHIVE);
+            let mut c = client(&f, MAX_ARCHIVE);
+            c.authenticated = a.authenticated;
+            let out = tempfile::tempdir().unwrap();
+            build(&c, &dep("pkg", "1.2.3"), &repo(None), true, out.path()).unwrap();
+            a
+        });
+        assert!(!a.authenticated);
+        assert!(requests(&f, "/o/r/tar.gz/") == 1);
+        assert_eq!(authed_requests(&f), 0);
+    }
+
+    /// Paths that received an Authorization header.
+    fn authed_paths(f: &Fake) -> Vec<String> {
+        f.seen
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|l| l.ends_with(" AUTH"))
+            .map(|l| l.split(' ').nth(1).unwrap_or("").to_string())
+            .collect()
+    }
+
+    #[test]
+    fn explicit_mode_sends_no_token_to_git_codeload_or_raw() {
+        // Archive path: git and codeload only.
+        let f = fake(Codeload::Ok, false, Some("v1.2.3"));
+        with_token(|| {
+            let out = tempfile::tempdir().unwrap();
+            build(&authed_client(&f), &dep("pkg", "1.2.3"), &repo(None), false, out.path()).unwrap();
+        });
+        assert!(requests(&f, "/o/r/tar.gz/") == 1 && requests(&f, "/o/r.git/") >= 1);
+        assert_eq!(authed_paths(&f), Vec::<String>::new());
+        // Per-file path: git, REST and raw. Only REST carries the token, as in 0.4.0.
+        let f = fake(Codeload::Fail, false, Some("v1.2.3"));
+        with_token(|| {
+            let out = tempfile::tempdir().unwrap();
+            build(&authed_client(&f), &dep("pkg", "1.2.3"), &repo(None), false, out.path()).unwrap();
+        });
+        assert!(requests(&f, "/raw/") >= 1 && requests(&f, "/repos/") >= 1);
+        let authed = authed_paths(&f);
+        assert!(!authed.is_empty() && authed.iter().all(|p| p.starts_with("/repos/")), "{authed:?}");
+    }
+
+    #[test]
+    fn unavailable_repository_keeps_docs_site_files() {
+        let f = fake(Codeload::PrivateWithSite, false, Some("v1.2.3"));
+        let out = tempfile::tempdir().unwrap();
+        let m = build(&client(&f, MAX_ARCHIVE), &dep("react", "19.0.0"), &repo(None), false, out.path()).unwrap();
+        assert!(m.files >= 1 && m.site.is_some(), "{m:?}");
+        assert_eq!(std::fs::read_to_string(out.path().join("react.dev/src/content/learn/a.md")).unwrap(), "# learn");
+    }
+
+    #[test]
+    fn unavailable_repository_without_docs_site_is_a_clear_error() {
+        let f = fake(Codeload::Private, false, Some("v1.2.3"));
+        let out = tempfile::tempdir().unwrap();
+        let e = format!(
+            "{:#}",
+            build(&client(&f, MAX_ARCHIVE), &dep("react", "19.0.0"), &repo(None), false, out.path()).unwrap_err()
+        );
+        assert!(e.contains("private repository: not supported"), "{e}");
+    }
+
+    #[test]
+    fn public_repository_fetches_anonymously_without_a_token() {
+        let f = fake(Codeload::Ok, false, Some("v1.2.3"));
+        let out = tempfile::tempdir().unwrap();
+        let m = build(&authed_client(&f), &dep("pkg", "1.2.3"), &repo(None), false, out.path()).unwrap();
+        assert_eq!(m.via.as_deref(), Some("codeload"));
+        assert_eq!(authed_requests(&f), 0);
+    }
+
+    #[test]
+    fn private_repository_fails_clearly_even_with_a_token() {
+        let f = fake(Codeload::Private, false, Some("v1.2.3"));
+        let e = with_token(|| {
+            let out = tempfile::tempdir().unwrap();
+            format!(
+                "{:#}",
+                build(&authed_client(&f), &dep("pkg", "1.2.3"), &repo(None), false, out.path()).unwrap_err()
+            )
+        });
+        assert!(e.contains("private repository: not supported"), "{e}");
+        assert!(!e.contains("Pro") && !e.contains("coming"), "{e}");
+        assert_eq!(authed_requests(&f), 0);
+        assert_eq!(requests(&f, "/o/r/tar.gz/"), 0);
+    }
+
+    #[test]
+    fn basic_auth_header_is_base64() {
+        assert_eq!(basic("a"), "Basic eC1hY2Nlc3MtdG9rZW46YQ==");
+        assert_eq!(basic("ab"), "Basic eC1hY2Nlc3MtdG9rZW46YWI=");
+        assert_eq!(basic("abc"), "Basic eC1hY2Nlc3MtdG9rZW46YWJj");
+    }
+
+    #[test]
+    fn tar_extraction_keeps_only_docs_paths() {
+        let big = vec![b'x'; (MAX_FILE + 1) as usize];
+        let tgz = tarball(&[
+            ("README.md", b"# readme"),
+            ("CHANGELOG.md", b"# changes"),
+            ("LICENSE", b"mit"),
+            ("src/lib.rs", b"fn main() {}"),
+            ("docs/index.md", b"# docs"),
+            ("docs/guide/a.mdx", b"a"),
+            ("docs/img.png", b"png"),
+            ("docs/blog/post.md", b"blog"),
+            ("docs/huge.md", &big),
+            ("packages/pkg/docs/b.md", b"b"),
+            ("packages/other/docs/c.md", b"c"), // another package: not opened
+            ("node_modules/x/docs/n.md", b"n"),
+            ("src/deep/er/est/docs/z.md", b"z"),
+        ]);
+        let got = extract_pkg_docs(&tgz[..], &dep("pkg", "1.0.0"), &repo(None)).unwrap();
+        assert_eq!(
+            names(&got),
+            vec!["CHANGELOG.md", "README.md", "docs/guide/a.mdx", "docs/index.md", "packages/pkg/docs/b.md",]
+        );
+        assert_eq!(got.iter().find(|(p, _)| p == "README.md").unwrap().1, b"# readme");
+        // The symlink never appears, and nothing outside docs roots is read.
+        assert!(!names(&got).iter().any(|p| p.contains("link") || p.starts_with("src/")));
+    }
+
+    #[test]
+    fn tar_extraction_prefers_english_and_package_readme() {
+        let tgz = tarball(&[
+            ("docs/en/a.md", b"a"),
+            ("docs/fr/a.md", b"fr"),
+            ("docs/de/a.md", b"de"),
+            ("docs/top.md", b"t"),
+            ("README.md", b"root"),
+            ("packages/pkg/README.md", b"pkg"),
+            ("packages/pkg/src/x.md", b"no"),
+            ("packages/other/README.md", b"other"),
+        ]);
+        let got = extract_pkg_docs(&tgz[..], &dep("pkg", "1.0.0"), &repo(Some("packages/pkg"))).unwrap();
+        assert_eq!(names(&got), vec!["README.md", "docs/en/a.md", "docs/top.md", "packages/pkg/README.md"]);
+    }
+
+    #[test]
+    fn tar_extraction_rejects_unsafe_and_corrupt_archives() {
+        // A path that escapes the folder is skipped, not written anywhere.
+        let mut b = tar::Builder::new(Vec::new());
+        let mut h = tar::Header::new_gnu();
+        h.set_size(1);
+        h.set_entry_type(tar::EntryType::Regular);
+        h.as_old_mut().name[..16].copy_from_slice(b"r-abc/../evil.md");
+        h.set_cksum();
+        b.append(&h, &b"x"[..]).unwrap();
+        let tar = b.into_inner().unwrap();
+        let mut gz = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
+        std::io::Write::write_all(&mut gz, &tar).unwrap();
+        let tgz = gz.finish().unwrap();
+        assert!(read_tar(&tgz[..], 1 << 20, |_, _| true).unwrap().is_empty());
+        assert!(write_file(Path::new("/nonexistent-root"), "../x.md", b"x").is_err());
+        // Truncated or non-archive bodies are errors, never "no docs".
+        let ok = tarball(&[("docs/a.md", &[b'a'; 4096])]);
+        assert!(extract_pkg_docs(&ok[..ok.len() / 2], &dep("pkg", "1.0.0"), &repo(None)).is_err());
+        assert!(extract_pkg_docs(&b"<html>not found</html>"[..], &dep("pkg", "1.0.0"), &repo(None)).is_err());
+    }
+
+    #[test]
+    fn hardlinks_and_absolute_paths_are_skipped() {
+        let mut b = tar::Builder::new(Vec::new());
+        let mut h = tar::Header::new_gnu();
+        h.set_entry_type(tar::EntryType::Link);
+        h.set_size(0);
+        b.append_link(&mut h, "r-abc/docs/hard.md", "r-abc/README.md").unwrap();
+        let mut h = tar::Header::new_gnu();
+        h.set_size(1);
+        h.set_mode(0o644);
+        h.set_entry_type(tar::EntryType::Regular);
+        let mut raw = [0u8; 100];
+        raw[..11].copy_from_slice(b"/abs/doc.md");
+        h.as_old_mut().name = raw;
+        h.set_cksum();
+        b.append(&h, &b"x"[..]).unwrap();
+        let mut h = tar::Header::new_gnu();
+        h.set_size(1);
+        h.set_mode(0o644);
+        h.set_entry_type(tar::EntryType::Regular);
+        b.append_data(&mut h, "r-abc/docs/ok.md", &b"y"[..]).unwrap();
+        let tar = b.into_inner().unwrap();
+        let mut gz = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
+        std::io::Write::write_all(&mut gz, &tar).unwrap();
+        let tgz = gz.finish().unwrap();
+        let got = read_tar(&tgz[..], 1000, |_, _| true).unwrap();
+        assert_eq!(names(&got), vec!["docs/ok.md"]);
+    }
+
+    #[test]
+    fn tar_extraction_stops_at_the_size_cap() {
+        let tgz = tarball(&[("docs/a.md", &[b'a'; 600]), ("docs/b.md", &[b'b'; 600])]);
+        let got = read_tar(&tgz[..], 1000, |_, _| true).unwrap();
+        assert_eq!(got.len(), 1);
+    }
+
+    #[test]
+    fn docs_site_files_follow_the_major_rules() {
+        let (docs, pages): (Vec<String>, Vec<String>) = (vec!["src/content/docs/en".into()], vec!["src/app/installation".into()]);
+        let versioned = vec!["src/content/api/4x".to_string()];
+        let k = |p: &str, ok: bool| site_kind(p, 4, &versioned, ok, &docs, &pages);
+        assert_eq!(k("src/content/docs/en/a.md", false), Some(false));
+        assert_eq!(k("src/content/docs/en/a.txt", false), None);
+        assert_eq!(k("src/content/docs/en/v5-beta.md", false), None);
+        assert_eq!(k("src/content/api/4x/req.md", true), Some(false));
+        assert_eq!(k("src/content/api/4x/req.md", false), None);
+        assert_eq!(k("src/app/installation/page.tsx", false), Some(true));
+        assert_eq!(k("src/app/installation/layout.tsx", false), None);
+        assert_eq!(k("README.md", true), None);
     }
 
     #[test]
@@ -1051,6 +2106,17 @@ mod tests {
     }
 
     #[test]
+    fn format_4_cache_is_trusted_automatically_and_refreshed_on_fetch() {
+        let mut v4 = manifest();
+        v4.format = 4;
+        v4.docs_sites_checked = true;
+        assert!(!needs_refresh(&v4, false));
+        assert!(needs_refresh(&v4, true));
+        let kept = enrich_cached(Some((PathBuf::new(), v4)), false, || Err(anyhow::anyhow!("offline"))).unwrap();
+        assert_eq!(kept.files, 1);
+    }
+
+    #[test]
     fn enrichment_policy_upgrades_once_and_preserves_opted_in_sites() {
         let automatic = manifest();
         assert!(needs_refresh(&automatic, true));
@@ -1069,18 +2135,9 @@ mod tests {
 
     #[test]
     fn failed_downloads_are_not_empty_docs_or_published_partial_success() {
-        assert!(download_results(vec![]).unwrap().is_empty());
-        assert!(download_results(vec![Err(anyhow::anyhow!("HTTP 503"))])
-            .unwrap_err()
-            .to_string()
-            .contains("1/1"));
-        assert!(download_results(vec![Ok(10), Err(anyhow::anyhow!("HTTP 503"))])
-            .unwrap_err()
-            .to_string()
-            .contains("1/2"));
         let old = manifest();
         let preserved = enrich_cached(Some((PathBuf::new(), old.clone())), true, || {
-            download_results(vec![Ok(10), Err(anyhow::anyhow!("HTTP 503"))]).map(|_| unreachable!())
+            Err(anyhow::anyhow!("reading the archive: corrupt or truncated archive"))
         })
         .unwrap();
         assert_eq!(preserved.commit, old.commit);

@@ -19,8 +19,9 @@ Do not open public issues for sensitive reports.
   file when the archive is too large or the download fails; and, only with
   `lockdocs fetch`, `--fetch` or `LOCKDOCS_FETCH=1`, package archives from the
   registries below and docs-site files from GitHub (a `GITHUB_TOKEN` /
-  `GH_TOKEN` in the environment is sent to GitHub hosts only for these
-  explicit fetches, never for automatic requests). No project data is ever
+  `GH_TOKEN` in the environment is sent to api.github.com only, and only for
+  these explicit fetches; it is never sent to github.com, codeload.github.com
+  or raw.githubusercontent.com, and never on automatic requests). No project data is ever
   sent: requests name public packages, versions and file paths.
 - With fetching enabled it downloads only the exact package versions requested,
   from registry.npmjs.org, pypi.org / files.pythonhosted.org, static.crates.io

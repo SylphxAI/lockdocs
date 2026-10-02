@@ -503,6 +503,9 @@ impl Hosts {
 struct Client {
     agent: ureq::Agent,
     authenticated: bool,
+    /// Future Pro "private sources" hook: when true, the token is also sent to
+    /// the git and codeload hosts. Always false today (see `source_auth`).
+    credentialed_sources: bool,
     deadline: Option<std::time::Instant>,
     hosts: Hosts,
     /// Largest compressed archive streamed from one repository.
@@ -530,7 +533,7 @@ fn agent(automatic: bool) -> Client {
         .timeout_global(Some(std::time::Duration::from_secs(if automatic { 10 } else { 60 })))
         .max_redirects(if automatic { 0 } else { 10 })
         .http_status_as_error(false)
-        // Renamed repositories answer with a redirect; keep the token for it.
+        // Renamed repositories answer with a redirect; the REST token follows it on the same host only.
         .redirect_auth_headers(ureq::config::RedirectAuthHeaders::SameHost)
         .user_agent(concat!("lockdocs/", env!("CARGO_PKG_VERSION"), " (+https://github.com/SylphxAI/lockdocs)"))
         .build()
@@ -538,9 +541,20 @@ fn agent(automatic: bool) -> Client {
     Client {
         agent,
         authenticated: !automatic,
+        credentialed_sources: false,
         deadline: automatic.then(|| std::time::Instant::now() + std::time::Duration::from_secs(45)),
         hosts: Hosts::github(),
         max_archive: if automatic { MAX_ARCHIVE_AUTOMATIC } else { MAX_ARCHIVE },
+    }
+}
+
+impl Client {
+    /// The token for the git smart-HTTP, codeload and raw hosts. Free lockdocs
+    /// sends no credential to any of them; only the future Pro "private
+    /// sources" path sets `credentialed_sources`. The REST API alone gets the
+    /// token on explicit fetch (see `api`).
+    fn source_auth(&self) -> Option<String> {
+        (self.authenticated && self.credentialed_sources).then(token).flatten()
     }
 }
 
@@ -681,7 +695,7 @@ fn list_refs(agent: &Client, repo: &Repo, prefixes: &[String]) -> Result<Option<
         .header("Content-Type", "application/x-git-upload-pack-request")
         .header("Accept", "application/x-git-upload-pack-result")
         .header("Git-Protocol", "version=2");
-    let sent_token = match agent.authenticated.then(token).flatten() {
+    let sent_token = match agent.source_auth() {
         Some(t) => {
             req = req.header("Authorization", &basic(&t));
             true
@@ -767,10 +781,10 @@ impl Archive {
 /// Stream `https://codeload.github.com/<owner>/<repo>/tar.gz/<ref>` (a tag, a
 /// branch or a commit). Ok(None) on 404. Not governed by the REST API quota.
 fn codeload(agent: &Client, repo: &Repo, reference: &str) -> Result<Option<Archive>> {
-    let sent_token = agent.authenticated && token().is_some();
+    let sent_token = agent.source_auth().is_some();
     match codeload_once(agent, repo, reference, sent_token)? {
-        // A private repository the token cannot see, or a token codeload rejects:
-        // public repositories still answer an anonymous request.
+        // Only reachable on the future credentialed path: a token codeload does not
+        // accept falls back to an anonymous request, which public repositories answer.
         None if sent_token => codeload_once(agent, repo, reference, false),
         other => Ok(other),
     }
@@ -794,7 +808,7 @@ fn codeload_once(agent: &Client, repo: &Repo, reference: &str, with_token: bool)
     };
     let mut req = agent.get(&url).config().timeout_global(Some(timeout)).build();
     if with_token {
-        if let Some(t) = token() {
+        if let Some(t) = agent.source_auth() {
             req = req.header("Authorization", &format!("Bearer {t}"));
         }
     }
@@ -1316,7 +1330,11 @@ fn fetch_attempt(dep: &Dep, src: &Source, automatic: bool) -> Result<Manifest> {
 fn build(agent: &Client, dep: &Dep, repo: &Repo, automatic: bool, out: &Path) -> Result<Manifest> {
     let label = format!("github.com/{}/{}", repo.owner, repo.name);
     let candidates = tag_candidates(dep);
-    let release = list_refs(agent, repo, &tag_prefixes(&candidates))?.and_then(|refs| pick_release(&candidates, &refs));
+    let refs = list_refs(agent, repo, &tag_prefixes(&candidates))?;
+    if refs.is_none() && !automatic {
+        bail!("{label}: private repository: not supported (or the repository does not exist)");
+    }
+    let release = refs.and_then(|refs| pick_release(&candidates, &refs));
     let Some((tag, commit)) = release else {
         let mut m = Manifest {
             format: FORMAT,
@@ -1537,6 +1555,8 @@ mod tests {
         MissingWithAuth,
         /// The git endpoint answers 401 when a token is sent.
         BadToken,
+        /// A private repository: anonymous git answers 401 and codeload 404.
+        Private,
         /// Answers after a pause longer than a short deadline.
         Slow,
     }
@@ -1574,54 +1594,56 @@ mod tests {
                     if authed { " AUTH" } else { "" }
                 ));
                 let json = |v: serde_json::Value| (200, "application/json", v.to_string().into_bytes());
-                let (status, ctype, body): (u16, &str, Vec<u8>) = if path.ends_with("/git-upload-pack") && authed && codeload == Codeload::BadToken {
-                    (401, "text/plain", Vec::new())
-                } else if path.ends_with("/git-upload-pack") {
-                    // Drain the request body (pkt-lines end with 0000).
-                    let mut body = buf.split(|_| false).next().unwrap().to_vec();
-                    while !body.ends_with(b"0000") {
-                        let n = c.read(&mut chunk).unwrap_or(0);
-                        if n == 0 {
-                            break;
+                let (status, ctype, body): (u16, &str, Vec<u8>) =
+                    if path.ends_with("/git-upload-pack") && (codeload == Codeload::Private || (authed && codeload == Codeload::BadToken)) {
+                        (401, "text/plain", Vec::new())
+                    } else if path.ends_with("/git-upload-pack") {
+                        // Drain the request body (pkt-lines end with 0000).
+                        let mut body = buf.split(|_| false).next().unwrap().to_vec();
+                        while !body.ends_with(b"0000") {
+                            let n = c.read(&mut chunk).unwrap_or(0);
+                            if n == 0 {
+                                break;
+                            }
+                            body.extend_from_slice(&chunk[..n]);
                         }
-                        body.extend_from_slice(&chunk[..n]);
-                    }
-                    let mut resp = String::new();
-                    if let Some(t) = &tag {
-                        let l = format!("{SHA} refs/tags/{t}\n");
-                        resp.push_str(&format!("{:04x}{l}", l.len() + 4));
-                    }
-                    resp.push_str("0000");
-                    (200, "application/x-git-upload-pack-result", resp.into_bytes())
-                } else if path.starts_with("/o/r/tar.gz/") {
-                    match codeload {
-                        Codeload::Ok => (200, "application/gzip", archive.clone()),
-                        Codeload::Fail => (500, "text/plain", b"boom".to_vec()),
-                        Codeload::MissingWithAuth if authed => (404, "text/plain", Vec::new()),
-                        Codeload::MissingWithAuth | Codeload::BadToken => (200, "application/gzip", archive.clone()),
-                        Codeload::Slow => {
-                            std::thread::sleep(std::time::Duration::from_secs(8));
-                            (200, "application/gzip", archive.clone())
+                        let mut resp = String::new();
+                        if let Some(t) = &tag {
+                            let l = format!("{SHA} refs/tags/{t}\n");
+                            resp.push_str(&format!("{:04x}{l}", l.len() + 4));
                         }
-                    }
-                } else if path.starts_with("/repos/") {
-                    if api_blocked {
-                        (403, "application/json", br#"{"message":"API rate limit exceeded"}"#.to_vec())
-                    } else if path.contains("/git/trees/docs-sha") {
-                        json(serde_json::json!({"tree":[{"path":"guide.md","type":"blob","sha":"b2","size":7}]}))
-                    } else if path.contains("/git/trees/") {
-                        json(serde_json::json!({"tree":[
+                        resp.push_str("0000");
+                        (200, "application/x-git-upload-pack-result", resp.into_bytes())
+                    } else if path.starts_with("/o/r/tar.gz/") {
+                        match codeload {
+                            Codeload::Ok => (200, "application/gzip", archive.clone()),
+                            Codeload::Private => (404, "text/plain", Vec::new()),
+                            Codeload::Fail => (500, "text/plain", b"boom".to_vec()),
+                            Codeload::MissingWithAuth if authed => (404, "text/plain", Vec::new()),
+                            Codeload::MissingWithAuth | Codeload::BadToken => (200, "application/gzip", archive.clone()),
+                            Codeload::Slow => {
+                                std::thread::sleep(std::time::Duration::from_secs(8));
+                                (200, "application/gzip", archive.clone())
+                            }
+                        }
+                    } else if path.starts_with("/repos/") {
+                        if api_blocked {
+                            (403, "application/json", br#"{"message":"API rate limit exceeded"}"#.to_vec())
+                        } else if path.contains("/git/trees/docs-sha") {
+                            json(serde_json::json!({"tree":[{"path":"guide.md","type":"blob","sha":"b2","size":7}]}))
+                        } else if path.contains("/git/trees/") {
+                            json(serde_json::json!({"tree":[
                             {"path":"README.md","type":"blob","sha":"b1","size":8},
                             {"path":"docs","type":"tree","sha":"docs-sha","size":0},
                             {"path":"src","type":"tree","sha":"src-sha","size":0}]}))
+                        } else {
+                            (404, "application/json", b"{}".to_vec())
+                        }
+                    } else if path.starts_with("/raw/o/r/") {
+                        (200, "text/markdown", b"# raw".to_vec())
                     } else {
-                        (404, "application/json", b"{}".to_vec())
-                    }
-                } else if path.starts_with("/raw/o/r/") {
-                    (200, "text/markdown", b"# raw".to_vec())
-                } else {
-                    (404, "text/plain", Vec::new())
-                };
+                        (404, "text/plain", Vec::new())
+                    };
                 let _ = write!(
                     c,
                     "HTTP/1.1 {status} X\r\nContent-Type: {ctype}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
@@ -1638,6 +1660,7 @@ mod tests {
         Client {
             agent,
             authenticated: false,
+            credentialed_sources: false,
             deadline: None,
             hosts: Hosts {
                 api: f.base.clone(),
@@ -1652,6 +1675,13 @@ mod tests {
     fn authed_client(f: &Fake) -> Client {
         let mut c = client(f, MAX_ARCHIVE);
         c.authenticated = true;
+        c
+    }
+
+    /// A client with the future credentialed-sources hook switched on.
+    fn credentialed_client(f: &Fake) -> Client {
+        let mut c = authed_client(f);
+        c.credentialed_sources = true;
         c
     }
 
@@ -1735,9 +1765,14 @@ mod tests {
     }
 
     #[test]
-    fn rejected_token_is_an_error_but_anonymous_401_is_not() {
+    fn credentialed_hook_rejected_token_is_an_error_but_anonymous_401_is_not() {
         let f = fake(Codeload::BadToken, false, Some("v1.2.3"));
-        let e = with_token(|| format!("{:#}", list_refs(&authed_client(&f), &repo(None), &["refs/tags/v1.2.3".into()]).unwrap_err()));
+        let e = with_token(|| {
+            format!(
+                "{:#}",
+                list_refs(&credentialed_client(&f), &repo(None), &["refs/tags/v1.2.3".into()]).unwrap_err()
+            )
+        });
         assert!(e.contains("rejected GITHUB_TOKEN") && e.contains("401"), "{e}");
         // Anonymous requests never send the header, so the same server answers normally.
         assert!(list_refs(&client(&f, MAX_ARCHIVE), &repo(None), &["refs/tags/v1.2.3".into()])
@@ -1746,9 +1781,9 @@ mod tests {
     }
 
     #[test]
-    fn codeload_404_with_a_token_retries_anonymously() {
+    fn credentialed_hook_codeload_404_retries_anonymously() {
         let f = fake(Codeload::MissingWithAuth, false, Some("v1.2.3"));
-        let got = with_token(|| codeload(&authed_client(&f), &repo(None), SHA).unwrap());
+        let got = with_token(|| codeload(&credentialed_client(&f), &repo(None), SHA).unwrap());
         assert!(got.is_some());
         let seen = f.seen.lock().unwrap().clone();
         let tar: Vec<_> = seen.iter().filter(|l| l.contains("/tar.gz/")).collect();
@@ -1785,14 +1820,61 @@ mod tests {
         assert_eq!(authed_requests(&f), 0);
     }
 
+    /// Paths that received an Authorization header.
+    fn authed_paths(f: &Fake) -> Vec<String> {
+        f.seen
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|l| l.ends_with(" AUTH"))
+            .map(|l| l.split(' ').nth(1).unwrap_or("").to_string())
+            .collect()
+    }
+
     #[test]
-    fn explicit_mode_sends_the_token_to_git_and_codeload() {
+    fn explicit_mode_sends_no_token_to_git_codeload_or_raw() {
+        // Archive path: git and codeload only.
         let f = fake(Codeload::Ok, false, Some("v1.2.3"));
         with_token(|| {
             let out = tempfile::tempdir().unwrap();
             build(&authed_client(&f), &dep("pkg", "1.2.3"), &repo(None), false, out.path()).unwrap();
         });
-        assert!(authed_requests(&f) >= 2);
+        assert!(requests(&f, "/o/r/tar.gz/") == 1 && requests(&f, "/o/r.git/") >= 1);
+        assert_eq!(authed_paths(&f), Vec::<String>::new());
+        // Per-file path: git, REST and raw. Only REST carries the token, as in 0.4.0.
+        let f = fake(Codeload::Fail, false, Some("v1.2.3"));
+        with_token(|| {
+            let out = tempfile::tempdir().unwrap();
+            build(&authed_client(&f), &dep("pkg", "1.2.3"), &repo(None), false, out.path()).unwrap();
+        });
+        assert!(requests(&f, "/raw/") >= 1 && requests(&f, "/repos/") >= 1);
+        let authed = authed_paths(&f);
+        assert!(!authed.is_empty() && authed.iter().all(|p| p.starts_with("/repos/")), "{authed:?}");
+    }
+
+    #[test]
+    fn public_repository_fetches_anonymously_without_a_token() {
+        let f = fake(Codeload::Ok, false, Some("v1.2.3"));
+        let out = tempfile::tempdir().unwrap();
+        let m = build(&authed_client(&f), &dep("pkg", "1.2.3"), &repo(None), false, out.path()).unwrap();
+        assert_eq!(m.via.as_deref(), Some("codeload"));
+        assert_eq!(authed_requests(&f), 0);
+    }
+
+    #[test]
+    fn private_repository_fails_clearly_even_with_a_token() {
+        let f = fake(Codeload::Private, false, Some("v1.2.3"));
+        let e = with_token(|| {
+            let out = tempfile::tempdir().unwrap();
+            format!(
+                "{:#}",
+                build(&authed_client(&f), &dep("pkg", "1.2.3"), &repo(None), false, out.path()).unwrap_err()
+            )
+        });
+        assert!(e.contains("private repository: not supported"), "{e}");
+        assert!(!e.contains("Pro") && !e.contains("coming"), "{e}");
+        assert_eq!(authed_requests(&f), 0);
+        assert_eq!(requests(&f, "/o/r/tar.gz/"), 0);
     }
 
     #[test]

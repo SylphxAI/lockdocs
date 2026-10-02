@@ -13,6 +13,8 @@ eq("server.json package", s.packages[0].version);
 eq("package.json", read("package.json").version);
 const cargo = readFileSync("Cargo.toml", "utf8").match(/\[workspace\.package\][^\[]*?version = "([^"]+)"/)?.[1] ?? "";
 eq("Cargo.toml", cargo);
+const dep = readFileSync("crates/lockdocs/Cargo.toml", "utf8").match(/\nlockdocs-core = \{[^\n}]*version = "([^"]+)"/)?.[1] ?? "";
+eq("crates/lockdocs/Cargo.toml (lockdocs-core dependency)", dep);
 const lock = readFileSync("Cargo.lock", "utf8").match(/name = "lockdocs"\nversion = "([^"]+)"/)?.[1] ?? "";
 eq("Cargo.lock", lock);
 if (bad.length) {

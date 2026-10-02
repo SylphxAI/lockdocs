@@ -4,7 +4,10 @@ name: release
 # on npm yet, through the shared mcp-kit release workflow: native binaries ->
 # npm (trusted publishing, OIDC) -> npx smoke -> GitHub release -> MCP Registry.
 # Bump with `bun scripts/set-version.ts X.Y.Z && cargo update -w`. npm trusted
-# publishing trusts this file (SylphxAI/lockdocs, release.yml).
+# publishing trusts this file (SylphxAI/lockdocs, release.yml). The crates job
+# publishes lockdocs-core, then lockdocs, to crates.io through trusted
+# publishing (OIDC, no token); crates.io trusts this file and the crates-io
+# environment.
 
 on:
   push:
@@ -19,6 +22,33 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  crates:
+    # An owner enables this only after registry ownership and both trusted
+    # publisher records have been confirmed. Landing this workflow publishes nothing.
+    if: github.ref == 'refs/heads/main' && vars.CRATES_IO_PUBLISH_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: crates-io
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+      - name: Skip versions that are already on crates.io
+        id: plan
+        run: |
+          V=$(cargo metadata --locked --no-deps --format-version 1 | python3 -c 'import json,sys; print(next(p["version"] for p in json.load(sys.stdin)["packages"] if p["name"] == "lockdocs"))')
+          if curl -fsS "https://index.crates.io/lo/ck/lockdocs" | grep -q "\"vers\":\"$V\""; then echo "publish=false" >> "$GITHUB_OUTPUT"; else echo "publish=true" >> "$GITHUB_OUTPUT"; fi
+      - id: auth
+        if: steps.plan.outputs.publish == 'true'
+        uses: rust-lang/crates-io-auth-action@c6f97d42243bad5fab37ca0427f495c86d5b1a18 # v1.0.5
+      - name: Publish lockdocs-core before lockdocs
+        if: steps.plan.outputs.publish == 'true'
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+        run: cargo publish --locked --workspace
+
   release:
     uses: SylphxAI/mcp-kit/.github/workflows/release.yml@v0
     permissions:

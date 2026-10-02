@@ -1592,7 +1592,32 @@ mod tests {
                     }
                     buf.extend_from_slice(&chunk[..n]);
                 }
-                let head = String::from_utf8_lossy(&buf).to_string();
+                let head_end = buf.windows(4).position(|w| w == b"\r\n\r\n").map_or(buf.len(), |i| i + 4);
+                let head = String::from_utf8_lossy(&buf[..head_end]).to_string();
+                // Always consume the request body before answering: closing a socket with unread
+                // data makes macOS and Windows reset the connection under the client.
+                let lower = head.to_ascii_lowercase();
+                let mut body_in = buf[head_end..].to_vec();
+                if lower.contains("transfer-encoding: chunked") {
+                    while !body_in.ends_with(b"0\r\n\r\n") {
+                        let n = c.read(&mut chunk).unwrap_or(0);
+                        if n == 0 {
+                            break;
+                        }
+                        body_in.extend_from_slice(&chunk[..n]);
+                    }
+                } else if let Some(len) = lower
+                    .lines()
+                    .find_map(|l| l.strip_prefix("content-length:").and_then(|v| v.trim().parse::<usize>().ok()))
+                {
+                    while body_in.len() < len {
+                        let n = c.read(&mut chunk).unwrap_or(0);
+                        if n == 0 {
+                            break;
+                        }
+                        body_in.extend_from_slice(&chunk[..n]);
+                    }
+                }
                 let line = head.lines().next().unwrap_or("").to_string();
                 let path = line.split(' ').nth(1).unwrap_or("").to_string();
                 let authed = head.to_ascii_lowercase().contains("\r\nauthorization:");
@@ -1608,15 +1633,6 @@ mod tests {
                 {
                     (401, "text/plain", Vec::new())
                 } else if path.ends_with("/git-upload-pack") {
-                    // Drain the request body (pkt-lines end with 0000).
-                    let mut body = buf.split(|_| false).next().unwrap().to_vec();
-                    while !body.ends_with(b"0000") {
-                        let n = c.read(&mut chunk).unwrap_or(0);
-                        if n == 0 {
-                            break;
-                        }
-                        body.extend_from_slice(&chunk[..n]);
-                    }
                     let mut resp = String::new();
                     if let Some(t) = &tag {
                         let l = format!("{SHA} refs/tags/{t}\n");
@@ -1668,6 +1684,8 @@ mod tests {
                     body.len()
                 );
                 let _ = c.write_all(&body);
+                let _ = c.flush();
+                let _ = c.shutdown(std::net::Shutdown::Write);
             }
         });
         Fake { base, seen }

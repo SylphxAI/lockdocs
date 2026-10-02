@@ -22,7 +22,12 @@ path = "src/main.rs"
 anyhow = "1"
 lockdocs-core = { path = "../lockdocs-core", version = "0.5.0" }
 serde_json = "1"
-sylphx-mcp-kit = "0.3"
+sylphx-mcp-kit = { version = "0.5.0", features = ["licence"] }
+
+[dev-dependencies]
+base64 = "0.22"
+ed25519-dalek = "2"
+tempfile = "3"
 
 # Release assets are published by the shared mcp-kit release workflow as
 # lockdocs-<platform>.tar.gz (.zip on Windows) with the binary at the archive root.

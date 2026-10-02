@@ -17,6 +17,7 @@ pub mod markdown;
 pub mod project;
 pub mod query;
 pub use mcp_kit::search as tokenize;
+pub mod upgrade;
 pub mod upstream;
 
 use serde::{Deserialize, Serialize};

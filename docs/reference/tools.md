@@ -25,6 +25,7 @@ Answer a question from the installed version's docs and API reference.
 | `package` | string | `zod`, `npm:zod`, `pydantic@2.9.2`, `tokio`, `github.com/gin-gonic/gin`; comma-separate several. Omit to search direct dependencies (a package named in the query is picked automatically) |
 | `offline` | boolean | No package/upstream network access for this call |
 | `tokens` | integer | Budget, default 1200 (200-20000) |
+| `upgrade_to` | string | lockdocs Pro: the [upgrade report](/pro) from the pinned version of `package` to this version. Without a licence the result is a normal (not error) answer with `structuredContent.pro_required`. Reading any version's docs, with `package: "zod@4.0.0"`, stays free |
 
 ## api
 

@@ -23,7 +23,7 @@ the pinned version and cheap in tokens and time. Layout and release flow:
   `rustfmt --edition 2021` (see `rustfmt.toml`).
 - Ranking changes are judged on the whole benchmark (`bench.yml`, which installs
   real packages, so run it in CI), never on one question.
-- CI also runs `scripts/check-version.ts`, `scripts/check-capabilities.ts` and
-  `scripts/check-tagline.ts`. One version everywhere: `bun scripts/set-version.ts`.
+- CI also runs `scripts/check-version.ts`, `scripts/check-capabilities.ts`,
+  `scripts/check-tagline.ts` and `scripts/check-readme-links.ts` (README URLs must be absolute for npm). One version everywhere: `bun scripts/set-version.ts`.
 - A new lockfile format is a pure parser in `lockfile.rs` with a unit test,
   registered in `LOCKFILES` or `parse`.

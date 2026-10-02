@@ -137,7 +137,7 @@ const DOCS_SITES: &[DocsSite] = &[
 fn latest_major(agent: &Client, dep: &Dep) -> Result<Option<u64>> {
     let name = dep.name.strip_prefix("@types/").unwrap_or(&dep.name);
     let (url, pointer) = match dep.eco {
-        Eco::Npm => (format!("https://registry.npmjs.org/{}/latest", name.replace('/', "%2F")), "/version"),
+        Eco::Npm => (format!("{}/{}/latest", agent.hosts.npm, name.replace('/', "%2F")), "/version"),
         Eco::Cargo => (format!("https://crates.io/api/v1/crates/{name}"), "/crate/max_stable_version"),
         Eco::PyPI => (format!("https://pypi.org/pypi/{name}/json"), "/info/version"),
         Eco::Go => return Ok(None),
@@ -487,6 +487,7 @@ struct Hosts {
     git: String,
     codeload: String,
     raw: String,
+    npm: String,
 }
 
 impl Hosts {
@@ -496,6 +497,7 @@ impl Hosts {
             git: "https://github.com".into(),
             codeload: "https://codeload.github.com".into(),
             raw: "https://raw.githubusercontent.com".into(),
+            npm: "https://registry.npmjs.org".into(),
         }
     }
 }
@@ -1331,9 +1333,7 @@ fn build(agent: &Client, dep: &Dep, repo: &Repo, automatic: bool, out: &Path) ->
     let label = format!("github.com/{}/{}", repo.owner, repo.name);
     let candidates = tag_candidates(dep);
     let refs = list_refs(agent, repo, &tag_prefixes(&candidates))?;
-    if refs.is_none() && !automatic {
-        bail!("{label}: private repository: not supported (or the repository does not exist)");
-    }
+    let repo_unavailable = refs.is_none();
     let release = refs.and_then(|refs| pick_release(&candidates, &refs));
     let Some((tag, commit)) = release else {
         let mut m = Manifest {
@@ -1361,6 +1361,11 @@ fn build(agent: &Client, dep: &Dep, repo: &Repo, automatic: bool, out: &Path) ->
             }
             Ok(None) => {}
             Err(e) => return Err(e.context("docs-site selection failed")),
+        }
+        // The repository is gone, renamed or private. A docs site may still serve the
+        // docs; fail clearly only when nothing was found anywhere.
+        if repo_unavailable && !automatic && m.files == 0 {
+            bail!("{}: private repository: not supported (or the repository does not exist)", m.repo);
         }
         return Ok(m);
     };
@@ -1557,6 +1562,8 @@ mod tests {
         BadToken,
         /// A private repository: anonymous git answers 401 and codeload 404.
         Private,
+        /// Like `Private`, but the package's docs site repository answers.
+        PrivateWithSite,
         /// Answers after a pause longer than a short deadline.
         Slow,
     }
@@ -1570,6 +1577,8 @@ mod tests {
         let seen: std::sync::Arc<std::sync::Mutex<Vec<String>>> = Default::default();
         let log = seen.clone();
         let tag = tag.map(String::from);
+        let site_docs_present = codeload == Codeload::PrivateWithSite;
+        let site_archive = tarball(&[("src/content/learn/a.md", b"# learn")]);
         let archive = tarball(&[("README.md", b"# readme"), ("docs/guide.md", b"# guide"), ("src/lib.rs", b"fn x() {}")]);
         std::thread::spawn(move || {
             for stream in listener.incoming() {
@@ -1594,56 +1603,65 @@ mod tests {
                     if authed { " AUTH" } else { "" }
                 ));
                 let json = |v: serde_json::Value| (200, "application/json", v.to_string().into_bytes());
-                let (status, ctype, body): (u16, &str, Vec<u8>) =
-                    if path.ends_with("/git-upload-pack") && (codeload == Codeload::Private || (authed && codeload == Codeload::BadToken)) {
-                        (401, "text/plain", Vec::new())
-                    } else if path.ends_with("/git-upload-pack") {
-                        // Drain the request body (pkt-lines end with 0000).
-                        let mut body = buf.split(|_| false).next().unwrap().to_vec();
-                        while !body.ends_with(b"0000") {
-                            let n = c.read(&mut chunk).unwrap_or(0);
-                            if n == 0 {
-                                break;
-                            }
-                            body.extend_from_slice(&chunk[..n]);
+                let (status, ctype, body): (u16, &str, Vec<u8>) = if path.ends_with("/git-upload-pack")
+                    && (matches!(codeload, Codeload::Private | Codeload::PrivateWithSite) || (authed && codeload == Codeload::BadToken))
+                {
+                    (401, "text/plain", Vec::new())
+                } else if path.ends_with("/git-upload-pack") {
+                    // Drain the request body (pkt-lines end with 0000).
+                    let mut body = buf.split(|_| false).next().unwrap().to_vec();
+                    while !body.ends_with(b"0000") {
+                        let n = c.read(&mut chunk).unwrap_or(0);
+                        if n == 0 {
+                            break;
                         }
-                        let mut resp = String::new();
-                        if let Some(t) = &tag {
-                            let l = format!("{SHA} refs/tags/{t}\n");
-                            resp.push_str(&format!("{:04x}{l}", l.len() + 4));
+                        body.extend_from_slice(&chunk[..n]);
+                    }
+                    let mut resp = String::new();
+                    if let Some(t) = &tag {
+                        let l = format!("{SHA} refs/tags/{t}\n");
+                        resp.push_str(&format!("{:04x}{l}", l.len() + 4));
+                    }
+                    resp.push_str("0000");
+                    (200, "application/x-git-upload-pack-result", resp.into_bytes())
+                } else if path.starts_with("/o/r/tar.gz/") {
+                    match codeload {
+                        Codeload::Ok => (200, "application/gzip", archive.clone()),
+                        Codeload::Private | Codeload::PrivateWithSite => (404, "text/plain", Vec::new()),
+                        Codeload::Fail => (500, "text/plain", b"boom".to_vec()),
+                        Codeload::MissingWithAuth if authed => (404, "text/plain", Vec::new()),
+                        Codeload::MissingWithAuth | Codeload::BadToken => (200, "application/gzip", archive.clone()),
+                        Codeload::Slow => {
+                            std::thread::sleep(std::time::Duration::from_secs(8));
+                            (200, "application/gzip", archive.clone())
                         }
-                        resp.push_str("0000");
-                        (200, "application/x-git-upload-pack-result", resp.into_bytes())
-                    } else if path.starts_with("/o/r/tar.gz/") {
-                        match codeload {
-                            Codeload::Ok => (200, "application/gzip", archive.clone()),
-                            Codeload::Private => (404, "text/plain", Vec::new()),
-                            Codeload::Fail => (500, "text/plain", b"boom".to_vec()),
-                            Codeload::MissingWithAuth if authed => (404, "text/plain", Vec::new()),
-                            Codeload::MissingWithAuth | Codeload::BadToken => (200, "application/gzip", archive.clone()),
-                            Codeload::Slow => {
-                                std::thread::sleep(std::time::Duration::from_secs(8));
-                                (200, "application/gzip", archive.clone())
-                            }
-                        }
-                    } else if path.starts_with("/repos/") {
-                        if api_blocked {
-                            (403, "application/json", br#"{"message":"API rate limit exceeded"}"#.to_vec())
-                        } else if path.contains("/git/trees/docs-sha") {
-                            json(serde_json::json!({"tree":[{"path":"guide.md","type":"blob","sha":"b2","size":7}]}))
-                        } else if path.contains("/git/trees/") {
-                            json(serde_json::json!({"tree":[
+                    }
+                } else if path.starts_with("/repos/") {
+                    if api_blocked {
+                        (403, "application/json", br#"{"message":"API rate limit exceeded"}"#.to_vec())
+                    } else if path.contains("/git/trees/docs-sha") {
+                        json(serde_json::json!({"tree":[{"path":"guide.md","type":"blob","sha":"b2","size":7}]}))
+                    } else if path.contains("/git/trees/") {
+                        json(serde_json::json!({"tree":[
                             {"path":"README.md","type":"blob","sha":"b1","size":8},
                             {"path":"docs","type":"tree","sha":"docs-sha","size":0},
                             {"path":"src","type":"tree","sha":"src-sha","size":0}]}))
-                        } else {
-                            (404, "application/json", b"{}".to_vec())
-                        }
-                    } else if path.starts_with("/raw/o/r/") {
-                        (200, "text/markdown", b"# raw".to_vec())
+                    } else {
+                        (404, "application/json", b"{}".to_vec())
+                    }
+                } else if path == "/npm/react/latest" {
+                    json(serde_json::json!({"version":"19.0.0"}))
+                } else if path.starts_with("/reactjs/react.dev/tar.gz/") {
+                    if site_docs_present {
+                        (200, "application/gzip", site_archive.clone())
                     } else {
                         (404, "text/plain", Vec::new())
-                    };
+                    }
+                } else if path.starts_with("/raw/o/r/") {
+                    (200, "text/markdown", b"# raw".to_vec())
+                } else {
+                    (404, "text/plain", Vec::new())
+                };
                 let _ = write!(
                     c,
                     "HTTP/1.1 {status} X\r\nContent-Type: {ctype}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
@@ -1667,6 +1685,7 @@ mod tests {
                 git: f.base.clone(),
                 codeload: f.base.clone(),
                 raw: format!("{}/raw", f.base),
+                npm: format!("{}/npm", f.base),
             },
             max_archive,
         }
@@ -1850,6 +1869,26 @@ mod tests {
         assert!(requests(&f, "/raw/") >= 1 && requests(&f, "/repos/") >= 1);
         let authed = authed_paths(&f);
         assert!(!authed.is_empty() && authed.iter().all(|p| p.starts_with("/repos/")), "{authed:?}");
+    }
+
+    #[test]
+    fn unavailable_repository_keeps_docs_site_files() {
+        let f = fake(Codeload::PrivateWithSite, false, Some("v1.2.3"));
+        let out = tempfile::tempdir().unwrap();
+        let m = build(&client(&f, MAX_ARCHIVE), &dep("react", "19.0.0"), &repo(None), false, out.path()).unwrap();
+        assert!(m.files >= 1 && m.site.is_some(), "{m:?}");
+        assert_eq!(std::fs::read_to_string(out.path().join("react.dev/src/content/learn/a.md")).unwrap(), "# learn");
+    }
+
+    #[test]
+    fn unavailable_repository_without_docs_site_is_a_clear_error() {
+        let f = fake(Codeload::Private, false, Some("v1.2.3"));
+        let out = tempfile::tempdir().unwrap();
+        let e = format!(
+            "{:#}",
+            build(&client(&f, MAX_ARCHIVE), &dep("react", "19.0.0"), &repo(None), false, out.path()).unwrap_err()
+        );
+        assert!(e.contains("private repository: not supported"), "{e}");
     }
 
     #[test]

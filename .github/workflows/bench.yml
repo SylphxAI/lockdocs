@@ -24,7 +24,7 @@ permissions:
 # One run at a time: Context7's anonymous quota is shared.
 concurrency:
   group: bench-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   bench:

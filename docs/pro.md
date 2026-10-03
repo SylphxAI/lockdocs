@@ -19,6 +19,19 @@ sections that apply.
 lockdocs upgrade next 15.0.0
 ```
 
+Not on Pro yet? The same command still answers, locally and free: it tells you
+how many of the APIs your project calls change between the two versions (removed,
+renamed, re-signed, deprecated), across how many call sites, and shows one as a
+sample. Pro adds the full list: each change, its replacement, your call sites and
+the migration sections.
+
+```text
+next 14.2.3 -> 15.0.0: 7 of the APIs your project calls change (3 removed, 2 renamed, 2 deprecated) across 12 call sites. Sample: removed next.foo at app/page.tsx:8. The full report ... is lockdocs Pro (US$120/seat/yr): <this page>
+```
+
+The preview downloads nothing the report would not: the target version comes
+from your installed or cached files, or from a fetch you turned on.
+
 Agents ask for the same report through the `docs` tool's `upgrade_to`
 argument. Reading another version's docs and its migration guide stays free.
 
@@ -43,7 +56,7 @@ offline and stores it for you), or set `LOCKDOCS_LICENCE_TOKEN` in CI. Check it
 with `lockdocs licence status`, which shows where the token was read and warns
 "expires in N days" during the last 30 days; the upgrade report adds a renewal
 line then too. Without a valid licence `lockdocs upgrade` exits 3, and an agent
-calling `upgrade_to` gets a normal answer saying the report is part of lockdocs
-Pro, with the link.
+calling `upgrade_to` gets a normal answer with the preview above and the Pro
+link, marked `pro_required` so the agent can tell you.
 
 Everything free in lockdocs stays free, under MIT.

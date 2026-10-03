@@ -29,7 +29,7 @@ pub struct Repo {
 
 /// Bump when what `fetch` downloads changes, so `lockdocs fetch` refreshes
 /// older copies (a stale copy is still used until then).
-pub const FORMAT: u32 = 5;
+pub const FORMAT: u32 = 6;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Manifest {
@@ -290,7 +290,8 @@ fn site_docs(agent: &Client, dep: &Dep, pkg_repo: Option<&Repo>, out: &Path) -> 
             }
         }
         Err(e) => {
-            // Over the cap or codeload failed: read this docs site file by file.
+            // Over the cap (tailwindcss.com is 190 MB, prisma/docs 860 MB) or codeload
+            // failed: read this docs site file by file (one tree request, then raw files).
             let _ = std::fs::remove_dir_all(&dst);
             let Some(items) = tree(agent, &repo, &reference, true).with_context(|| format!("codeload path failed ({e:#}); per-file fallback failed"))? else {
                 return Ok(None);
@@ -563,11 +564,26 @@ impl Client {
 /// GitHub API GET; Ok(None) on 404.
 fn api(agent: &Client, path: &str) -> Result<Option<Value>> {
     agent.check_deadline()?;
-    let mut req = agent.get(&format!("{}{path}", agent.hosts.api)).header("Accept", "application/vnd.github+json");
-    if let Some(t) = agent.authenticated.then(token).flatten() {
-        req = req.header("Authorization", &format!("Bearer {t}"));
-    }
-    let mut res = req.call()?;
+    let mut url = format!("{}{path}", agent.hosts.api);
+    let mut moved = false;
+    let mut res = loop {
+        let mut req = agent.get(&url).header("Accept", "application/vnd.github+json");
+        if let Some(t) = agent.authenticated.then(token).flatten() {
+            req = req.header("Authorization", &format!("Bearer {t}"));
+        }
+        let res = req.call()?;
+        // A renamed repository (prisma/docs) answers the REST API with a redirect to
+        // its id-based URL. The automatic client follows no redirects, so follow this
+        // one, once, and only to the same API host.
+        let next = res.headers().get("location").and_then(|l| l.to_str().ok()).map(String::from);
+        match (res.status().as_u16(), next) {
+            (301 | 302 | 307 | 308, Some(l)) if !moved && l.starts_with(&format!("{}/", agent.hosts.api)) => {
+                moved = true;
+                url = l;
+            }
+            _ => break res,
+        }
+    };
     let status = res.status().as_u16();
     if status == 404 || status == 422 || status == 409 {
         return Ok(None);
@@ -737,7 +753,8 @@ pub fn downloaded_bytes() -> u64 {
 /// requests (see the measurements in the PR for the choice).
 const MAX_ARCHIVE: u64 = 150 << 20;
 
-/// The cap for the automatic (anonymous, 45 s budget) mode.
+/// The cap for a package's own archive in the automatic (anonymous, 45 s
+/// budget) mode: a bigger one falls back to per-file requests.
 const MAX_ARCHIVE_AUTOMATIC: u64 = 64 << 20;
 
 /// Counts compressed bytes and stops the stream (with an error) past `cap`.
@@ -1328,6 +1345,22 @@ fn fetch_attempt(dep: &Dep, src: &Source, automatic: bool) -> Result<Manifest> {
     Ok(m)
 }
 
+/// The docs site of `dep`, if it has one. An explicit fetch fails on an error;
+/// an automatic one keeps the package docs it has and says what was skipped
+/// (the cache stays unchecked, so `lockdocs fetch` retries it).
+fn site_step(agent: &Client, dep: &Dep, repo: &Repo, automatic: bool, out: &Path) -> Result<(Option<SiteDocs>, Option<String>)> {
+    match site_docs(agent, dep, Some(repo), out) {
+        Ok(s) => Ok((s, None)),
+        Err(e) if automatic => {
+            if let Some(site) = DOCS_SITES.iter().find(|s| s.eco == dep.eco && s.names.contains(&dep.name.as_str())) {
+                let _ = std::fs::remove_dir_all(out.join(site.repo.1));
+            }
+            Ok((None, Some(format!("docs site skipped: {e:#}"))))
+        }
+        Err(e) => Err(e.context("docs-site selection failed")),
+    }
+}
+
 /// Download the docs of `dep`'s release (and docs site) into `out`; the caller publishes.
 fn build(agent: &Client, dep: &Dep, repo: &Repo, automatic: bool, out: &Path) -> Result<Manifest> {
     let label = format!("github.com/{}/{}", repo.owner, repo.name);
@@ -1349,18 +1382,16 @@ fn build(agent: &Client, dep: &Dep, repo: &Repo, automatic: bool, out: &Path) ->
             pages: Vec::new(),
             via: None,
         };
-        match if automatic { Ok(None) } else { site_docs(agent, dep, Some(repo), out) } {
-            Ok(Some(site)) => {
-                if site.files > 0 {
-                    m.files = site.files;
-                    m.bytes = site.bytes;
-                    m.site = Some(site.label);
-                    m.pages = site.pages;
-                    m.note = None;
-                }
-            }
-            Ok(None) => {}
-            Err(e) => return Err(e.context("docs-site selection failed")),
+        let (found, skipped) = site_step(agent, dep, repo, automatic, out)?;
+        if let Some(site) = found.filter(|s| s.files > 0) {
+            m.files = site.files;
+            m.bytes = site.bytes;
+            m.site = Some(site.label);
+            m.pages = site.pages;
+            m.note = None;
+        }
+        if let Some(n) = skipped {
+            m.note = Some(m.note.take().map_or(n.clone(), |old| format!("{old}; {n}")));
         }
         // The repository is gone, renamed or private. A docs site may still serve the
         // docs; fail clearly only when nothing was found anywhere.
@@ -1386,15 +1417,12 @@ fn build(agent: &Client, dep: &Dep, repo: &Repo, automatic: bool, out: &Path) ->
     let mut site_n = 0usize;
     let mut site_bytes = 0u64;
     let mut pages = Vec::new();
-    match if automatic { Ok(None) } else { site_docs(agent, dep, Some(repo), out) } {
-        Ok(Some(s)) => {
-            (site_n, site_bytes, pages) = (s.files, s.bytes, s.pages);
-            if site_n > 0 {
-                site = Some(s.label);
-            }
+    let (found, skipped) = site_step(agent, dep, repo, automatic, out)?;
+    if let Some(s) = found {
+        (site_n, site_bytes, pages) = (s.files, s.bytes, s.pages);
+        if site_n > 0 {
+            site = Some(s.label);
         }
-        Ok(None) => {}
-        Err(e) => return Err(e.context("docs-site selection failed")),
     }
     let m = Manifest {
         format: FORMAT,
@@ -1404,10 +1432,10 @@ fn build(agent: &Client, dep: &Dep, repo: &Repo, automatic: bool, out: &Path) ->
         docs_sites_checked: !automatic,
         files: docs_n + site_n,
         bytes: docs_bytes + site_bytes,
-        note: if docs_n == 0 && site_n == 0 {
-            Some("no docs folder at that tag".into())
-        } else {
-            None
+        note: match (docs_n == 0 && site_n == 0, skipped) {
+            (true, None) => Some("no docs folder at that tag".into()),
+            (true, Some(n)) => Some(format!("no docs folder at that tag; {n}")),
+            (false, n) => n,
         },
         site,
         pages,
@@ -1896,6 +1924,27 @@ mod tests {
         let m = build(&client(&f, MAX_ARCHIVE), &dep("react", "19.0.0"), &repo(None), false, out.path()).unwrap();
         assert!(m.files >= 1 && m.site.is_some(), "{m:?}");
         assert_eq!(std::fs::read_to_string(out.path().join("react.dev/src/content/learn/a.md")).unwrap(), "# learn");
+    }
+
+    #[test]
+    fn automatic_build_includes_the_docs_site_but_stays_unchecked() {
+        let f = fake(Codeload::PrivateWithSite, false, Some("v1.2.3"));
+        let out = tempfile::tempdir().unwrap();
+        let m = build(&client(&f, MAX_ARCHIVE), &dep("react", "19.0.0"), &repo(None), true, out.path()).unwrap();
+        assert!(m.files >= 1 && m.site.is_some(), "{m:?}");
+        // Explicit `lockdocs fetch` still completes what the automatic budget cannot.
+        assert!(!m.docs_sites_checked);
+        assert!(out.path().join("react.dev/src/content/learn/a.md").exists());
+    }
+
+    #[test]
+    fn automatic_docs_site_failure_keeps_the_package_docs() {
+        let f = fake(Codeload::Ok, false, Some("v1.2.3"));
+        let out = tempfile::tempdir().unwrap();
+        // The fake serves no site repository, so the lookup fails; the package docs stay.
+        let m = build(&client(&f, MAX_ARCHIVE), &dep("react", "1.2.3"), &repo(None), true, out.path()).unwrap();
+        assert_eq!(m.files, 2, "{m:?}");
+        assert!(m.site.is_none());
     }
 
     #[test]

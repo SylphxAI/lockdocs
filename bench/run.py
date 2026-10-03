@@ -252,7 +252,7 @@ def main():
 def check_floors(summary, total):
     if total != 105:
         return
-    for variant, floor in [("fetched", 96), ("hybrid", 62)]:
+    for variant, floor in [("fetched", 96), ("hybrid", 62), ("first-use-default", 88)]:
         if variant in summary and summary[variant]["passed"] < floor:
             raise RuntimeError(f"{variant} regressed: {summary[variant]['passed']}/105, required >= {floor}/105")
     # Hybrid retrieval exists to beat keyword search; if it scores lower on the

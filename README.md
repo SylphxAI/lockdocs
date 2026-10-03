@@ -186,6 +186,7 @@ Registry package downloads remain opt-in; default upstream enrichment uses insta
 | Context7 (anonymous) | 77/105 | 19/45 | 53/55 | 5/5 | 15/18 | 908 | 2,583 ms |
 <!-- bench:end -->
 
+- **Default first use is 88/105 in 0.7.0** (local first-use run; the table's 70/105 row is the earlier 0.4.0 run and is replaced by the next full benchmark run), above Context7's 77/105.
 - **Where versions matter most, lockdocs wins by 2x** (38/45 vs 19/45 on older majors). Context7 often answers with the newest API (pydantic 1 questions get pydantic 2 answers).
 - **Tied on the newest majors (53/55 each) and on tokio (5/5 each); ahead on held-out questions (16/18 vs 15/18)**, which were written before the ranking changes they measure and not used for tuning.
 - **Faster, fewer tokens, no quota.** Median 58 ms per question after `lockdocs fetch` (185 ms on first use), a fresh CLI process each time. Context7's hosted API took a median 2,583 ms in the earlier runs its reused answers come from.

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **lockdocs Pro: private sources.** With a licence, `resolve`, `docs`, `api` and `lockdocs fetch` read packages and upstream docs from the private registries and git hosts you already use, with your own credentials: npm (`.npmrc` scoped registries and tokens, `package-lock.json` resolved URLs), PyPI (uv and pip indexes, `UV_INDEX_*`, credentials in the URL or `~/.netrc`, `uv.lock` registries), Cargo (alternate sparse registries, `credentials.toml`, `CARGO_REGISTRIES_<NAME>_TOKEN`, `Cargo.lock` sources), Go (`GOPROXY`, `GOPRIVATE`, `~/.netrc`, direct git for private modules) and docs at a tag from GitHub, GitHub Enterprise, GitLab, Bitbucket or any https git host (token variables or `git credential fill`). A credential is sent only to the exact scheme, host and port it is configured for: redirects are followed hop by hop and re-checked, and secrets are redacted from every message. Without a licence a request that needs a private source returns the normal `pro_required` answer (CLI exit 3) and sends nothing. New `lockdocs-core::private` module; no new MCP tool and no new config format. Cargo git-index registries and Go modules whose git host nests more than owner/name are not read.
 - **`lockdocs licence buy`.** Built on mcp-kit 0.6.0. It opens the Pro page; in-terminal purchase turns on when checkout is live.
 
 ## 0.6.0

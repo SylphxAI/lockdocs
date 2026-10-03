@@ -1,5 +1,6 @@
 //! The MCP tool surface: resolve, docs, api.
 
+use lockdocs_core::private::PrivateRequired;
 use lockdocs_core::query::{Answer, Options, Workspace, DEFAULT_TOKENS};
 use serde_json::{json, Value};
 use std::path::Path;
@@ -50,8 +51,14 @@ pub fn definitions() -> Value {
     ])
 }
 
-pub fn call(ws: &Workspace, opts: &Options, name: &str, args: &Value, root: &Path) -> Result<Answer, String> {
-    let s = |k: &str| args.get(k).and_then(|v| v.as_str()).map(str::trim).filter(|v| !v.is_empty());
+/// The outcome of one tool call, plus the packages that needed a private source
+/// the licence did not cover (the caller turns those into `pro_required`).
+pub struct Called {
+    pub result: Result<Answer, String>,
+    pub blocked: Vec<PrivateRequired>,
+}
+
+pub fn call_checked(ws: &Workspace, opts: &Options, name: &str, args: &Value, root: &Path) -> Called {
     let tokens = args.get("tokens").and_then(|v| v.as_u64()).map_or(DEFAULT_TOKENS, |t| t as usize);
     let mut opts = opts.clone();
     if args.get("offline").and_then(Value::as_bool) == Some(true) {
@@ -59,6 +66,15 @@ pub fn call(ws: &Workspace, opts: &Options, name: &str, args: &Value, root: &Pat
         opts.upstream = false;
     }
     let engine = ws.engine(root, &opts);
+    let result = run(&engine, name, args, tokens);
+    Called {
+        result,
+        blocked: engine.take_private_blocked(),
+    }
+}
+
+fn run(engine: &lockdocs_core::query::Engine, name: &str, args: &Value, tokens: usize) -> Result<Answer, String> {
+    let s = |k: &str| args.get(k).and_then(|v| v.as_str()).map(str::trim).filter(|v| !v.is_empty());
     match name {
         "resolve" => Ok(engine.resolve(s("filter"))),
         "docs" => {

@@ -33,6 +33,7 @@ pub const POLICY: LicencePolicy<'static> = LicencePolicy {
 };
 
 pub const UPGRADE_REPORT: &str = "Upgrade report";
+pub const PRIVATE_SOURCES: &str = lockdocs_core::private::FEATURE;
 
 /// Gate one Pro feature against a policy.
 pub fn require(policy: &LicencePolicy, feature: &str) -> Result<Licence, ProRequired> {

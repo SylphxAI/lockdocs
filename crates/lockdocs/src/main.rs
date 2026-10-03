@@ -198,7 +198,17 @@ fn run() -> Result<()> {
         ensure_model(args.on("offline"));
     }
     let json = args.on("json");
-    let engine = || Engine::new(&args.root(), args.opts());
+    // Private registries and git hosts are lockdocs Pro: the licence is checked
+    // here, before any engine can send a request to one.
+    let private = pro::require(&pro::POLICY, pro::PRIVATE_SOURCES);
+    let cell: std::cell::OnceCell<Engine> = std::cell::OnceCell::new();
+    let engine = || {
+        cell.get_or_init(|| {
+            let mut opts = args.opts();
+            opts.private = private.is_ok();
+            Engine::new(&args.root(), opts)
+        })
+    };
     let counts_as_run = !json
         && !matches!(
             cmd.as_str(),
@@ -281,6 +291,18 @@ fn run() -> Result<()> {
             }
         }
     };
+    if let (Err(required), Some(e)) = (&private, cell.get()) {
+        let blocked = e.take_private_blocked();
+        if !blocked.is_empty() {
+            let names: Vec<String> = blocked.iter().map(|b| b.package.clone()).collect();
+            if result.is_err() || args.pkg().is_some() || matches!(cmd.as_str(), "fetch" | "pull") {
+                eprintln!("{required}");
+                eprintln!("Needs a private source: {}", names.join(", "));
+                std::process::exit(3);
+            }
+            eprintln!("{} need a private source, which is part of lockdocs Pro: {}", names.join(", "), required.url);
+        }
+    }
     if result.is_ok() && counts_as_run {
         mcp_kit::star_hint::after_success(
             "Enjoying lockdocs? A GitHub star helps others find it: https://github.com/SylphxAI/lockdocs",

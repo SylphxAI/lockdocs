@@ -58,6 +58,10 @@ fn source_for(dep: &Dep, dir: &Path) -> Source {
         Eco::Cargo => "crates.io",
         Eco::Go => "proxy.golang.org",
     };
+    source_from(dep, dir, origin)
+}
+
+fn source_from(dep: &Dep, dir: &Path, origin: &str) -> Source {
     if dep.eco == Eco::PyPI {
         // A wheel unpacks to a site-packages layout with a dist-info RECORD.
         if let Some(di) = std::fs::read_dir(dir)
@@ -97,6 +101,13 @@ pub fn require_registry_origin(dep: &Dep) -> Result<()> {
 }
 
 pub fn fetch(dep: &Dep) -> Result<Source> {
+    fetch_for(dep, None, false)
+}
+
+/// `fetch`, reading the project's private-source configuration when `root` is
+/// given. Without `private` (lockdocs Pro), a package that needs a private
+/// source fails with `private::PrivateRequired` and nothing is sent anywhere.
+pub fn fetch_for(dep: &Dep, root: Option<&Path>, private: bool) -> Result<Source> {
     require_registry_origin(dep)?;
     if let Some(s) = cached(dep) {
         return Ok(s);
@@ -104,6 +115,20 @@ pub fn fetch(dep: &Dep) -> Result<Source> {
     let dir = fetched_dir(dep);
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir)?;
+    let mut skipped = None;
+    if let Some(root) = root {
+        match crate::private::fetch_into(dep, root, private, &dir) {
+            Ok(crate::private::Outcome::Done { host }) => {
+                std::fs::write(dir.join(".lockdocs-complete"), b"")?;
+                return Ok(source_from(dep, &dir, &format!("private source {host}")));
+            }
+            Ok(crate::private::Outcome::UsePublic { skipped: s }) => skipped = s,
+            Err(e) => {
+                let _ = std::fs::remove_dir_all(&dir);
+                return Err(e);
+            }
+        }
+    }
     let r = match dep.eco {
         Eco::Npm => {
             let meta = get_json(&format!("https://registry.npmjs.org/{}/{}", dep.name.replace('/', "%2F"), dep.version))?;
@@ -147,7 +172,12 @@ pub fn fetch(dep: &Dep) -> Result<Source> {
     };
     if let Err(e) = r {
         let _ = std::fs::remove_dir_all(&dir);
-        return Err(e);
+        // The public registry does not have it, and a private source was configured
+        // for it: the answer is "that needs Pro", not "not found".
+        return Err(match skipped {
+            Some(req) => req.into(),
+            None => e,
+        });
     }
     std::fs::write(dir.join(".lockdocs-complete"), b"")?;
     Ok(source_for(dep, &dir))
@@ -244,11 +274,21 @@ fn write_member(dir: &Path, rel: PathBuf, buf: Vec<u8>) -> Result<()> {
     Ok(())
 }
 
-fn untar_gz(bytes: &[u8], dir: &Path) -> Result<()> {
+pub(crate) fn untar_gz(bytes: &[u8], dir: &Path) -> Result<()> {
     untar_gz_with(bytes, dir, LIMITS)
 }
 
+/// Like `untar_gz`, keeping only the files under `sub` (relative to the
+/// archive's top folder) and unpacking them without that prefix.
+pub(crate) fn untar_gz_sub(bytes: &[u8], dir: &Path, sub: Option<&str>) -> Result<()> {
+    untar_gz_prefix(bytes, dir, LIMITS, sub)
+}
+
 fn untar_gz_with(bytes: &[u8], dir: &Path, limits: Limits) -> Result<()> {
+    untar_gz_prefix(bytes, dir, limits, None)
+}
+
+fn untar_gz_prefix(bytes: &[u8], dir: &Path, limits: Limits, sub: Option<&str>) -> Result<()> {
     let mut budget = Budget::new(limits);
     let mut ar = tar::Archive::new(flate2::read::GzDecoder::new(bytes));
     for e in ar.entries()? {
@@ -258,7 +298,14 @@ fn untar_gz_with(bytes: &[u8], dir: &Path, limits: Limits) -> Result<()> {
             continue;
         }
         let path = e.path()?.to_path_buf();
-        let Some(rel) = safe_rel(&path, true) else { continue };
+        let Some(mut rel) = safe_rel(&path, true) else { continue };
+        if let Some(sub) = sub {
+            let Ok(inner) = rel.strip_prefix(sub) else { continue };
+            rel = inner.to_path_buf();
+            if rel.as_os_str().is_empty() {
+                continue;
+            }
+        }
         if !wanted(&rel) {
             continue;
         }

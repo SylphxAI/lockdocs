@@ -25,6 +25,8 @@ pub struct Repo {
     pub name: String,
     /// Package directory inside a monorepo (npm `repository.directory`).
     pub subdir: Option<String>,
+    /// The git host when it is not github.com (lockdocs Pro private sources).
+    pub host: Option<crate::private::Origin>,
 }
 
 /// Bump when what `fetch` downloads changes, so `lockdocs fetch` refreshes
@@ -221,6 +223,7 @@ fn site_docs(agent: &Client, dep: &Dep, pkg_repo: Option<&Repo>, out: &Path) -> 
         owner: site.repo.0.into(),
         name: site.repo.1.into(),
         subdir: None,
+        host: None,
     };
     let versioned: Vec<String> = site.versioned.iter().map(|d| d.replace("{major}", &major.to_string())).collect();
     let is_latest = latest.is_some_and(|l| major >= l);
@@ -374,8 +377,28 @@ pub fn parse_github(url: &str) -> Option<(String, String)> {
     Some((owner, name))
 }
 
-/// The package's source repository, from its own metadata.
+type RepoParts = (Option<crate::private::Origin>, String, String);
+
+/// A repository URL on github.com, or (with `any_host`) on another git host.
+fn parse_repo(url: &str, any_host: bool) -> Option<RepoParts> {
+    if let Some((owner, name)) = parse_github(url) {
+        return Some((None, owner, name));
+    }
+    if !any_host {
+        return None;
+    }
+    let (origin, path) = crate::private::git::parse_repo_url(url)?;
+    let (owner, name) = path.rsplit_once('/')?;
+    Some((Some(origin), owner.to_string(), name.to_string()))
+}
+
+/// The package's source repository on github.com, from its own metadata.
 pub fn repo_of(dep: &Dep, src: &Source) -> Option<Repo> {
+    repo_of_with(dep, src, false)
+}
+
+/// Like `repo_of`; with `any_host` a repository on another git host qualifies too.
+pub fn repo_of_with(dep: &Dep, src: &Source, any_host: bool) -> Option<Repo> {
     match dep.eco {
         Eco::Npm => {
             let v: Value = serde_json::from_str(&std::fs::read_to_string(src.dir.join("package.json")).ok()?).ok()?;
@@ -387,12 +410,17 @@ pub fn repo_of(dep: &Dep, src: &Source) -> Option<Repo> {
                     r.get("directory").and_then(|d| d.as_str()).map(String::from),
                 ),
             };
-            let (owner, name) = parse_github(&url)?;
-            Some(Repo { owner, name, subdir: dir })
+            let (host, owner, name) = parse_repo(&url, any_host)?;
+            Some(Repo {
+                owner,
+                name,
+                subdir: dir,
+                host,
+            })
         }
         Eco::PyPI => {
             let meta = std::fs::read_to_string(src.metadata.as_ref()?).ok()?;
-            let mut best: Option<(u8, (String, String))> = None;
+            let mut best: Option<(u8, RepoParts)> = None;
             for line in meta.lines().take_while(|l| !l.trim().is_empty()) {
                 let (key, val) = line.split_once(':')?;
                 let (rank, url) = match key.trim() {
@@ -409,20 +437,42 @@ pub fn repo_of(dep: &Dep, src: &Source) -> Option<Repo> {
                     "Home-page" => (2, val.trim().to_string()),
                     _ => continue,
                 };
-                if let Some(gh) = parse_github(&url) {
+                if let Some(gh) = parse_repo(&url, any_host) {
                     if best.as_ref().is_none_or(|b| rank > b.0) {
                         best = Some((rank, gh));
                     }
                 }
             }
-            let (_, (owner, name)) = best?;
-            Some(Repo { owner, name, subdir: None })
+            let (_, (host, owner, name)) = best?;
+            Some(Repo {
+                owner,
+                name,
+                subdir: None,
+                host,
+            })
         }
         Eco::Cargo => {
             let t: toml::Table = toml::from_str(&std::fs::read_to_string(src.dir.join("Cargo.toml")).ok()?).ok()?;
             let url = t.get("package")?.get("repository")?.as_str()?;
-            let (owner, name) = parse_github(url)?;
-            Some(Repo { owner, name, subdir: None })
+            let (host, owner, name) = parse_repo(url, any_host)?;
+            Some(Repo {
+                owner,
+                name,
+                subdir: None,
+                host,
+            })
+        }
+        Eco::Go if any_host && !dep.name.starts_with("github.com/") && crate::private::go::is_private_module(&dep.name) => {
+            let (path, sub) = crate::private::go::split_module(&dep.name)?;
+            let (owner, name) = path.rsplit_once('/')?;
+            let host = dep.name.split('/').next()?;
+            let origin = crate::private::Url::parse(&format!("https://{host}/"))?.origin();
+            Some(Repo {
+                owner: owner.into(),
+                name: name.into(),
+                subdir: sub,
+                host: Some(origin),
+            })
         }
         Eco::Go => {
             let rest = dep.name.strip_prefix("github.com/")?;
@@ -434,6 +484,7 @@ pub fn repo_of(dep: &Dep, src: &Source) -> Option<Repo> {
                 owner,
                 name,
                 subdir: if sub.is_empty() { None } else { Some(sub.join("/")) },
+                host: None,
             })
         }
     }
@@ -500,14 +551,35 @@ impl Hosts {
             npm: "https://registry.npmjs.org".into(),
         }
     }
+
+    /// Endpoints of another git host; archives go through `Host::archive_url`.
+    fn for_host(h: &crate::private::git::Host) -> Self {
+        let o = h.origin.to_string();
+        Hosts {
+            api: if h.kind == crate::private::git::Kind::GhEnterprise {
+                format!("{o}/api/v3")
+            } else {
+                o.clone()
+            },
+            git: o.clone(),
+            codeload: o.clone(),
+            raw: o,
+            npm: "https://registry.npmjs.org".into(),
+        }
+    }
 }
 
 struct Client {
     agent: ureq::Agent,
     authenticated: bool,
-    /// Future Pro "private sources" hook: when true, the token is also sent to
-    /// the git and codeload hosts. Always false today (see `source_auth`).
+    /// lockdocs Pro "private sources": when true, the credential for this
+    /// repository's host is also sent to its git, archive and API endpoints.
+    /// False for free lockdocs and for automatic first-use fetches.
     credentialed_sources: bool,
+    /// The repository's host when it is not github.com.
+    git_host: Option<crate::private::git::Host>,
+    /// Credentials for that host, each bound to its own origin.
+    host_creds: crate::private::Creds,
     deadline: Option<std::time::Instant>,
     hosts: Hosts,
     /// Largest compressed archive streamed from one repository.
@@ -530,7 +602,15 @@ impl Client {
     }
 }
 
-fn agent(automatic: bool) -> Client {
+fn agent(automatic: bool, private: Option<(Option<crate::private::git::Host>, crate::private::Creds)>) -> Client {
+    let (git_host, host_creds) = match private {
+        Some((h, c)) => (h, c),
+        None => (None, crate::private::Creds::default()),
+    };
+    let hosts = match &git_host {
+        Some(h) => Hosts::for_host(h),
+        None => Hosts::github(),
+    };
     let agent = ureq::Agent::config_builder()
         .timeout_global(Some(std::time::Duration::from_secs(if automatic { 10 } else { 60 })))
         .max_redirects(if automatic { 0 } else { 10 })
@@ -543,9 +623,11 @@ fn agent(automatic: bool) -> Client {
     Client {
         agent,
         authenticated: !automatic,
-        credentialed_sources: false,
+        credentialed_sources: !automatic && !host_creds.0.is_empty(),
+        git_host,
+        host_creds,
         deadline: automatic.then(|| std::time::Instant::now() + std::time::Duration::from_secs(45)),
-        hosts: Hosts::github(),
+        hosts,
         max_archive: if automatic { MAX_ARCHIVE_AUTOMATIC } else { MAX_ARCHIVE },
     }
 }
@@ -557,6 +639,34 @@ impl Client {
     /// token on explicit fetch (see `api`).
     fn source_auth(&self) -> Option<String> {
         (self.authenticated && self.credentialed_sources).then(token).flatten()
+    }
+
+    /// The `Authorization` value for a git, archive or raw request, or `None`.
+    /// A credential is only ever returned for the exact origin it is bound to.
+    fn source_header(&self, url: &str, smart_git: bool) -> Option<String> {
+        if !(self.authenticated && self.credentialed_sources) {
+            return None;
+        }
+        let u = crate::private::Url::parse(url)?;
+        if let Some(auth) = self.host_creds.for_url(&u) {
+            return Some(match (&self.git_host, smart_git) {
+                (Some(h), true) => crate::private::git::git_header(h, auth),
+                (None, true) => match auth {
+                    crate::private::Auth::Bearer(t) => basic(t),
+                    other => other.header(),
+                },
+                _ => auth.header(),
+            });
+        }
+        if self.git_host.is_some() || !self.host_creds.0.is_empty() {
+            return None;
+        }
+        // github.com with the token variable: only to the git and codeload hosts.
+        let t = self.source_auth()?;
+        let allowed = [&self.hosts.git, &self.hosts.codeload]
+            .iter()
+            .any(|h| crate::private::Url::parse(h).is_some_and(|b| b.origin() == u.origin()));
+        allowed.then(|| if smart_git { basic(&t) } else { format!("Bearer {t}") })
     }
 }
 
@@ -692,14 +802,15 @@ fn basic(token: &str) -> String {
 fn list_refs(agent: &Client, repo: &Repo, prefixes: &[String]) -> Result<Option<Vec<GitRef>>> {
     agent.check_deadline()?;
     let url = format!("{}/{}/{}.git/git-upload-pack", agent.hosts.git, repo.owner, repo.name);
+    let sent = agent.source_header(&url, true);
     let mut req = agent
         .post(&url)
         .header("Content-Type", "application/x-git-upload-pack-request")
         .header("Accept", "application/x-git-upload-pack-result")
         .header("Git-Protocol", "version=2");
-    let sent_token = match agent.source_auth() {
-        Some(t) => {
-            req = req.header("Authorization", &basic(&t));
+    let sent_token = match sent {
+        Some(h) => {
+            req = req.header("Authorization", &h);
             true
         }
         None => false,
@@ -707,6 +818,14 @@ fn list_refs(agent: &Client, repo: &Repo, prefixes: &[String]) -> Result<Option<
     let mut res = req.send(&ls_refs_request(prefixes)[..])?;
     let status = res.status().as_u16();
     if status == 401 && sent_token {
+        if agent.git_host.is_some() {
+            bail!(
+                "{} rejected the configured credential for {}/{} (HTTP 401); refresh it",
+                agent.hosts.git,
+                repo.owner,
+                repo.name
+            );
+        }
         bail!(
             "GitHub rejected GITHUB_TOKEN/GH_TOKEN for {}/{} (HTTP 401); refresh or unset it",
             repo.owner,
@@ -783,7 +902,7 @@ impl Archive {
 /// Stream `https://codeload.github.com/<owner>/<repo>/tar.gz/<ref>` (a tag, a
 /// branch or a commit). Ok(None) on 404. Not governed by the REST API quota.
 fn codeload(agent: &Client, repo: &Repo, reference: &str) -> Result<Option<Archive>> {
-    let sent_token = agent.source_auth().is_some();
+    let sent_token = agent.source_header(&archive_url(agent, repo, reference), false).is_some();
     match codeload_once(agent, repo, reference, sent_token)? {
         // Only reachable on the future credentialed path: a token codeload does not
         // accept falls back to an anonymous request, which public repositories answer.
@@ -792,9 +911,18 @@ fn codeload(agent: &Client, repo: &Repo, reference: &str) -> Result<Option<Archi
     }
 }
 
+/// Where the archive of `reference` lives: codeload on github.com, the host's
+/// own archive endpoint elsewhere.
+fn archive_url(agent: &Client, repo: &Repo, reference: &str) -> String {
+    match &agent.git_host {
+        Some(h) => h.archive_url(&format!("{}/{}", repo.owner, repo.name), reference),
+        None => format!("{}/{}/{}/tar.gz/{}", agent.hosts.codeload, repo.owner, repo.name, enc_path(reference)),
+    }
+}
+
 fn codeload_once(agent: &Client, repo: &Repo, reference: &str, with_token: bool) -> Result<Option<Archive>> {
     agent.check_deadline()?;
-    let url = format!("{}/{}/{}/tar.gz/{}", agent.hosts.codeload, repo.owner, repo.name, enc_path(reference));
+    let url = archive_url(agent, repo, reference);
     let timeout = match agent.deadline {
         Some(d) => {
             let remaining = d.saturating_duration_since(std::time::Instant::now());
@@ -810,8 +938,8 @@ fn codeload_once(agent: &Client, repo: &Repo, reference: &str, with_token: bool)
     };
     let mut req = agent.get(&url).config().timeout_global(Some(timeout)).build();
     if with_token {
-        if let Some(t) = agent.source_auth() {
-            req = req.header("Authorization", &format!("Bearer {t}"));
+        if let Some(h) = agent.source_header(&url, false) {
+            req = req.header("Authorization", &h);
         }
     }
     let res = req.call()?;
@@ -1241,12 +1369,18 @@ fn is_lang(s: &str) -> bool {
 
 /// Download the docs folders of `dep`'s repository at the pinned version's tag.
 pub fn fetch(dep: &Dep, src: &Source) -> Result<Manifest> {
-    fetch_with(dep, src, false)
+    fetch_with(dep, src, false, false)
+}
+
+/// Explicit fetch. With `private` (lockdocs Pro) it also reads repositories on
+/// other git hosts and private repositories, with the user's own credentials.
+pub fn fetch_private(dep: &Dep, src: &Source, private: bool) -> Result<Manifest> {
+    fetch_with(dep, src, false, private)
 }
 
 /// Anonymous, bounded first-use enrichment; never substitutes a major docs site.
 pub fn fetch_automatic(dep: &Dep, src: &Source) -> Result<Manifest> {
-    fetch_with(dep, src, true)
+    fetch_with(dep, src, true, false)
 }
 
 struct FetchGuard {
@@ -1286,9 +1420,9 @@ fn publish(out: &Path, target: &Path, m: &Manifest) -> Result<()> {
     Ok(())
 }
 
-fn fetch_with(dep: &Dep, src: &Source, automatic: bool) -> Result<Manifest> {
+fn fetch_with(dep: &Dep, src: &Source, automatic: bool, private: bool) -> Result<Manifest> {
     crate::fetch::require_registry_origin(dep)?;
-    enrich_cached(cached(dep), !automatic, || fetch_attempt(dep, src, automatic))
+    enrich_cached(cached(dep), !automatic, || fetch_attempt(dep, src, automatic, private))
 }
 
 fn enrich_cached(prior: Option<(PathBuf, Manifest)>, explicit: bool, attempt: impl FnOnce() -> Result<Manifest>) -> Result<Manifest> {
@@ -1307,8 +1441,29 @@ fn enrich_cached(prior: Option<(PathBuf, Manifest)>, explicit: bool, attempt: im
     }
 }
 
-fn fetch_attempt(dep: &Dep, src: &Source, automatic: bool) -> Result<Manifest> {
-    let repo = repo_of(dep, src).context("no GitHub repository in the package metadata")?;
+/// The repository exists nowhere this client can see (missing, or private and
+/// not readable with what it holds).
+#[derive(Debug)]
+struct RepoUnavailable(String);
+impl std::fmt::Display for RepoUnavailable {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+impl std::error::Error for RepoUnavailable {}
+
+fn fetch_attempt(dep: &Dep, src: &Source, automatic: bool, private: bool) -> Result<Manifest> {
+    let use_private = private && !automatic;
+    let repo = repo_of_with(dep, src, !automatic).context("no GitHub repository in the package metadata")?;
+    if let Some(origin) = &repo.host {
+        if !use_private {
+            return Err(crate::private::PrivateRequired {
+                package: dep.id(),
+                host: origin.host.clone(),
+            }
+            .into());
+        }
+    }
     let target = dir(dep);
     let parent = target.parent().context("upstream cache parent")?;
     std::fs::create_dir_all(parent)?;
@@ -1322,15 +1477,45 @@ fn fetch_attempt(dep: &Dep, src: &Source, automatic: bool) -> Result<Manifest> {
     let out = target.with_file_name(format!("{stem}.staging-{}", std::process::id()));
     let _guard = FetchGuard { lock, staging: out.clone() };
     std::fs::create_dir_all(&out)?;
-    let agent = agent(automatic);
-    let m = build(&agent, dep, &repo, automatic, &out)?;
+    let git_host = repo.host.clone().map(crate::private::git::Host::of);
+    let env = crate::private::Env::process();
+    // Another host's credential may come from `git credential fill`. github.com
+    // reads the token variables first and asks the helpers only if that fails.
+    let creds_for = |fill: bool| {
+        use_private.then(|| {
+            let h = git_host
+                .clone()
+                .unwrap_or_else(|| crate::private::git::Host::of(crate::private::Url::parse("https://github.com/").unwrap().origin()));
+            (git_host.clone(), crate::private::git::credentials(&h, &env, fill))
+        })
+    };
+    let agent = agent(automatic, creds_for(git_host.is_some()));
+    let m = match build(&agent, dep, &repo, automatic, &out) {
+        Err(e) if use_private && git_host.is_none() && agent.host_creds.0.is_empty() && e.downcast_ref::<RepoUnavailable>().is_some() => {
+            let retry = creds_for(true);
+            if retry.as_ref().is_none_or(|(_, c)| c.0.is_empty()) {
+                return Err(e);
+            }
+            let _ = std::fs::remove_dir_all(&out);
+            std::fs::create_dir_all(&out)?;
+            build(&self::agent(automatic, retry), dep, &repo, automatic, &out)?
+        }
+        other => other?,
+    };
     publish(&out, &target, &m)?;
     Ok(m)
 }
 
 /// Download the docs of `dep`'s release (and docs site) into `out`; the caller publishes.
 fn build(agent: &Client, dep: &Dep, repo: &Repo, automatic: bool, out: &Path) -> Result<Manifest> {
-    let label = format!("github.com/{}/{}", repo.owner, repo.name);
+    let label = format!(
+        "{}/{}/{}",
+        repo.host
+            .as_ref()
+            .map_or_else(|| "github.com".to_string(), |o| o.to_string().replace("https://", "")),
+        repo.owner,
+        repo.name
+    );
     let candidates = tag_candidates(dep);
     let refs = list_refs(agent, repo, &tag_prefixes(&candidates))?;
     let repo_unavailable = refs.is_none();
@@ -1349,7 +1534,11 @@ fn build(agent: &Client, dep: &Dep, repo: &Repo, automatic: bool, out: &Path) ->
             pages: Vec::new(),
             via: None,
         };
-        match if automatic { Ok(None) } else { site_docs(agent, dep, Some(repo), out) } {
+        match if automatic || repo.host.is_some() {
+            Ok(None)
+        } else {
+            site_docs(agent, dep, Some(repo), out)
+        } {
             Ok(Some(site)) => {
                 if site.files > 0 {
                     m.files = site.files;
@@ -1365,7 +1554,10 @@ fn build(agent: &Client, dep: &Dep, repo: &Repo, automatic: bool, out: &Path) ->
         // The repository is gone, renamed or private. A docs site may still serve the
         // docs; fail clearly only when nothing was found anywhere.
         if repo_unavailable && !automatic && m.files == 0 {
-            bail!("{}: private repository: not supported (or the repository does not exist)", m.repo);
+            if agent.credentialed_sources {
+                return Err(RepoUnavailable(format!("{}: the repository does not exist or the configured credential cannot read it", m.repo)).into());
+            }
+            return Err(RepoUnavailable(format!("{}: private repository: not supported (or the repository does not exist)", m.repo)).into());
         }
         return Ok(m);
     };
@@ -1377,6 +1569,9 @@ fn build(agent: &Client, dep: &Dep, repo: &Repo, automatic: bool, out: &Path) ->
         Err(e) => {
             let _ = std::fs::remove_dir_all(out);
             std::fs::create_dir_all(out)?;
+            if agent.git_host.is_some() {
+                return Err(e.context(format!("archive download failed; the per-file fallback is GitHub-only ({})", agent.hosts.git)));
+            }
             let (n, bytes) = rest_docs(agent, dep, repo, &commit, out).with_context(|| format!("codeload path failed ({e:#}); per-file fallback failed"))?;
             (n, bytes, "rest")
         }
@@ -1386,7 +1581,11 @@ fn build(agent: &Client, dep: &Dep, repo: &Repo, automatic: bool, out: &Path) ->
     let mut site_n = 0usize;
     let mut site_bytes = 0u64;
     let mut pages = Vec::new();
-    match if automatic { Ok(None) } else { site_docs(agent, dep, Some(repo), out) } {
+    match if automatic || repo.host.is_some() {
+        Ok(None)
+    } else {
+        site_docs(agent, dep, Some(repo), out)
+    } {
         Ok(Some(s)) => {
             (site_n, site_bytes, pages) = (s.files, s.bytes, s.pages);
             if site_n > 0 {
@@ -1472,6 +1671,7 @@ mod tests {
             owner: "o".into(),
             name: "r".into(),
             subdir: subdir.map(String::from),
+            host: None,
         }
     }
 
@@ -1697,6 +1897,8 @@ mod tests {
             agent,
             authenticated: false,
             credentialed_sources: false,
+            git_host: None,
+            host_creds: Default::default(),
             deadline: None,
             hosts: Hosts {
                 api: f.base.clone(),
@@ -1843,9 +2045,9 @@ mod tests {
     fn automatic_mode_sends_no_authorization_header() {
         let f = fake(Codeload::Ok, false, Some("v1.2.3"));
         let a = with_token(|| {
-            let a = agent(true);
+            let a = agent(true, None);
             assert_eq!(a.max_archive, MAX_ARCHIVE_AUTOMATIC);
-            assert_eq!(agent(false).max_archive, MAX_ARCHIVE);
+            assert_eq!(agent(false, None).max_archive, MAX_ARCHIVE);
             let mut c = client(&f, MAX_ARCHIVE);
             c.authenticated = a.authenticated;
             let out = tempfile::tempdir().unwrap();
@@ -2177,12 +2379,12 @@ mod tests {
 
     #[test]
     fn automatic_client_is_anonymous_and_bounded() {
-        let mut client = agent(true);
+        let mut client = agent(true, None);
         assert!(!client.authenticated);
         assert!(client.deadline.is_some());
         client.deadline = Some(std::time::Instant::now());
         assert!(client.check_deadline().is_err());
-        assert!(agent(false).authenticated);
+        assert!(agent(false, None).authenticated);
     }
 
     #[test]

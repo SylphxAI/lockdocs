@@ -674,9 +674,11 @@ dependencies = [
  "anyhow",
  "base64 0.22.1",
  "ed25519-dalek",
+ "flate2",
  "lockdocs-core",
  "serde_json",
  "sylphx-mcp-kit",
+ "tar",
  "tempfile",
 ]
 

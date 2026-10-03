@@ -27,6 +27,8 @@ sylphx-mcp-kit = { version = "0.7.0", features = ["licence"] }
 [dev-dependencies]
 base64 = "0.22"
 ed25519-dalek = "2"
+flate2 = "1"
+tar = "0.4"
 tempfile = "3"
 
 # Release assets are published by the shared mcp-kit release workflow as

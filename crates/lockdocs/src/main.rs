@@ -1,4 +1,5 @@
 mod mcp;
+mod preview;
 mod pro;
 mod setup;
 mod tools;
@@ -169,7 +170,30 @@ fn run() -> Result<()> {
                 }
             }
             Err(required) => {
-                eprintln!("{required}");
+                let json = args.on("json");
+                let (pkg, target) = if cmd == "upgrade" {
+                    (args.positional.first().map(String::as_str), upgrade_target)
+                } else {
+                    (args.pkg(), upgrade_target)
+                };
+                match (pkg, target) {
+                    (Some(pkg), Some(target)) => {
+                        // A local, honest preview: counts only, same download opt-ins as the report.
+                        let engine = Engine::new(&args.root(), args.opts());
+                        match engine.upgrade_report(pkg, target, args.tokens()) {
+                            Ok(answer) => {
+                                let p = preview::build(&answer.json, &required, pro::PRICE);
+                                if json {
+                                    println!("{}", serde_json::to_string_pretty(&p.json).unwrap_or_default());
+                                } else {
+                                    println!("{}", p.text);
+                                }
+                            }
+                            Err(e) => eprintln!("{e}\n{required}"),
+                        }
+                    }
+                    _ => eprintln!("{required}"),
+                }
                 std::process::exit(3);
             }
         }

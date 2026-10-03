@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Free upgrade preview.** Without a Pro licence, `lockdocs upgrade <pkg> <ver>` (and `docs --upgrade-to`, and the `docs` tool's `upgrade_to`) now answers with a short local preview instead of only "Pro required": how many of the APIs your project calls were removed, renamed, re-signed or deprecated, across how many call sites, plus one sample, then the Pro price and link. The full list stays Pro. The MCP answer still carries `structuredContent.pro_required`, the CLI still exits 3, and the preview reads the same installed, cached or opted-in files as the report (no new downloads).
 - **`lockdocs licence buy`.** Built on mcp-kit 0.6.0. It opens the Pro page; in-terminal purchase turns on when checkout is live.
 
 ## 0.6.0

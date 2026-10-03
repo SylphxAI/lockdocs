@@ -1,6 +1,6 @@
 //! The MCP server: lockdocs' tools on mcp-kit (rmcp over stdio).
 
-use crate::{pro, tools};
+use crate::{preview, pro, tools};
 use lockdocs_core::query::{Options, Workspace};
 use mcp_kit::licence::{self, LicencePolicy};
 use mcp_kit::rmcp::model::{CallToolResult, ContentBlock};
@@ -30,6 +30,27 @@ impl Lockdocs {
             default: self.default_root.clone(),
             client: &call.client_roots,
         })
+    }
+
+    /// The free answer to an upgrade call: a local preview (counts and a sample),
+    /// still carrying `pro_required`. If the preview cannot be computed (target
+    /// files not available, unknown package) the reason is appended to the plain
+    /// Pro answer.
+    fn preview(&self, name: &str, args: &Value, call: &Call, required: &licence::ProRequired) -> CallToolResult {
+        let mut result = licence::required_result(required);
+        match self.root(args, call).and_then(|root| tools::call(&self.ws, &self.opts, name, args, &root)) {
+            Ok(answer) => {
+                let p = preview::build(&answer.json, required, pro::PRICE);
+                let body = if args.get("format").and_then(|v| v.as_str()) == Some("json") {
+                    serde_json::to_string_pretty(&p.json).unwrap_or_default()
+                } else {
+                    p.text
+                };
+                result.content = vec![ContentBlock::text(body)];
+            }
+            Err(e) => result.content = vec![ContentBlock::text(format!("{required}\nPreview unavailable: {e}"))],
+        }
+        result
     }
 }
 
@@ -65,7 +86,7 @@ impl App for Lockdocs {
         if tools::is_upgrade(name, args) {
             match pro::require(&self.policy, pro::UPGRADE_REPORT) {
                 Ok(licence) => note = pro::renewal_note(&self.policy, &licence),
-                Err(required) => return licence::required_result(&required),
+                Err(required) => return self.preview(name, args, call, &required),
             }
         }
         match self.call(name, args, call) {
@@ -208,6 +229,29 @@ mod tests {
         assert_eq!(r["structuredContent"]["pro_required"]["product"], "lockdocs");
         assert_eq!(r["structuredContent"]["pro_required"]["feature"], pro::UPGRADE_REPORT);
         assert!(!text(&r).contains("RENAMED"));
+        // ...whose text is a local preview: counts and a sample, not the list.
+        let pv = text(&r);
+        assert!(
+            pv.contains("tiny-schema 1.0.0 -> 2.0.0: 3 of the APIs your project calls change (1 removed, 1 renamed, 1 re-signed) across 3 call sites"),
+            "{pv}"
+        );
+        assert!(pv.contains("US$120/seat/yr") && pv.contains("https://example.com/pro"), "{pv}");
+        assert!(!pv.contains("was:") && !pv.contains("now:"), "{pv}");
+        // JSON form keeps the marker and the counts.
+        let pj = call(
+            &a,
+            "docs",
+            json!({"query": "x", "package": "tiny-schema", "upgrade_to": "2.0.0", "root": root, "format": "json"}),
+        );
+        assert!(pj["structuredContent"]["pro_required"].is_object(), "{pj}");
+        let pj: Value = serde_json::from_str(&text(&pj)).unwrap();
+        assert_eq!(pj["call_sites"], 3);
+        // Preview needs the same target files as the report; without them the answer is the plain Pro one.
+        let r2 = call(&a, "docs", json!({"query": "x", "package": "nope", "upgrade_to": "2.0.0", "root": root}));
+        assert!(
+            r2["structuredContent"]["pro_required"].is_object() && text(&r2).contains("Preview unavailable"),
+            "{r2}"
+        );
 
         // Tokens that must not unlock: wrong product, wrong plan, expired, signed by another key, junk.
         let other = SigningKey::from_bytes(&[8; 32]);

@@ -13,6 +13,10 @@ pub const KEY_PLACEHOLDER: &str = "PLACEHOLDER-lockdocs-pro-issuer-public-key-no
 #[allow(dead_code)]
 pub const CHECKOUT_BASE: &str = "https://buy.sylphx.com";
 
+/// Yearly price per seat, quoted in the free upgrade preview. The pricing page
+/// reads the same value from `docs/.vitepress/config.ts`; a test keeps them equal.
+pub const PRICE: &str = "US$120";
+
 /// The lockdocs Pro licence policy.
 ///
 /// TODO(Services S1): replace `KEY_PLACEHOLDER` with the issued lockdocs-pro

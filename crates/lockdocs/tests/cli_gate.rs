@@ -26,7 +26,7 @@ fn pro_commands_exit_3_and_free_commands_do_not() {
     let o = run(&["licence", "status"], home.path());
     assert_eq!(o.status.code(), Some(0));
     assert!(String::from_utf8_lossy(&o.stdout).contains("inactive"));
-    // The placeholder key refuses every token, so activate fails (exit 1), never 3.
+    // The pinned issuer key refuses an unsigned token, so activate fails (exit 1), never 3.
     let o = run(&["licence", "activate", "e30.AAAA"], home.path());
     assert_eq!(o.status.code(), Some(1));
     let o = run(&["version"], home.path());

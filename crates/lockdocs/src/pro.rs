@@ -62,6 +62,9 @@ mod tests {
     #[test]
     fn issuer_key_is_pinned_and_decodes_to_32_bytes() {
         assert_eq!(POLICY.public_keys, &[ISSUER_PUBLIC_KEY]);
+        // Every sold Pro token is signed by this key. Changing or dropping it
+        // breaks those tokens: a new key is added next to it, never in its place.
+        assert!(POLICY.public_keys.contains(&"3WKM0pn_td25hztpKOVCSFZvE8zs06uXrMWU1p5O4so"));
         assert_eq!(URL_SAFE_NO_PAD.decode(ISSUER_PUBLIC_KEY).unwrap().len(), 32);
         for t in ["", "x.y", "e30.AAAA"] {
             assert!(POLICY.verify(t).is_err());

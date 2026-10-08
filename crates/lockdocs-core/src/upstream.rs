@@ -29,7 +29,7 @@ pub struct Repo {
 
 /// Bump when what `fetch` downloads changes, so `lockdocs fetch` refreshes
 /// older copies (a stale copy is still used until then).
-pub const FORMAT: u32 = 6;
+pub const FORMAT: u32 = 7;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Manifest {
@@ -65,6 +65,7 @@ pub struct Manifest {
 /// describe one major: the latest one on `branch`, an older one on a
 /// `v{major}` / `{major}.x` branch or, when `before_next_major` is set, at the
 /// last commit before the next major was released.
+#[derive(Clone)]
 struct DocsSite {
     eco: Eco,
     names: &'static [&'static str],
@@ -216,7 +217,25 @@ fn site_docs(agent: &Client, dep: &Dep, pkg_repo: Option<&Repo>, out: &Path) -> 
         return Ok(None);
     };
     let major: u64 = dep.version.split('.').next().and_then(|m| m.parse().ok()).unwrap_or(0);
-    let latest = latest_major(agent, dep)?;
+    let mut site = site.clone();
+    // react.dev includes APIs before release. Use the official frozen legacy
+    // site for React 18 and its version archives for 16/17, never a date guess.
+    let archive = if site.repo == ("reactjs", "react.dev") {
+        match major {
+            16 => Some("16.reactjs.org"),
+            17 => Some("17.reactjs.org"),
+            18 => Some("main"),
+            _ => None,
+        }
+    } else {
+        None
+    };
+    if let Some(branch) = archive {
+        site.repo = ("reactjs", "legacy.reactjs.org");
+        site.branch = branch;
+        site.current = &["content/docs"];
+    }
+    let latest = if archive.is_some() { Some(major) } else { latest_major(agent, dep)? };
     let repo = Repo {
         owner: site.repo.0.into(),
         name: site.repo.1.into(),
@@ -226,7 +245,11 @@ fn site_docs(agent: &Client, dep: &Dep, pkg_repo: Option<&Repo>, out: &Path) -> 
     let is_latest = latest.is_some_and(|l| major >= l);
     // Where the current-major folders come from for this version.
     let mut reference = site.branch.to_string();
-    let mut how = String::from("current docs; your major is the latest");
+    let mut how = if archive.is_some() {
+        format!("official archive for major {major}")
+    } else {
+        String::from("current docs; your major is the latest")
+    };
     let mut current = is_latest;
     if !is_latest && latest.is_some() && (!site.current.is_empty() || !site.pages.is_empty()) {
         let branches = [format!("v{major}"), format!("{major}.x")];
@@ -326,7 +349,10 @@ fn site_docs(agent: &Client, dep: &Dep, pkg_repo: Option<&Repo>, out: &Path) -> 
 /// page written as a JS/TSX component, `None` skip.
 fn site_kind(p: &str, major: u64, versioned: &[String], versioned_ok: bool, docs_dirs: &[String], page_dirs: &[String]) -> Option<bool> {
     let under = |dirs: &[String]| dirs.iter().any(|d| p.starts_with(&format!("{d}/")));
-    if doc_file(p) && !p.ends_with(".txt") && !later_major_file(p, major) && ((versioned_ok && under(versioned)) || under(docs_dirs)) {
+    if later_major_file(p, major) {
+        return None;
+    }
+    if doc_file(p) && !p.ends_with(".txt") && ((versioned_ok && under(versioned)) || under(docs_dirs)) {
         Some(false)
     } else if page_file(p) && under(page_dirs) {
         Some(true)
@@ -338,8 +364,8 @@ fn site_kind(p: &str, major: u64, versioned: &[String], versioned_ok: bool, docs
 /// A page about a later major than the pinned one (`v4-beta.mdx` on the v3
 /// branch): it would answer with APIs this version does not have.
 fn later_major_file(p: &str, major: u64) -> bool {
-    let name = p.rsplit('/').next().unwrap_or(p).to_ascii_lowercase();
-    name.split(|c: char| !c.is_ascii_alphanumeric())
+    let path = p.to_ascii_lowercase();
+    path.split(|c: char| !c.is_ascii_alphanumeric())
         .any(|w| w.strip_prefix('v').and_then(|n| n.parse::<u64>().ok()).is_some_and(|n| n > major))
 }
 
@@ -1607,6 +1633,10 @@ mod tests {
         let tag = tag.map(String::from);
         let site_docs_present = codeload == Codeload::PrivateWithSite;
         let site_archive = tarball(&[("src/content/learn/a.md", b"# learn")]);
+        let legacy_archive = tarball(&[
+            ("content/docs/hooks-reference.md", b"# Hooks API Reference"),
+            ("content/blog/new-api.md", b"# Future API"),
+        ]);
         let archive = tarball(&[("README.md", b"# readme"), ("docs/guide.md", b"# guide"), ("src/lib.rs", b"fn x() {}")]);
         std::thread::spawn(move || {
             for stream in listener.incoming() {
@@ -1695,6 +1725,8 @@ mod tests {
                     }
                 } else if path == "/npm/react/latest" {
                     json(serde_json::json!({"version":"19.0.0"}))
+                } else if path.starts_with("/reactjs/legacy.reactjs.org/tar.gz/") {
+                    (200, "application/gzip", legacy_archive.clone())
                 } else if path.starts_with("/reactjs/react.dev/tar.gz/") {
                     if site_docs_present {
                         (200, "application/gzip", site_archive.clone())
@@ -2093,6 +2125,24 @@ mod tests {
     }
 
     #[test]
+    fn older_react_majors_use_the_official_archives() {
+        for name in ["react", "react-dom", "@types/react"] {
+            for (major, branch) in [(16, "16.reactjs.org"), (17, "17.reactjs.org"), (18, "main")] {
+                let f = fake(Codeload::Ok, false, None);
+                let out = tempfile::tempdir().unwrap();
+                let got = site_docs(&client(&f, MAX_ARCHIVE), &dep(name, &format!("{major}.0.0")), None, out.path()).unwrap();
+                let got = got.expect("older React docs must be available");
+                assert_eq!(got.files, 1);
+                assert!(got.label.contains(&format!("legacy.reactjs.org@{branch}")));
+                assert!(got.label.contains(&format!("official archive for major {major}")));
+                assert!(out.path().join("legacy.reactjs.org/content/docs/hooks-reference.md").exists());
+                assert!(!out.path().join("legacy.reactjs.org/content/blog/new-api.md").exists());
+                assert_eq!(requests(&f, "/reactjs/react.dev/tar.gz/"), 0);
+            }
+        }
+    }
+
+    #[test]
     fn docs_site_files_follow_the_major_rules() {
         let (docs, pages): (Vec<String>, Vec<String>) = (vec!["src/content/docs/en".into()], vec!["src/app/installation".into()]);
         let versioned = vec!["src/content/api/4x".to_string()];
@@ -2100,11 +2150,36 @@ mod tests {
         assert_eq!(k("src/content/docs/en/a.md", false), Some(false));
         assert_eq!(k("src/content/docs/en/a.txt", false), None);
         assert_eq!(k("src/content/docs/en/v5-beta.md", false), None);
+        assert_eq!(k("src/content/docs/en/v5/migration.md", false), None);
+        assert_eq!(k("src/app/installation/v5/page.tsx", false), None);
         assert_eq!(k("src/content/api/4x/req.md", true), Some(false));
         assert_eq!(k("src/content/api/4x/req.md", false), None);
         assert_eq!(k("src/app/installation/page.tsx", false), Some(true));
         assert_eq!(k("src/app/installation/layout.tsx", false), None);
         assert_eq!(k("README.md", true), None);
+    }
+
+    #[test]
+    fn all_five_docs_sites_exclude_later_major_pages() {
+        for (site, major) in DOCS_SITES.iter().zip([18, 4, 3, 5, 1]) {
+            let docs: Vec<String> = site.current.iter().map(|p| p.to_string()).collect();
+            let pages: Vec<String> = site.pages.iter().map(|p| p.to_string()).collect();
+            let versioned: Vec<String> = site.versioned.iter().map(|p| p.replace("{major}", &major.to_string())).collect();
+            let k = |p: &str| site_kind(p, major, &versioned, true, &docs, &pages);
+            for dir in &docs {
+                assert_eq!(k(&format!("{dir}/guide.md")), Some(false), "{}", site.repo.1);
+                assert_eq!(k(&format!("{dir}/v{}/guide.mdx", major + 1)), None, "{}", site.repo.1);
+                assert_eq!(k(&format!("{dir}/v{major}/guide.md")), Some(false), "{}", site.repo.1);
+            }
+            for dir in &pages {
+                assert_eq!(k(&format!("{dir}/page.tsx")), Some(true));
+                assert_eq!(k(&format!("{dir}/v{}/page.tsx", major + 1)), None);
+            }
+            if !versioned.is_empty() {
+                assert_eq!(k("src/content/api/4x/req.md"), Some(false));
+                assert_eq!(k("src/content/api/5x/req.md"), None);
+            }
+        }
     }
 
     #[test]

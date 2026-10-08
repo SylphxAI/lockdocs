@@ -10,7 +10,6 @@ use mcp_kit::licence::{self, Licence, LicencePolicy, ProRequired};
 pub const ISSUER_PUBLIC_KEY: &str = "3WKM0pn_td25hztpKOVCSFZvE8zs06uXrMWU1p5O4so";
 
 /// Base URL of the in-terminal checkout.
-#[allow(dead_code)]
 pub const CHECKOUT_BASE: &str = "https://buy.sylphx.com";
 
 /// Yearly price per seat, quoted in the free upgrade preview. The pricing page
@@ -28,8 +27,7 @@ pub const POLICY: LicencePolicy<'static> = LicencePolicy {
     file_name: "licence",
     // Published pricing page (docs/pro.md). The price itself is `docs/pricing.json`.
     upgrade_url: "https://sylphxai.github.io/lockdocs/pro",
-    // set when buy.sylphx.com serves /api/v1/claims and a Money sandbox token passes activate
-    checkout_base: None,
+    checkout_base: Some(CHECKOUT_BASE),
 };
 
 pub const UPGRADE_REPORT: &str = "Upgrade report";
@@ -57,6 +55,18 @@ mod tests {
     fn token(key: &SigningKey, payload: &str) -> String {
         let sig = key.sign(payload.as_bytes());
         format!("{}.{}", URL_SAFE_NO_PAD.encode(payload), URL_SAFE_NO_PAD.encode(sig.to_bytes()))
+    }
+
+    #[test]
+    fn checkout_policy_and_docs_use_the_live_product() {
+        assert_eq!(POLICY.product, "lockdocs");
+        assert_eq!(POLICY.checkout_base, Some("https://buy.sylphx.com"));
+        let config = include_str!("../../../docs/.vitepress/config.ts");
+        assert!(config.contains(&format!("price: '{PRICE}'")));
+        assert!(config.contains("checkoutUrl: 'https://buy.sylphx.com/buy/lockdocs?pack=1'"));
+        let page = include_str!("../../../docs/pro.md");
+        assert!(page.contains("Buy lockdocs Pro"));
+        assert!(page.contains("starts the device flow"));
     }
 
     #[test]

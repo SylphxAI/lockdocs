@@ -49,7 +49,9 @@ version you pinned.
 
 <p v-if="$site.themeConfig.pro.checkoutUrl"><a :href="$site.themeConfig.pro.checkoutUrl">Buy lockdocs Pro</a></p>
 
-`lockdocs licence buy` opens the Pro page; in-terminal purchase turns on when checkout is live.
+`lockdocs licence buy` starts the device flow for lockdocs Pro: open the link
+printed in your terminal to buy, then return to the terminal. After checkout,
+lockdocs verifies and stores your licence automatically.
 
 Already bought? Run `lockdocs licence activate <token>` (it verifies the token
 offline and stores it for you), or set `LOCKDOCS_LICENCE_TOKEN` in CI. Check it

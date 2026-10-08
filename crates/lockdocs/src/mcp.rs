@@ -58,7 +58,7 @@ impl Lockdocs {
     /// Pro answer.
     fn preview(&self, name: &str, args: &Value, call: &Call, required: &licence::ProRequired) -> CallToolResult {
         let mut result = licence::required_result(required);
-        match self.root(args, call).and_then(|root| tools::call(&self.ws, &self.opts, name, args, &root)) {
+        match self.root(args, call).and_then(|root| tools::call_checked(&self.ws, &self.opts, name, args, &root).result) {
             Ok(answer) => {
                 let p = preview::build(&answer.json, required, pro::PRICE);
                 let body = if args.get("format").and_then(|v| v.as_str()) == Some("json") {

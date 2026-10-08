@@ -1698,6 +1698,35 @@ mod tests {
         }
     }
 
+    /// Exercise GitLab's real smart-HTTP and archive endpoints without credentials.
+    #[test]
+    #[ignore = "requires network access to gitlab.com"]
+    fn real_gitlab_release_docs() {
+        let origin = crate::private::Url::parse("https://gitlab.com/").unwrap().origin();
+        let host = crate::private::git::Host::of(origin.clone());
+        let client = agent(false, Some((Some(host), crate::private::Creds::default())));
+        let repo = Repo {
+            owner: "gitlab-org".into(),
+            name: "cli".into(),
+            subdir: None,
+            host: Some(origin),
+        };
+        let out = tempfile::tempdir().unwrap();
+        let manifest = build(&client, &dep("glab", "1.45.0"), &repo, false, out.path()).unwrap();
+        assert_eq!(manifest.tag.as_deref(), Some("v1.45.0"));
+        assert!(manifest.commit.as_ref().is_some_and(|c| c.len() == 40));
+        assert!(manifest.files > 0);
+        assert!(std::fs::read_to_string(out.path().join("README.md")).unwrap().contains("GitLab"));
+        println!(
+            "GitLab readback: {} tag={} commit={} files={} bytes={}",
+            manifest.repo,
+            manifest.tag.unwrap(),
+            manifest.commit.unwrap(),
+            manifest.files,
+            manifest.bytes
+        );
+    }
+
     /// A small `<repo>-<ref>/...` codeload-shaped archive built in memory.
     fn tarball(files: &[(&str, &[u8])]) -> Vec<u8> {
         let mut b = tar::Builder::new(Vec::new());

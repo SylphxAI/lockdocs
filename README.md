@@ -240,7 +240,7 @@ Prebuilt binaries for macOS (arm64, x64), Linux glibc (x64, arm64) and Windows x
 
 ## Pro
 
-Everything above is free, under MIT. The one paid feature is the upgrade report (`lockdocs upgrade next 15.0.0`, or `upgrade_to` in the `docs` tool): which APIs you call were removed, renamed or deprecated between your pinned version and the target, with your call sites. lockdocs Pro is US$120 per seat per year. The licence is checked offline: run `lockdocs licence activate <token>` (check it with `lockdocs licence status`, which warns during the last 30 days), or set `LOCKDOCS_LICENCE_TOKEN` in CI. Details: [lockdocs Pro](https://sylphxai.github.io/lockdocs/pro).
+Everything above is free, under MIT. Pro adds two things for teams. Private sources: lockdocs reads your internal packages and docs from the private npm, PyPI, Cargo and Go registries and the GitHub Enterprise, GitLab and Bitbucket hosts you already use, with the credentials your `.npmrc`, uv, pip, Cargo, Go and git already hold, each sent only to its own host, inside the same `resolve`, `docs` and `api` tools and `lockdocs fetch`. And the upgrade report (`lockdocs upgrade next 15.0.0`, or `upgrade_to` in the `docs` tool): which APIs you call were removed, renamed or deprecated between your pinned version and the target, with your call sites. lockdocs Pro is US$120 per seat per year. The licence is checked offline: run `lockdocs licence activate <token>` (check it with `lockdocs licence status`, which warns during the last 30 days), or set `LOCKDOCS_LICENCE_TOKEN` in CI. Details: [lockdocs Pro](https://sylphxai.github.io/lockdocs/pro).
 
 ## Privacy
 

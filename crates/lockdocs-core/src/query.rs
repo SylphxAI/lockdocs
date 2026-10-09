@@ -41,6 +41,10 @@ pub struct Options {
     pub fetch: bool,
     /// Anonymous release-tag docs on first use; independent of registry downloads.
     pub upstream: bool,
+    /// lockdocs Pro: read the private registries and git hosts the user has
+    /// configured. Set by the binary after it has verified the licence; the
+    /// core never decides this itself.
+    pub private: bool,
 }
 
 impl Default for Options {
@@ -51,7 +55,11 @@ impl Default for Options {
             fetch = false;
             upstream = false;
         }
-        Options { fetch, upstream }
+        Options {
+            fetch,
+            upstream,
+            private: false,
+        }
     }
 }
 
@@ -69,6 +77,8 @@ pub struct Engine {
     opts: Options,
     indexes: Mutex<HashMap<String, Arc<PackageIndex>>>,
     upstream_notes: Mutex<HashMap<String, String>>,
+    /// Packages that needed a private source this engine was not licensed to read.
+    private_blocked: Mutex<Vec<crate::private::PrivateRequired>>,
 }
 
 /// An indexed package, the dependency it answers for, and a drift note.
@@ -211,7 +221,21 @@ impl Engine {
             opts,
             indexes: Mutex::new(HashMap::new()),
             upstream_notes: Mutex::new(HashMap::new()),
+            private_blocked: Mutex::new(Vec::new()),
         }
+    }
+
+    fn block(&self, req: &crate::private::PrivateRequired) {
+        let mut b = self.private_blocked.lock().unwrap();
+        if !b.iter().any(|r| r.package == req.package) {
+            b.push(req.clone());
+        }
+    }
+
+    /// The packages that needed a private source without Pro since the last
+    /// call. The binary turns a non-empty list into the `pro_required` answer.
+    pub fn take_private_blocked(&self) -> Vec<crate::private::PrivateRequired> {
+        std::mem::take(&mut *self.private_blocked.lock().unwrap())
     }
 
     pub fn root(&self) -> &Path {
@@ -234,10 +258,22 @@ impl Engine {
         if let Some(s) = fetch::cached(dep) {
             return Ok((s, None));
         }
+        if !self.opts.private {
+            if let Some(req) = crate::private::needs_private(dep, &self.project.root) {
+                self.block(&req);
+                return Err(format!("{req}. Run `lockdocs licence status`."));
+            }
+        }
         if self.opts.fetch {
-            match fetch::fetch(dep) {
+            match fetch::fetch_for(dep, Some(&self.project.root), self.opts.private) {
                 Ok(s) => return Ok((s, None)),
-                Err(e) => return Err(format!("{}: exact registry fetching failed: {e:#}; no other version substituted", dep.id())),
+                Err(e) => {
+                    if let Some(req) = e.downcast_ref::<crate::private::PrivateRequired>() {
+                        self.block(req);
+                        return Err(format!("{req}. Run `lockdocs licence status`."));
+                    }
+                    return Err(format!("{}: exact registry fetching failed: {e:#}; no other version substituted", dep.id()));
+                }
             }
         }
         if let Some(s) = local {
@@ -329,7 +365,7 @@ impl Engine {
         }
         if enabled {
             let result = if self.opts.fetch {
-                upstream::fetch(dep, src)
+                upstream::fetch_private(dep, src, self.opts.private)
             } else {
                 upstream::fetch_automatic(dep, src)
             };
@@ -382,7 +418,15 @@ impl Engine {
                     .or_else(|| fetch::cached(d))
                 {
                     Some(s) => Some(s),
-                    None if !fetch::is_git(d) => fetch::fetch(d).ok(),
+                    None if !fetch::is_git(d) => match fetch::fetch_for(d, Some(&self.project.root), self.opts.private) {
+                        Ok(s) => Some(s),
+                        Err(e) => {
+                            if let Some(req) = e.downcast_ref::<crate::private::PrivateRequired>() {
+                                self.block(req);
+                            }
+                            None
+                        }
+                    },
                     None => None,
                 };
                 let Some(src) = src else {
@@ -392,7 +436,7 @@ impl Engine {
                         json!({"package": d.id(), "status": "missing"}),
                     );
                 };
-                let status = match upstream::fetch(d, &src) {
+                let status = match upstream::fetch_private(d, &src, self.opts.private) {
                     Ok(m) => m,
                     Err(e) => {
                         return (
@@ -1754,8 +1798,16 @@ mod tests {
     fn workspace_does_not_reuse_network_policy() {
         let ws = Workspace::default();
         let root = std::env::temp_dir();
-        let online = Options { fetch: false, upstream: true };
-        let offline = Options { fetch: false, upstream: false };
+        let online = Options {
+            fetch: false,
+            upstream: true,
+            private: false,
+        };
+        let offline = Options {
+            fetch: false,
+            upstream: false,
+            private: false,
+        };
         let a = ws.engine(&root, &online);
         let b = ws.engine(&root, &offline);
         assert!(!Arc::ptr_eq(&a, &b));

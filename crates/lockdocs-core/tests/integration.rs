@@ -13,7 +13,14 @@ fn engine() -> Engine {
         std::env::set_var("LOCKDOCS_NO_SYSTEM_PYTHON", "1");
     });
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests").join("fixture");
-    Engine::new(&root, Options { fetch: false, upstream: false })
+    Engine::new(
+        &root,
+        Options {
+            fetch: false,
+            upstream: false,
+            private: false,
+        },
+    )
 }
 
 #[test]
@@ -90,7 +97,14 @@ fn budget_is_respected() {
 fn first_use_reports_unavailable_upstream_and_reuses_note() {
     let e = engine();
     let root = e.root().to_path_buf();
-    let e = Engine::new(&root, Options { fetch: false, upstream: true });
+    let e = Engine::new(
+        &root,
+        Options {
+            fetch: false,
+            upstream: true,
+            private: false,
+        },
+    );
     for _ in 0..2 {
         let a = e.docs(Some("tiny-schema"), "reject unknown keys", 1500).unwrap();
         assert!(a.text.contains("upstream docs fetch failed"), "{}", a.text);
@@ -137,9 +151,21 @@ fn pinned_upstream_cache_is_reused_online_and_offline_with_provenance() {
     });
     std::fs::write(cache.join(".lockdocs-upstream.json"), manifest.to_string()).unwrap();
     for opts in [
-        Options { fetch: true, upstream: true },
-        Options { fetch: false, upstream: true },
-        Options { fetch: false, upstream: false },
+        Options {
+            fetch: true,
+            upstream: true,
+            private: false,
+        },
+        Options {
+            fetch: false,
+            upstream: true,
+            private: false,
+        },
+        Options {
+            fetch: false,
+            upstream: false,
+            private: false,
+        },
     ] {
         let mut e = Engine::new(&root, opts);
         e.project.deps = vec![dep.clone()];
@@ -154,7 +180,14 @@ fn pinned_upstream_cache_is_reused_online_and_offline_with_provenance() {
     let mut legacy = manifest.clone();
     legacy["format"] = serde_json::json!(3);
     std::fs::write(cache.join(".lockdocs-upstream.json"), legacy.to_string()).unwrap();
-    let mut online = Engine::new(&root, Options { fetch: false, upstream: true });
+    let mut online = Engine::new(
+        &root,
+        Options {
+            fetch: false,
+            upstream: true,
+            private: false,
+        },
+    );
     online.project.deps = vec![dep.clone()];
     let rejected = online.docs(Some(&dep.name), "reject unknown keys", 1500).unwrap();
     assert!(rejected.json["provenance"][0]["upstream"].is_null());
@@ -162,7 +195,14 @@ fn pinned_upstream_cache_is_reused_online_and_offline_with_provenance() {
     assert!(!rejected.text.contains("release_only_api"));
     // Failed revalidation does not destroy the disk cache. Explicitly offline
     // callers may read it, with its unverified provenance clearly disclosed.
-    let mut offline = Engine::new(&root, Options { fetch: false, upstream: false });
+    let mut offline = Engine::new(
+        &root,
+        Options {
+            fetch: false,
+            upstream: false,
+            private: false,
+        },
+    );
     offline.project.deps = vec![dep];
     let fallback = offline.docs(Some("cached-provenance-fixture"), "reject unknown keys", 1500).unwrap();
     assert!(fallback.text.contains("release_only_api") && fallback.text.contains("offline fallback"));

@@ -10,7 +10,14 @@ fn reads_packages_from_the_yarn_zip_cache() {
     std::env::set_var("YARN_CACHE_FOLDER", cache.join("no-global-yarn-cache"));
     std::env::set_var("LOCKDOCS_NO_SYSTEM_PYTHON", "1");
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests").join("fixture-pnp");
-    let e = Engine::new(&root, Options { fetch: false, upstream: false });
+    let e = Engine::new(
+        &root,
+        Options {
+            fetch: false,
+            upstream: false,
+            private: false,
+        },
+    );
     let r = e.resolve(Some("tiny-pnp"));
     assert!(r.text.contains("tiny-pnp@1.0.0") && r.text.contains("docs ready"), "{}", r.text);
     assert!(r.text.contains(".yarn/cache/tiny-pnp-npm-1.0.0-"), "{}", r.text);

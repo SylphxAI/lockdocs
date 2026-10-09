@@ -1,6 +1,7 @@
 //! The MCP server: lockdocs' tools on mcp-kit (rmcp over stdio).
 
 use crate::{preview, pro, tools};
+use lockdocs_core::private::PrivateRequired;
 use lockdocs_core::query::{Options, Workspace};
 use mcp_kit::licence::{self, LicencePolicy};
 use mcp_kit::rmcp::model::{CallToolResult, ContentBlock};
@@ -19,6 +20,25 @@ struct Lockdocs {
 }
 
 impl Lockdocs {
+    /// One tool call with these options; also the packages that needed a private
+    /// source the licence did not cover.
+    fn run(&self, opts: &Options, name: &str, args: &Value, call: &Call) -> (Result<String, String>, Vec<PrivateRequired>) {
+        let root = match self.root(args, call) {
+            Ok(r) => r,
+            Err(e) => return (Err(e), Vec::new()),
+        };
+        let out = tools::call_checked(&self.ws, opts, name, args, &root);
+        let json = args.get("format").and_then(|v| v.as_str()) == Some("json");
+        let result = out.result.map(|a| {
+            if json {
+                serde_json::to_string_pretty(&a.json).unwrap_or_default()
+            } else {
+                a.text
+            }
+        });
+        (result, out.blocked)
+    }
+
     fn root(&self, args: &Value, call: &Call) -> Result<PathBuf, String> {
         let explicit = ["root", "repo_root"]
             .iter()
@@ -38,7 +58,10 @@ impl Lockdocs {
     /// Pro answer.
     fn preview(&self, name: &str, args: &Value, call: &Call, required: &licence::ProRequired) -> CallToolResult {
         let mut result = licence::required_result(required);
-        match self.root(args, call).and_then(|root| tools::call(&self.ws, &self.opts, name, args, &root)) {
+        match self
+            .root(args, call)
+            .and_then(|root| tools::call_checked(&self.ws, &self.opts, name, args, &root).result)
+        {
             Ok(answer) => {
                 let p = preview::build(&answer.json, required, pro::PRICE);
                 let body = if args.get("format").and_then(|v| v.as_str()) == Some("json") {
@@ -70,17 +93,15 @@ impl App for Lockdocs {
     }
 
     fn call(&self, name: &str, args: &Value, call: &Call) -> Result<String, String> {
-        let out = tools::call(&self.ws, &self.opts, name, args, &self.root(args, call)?)?;
-        if args.get("format").and_then(|v| v.as_str()) == Some("json") {
-            Ok(serde_json::to_string_pretty(&out.json).unwrap_or_default())
-        } else {
-            Ok(out.text)
-        }
+        self.run(&self.opts, name, args, call).0
     }
 
     /// Free calls go straight through `call`. The Pro upgrade report (`docs` with
     /// `upgrade_to`) needs a licence; without one the answer is a normal result
-    /// with `structuredContent.pro_required`, never an error.
+    /// with `structuredContent.pro_required`, never an error. So does a call that
+    /// needs a private source (a package only a private registry or git host
+    /// has): the licence is checked first, and nothing is sent to any private
+    /// host without it.
     fn call_result(&self, name: &str, args: &Value, call: &Call) -> CallToolResult {
         let mut note = None;
         if tools::is_upgrade(name, args) {
@@ -89,7 +110,23 @@ impl App for Lockdocs {
                 Err(required) => return self.preview(name, args, call, &required),
             }
         }
-        match self.call(name, args, call) {
+        let grant = pro::require(&self.policy, pro::PRIVATE_SOURCES);
+        let mut opts = self.opts.clone();
+        opts.private = grant.is_ok();
+        let (result, blocked) = self.run(&opts, name, args, call);
+        if let (Err(required), false) = (&grant, blocked.is_empty()) {
+            let named = args.get("package").or_else(|| args.get("library")).is_some();
+            if result.is_err() || named {
+                return licence::required_result(required);
+            }
+            let names: Vec<String> = blocked.iter().map(|b| b.package.clone()).collect();
+            note = Some(format!(
+                "{} need a private source, which is part of lockdocs Pro: {}",
+                names.join(", "),
+                required.url
+            ));
+        }
+        match result {
             Ok(mut text) => {
                 if let Some(n) = note {
                     text.push_str("\n\n");
@@ -180,7 +217,11 @@ mod tests {
     fn app(policy: LicencePolicy<'static>) -> Lockdocs {
         Lockdocs {
             ws: Workspace::default(),
-            opts: Options { fetch: false, upstream: false },
+            opts: Options {
+                fetch: false,
+                upstream: false,
+                private: false,
+            },
             default_root: None,
             policy,
         }
@@ -327,6 +368,113 @@ mod tests {
         assert_eq!(e["isError"], true);
         let e = call(&a, "docs", json!({"query": "x", "package": "nope", "upgrade_to": "2.0.0", "root": root}));
         assert_eq!(e["isError"], true);
+        std::env::remove_var(TEST_ENV);
+        private_sources(tmp.path(), policy_of(&a), &key);
+    }
+
+    fn policy_of(a: &Lockdocs) -> LicencePolicy<'static> {
+        a.policy
+    }
+
+    type Seen = std::sync::Arc<std::sync::Mutex<Vec<(String, Option<String>)>>>;
+
+    /// A one-file HTTP server: answers by path and records (path, Authorization).
+    fn serve(route: impl Fn(&str, Option<&str>) -> (u16, Vec<u8>) + Send + 'static) -> (String, Seen) {
+        use std::io::{Read, Write};
+        let l = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let base = format!("http://{}", l.local_addr().unwrap());
+        let seen: Seen = Default::default();
+        let log = seen.clone();
+        std::thread::spawn(move || {
+            for s in l.incoming() {
+                let Ok(mut c) = s else { return };
+                let mut buf = Vec::new();
+                let mut chunk = [0u8; 2048];
+                while !buf.windows(4).any(|w| w == b"\r\n\r\n") {
+                    let n = c.read(&mut chunk).unwrap_or(0);
+                    if n == 0 {
+                        break;
+                    }
+                    buf.extend_from_slice(&chunk[..n]);
+                }
+                let head = String::from_utf8_lossy(&buf).to_string();
+                let path = head.lines().next().unwrap_or("").split(' ').nth(1).unwrap_or("").to_string();
+                let auth = head.lines().find_map(|l| {
+                    l.split_once(':')
+                        .filter(|(k, _)| k.eq_ignore_ascii_case("authorization"))
+                        .map(|(_, v)| v.trim().to_string())
+                });
+                log.lock().unwrap().push((path.clone(), auth.clone()));
+                let (status, body) = route(&path, auth.as_deref());
+                let _ = write!(c, "HTTP/1.1 {status} X\r\nContent-Length: {}\r\nConnection: close\r\n\r\n", body.len());
+                let _ = c.write_all(&body);
+                let _ = c.shutdown(std::net::Shutdown::Write);
+            }
+        });
+        (base, seen)
+    }
+
+    fn private_sources(tmp: &Path, policy: LicencePolicy<'static>, key: &SigningKey) {
+        std::env::set_var("LOCKDOCS_NO_UPSTREAM", "1");
+        std::env::set_var("HOME", tmp.join("home"));
+        let tarball = {
+            let mut tar = tar::Builder::new(flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default()));
+            let data = b"# Acme UI\n\nHello private world.\n";
+            let mut h = tar::Header::new_gnu();
+            h.set_size(data.len() as u64);
+            h.set_mode(0o644);
+            h.set_cksum();
+            tar.append_data(&mut h, "package/README.md", &data[..]).unwrap();
+            tar.into_inner().unwrap().finish().unwrap()
+        };
+        let (files, files_seen) = serve(move |_, _| (200, tarball.clone()));
+        let (reg, reg_seen) = serve(move |p, auth| match (p, auth) {
+            ("/@acme%2Fui/1.0.0", Some("Bearer SECRET-MCP")) => (200, format!(r#"{{"dist":{{"tarball":"{files}/ui.tgz"}}}}"#).into_bytes()),
+            _ => (401, Vec::new()),
+        });
+        let proj = tmp.join("private-proj");
+        write(&proj.join("package.json"), r#"{"name":"app","dependencies":{"@acme/ui":"^1.0.0"}}"#);
+        write(
+            &proj.join("package-lock.json"),
+            r#"{"name":"app","lockfileVersion":3,"packages":{"":{"name":"app","dependencies":{"@acme/ui":"^1.0.0"}},"node_modules/@acme/ui":{"version":"1.0.0"}}}"#,
+        );
+        write(
+            &proj.join(".npmrc"),
+            &format!("@acme:registry={reg}/\n//{}/:_authToken=SECRET-MCP\n", reg.trim_start_matches("http://")),
+        );
+        let args = json!({"query": "hello", "package": "@acme/ui", "root": proj.to_str().unwrap()});
+
+        // Without Pro: the pro_required answer, and nothing was sent to the private host.
+        std::env::remove_var(TEST_ENV);
+        let mut a = app(policy);
+        a.opts.fetch = true;
+        let r = call(&a, "docs", args.clone());
+        assert_eq!(r["isError"], false, "{r}");
+        assert_eq!(r["structuredContent"]["pro_required"]["feature"], pro::PRIVATE_SOURCES, "{r}");
+        assert!(!text(&r).contains("SECRET"));
+        assert!(
+            reg_seen.lock().unwrap().is_empty() && files_seen.lock().unwrap().is_empty(),
+            "a request left the machine without Pro"
+        );
+        // The same call in a project with no private config is not gated.
+        let free = call(
+            &a,
+            "docs",
+            json!({"query": "object schema", "package": "tiny-schema", "root": tmp.join("proj").to_str().unwrap()}),
+        );
+        assert!(free["structuredContent"].is_null(), "{free}");
+
+        // With Pro: the docs come from the private registry; the token reached only that origin.
+        std::env::set_var(TEST_ENV, token(key, r#"{"plan":"pro","issuedAt":1,"product":"lockdocs","seats":1}"#));
+        let r = call(&a, "docs", args);
+        assert!(r["structuredContent"].is_null(), "{r}");
+        assert!(text(&r).contains("Hello private world"), "{}", text(&r));
+        assert!(!text(&r).contains("SECRET"));
+        assert!(reg_seen.lock().unwrap().iter().all(|(_, a)| a.as_deref() == Some("Bearer SECRET-MCP")));
+        assert!(
+            files_seen.lock().unwrap().iter().all(|(_, a)| a.is_none()),
+            "the token followed the tarball URL to another origin"
+        );
         std::env::remove_var(TEST_ENV);
     }
 

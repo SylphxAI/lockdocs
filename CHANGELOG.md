@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.7.0
 
 - **First use finds the docs sites too.** The automatic first-use fetch (`docs`/`api` before any `lockdocs fetch`) skipped the separate docs-site repositories, so React 19, Express, tokio and Tailwind answers came from package files only. It now reads them as well: the site archive within the same 64 MB cap, else one REST tree request plus raw files (tailwindcss.com is 190 MB and prisma/docs over 800 MB as archives, but a few hundred files). The REST call follows a redirect to the same API host once, which a renamed repository such as prisma/docs answers. A docs-site failure keeps the package docs and says what was skipped in the manifest note; `lockdocs fetch` retries it. On the benchmark's first-use run (empty isolated cache, no credentials, 97 of 105 questions installable locally) 76 become 88 correct and held-out 13/16 becomes 14/16; the first-use floor in `bench/run.py` is 88/105. `upstream::FORMAT` is 6.
 - **Free upgrade preview.** Without a Pro licence, `lockdocs upgrade <pkg> <ver>` (and `docs --upgrade-to`, and the `docs` tool's `upgrade_to`) now answers with a short local preview instead of only "Pro required": how many of the APIs your project calls were removed, renamed, re-signed or deprecated, across how many call sites, plus one sample, then the Pro price and link. The full list stays Pro. The MCP answer still carries `structuredContent.pro_required`, the CLI still exits 3, and the preview reads the same installed, cached or opted-in files as the report (no new downloads).

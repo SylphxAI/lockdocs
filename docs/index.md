@@ -24,7 +24,7 @@ proof:
   - value: "96/105"
     label: version-sensitive questions right after lockdocs fetch (Context7 77/105)
     link: /benchmarks
-  - value: "70/105"
+  - value: "88/105"
     label: with default settings from an empty cache
     link: /benchmarks
   - value: "58 ms"

@@ -14,6 +14,7 @@ pub mod index;
 pub mod locate;
 pub mod lockfile;
 pub mod markdown;
+pub mod private;
 pub mod project;
 pub mod query;
 pub use mcp_kit::search as tokenize;

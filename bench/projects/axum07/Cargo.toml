@@ -6,6 +6,6 @@ publish = false
 
 [dependencies]
 axum = "=0.8.9"
-tokio = { version = "=1.41.1", features = ["full"] }
+tokio = { version = "=1.53.2", features = ["full"] }
 
 [workspace]

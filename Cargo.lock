@@ -672,7 +672,7 @@ name = "lockdocs"
 version = "0.6.0"
 dependencies = [
  "anyhow",
- "base64 0.22.1",
+ "base64 0.23.1",
  "ed25519-dalek",
  "lockdocs-core",
  "serde_json",

@@ -44,29 +44,33 @@ fn slot(dep: &Dep, source: &str) -> PathBuf {
     crate::cache::dir().join("src").join(dep.eco.as_str()).join(format!("{safe}-{key}"))
 }
 
-/// The source identity a fetch would resolve to: the private candidate the
-/// user's configuration and lockfiles select, else the public default. Offline
-/// and cheap; the plan is already read by the private path.
-fn source_identity(dep: &Dep, root: Option<&Path>) -> String {
-    let public = match dep.eco {
+/// The public default registry for a package's ecosystem.
+fn public_default(dep: &Dep) -> &'static str {
+    match dep.eco {
         Eco::Npm => "registry.npmjs.org",
         Eco::PyPI => "pypi.org",
         Eco::Cargo => "crates.io",
         Eco::Go => "proxy.golang.org",
-    };
-    let Some(root) = root else { return public.into() };
+    }
+}
+
+/// The source identity a fetch would resolve to: the private candidate the
+/// user's configuration and lockfiles select, else the public default. Offline
+/// and cheap; the plan is already read by the private path.
+fn source_identity(dep: &Dep, root: Option<&Path>) -> String {
+    let Some(root) = root else { return public_default(dep).into() };
     let plan = crate::private::plan(dep, root, &crate::private::Env::process());
     plan.candidates
         .first()
         .filter(|c| c.private)
         .map(|c| c.base.clone())
-        .unwrap_or_else(|| public.into())
+        .unwrap_or_else(|| public_default(dep).into())
 }
 
 /// Directory for a fetched package, for the public default source. Callers
 /// that resolved a private source use [`fetched_dir_for`].
 pub fn fetched_dir(dep: &Dep) -> PathBuf {
-    slot(dep, "public")
+    slot(dep, public_default(dep))
 }
 
 /// Directory for a fetched `dep` read from `root`'s resolved source.
@@ -430,6 +434,8 @@ mod tests {
         assert_ne!(a, b, "two private registries shared a cache directory");
         assert_ne!(a, public, "a private registry shared the public cache directory");
         assert_ne!(b, public);
+        // The public slot is the same whenever no private source applies.
+        assert_eq!(fetched_dir(&dep), fetched_dir_for(&dep, None));
         // The same source resolves to the same directory across projects.
         let craft_again = tempfile::tempdir().unwrap();
         write(

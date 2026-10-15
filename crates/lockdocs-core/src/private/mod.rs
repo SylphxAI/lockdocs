@@ -776,6 +776,18 @@ pub(crate) mod testutil {
         tar.into_inner().unwrap().finish().unwrap()
     }
 
+    /// A zip of `files`, for a wheel or sdist artifact in a test.
+    pub fn zip(files: &[(&str, &[u8])]) -> Vec<u8> {
+        use std::io::Write;
+        let mut w = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+        let opts = zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
+        for (name, data) in files {
+            w.start_file(*name, opts).unwrap();
+            w.write_all(data).unwrap();
+        }
+        w.finish().unwrap().into_inner()
+    }
+
     pub fn write(p: &std::path::Path, text: &str) {
         std::fs::create_dir_all(p.parent().unwrap()).unwrap();
         std::fs::write(p, text).unwrap();

@@ -255,7 +255,7 @@ impl Engine {
                 return Ok((s.clone(), None));
             }
         }
-        if let Some(s) = fetch::cached(dep) {
+        if let Some(s) = fetch::cached_for(dep, Some(&self.project.root)) {
             return Ok((s, None));
         }
         if !self.opts.private {
@@ -415,7 +415,7 @@ impl Engine {
                 }
                 let src = match locate::locate(d, &self.project.root)
                     .filter(|s| s.version == d.version)
-                    .or_else(|| fetch::cached(d))
+                    .or_else(|| fetch::cached_for(d, Some(&self.project.root)))
                 {
                     Some(s) => Some(s),
                     None if !fetch::is_git(d) => match fetch::fetch_for(d, Some(&self.project.root), self.opts.private) {
@@ -493,7 +493,7 @@ impl Engine {
                     direct: false,
                     from: "requested".into(),
                 };
-                if fetch::cached(&dep).is_some() || self.opts.fetch {
+                if fetch::cached_for(&dep, Some(&self.project.root)).is_some() || self.opts.fetch {
                     return Ok(vec![dep]);
                 }
                 return Err(format!(
@@ -643,7 +643,7 @@ impl Engine {
         };
         let rows: Vec<(&Dep, Option<Source>)> = shown
             .par_iter()
-            .map(|d| (*d, locate::locate(d, &p.root).or_else(|| fetch::cached(d))))
+            .map(|d| (*d, locate::locate(d, &p.root).or_else(|| fetch::cached_for(d, Some(&p.root)))))
             .collect();
         let mut text = format!(
             "Project: {}\nLockfiles: {}\n",

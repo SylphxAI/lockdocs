@@ -48,6 +48,12 @@ fn is_public(index: &str) -> bool {
     Url::parse(&i).is_none_or(|u| PUBLIC_HOSTS.contains(&u.host.as_str()) && (u.host != "github.com" || u.path.contains("crates.io-index")))
 }
 
+/// The public fetch base for a crates.io `Cargo.lock` source, or `None` when it
+/// is not one. `static.crates.io` serves the `.crate` files directly.
+fn public_base(src: &str) -> Option<String> {
+    is_public(src).then(|| "https://static.crates.io".to_string())
+}
+
 struct Registry {
     name: String,
     index: String,
@@ -165,6 +171,16 @@ pub fn plan(dep: &Dep, root: &Path, env: &Env) -> Plan {
                 &mut candidates,
                 &mut creds,
             );
+        } else if let Some(base) = public_base(&src) {
+            // Cargo.lock resolved this package to crates.io: honour it. A
+            // configured mirror or replacement registry must not shadow the
+            // artifact the lockfile actually pinned.
+            candidates.push(Candidate {
+                base,
+                private: false,
+                definitive: true,
+                pinned: None,
+            });
         }
     }
     if candidates.is_empty() {

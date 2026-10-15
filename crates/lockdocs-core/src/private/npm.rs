@@ -174,14 +174,27 @@ pub fn plan(dep: &Dep, root: &Path, env: &Env) -> Plan {
     }
     let creds = credentials(&cfg, &registries);
     let mut candidates = Vec::new();
-    if let Some(p) = pinned.filter(|p| !is_public(p)) {
-        let base = Url::parse(&p).map(|u| u.origin().to_string()).unwrap_or_default();
-        candidates.push(Candidate {
-            base,
-            private: true,
-            definitive: true,
-            pinned: Some(p),
-        });
+    if let Some(p) = pinned {
+        if !is_public(&p) {
+            let base = Url::parse(&p).map(|u| u.origin().to_string()).unwrap_or_default();
+            candidates.push(Candidate {
+                base,
+                private: true,
+                definitive: true,
+                pinned: Some(p),
+            });
+        } else {
+            // `package-lock.json` resolved this package to the public registry:
+            // honour the resolved URL. A configured private registry must not
+            // shadow the artifact the lockfile actually pinned.
+            let Some(u) = Url::parse(&p) else { return Plan { candidates, creds } };
+            candidates.push(Candidate {
+                base: u.origin().to_string(),
+                private: false,
+                definitive: true,
+                pinned: Some(p),
+            });
+        }
     } else if !is_public(&reg) {
         candidates.push(Candidate {
             base: reg,

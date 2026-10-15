@@ -265,12 +265,28 @@ pub fn plan(dep: &Dep, root: &Path, env: &Env) -> Plan {
             .and_then(|(_, n)| cfg.indexes.iter().find(|i| i.name.as_deref() == Some(n)))
             .map(|i| i.url.clone());
     }
-    if let Some(p) = pinned.filter(|p| !is_public(p)) {
-        if let Some(ix) = by_url(&p) {
-            register(ix, &mut creds);
-        }
-        add(&p, true, &mut candidates, &mut creds);
-        if !candidates.is_empty() {
+    if let Some(p) = pinned {
+        if !is_public(&p) {
+            if let Some(ix) = by_url(&p) {
+                register(ix, &mut creds);
+            }
+            add(&p, true, &mut candidates, &mut creds);
+            if !candidates.is_empty() {
+                return Plan { candidates, creds };
+            }
+        } else {
+            // The lockfile recorded a public registry: honour it. A same-name
+            // and same-version artifact on a configured private index must not
+            // win over the artifact `uv.lock` actually pinned.
+            if let Some(ix) = by_url(&p) {
+                register(ix, &mut creds);
+            }
+            candidates.push(Candidate {
+                base: clean(&p).unwrap_or_else(|| DEFAULT.into()),
+                private: false,
+                definitive: true,
+                pinned: None,
+            });
             return Plan { candidates, creds };
         }
     }
@@ -351,7 +367,10 @@ pub fn parse_simple(body: &[u8], page_url: &str) -> Vec<(String, String)> {
 }
 
 /// Pick the artifact for `version`: a pure wheel, any wheel, then an sdist.
-pub fn pick(files: &[(String, String)], name: &str, version: &str) -> Option<String> {
+/// Returns the advertised filename and its URL together: the filename is the
+/// only reliable format signal, since a private index may serve the artifact
+/// from a signed or opaque download URL with no extension.
+pub fn pick(files: &[(String, String)], name: &str, version: &str) -> Option<(String, String)> {
     let want = crate::norm_name(Eco::PyPI, name);
     let matching: Vec<&(String, String)> = files
         .iter()
@@ -362,7 +381,20 @@ pub fn pick(files: &[(String, String)], name: &str, version: &str) -> Option<Str
         .find(|(f, _)| f.ends_with("-none-any.whl"))
         .or_else(|| matching.iter().find(|(f, _)| f.ends_with(".whl")))
         .or_else(|| matching.iter().find(|(f, _)| f.ends_with(".tar.gz") || f.ends_with(".zip")))
-        .map(|(_, u)| u.clone())
+        .map(|(f, u)| (f.clone(), u.clone()))
+}
+
+/// Unpack a downloaded artifact using its advertised filename, not its URL: a
+/// wheel behind a `?query=` or an opaque endpoint still unpacks as a wheel.
+pub fn unpack(filename: &str, bytes: &[u8], dir: &Path) -> Result<()> {
+    let f = filename.split(['?', '#']).next().unwrap_or(filename).to_ascii_lowercase();
+    if f.ends_with(".whl") {
+        crate::fetch::unzip(bytes, dir, false, None)
+    } else if f.ends_with(".zip") {
+        crate::fetch::unzip(bytes, dir, true, None)
+    } else {
+        crate::fetch::untar_gz(bytes, dir)
+    }
 }
 
 /// Download one version from a private index. Ok(false) when it has none.
@@ -380,13 +412,11 @@ pub fn download(http: &Http, dep: &Dep, c: &Candidate, dir: &Path) -> Result<boo
         s => bail!("{}: HTTP {s}", r.url),
     }
     let files = parse_simple(&r.body, &r.url);
-    let Some(url) = pick(&files, &dep.name, &dep.version) else { return Ok(false) };
+    let Some((filename, url)) = pick(&files, &dep.name, &dep.version) else {
+        return Ok(false);
+    };
     let Some(bytes) = http.get_ok(&url, None)? else { return Ok(false) };
-    if url.ends_with(".whl") || url.ends_with(".zip") {
-        crate::fetch::unzip(&bytes, dir, url.ends_with(".zip"), None)?;
-    } else {
-        crate::fetch::untar_gz(&bytes, dir)?;
-    }
+    unpack(&filename, &bytes, dir)?;
     Ok(true)
 }
 
@@ -465,14 +495,88 @@ mod tests {
         let f = parse_simple(html, "https://p.example/simple/acme-lib/");
         assert_eq!(
             pick(&f, "acme-lib", "1.0.0").unwrap(),
-            "https://p.example/files/acme_lib-1.0.0-py3-none-any.whl"
+            (
+                "acme_lib-1.0.0-py3-none-any.whl".to_string(),
+                "https://p.example/files/acme_lib-1.0.0-py3-none-any.whl".to_string()
+            )
         );
         assert!(pick(&f, "acme-lib", "2.0.0").is_none());
         let json = br#"{"files":[{"filename":"acme-lib-1.0.0.tar.gz","url":"https://f.example/a.tar.gz"}]}"#;
         assert_eq!(
             pick(&parse_simple(json, "https://p.example/simple/acme-lib/"), "acme-lib", "1.0.0").unwrap(),
-            "https://f.example/a.tar.gz"
+            ("acme-lib-1.0.0.tar.gz".to_string(), "https://f.example/a.tar.gz".to_string())
         );
+    }
+
+    #[test]
+    fn public_registry_recorded_in_uv_lock_beats_a_private_index() {
+        // uv.lock pins the public index, but a private index is also configured
+        // and publishes the same name@version. The lockfile must win: otherwise
+        // the private artifact shadows the one the project actually resolved.
+        let t = tempfile::tempdir().unwrap();
+        write(
+            &t.path().join("uv.lock"),
+            "version = 1\n[[package]]\nname = \"acme-lib\"\nversion = \"2.0.0\"\nsource = { registry = \"https://pypi.org/simple\" }\n",
+        );
+        let env = Env::fixed(&[("PIP_EXTRA_INDEX_URL", "https://priv.example/simple")], None);
+        let p = plan(&dep("acme-lib", "2.0.0"), t.path(), &env);
+        assert!(!p.any_private(), "the locked public source must not be shadowed: {p:?}");
+        assert_eq!(p.candidates[0].base, "https://pypi.org/simple");
+    }
+
+    #[test]
+    fn advertised_filename_drives_extraction_not_the_url() {
+        // A wheel served from a signed URL with a query string, and one from an
+        // opaque endpoint with no extension at all. The advertised filename is
+        // the only reliable format signal; the URL must not decide extraction.
+        let wheel = zip(&[
+            ("acme_lib/__init__.py", b"x = 1"),
+            ("acme_lib-1.0.0.dist-info/METADATA", b"Metadata-Version: 2.1\nName: acme-lib\nVersion: 1.0.0\n"),
+        ]);
+        let body = wheel.clone();
+        let m = serve(move |p, _| {
+            if p.starts_with("/simple/acme-lib/") {
+                (
+                    200,
+                    "application/vnd.pypi.simple.v1+json".into(),
+                    br#"{"files":[{"filename":"acme_lib-1.0.0-py3-none-any.whl","url":"../../artifact/acme.whl?X-Amz-Signature=abc"}]}"#.to_vec(),
+                    vec![],
+                )
+            } else if p.starts_with("/artifact/acme.whl") {
+                (200, "application/octet-stream".into(), body.clone(), vec![])
+            } else {
+                (404, "text/plain".into(), vec![], vec![])
+            }
+        });
+        let t = tempfile::tempdir().unwrap();
+        let env = Env::fixed(&[("PIP_EXTRA_INDEX_URL", &format!("{}/simple", m.base))], None);
+        let p = plan(&dep("acme-lib", "1.0.0"), t.path(), &env);
+        let out = tempfile::tempdir().unwrap();
+        assert!(download(&Http::new(p.creds), &dep("acme-lib", "1.0.0"), &p.candidates[0], out.path()).unwrap());
+        assert!(out.path().join("acme_lib/__init__.py").is_file(), "wheel not unpacked from a signed URL");
+
+        // The opaque endpoint: no extension on the URL, the filename says wheel.
+        let wheel2 = zip(&[("acme_pkg/__init__.py", b"y = 2")]);
+        let body2 = wheel2.clone();
+        let m2 = serve(move |p, _| {
+            if p.starts_with("/simple/acme-pkg/") {
+                (
+                    200,
+                    "application/vnd.pypi.simple.v1+json".into(),
+                    br#"{"files":[{"filename":"acme_pkg-1.0.0-py3-none-any.whl","url":"../../download/9f3a2b"}]}"#.to_vec(),
+                    vec![],
+                )
+            } else if p == "/download/9f3a2b" {
+                (200, "application/octet-stream".into(), body2.clone(), vec![])
+            } else {
+                (404, "text/plain".into(), vec![], vec![])
+            }
+        });
+        let env2 = Env::fixed(&[("PIP_EXTRA_INDEX_URL", &format!("{}/simple", m2.base))], None);
+        let p2 = plan(&dep("acme-pkg", "1.0.0"), t.path(), &env2);
+        let out2 = tempfile::tempdir().unwrap();
+        assert!(download(&Http::new(p2.creds), &dep("acme-pkg", "1.0.0"), &p2.candidates[0], out2.path()).unwrap());
+        assert!(out2.path().join("acme_pkg/__init__.py").is_file(), "wheel not unpacked from an opaque URL");
     }
 
     #[test]

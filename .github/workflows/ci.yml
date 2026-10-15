@@ -19,7 +19,7 @@ jobs:
     name: plain language
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
       - uses: SylphxAI/.github/.github/actions/plain-language@f9176dad2e49c6b99d75f1506fafac84632fe870
@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
           fetch-depth: 0
@@ -64,9 +64,9 @@ jobs:
               - '!CHANGELOG.md'
               - '!CONTRIBUTING.md'
               - '!SECURITY.md'
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         if: github.event_name != 'pull_request' || steps.c.outputs.code != 'false'
-      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+      - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
         if: github.event_name != 'pull_request' || steps.c.outputs.code != 'false'
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         if: github.event_name != 'pull_request' || steps.c.outputs.code != 'false'
@@ -77,11 +77,11 @@ jobs:
     name: manifests, smoke, docs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: '1.4.0'
-      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+          bun-version: '1.4.3'
+      - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
         with:
           components: clippy, rustfmt
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
@@ -141,3 +141,20 @@ jobs:
         run: bun run docs:build
       - name: Brand home (hashes and surface copies agree)
         uses: SylphxAI/.github/.github/actions/brand@a6c81b4bcda66bf624f0a68e25e63b3c0ed043eb # shared brand generator
+
+  # The org-wide required check name. Skipped lanes pass; a failed or
+  # cancelled lane fails.
+  ci-ok:
+    if: always()
+    needs: [plain-language, identifiers, test, checks]
+    # The reserved gate pool (Kueue queue scale-set-gate, never lends): an
+    # `if: always()` verdict still runs after its run is cancelled, and that run
+    # keeps its concurrency group until it does, so on a busy build pool a
+    # superseded run held the next one (SylphxAI/agents#4222, 2026-10-02).
+    runs-on: sylphx-linux-control
+    timeout-minutes: 5
+    steps:
+      - uses: SylphxAI/.github/.github/actions/needs-pass@46ec433892bca8693193049b5ee7441bb916a7ad # main
+        with:
+          needs: ${{ toJSON(needs) }}
+          required: test,checks

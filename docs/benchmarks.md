@@ -11,6 +11,26 @@
 - **Tokens:** tiktoken `o200k_base`. **Latency:** wall time per call from the same GitHub-hosted runner (for lockdocs: a fresh CLI process per question, including loading the model).
 - **Runner:** [`bench/run.py`](https://github.com/SylphxAI/lockdocs/blob/main/bench/run.py) via the [`bench` workflow](https://github.com/SylphxAI/lockdocs/actions/workflows/bench.yml). Reproduce: `bash bench/setup.sh && python3 bench/run.py target/release/lockdocs bench/projects out.json --fetch --context7`.
 
+### The cloud index, same corpus and grader
+
+Sylphx Search covers technical documentation as one vertical
+(`POST /v1/web/search` with `category: code`, engines hidden), and lockdocs is
+its local/offline client over the same index format and ranking. So the same
+105 questions are asked through the cloud index too:
+[`bench/cloud.py`](https://github.com/SylphxAI/lockdocs/blob/main/bench/cloud.py)
+sends `"<question> (<package>@<version>)"` with `category: code` and grades
+the returned titles and snippets with the same grader, at the pinned versions
+`bench/setup.sh` installed. The comparison then has three arms on one answer
+set and one grader:
+
+```bash
+SYLPHX_SEARCH_EVAL_KEY=... python3 bench/cloud.py --out cloud.json --depth standard
+```
+
+Its rows are the same shape as `bench/run.py`'s, so a cloud run reads beside a
+local one; the committed report that pairs them lives in SylphxAI/cloud
+(`services/ai/evals/search/evals/docs/reports/`), which owns the vertical.
+
 ## Results
 
 <!-- results -->

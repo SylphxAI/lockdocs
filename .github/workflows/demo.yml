@@ -6,7 +6,10 @@ name: demo
 on:
   workflow_dispatch:
   pull_request:
-    paths: ['docs/demo.tape', '.github/workflows/demo.yml']
+    paths:
+      - 'docs/demo.tape'
+      - '.github/workflows/demo.yml'
+  merge_group:
 
 permissions:
   contents: read

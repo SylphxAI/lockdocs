@@ -36,6 +36,28 @@ jobs:
       - name: Non-v7 ids on added lines (owner standards/identifiers.md)
         uses: SylphxAI/.github/.github/actions/identifiers@e4a5ea41cbcc87cd93914f89f0d7c3981c868bf9
 
+  chat-senders:
+    name: Chat senders
+    # Ubuntu-hosted: this repository has never scheduled a self-hosted job and
+    # the shared standard pool is congested, so a pinned self-hosted lane here
+    # would sit queued and block the pull request rather than report. The fast
+    # lane stays cheap enough for a hosted runner; the merge group still fails
+    # the change through its own run, and a follow-up moves the lane onto the
+    # standard pool once the pool serves this repository reliably.
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Full history: the action diffs the merge base with the base branch, so
+      # a shallow checkout would make it pass on a change it never saw.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      # Fails a change that adds a direct chat-API host (Telegram, Slack,
+      # Discord) outside Notify. The allow-list is owned by the action.
+      - uses: SylphxAI/.github/.github/actions/chat-senders@5cfd55a41435cca8e4b7caf6506faf04ca08d200
+        with:
+          mode: fail
+
   test:
     name: test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -142,11 +164,11 @@ jobs:
       - name: Brand home (hashes and surface copies agree)
         uses: SylphxAI/.github/.github/actions/brand@a6c81b4bcda66bf624f0a68e25e63b3c0ed043eb # shared brand generator
 
-  # The org-wide required check name. Skipped lanes pass; a failed or
-  # cancelled lane fails.
+  # The org-wide required check name: every lane passes or is skipped, except
+  # chat-senders, which must actually succeed.
   ci-ok:
     if: always()
-    needs: [plain-language, identifiers, test, checks]
+    needs: [plain-language, identifiers, chat-senders, test, checks]
     # The reserved gate pool (Kueue queue scale-set-gate, never lends): an
     # `if: always()` verdict still runs after its run is cancelled, and that run
     # keeps its concurrency group until it does, so on a busy build pool a
@@ -157,4 +179,13 @@ jobs:
       - uses: SylphxAI/.github/.github/actions/needs-pass@46ec433892bca8693193049b5ee7441bb916a7ad # main
         with:
           needs: ${{ toJSON(needs) }}
-          required: test,checks
+          # test and checks keep a job result of success even when a pull
+          # request touches no code (their heavy steps are skipped inside), so
+          # a non-skipped verdict is required only of the fast lanes.
+          required: plain-language,identifiers,test,checks
+      # chat-senders is never skipped, so its success is required directly:
+      # on a pull request, on a merge group and on the main push alike.
+      - name: Require the chat-senders proof (skipped or cancelled fails)
+        env:
+          CHAT_SENDERS_RESULT: ${{ needs.chat-senders.result }}
+        run: test "$CHAT_SENDERS_RESULT" = success

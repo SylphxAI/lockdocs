@@ -192,6 +192,8 @@ Registry package downloads remain opt-in; default upstream enrichment uses insta
 
 Method, questions, per-question results and scripts: [benchmark page](https://sylphxai.github.io/lockdocs/benchmarks) and [`bench/`](https://github.com/SylphxAI/lockdocs/tree/main/bench).
 
+The same 105 questions are also asked through [Sylphx Search](https://github.com/SylphxAI/cloud) — our platform's web search, whose technical-documentation vertical is the hosted index for docs that never ship inside a package — with `bench/cloud.py`. Local and cloud answer one corpus with one grader, so lockdocs and Sylphx Search are one index format and one ranking rather than two products.
+
 ## How it compares
 
 | | **lockdocs** | Context7 | docs-mcp-server | Ref |

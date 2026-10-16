@@ -55,7 +55,22 @@ jobs:
           extra=()
           for v in $VARIANTS; do extra+=(--variant "$v"); done
           python3 bench/run.py target/release/lockdocs bench/projects bench.json --fetch $C7 --context7-cache docs/public/bench-results.json "${extra[@]}" | tee -a "$GITHUB_STEP_SUMMARY"
+      # The cloud arm with the same corpus and grader, when a key is set: it
+      # answers the cloud vertical's "one index format, local and cloud" claim
+      # and its JSON feeds the cloud report (SylphxAI/cloud
+      # services/ai/evals/search/evals/docs). No key means the arm is skipped,
+      # never failed: this runs on a pull request with no secret.
+      - name: Run the Sylphx Search cloud arm (docs vertical)
+        if: env.SYLPHX_SEARCH_EVAL_KEY != ''
+        env:
+          SYLPHX_SEARCH_EVAL_KEY: ${{ secrets.SYLPHX_SEARCH_EVAL_KEY }}
+        run: |
+          set -euo pipefail
+          python3 bench/cloud.py --out cloud.json --depth standard | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: bench
-          path: bench.json
+          path: |
+            bench.json
+            cloud.json
+          if-no-files-found: ignore

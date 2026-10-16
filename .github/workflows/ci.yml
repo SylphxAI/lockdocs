@@ -38,7 +38,13 @@ jobs:
 
   chat-senders:
     name: Chat senders
-    runs-on: ${{ github.event_name == 'merge_group' && 'sylphx-linux-standard-merge' || 'sylphx-linux-standard' }}
+    # Ubuntu-hosted: this repository has never scheduled a self-hosted job and
+    # the shared standard pool is congested, so a pinned self-hosted lane here
+    # would sit queued and block the pull request rather than report. The fast
+    # lane stays cheap enough for a hosted runner; the merge group still fails
+    # the change through its own run, and a follow-up moves the lane onto the
+    # standard pool once the pool serves this repository reliably.
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       # Full history: the action diffs the merge base with the base branch, so

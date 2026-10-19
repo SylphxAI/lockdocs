@@ -36,9 +36,15 @@ newest one. That is the one job.
   go into those tools, not into more tools.
 - Four ecosystems: npm, PyPI, Cargo and Go. A new ecosystem needs a lockfile
   parser, a way to find installed files, and a symbol extractor.
-- No hosted index. We do not crawl or store other people's documentation on a
-  server. Team index packs are built and stored by the customer, in the
-  customer's own registry or storage.
+- No hosted index for lockdocs itself. We do not crawl or store other people's
+  documentation on the lockdocs side: lockdocs reads the package files already
+  on the machine and builds its index there. Sylphx Search, our separate
+  platform service, is the cloud index for public documentation lockdocs
+  cannot reach locally (a package that is not installed, a docs website that
+  ships nothing inside the package); lockdocs is its local arm, and the same
+  version-sensitive questions and grader measure both, so the two are one
+  index format and one ranking rather than two products. Team index packs are
+  built and stored by the customer, in the customer's own registry or storage.
 
 ## Free and Pro
 

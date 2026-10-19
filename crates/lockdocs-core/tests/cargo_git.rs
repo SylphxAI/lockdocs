@@ -12,7 +12,14 @@ fn finds_git_dependencies_in_cargo_checkouts() {
     std::env::set_var("CARGO_HOME", tests.join("fixture-git-home"));
     std::env::set_var("LOCKDOCS_NO_SYSTEM_PYTHON", "1");
     std::env::set_var("LOCKDOCS_EMBED", "0");
-    let mut e = Engine::new(&tests.join("fixture-git"), Options { fetch: true, upstream: true });
+    let mut e = Engine::new(
+        &tests.join("fixture-git"),
+        Options {
+            fetch: true,
+            upstream: true,
+            private: false,
+        },
+    );
     let r = e.resolve(Some("tinygit"));
     assert!(r.text.contains("tinygit@0.2.0") && r.text.contains("docs ready"), "{}", r.text);
     let a = e.api("tinygit::clone_into", None, 800).unwrap();

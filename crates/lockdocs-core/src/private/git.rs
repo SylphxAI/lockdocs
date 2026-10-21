@@ -36,11 +36,6 @@ impl Host {
         Host { origin, kind }
     }
 
-    /// The smart-HTTP endpoint that lists refs.
-    pub fn refs_url(&self, path: &str) -> String {
-        format!("{}/{path}.git/git-upload-pack", self.origin)
-    }
-
     /// The tarball of `reference` (tag, branch or commit) and the origin that
     /// serves it.
     pub fn archive_url(&self, path: &str, reference: &str) -> String {

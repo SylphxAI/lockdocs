@@ -862,11 +862,6 @@ fn list_refs(agent: &Client, repo: &Repo, prefixes: &[String]) -> Result<Option<
 /// Compressed bytes downloaded from codeload by this process (for reporting).
 static DOWNLOADED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
-/// Compressed archive bytes downloaded by this process so far.
-pub fn downloaded_bytes() -> u64 {
-    DOWNLOADED.load(std::sync::atomic::Ordering::Relaxed)
-}
-
 /// Largest compressed archive streamed from one repository by default. A
 /// bigger one is not downloaded whole: the repository falls back to per-file
 /// requests (see the measurements in the PR for the choice).

@@ -7,7 +7,7 @@ use crate::extract::{Entry, Kind};
 use crate::index::{self, PackageIndex};
 use crate::locate::{self, Source};
 use crate::project::{Project, Spec};
-use crate::{embed, est_tokens, fetch, norm_name, upstream, Dep, Eco};
+use crate::{embed, est_tokens, fetch, upstream, Dep, Eco};
 use rayon::prelude::*;
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
@@ -240,10 +240,6 @@ impl Engine {
 
     pub fn root(&self) -> &Path {
         &self.project.root
-    }
-
-    pub fn fetch_enabled(&self) -> bool {
-        self.opts.fetch
     }
 
     /// Find sources for a dependency: installed files first, then a
@@ -1751,11 +1747,6 @@ impl Workspace {
         m.insert(root, (stamp, e.clone()));
         e
     }
-}
-
-/// Normalized dependency key, exposed for callers that dedupe.
-pub fn dep_key(d: &Dep) -> String {
-    format!("{}:{}", d.eco, norm_name(d.eco, &d.name))
 }
 
 #[cfg(test)]

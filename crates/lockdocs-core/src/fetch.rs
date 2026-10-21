@@ -452,14 +452,8 @@ mod tests {
     }
 
     fn zip_of(files: &[(&str, Vec<u8>)]) -> Vec<u8> {
-        use std::io::Write;
-        let mut w = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
-        let opts = zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
-        for (name, data) in files {
-            w.start_file(*name, opts).unwrap();
-            w.write_all(data).unwrap();
-        }
-        w.finish().unwrap().into_inner()
+        let files: Vec<(&str, &[u8])> = files.iter().map(|(n, d)| (*n, d.as_slice())).collect();
+        crate::private::testutil::zip(&files)
     }
 
     #[test]

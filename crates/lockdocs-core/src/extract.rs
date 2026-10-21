@@ -778,17 +778,7 @@ fn prose_titled(text: &str, rel: &str, line_off: u32, given: Option<String>, out
         file_title.to_string()
     };
     for s in markdown::split(&text, &title) {
-        out.push(Entry {
-            kind: Kind::Prose,
-            name: s.heading.clone(),
-            path: s.heading,
-            file: rel.to_string(),
-            line: s.line + line_off,
-            sig: String::new(),
-            doc: s.text,
-            alias_of: None,
-            legacy: false,
-        });
+        out.push(prose_section(s, rel, line_off));
     }
 }
 
@@ -932,6 +922,22 @@ fn entry(kind: Kind, name: &str, path: String, file: &str, line: u32, sig: Strin
         line,
         sig,
         doc,
+        alias_of: None,
+        legacy: false,
+    }
+}
+
+/// A Prose entry for one Markdown section: the heading names it and is its
+/// path, and `line_off` shifts the section line into the surrounding file.
+fn prose_section(s: crate::markdown::Section, rel: &str, line_off: u32) -> Entry {
+    Entry {
+        kind: Kind::Prose,
+        name: s.heading.clone(),
+        path: s.heading,
+        file: rel.to_string(),
+        line: s.line + line_off,
+        sig: String::new(),
+        doc: s.text,
         alias_of: None,
         legacy: false,
     }
@@ -1256,17 +1262,7 @@ fn py_file(text: &str, rel: &str, out: &mut Vec<Entry>) {
     parse_with("py", text, |root, src| {
         if let Some(doc) = py_docstring(root, src) {
             for s in markdown::split(&doc, &module) {
-                out.push(Entry {
-                    kind: Kind::Prose,
-                    name: s.heading.clone(),
-                    path: s.heading,
-                    file: rel.to_string(),
-                    line: s.line,
-                    sig: String::new(),
-                    doc: s.text,
-                    alias_of: None,
-                    legacy: false,
-                });
+                out.push(prose_section(s, rel, 0));
             }
         }
         py_block(root, src, &module, false, rel, out);
@@ -1408,17 +1404,7 @@ fn rs_parse(text: &str, rel: &str, module: &str, line_off: u32, depth: u32, inhe
         if !inner_doc.is_empty() {
             let doc = inner_doc.join("\n");
             for s in markdown::split(&doc, module) {
-                out.push(Entry {
-                    kind: Kind::Prose,
-                    name: s.heading.clone(),
-                    path: s.heading,
-                    file: rel.to_string(),
-                    line: s.line + line_off,
-                    sig: String::new(),
-                    doc: s.text,
-                    alias_of: None,
-                    legacy: false,
-                });
+                out.push(prose_section(s, rel, line_off));
             }
         }
         out.append(&mut w.out);
@@ -1721,17 +1707,7 @@ fn go_file(text: &str, rel: &str, module: &str, out: &mut Vec<Entry>) {
                             format!("package {pkg} ({dir})")
                         };
                         for s in markdown::split(&doc, &title) {
-                            out.push(Entry {
-                                kind: Kind::Prose,
-                                name: s.heading.clone(),
-                                path: s.heading,
-                                file: rel.to_string(),
-                                line: s.line,
-                                sig: String::new(),
-                                doc: s.text,
-                                alias_of: None,
-                                legacy: false,
-                            });
+                            out.push(prose_section(s, rel, 0));
                         }
                     }
                 }

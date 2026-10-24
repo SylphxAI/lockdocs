@@ -248,6 +248,28 @@ Everything above is free, under MIT. Pro adds two things for teams. Private sour
 
 lockdocs reads files on your machine and answers over stdio. Network use: the embedding model once from huggingface.co (pinned revision, SHA-256 checked; `LOCKDOCS_EMBED=0` or `--offline` skips it), and anonymous GitHub requests (git tag lookup and one `codeload.github.com` tarball, not the rate-limited REST API; a repository whose archive is too large or whose download fails is read file by file through the REST API instead) for public docs at the resolved release commit on first query. `--fetch` / `lockdocs fetch` also access public registries and major-version docs-site repositories; only these explicit fetches may use `GITHUB_TOKEN` / `GH_TOKEN`, and only on api.github.com (never on git, codeload or raw downloads; private repositories are not supported). Upstream requests disclose the repository, version and file paths, not your question, lockfile or project files. `--no-fetch` / `LOCKDOCS_FETCH=0` disables query package/docs downloads; `--offline` / `LOCKDOCS_OFFLINE=1` prohibits all downloads. The cache lives in your OS cache directory (`LOCKDOCS_CACHE` overrides it).
 
+## Open-source README visuals
+
+The **AI-friendliness badge** above is generated locally by
+[repomap's agent-readiness score](https://github.com/SylphxAI/repomap#agent-readiness-score).
+Run `npx -y @sylphx/repomap score` in your repository to get the checks, suggested
+fixes and a badge snippet. The score is a heuristic, not a security audit or a
+certification. Scoring does not upload your source; only publish a score for a
+private repository if you intend to make that score public.
+
+**GitHub data cards** are served by the open-source
+[Mark](https://github.com/SylphxAI/readme-mark#github-stats--live-cached-no-token)
+service. Here is this public repository's card:
+
+[![lockdocs GitHub repository card](https://mark.sylphx.com/api/pin.svg?username=SylphxAI&repo=lockdocs)](https://github.com/SylphxAI/lockdocs)
+
+```markdown
+[![lockdocs GitHub repository card](https://mark.sylphx.com/api/pin.svg?username=SylphxAI&repo=lockdocs)](https://github.com/SylphxAI/lockdocs)
+```
+
+Replace `username` and `repo` with your public repository. No user token is
+needed. See Mark's [card options and self-hosting instructions](https://github.com/SylphxAI/readme-mark#readme).
+
 ## Also from Sylphx
 
 <!-- generated:also-from -->

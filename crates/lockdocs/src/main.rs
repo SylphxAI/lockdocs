@@ -30,7 +30,7 @@ Commands:
   cache [clean]         Show or delete the cache (indexes and fetched packages)
   upgrade <pkg> <ver>   Pro: API changes from the pinned version to <ver>, limited to what this
                         project calls, with call sites (also: docs --pkg <pkg> --upgrade-to <ver>)
-  licence status|activate <token>|buy
+  licence status|activate <token>|buy --pack <id>
                         Show or activate a lockdocs Pro licence, or buy with the device flow
   mcp                   Run the MCP server on stdio (default when stdin is not a terminal)
   version               Print the version

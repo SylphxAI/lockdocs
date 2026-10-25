@@ -67,6 +67,7 @@ mod tests {
         assert!(config.contains("checkoutUrl: 'https://buy.sylphx.com/buy/lockdocs?pack=1'"));
         let page = include_str!("../../../docs/pro.md");
         assert!(page.contains("Buy lockdocs Pro"));
+        assert!(page.contains("lockdocs licence buy --pack 1"));
         assert!(page.contains("starts the device flow"));
     }
 

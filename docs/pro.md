@@ -90,7 +90,7 @@ version you pinned.
 
 <p v-if="theme.pro.checkoutUrl"><a :href="theme.pro.checkoutUrl">Buy lockdocs Pro</a></p>
 
-`lockdocs licence buy` starts the device flow for lockdocs Pro: open the link
+`lockdocs licence buy --pack 1` starts the device flow for one lockdocs Pro seat: open the link
 printed in your terminal to buy, then return to the terminal. After checkout,
 lockdocs verifies and stores your licence automatically.
 

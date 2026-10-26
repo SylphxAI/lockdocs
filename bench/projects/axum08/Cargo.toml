@@ -5,7 +5,7 @@ edition = "2021"
 publish = false
 
 [dependencies]
-axum = "=0.8.1"
-tokio = { version = "=1.43.0", features = ["full"] }
+axum = "=0.8.9"
+tokio = { version = "=1.53.3", features = ["full"] }
 
 [workspace]

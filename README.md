@@ -192,6 +192,8 @@ Registry package downloads remain opt-in; default upstream enrichment uses insta
 
 Method, questions, per-question results and scripts: [benchmark page](https://sylphxai.github.io/lockdocs/benchmarks) and [`bench/`](https://github.com/SylphxAI/lockdocs/tree/main/bench).
 
+The same 105 questions are also asked through [Sylphx Search](https://github.com/SylphxAI/cloud) — our platform's web search, whose technical-documentation vertical is the hosted index for docs that never ship inside a package — with `bench/cloud.py`. Local and cloud answer one corpus with one grader, so lockdocs and Sylphx Search are one index format and one ranking rather than two products.
+
 ## How it compares
 
 | | **lockdocs** | Context7 | docs-mcp-server | Ref |
@@ -240,11 +242,33 @@ Prebuilt binaries for macOS (arm64, x64), Linux glibc (x64, arm64) and Windows x
 
 ## Pro
 
-Everything above is free, under MIT. The one paid feature is the upgrade report (`lockdocs upgrade next 15.0.0`, or `upgrade_to` in the `docs` tool): which APIs you call were removed, renamed or deprecated between your pinned version and the target, with your call sites. lockdocs Pro is US$120 per seat per year. The licence is checked offline: run `lockdocs licence activate <token>` (check it with `lockdocs licence status`, which warns during the last 30 days), or set `LOCKDOCS_LICENCE_TOKEN` in CI. Details: [lockdocs Pro](https://sylphxai.github.io/lockdocs/pro).
+Everything above is free, under MIT. Pro adds two things for teams. Private sources: lockdocs reads your internal packages and docs from the private npm, PyPI, Cargo and Go registries and the GitHub Enterprise, GitLab and Bitbucket hosts you already use, with the credentials your `.npmrc`, uv, pip, Cargo, Go and git already hold, each sent only to its own host, inside the same `resolve`, `docs` and `api` tools and `lockdocs fetch`. And the upgrade report (`lockdocs upgrade next 15.0.0`, or `upgrade_to` in the `docs` tool): which APIs you call were removed, renamed or deprecated between your pinned version and the target, with your call sites. lockdocs Pro is US$120 per seat per year. The licence is checked offline: run `lockdocs licence activate <token>` (check it with `lockdocs licence status`, which warns during the last 30 days), or set `LOCKDOCS_LICENCE_TOKEN` in CI. Details: [lockdocs Pro](https://sylphxai.github.io/lockdocs/pro).
 
 ## Privacy
 
 lockdocs reads files on your machine and answers over stdio. Network use: the embedding model once from huggingface.co (pinned revision, SHA-256 checked; `LOCKDOCS_EMBED=0` or `--offline` skips it), and anonymous GitHub requests (git tag lookup and one `codeload.github.com` tarball, not the rate-limited REST API; a repository whose archive is too large or whose download fails is read file by file through the REST API instead) for public docs at the resolved release commit on first query. `--fetch` / `lockdocs fetch` also access public registries and major-version docs-site repositories; only these explicit fetches may use `GITHUB_TOKEN` / `GH_TOKEN`, and only on api.github.com (never on git, codeload or raw downloads; private repositories are not supported). Upstream requests disclose the repository, version and file paths, not your question, lockfile or project files. `--no-fetch` / `LOCKDOCS_FETCH=0` disables query package/docs downloads; `--offline` / `LOCKDOCS_OFFLINE=1` prohibits all downloads. The cache lives in your OS cache directory (`LOCKDOCS_CACHE` overrides it).
+
+## Open-source README visuals
+
+The **AI-friendliness badge** above is generated locally by
+[repomap's agent-readiness score](https://github.com/SylphxAI/repomap#agent-readiness-score).
+Run `npx -y @sylphx/repomap score` in your repository to get the checks, suggested
+fixes and a badge snippet. The score is a heuristic, not a security audit or a
+certification. Scoring does not upload your source; only publish a score for a
+private repository if you intend to make that score public.
+
+**GitHub data cards** are served by the open-source
+[Mark](https://github.com/SylphxAI/readme-mark#github-stats--live-cached-no-token)
+service. Here is this public repository's card:
+
+[![lockdocs GitHub repository card](https://mark.sylphx.com/api/pin.svg?username=SylphxAI&repo=lockdocs)](https://github.com/SylphxAI/lockdocs)
+
+```markdown
+[![lockdocs GitHub repository card](https://mark.sylphx.com/api/pin.svg?username=SylphxAI&repo=lockdocs)](https://github.com/SylphxAI/lockdocs)
+```
+
+Replace `username` and `repo` with your public repository. No user token is
+needed. See Mark's [card options and self-hosting instructions](https://github.com/SylphxAI/readme-mark#readme).
 
 ## Also from Sylphx
 

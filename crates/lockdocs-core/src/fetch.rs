@@ -33,18 +33,60 @@ fn get_json(url: &str) -> Result<serde_json::Value> {
     Ok(serde_json::from_slice(&get_bytes(url)?)?)
 }
 
-/// Directory for a fetched package.
-pub fn fetched_dir(dep: &Dep) -> PathBuf {
+/// Where a fetched copy of `dep` is stored, keyed by the resolved source so a
+/// package pinned to a private registry never shares a directory with the
+/// public one of the same `name@version` (nor with another private registry's).
+/// Two registries publishing the same version otherwise yield whichever copy
+/// was fetched first.
+fn slot(dep: &Dep, source: &str) -> PathBuf {
     let safe = format!("{}@{}", dep.name, dep.version).replace(['/', '\\', ':'], "+");
-    crate::cache::dir().join("src").join(dep.eco.as_str()).join(safe)
+    let key = crate::cache::hash(&[dep.eco.as_str(), &dep.name, &dep.version, source]);
+    crate::cache::dir().join("src").join(dep.eco.as_str()).join(format!("{safe}-{key}"))
 }
 
-/// A previously fetched copy, if any (never touches the network).
-pub fn cached(dep: &Dep) -> Option<Source> {
+/// The public default registry for a package's ecosystem.
+fn public_default(dep: &Dep) -> &'static str {
+    match dep.eco {
+        Eco::Npm => "registry.npmjs.org",
+        Eco::PyPI => "pypi.org",
+        Eco::Cargo => "crates.io",
+        Eco::Go => "proxy.golang.org",
+    }
+}
+
+/// The source identity a fetch would resolve to: the private candidate the
+/// user's configuration and lockfiles select, else the public default. Offline
+/// and cheap; the plan is already read by the private path.
+fn source_identity(dep: &Dep, root: Option<&Path>) -> String {
+    let Some(root) = root else { return public_default(dep).into() };
+    let plan = crate::private::plan(dep, root, &crate::private::Env::process());
+    plan.candidates
+        .first()
+        .filter(|c| c.private)
+        .map(|c| c.base.clone())
+        .unwrap_or_else(|| public_default(dep).into())
+}
+
+/// Directory for a fetched package, for the public default source. Callers
+/// that resolved a private source use [`fetched_dir_for`].
+pub fn fetched_dir(dep: &Dep) -> PathBuf {
+    slot(dep, public_default(dep))
+}
+
+/// Directory for a fetched `dep` read from `root`'s resolved source.
+pub fn fetched_dir_for(dep: &Dep, root: Option<&Path>) -> PathBuf {
+    let id = source_identity(dep, root);
+    slot(dep, &id)
+}
+
+/// A previously fetched copy, if any (never touches the network). `root` lets
+/// the lookup see the project's configured source, so a cached public copy is
+/// never returned for a package whose lockfile pins a private registry.
+pub fn cached_for(dep: &Dep, root: Option<&Path>) -> Option<Source> {
     if is_git(dep) {
         return None;
     }
-    let dir = fetched_dir(dep);
+    let dir = fetched_dir_for(dep, root);
     if dir.join(".lockdocs-complete").is_file() {
         return Some(source_for(dep, &dir));
     }
@@ -58,6 +100,10 @@ fn source_for(dep: &Dep, dir: &Path) -> Source {
         Eco::Cargo => "crates.io",
         Eco::Go => "proxy.golang.org",
     };
+    source_from(dep, dir, origin)
+}
+
+fn source_from(dep: &Dep, dir: &Path, origin: &str) -> Source {
     if dep.eco == Eco::PyPI {
         // A wheel unpacks to a site-packages layout with a dist-info RECORD.
         if let Some(di) = std::fs::read_dir(dir)
@@ -97,13 +143,34 @@ pub fn require_registry_origin(dep: &Dep) -> Result<()> {
 }
 
 pub fn fetch(dep: &Dep) -> Result<Source> {
+    fetch_for(dep, None, false)
+}
+
+/// `fetch`, reading the project's private-source configuration when `root` is
+/// given. Without `private` (lockdocs Pro), a package that needs a private
+/// source fails with `private::PrivateRequired` and nothing is sent anywhere.
+pub fn fetch_for(dep: &Dep, root: Option<&Path>, private: bool) -> Result<Source> {
     require_registry_origin(dep)?;
-    if let Some(s) = cached(dep) {
+    if let Some(s) = cached_for(dep, root) {
         return Ok(s);
     }
-    let dir = fetched_dir(dep);
+    let dir = fetched_dir_for(dep, root);
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir)?;
+    let mut skipped = None;
+    if let Some(root) = root {
+        match crate::private::fetch_into(dep, root, private, &dir) {
+            Ok(crate::private::Outcome::Done { host }) => {
+                std::fs::write(dir.join(".lockdocs-complete"), b"")?;
+                return Ok(source_from(dep, &dir, &format!("private source {host}")));
+            }
+            Ok(crate::private::Outcome::UsePublic { skipped: s }) => skipped = s,
+            Err(e) => {
+                let _ = std::fs::remove_dir_all(&dir);
+                return Err(e);
+            }
+        }
+    }
     let r = match dep.eco {
         Eco::Npm => {
             let meta = get_json(&format!("https://registry.npmjs.org/{}/{}", dep.name.replace('/', "%2F"), dep.version))?;
@@ -137,17 +204,21 @@ pub fn fetch(dep: &Dep) -> Result<Source> {
                 .or_else(|| pick("sdist", false))
                 .context("pypi: no files for this version")?;
             let url = chosen.get("url").and_then(|u| u.as_str()).context("pypi: no url")?;
+            // The advertised filename, not the URL: pypi serves artifacts from
+            // files.pythonhosted.org behind a `?`-signed query string.
+            let filename = chosen.get("filename").and_then(|f| f.as_str()).unwrap_or(url);
             let bytes = get_bytes(url)?;
-            if url.ends_with(".whl") || url.ends_with(".zip") {
-                unzip(&bytes, &dir, url.ends_with(".zip"), None)
-            } else {
-                untar_gz(&bytes, &dir)
-            }
+            crate::private::pypi::unpack(filename, &bytes, &dir)
         }
     };
     if let Err(e) = r {
         let _ = std::fs::remove_dir_all(&dir);
-        return Err(e);
+        // The public registry does not have it, and a private source was configured
+        // for it: the answer is "that needs Pro", not "not found".
+        return Err(match skipped {
+            Some(req) => req.into(),
+            None => e,
+        });
     }
     std::fs::write(dir.join(".lockdocs-complete"), b"")?;
     Ok(source_for(dep, &dir))
@@ -244,11 +315,21 @@ fn write_member(dir: &Path, rel: PathBuf, buf: Vec<u8>) -> Result<()> {
     Ok(())
 }
 
-fn untar_gz(bytes: &[u8], dir: &Path) -> Result<()> {
+pub(crate) fn untar_gz(bytes: &[u8], dir: &Path) -> Result<()> {
     untar_gz_with(bytes, dir, LIMITS)
 }
 
+/// Like `untar_gz`, keeping only the files under `sub` (relative to the
+/// archive's top folder) and unpacking them without that prefix.
+pub(crate) fn untar_gz_sub(bytes: &[u8], dir: &Path, sub: Option<&str>) -> Result<()> {
+    untar_gz_prefix(bytes, dir, LIMITS, sub)
+}
+
 fn untar_gz_with(bytes: &[u8], dir: &Path, limits: Limits) -> Result<()> {
+    untar_gz_prefix(bytes, dir, limits, None)
+}
+
+fn untar_gz_prefix(bytes: &[u8], dir: &Path, limits: Limits, sub: Option<&str>) -> Result<()> {
     let mut budget = Budget::new(limits);
     let mut ar = tar::Archive::new(flate2::read::GzDecoder::new(bytes));
     for e in ar.entries()? {
@@ -258,7 +339,14 @@ fn untar_gz_with(bytes: &[u8], dir: &Path, limits: Limits) -> Result<()> {
             continue;
         }
         let path = e.path()?.to_path_buf();
-        let Some(rel) = safe_rel(&path, true) else { continue };
+        let Some(mut rel) = safe_rel(&path, true) else { continue };
+        if let Some(sub) = sub {
+            let Ok(inner) = rel.strip_prefix(sub) else { continue };
+            rel = inner.to_path_buf();
+            if rel.as_os_str().is_empty() {
+                continue;
+            }
+        }
         if !wanted(&rel) {
             continue;
         }
@@ -304,6 +392,12 @@ pub(crate) fn unzip_with(bytes: &[u8], dir: &Path, strip_first: bool, prefix: Op
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn write(p: &Path, text: &str) {
+        std::fs::create_dir_all(p.parent().unwrap()).unwrap();
+        std::fs::write(p, text).unwrap();
+    }
+
     #[test]
     fn rejects_escaping_paths() {
         assert_eq!(safe_rel(Path::new("package/README.md"), true), Some(PathBuf::from("README.md")));
@@ -311,15 +405,55 @@ mod tests {
         assert_eq!(safe_rel(Path::new("/abs/x"), false), None);
     }
 
+    #[test]
+    fn two_sources_publishing_the_same_version_do_not_share_a_cache_dir() {
+        // The public default and each configured private registry are distinct
+        // sources: two registries publishing the same name@version must not
+        // return the copy fetched first. Keying on the resolved source keeps
+        // them apart, and a cache written for one source is invisible to another.
+        let dep = Dep {
+            eco: Eco::PyPI,
+            name: "acme-lib".into(),
+            version: "2.0.0".into(),
+            direct: true,
+            from: "uv.lock".into(),
+        };
+        let craft = tempfile::tempdir().unwrap();
+        write(
+            &craft.path().join("uv.lock"),
+            "version = 1\n[[package]]\nname = \"acme-lib\"\nversion = \"2.0.0\"\nsource = { registry = \"https://craft.example/simple\" }\n",
+        );
+        let npm = tempfile::tempdir().unwrap();
+        write(
+            &npm.path().join("uv.lock"),
+            "version = 1\n[[package]]\nname = \"acme-lib\"\nversion = \"2.0.0\"\nsource = { registry = \"https://npm.example/simple\" }\n",
+        );
+        let a = fetched_dir_for(&dep, Some(craft.path()));
+        let b = fetched_dir_for(&dep, Some(npm.path()));
+        let public = fetched_dir(&dep);
+        assert_ne!(a, b, "two private registries shared a cache directory");
+        assert_ne!(a, public, "a private registry shared the public cache directory");
+        assert_ne!(b, public);
+        // The public slot is the same whenever no private source applies.
+        assert_eq!(fetched_dir(&dep), fetched_dir_for(&dep, None));
+        // The same source resolves to the same directory across projects.
+        let craft_again = tempfile::tempdir().unwrap();
+        write(
+            &craft_again.path().join("uv.lock"),
+            &std::fs::read_to_string(craft.path().join("uv.lock")).unwrap(),
+        );
+        assert_eq!(a, fetched_dir_for(&dep, Some(craft_again.path())));
+        // A cache written for one source is not returned for another.
+        std::fs::create_dir_all(&a).unwrap();
+        std::fs::write(a.join(".lockdocs-complete"), b"").unwrap();
+        assert!(cached_for(&dep, Some(craft.path())).is_some());
+        assert!(cached_for(&dep, Some(npm.path())).is_none());
+        assert!(cached_for(&dep, None).is_none());
+    }
+
     fn zip_of(files: &[(&str, Vec<u8>)]) -> Vec<u8> {
-        use std::io::Write;
-        let mut w = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
-        let opts = zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
-        for (name, data) in files {
-            w.start_file(*name, opts).unwrap();
-            w.write_all(data).unwrap();
-        }
-        w.finish().unwrap().into_inner()
+        let files: Vec<(&str, &[u8])> = files.iter().map(|(n, d)| (*n, d.as_slice())).collect();
+        crate::private::testutil::zip(&files)
     }
 
     #[test]

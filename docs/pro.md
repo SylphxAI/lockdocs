@@ -32,7 +32,7 @@ sample. Pro adds the full list: each change, its replacement, your call sites an
 the migration sections.
 
 ```text
-next 14.2.3 -> 15.0.0: 7 of the APIs your project calls change (3 removed, 2 renamed, 2 deprecated) across 12 call sites. Sample: removed next.foo at app/page.tsx:8. The full report ... is lockdocs Pro (US$120/seat/yr): <this page>
+next 14.2.3 -> 15.0.0: 7 of the APIs your project calls change (3 removed, 2 renamed, 2 deprecated) across 12 call sites. Sample: removed next.foo at app/page.tsx:8. The full report is lockdocs Pro: <this page>
 ```
 
 The preview downloads nothing the report would not: the target version comes
@@ -78,7 +78,7 @@ lockdocs Pro, with the link. Nothing is sent to the private host.
 
 ## Price
 
-**{{ theme.pro.price }} per seat per year**, paid upfront. No
+**See current prices and seat packs on the <a href="https://sylphxai.github.io/lockdocs/pricing" target="_self">pricing page</a>.** No
 per-call charges, no parsing fees, no usage caps. Seats come in packs of 1, 5,
 10, 25 and 50. CI runners don't count as seats. Pro includes email support with
 a reply within two business days.
@@ -88,7 +88,7 @@ US$5 per million tokens to parse private repositories (context7.com/plans,
 checked 2026-10-02). lockdocs Pro is one yearly price, and it answers for the
 version you pinned.
 
-<p v-if="theme.pro.checkoutUrl"><a :href="theme.pro.checkoutUrl">Buy lockdocs Pro</a></p>
+<p v-if="theme.pro.checkoutUrl"><a :href="theme.pro.checkoutUrl" target="_self">Buy lockdocs Pro</a></p>
 
 `lockdocs licence buy --pack 1` starts the device flow for one lockdocs Pro seat: open the link
 printed in your terminal to buy, then return to the terminal. After checkout,

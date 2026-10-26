@@ -63,7 +63,7 @@ impl Lockdocs {
             .and_then(|root| tools::call_checked(&self.ws, &self.opts, name, args, &root).result)
         {
             Ok(answer) => {
-                let p = preview::build(&answer.json, required, pro::PRICE);
+                let p = preview::build(&answer.json, required);
                 let body = if args.get("format").and_then(|v| v.as_str()) == Some("json") {
                     serde_json::to_string_pretty(&p.json).unwrap_or_default()
                 } else {
@@ -260,6 +260,7 @@ mod tests {
             upgrade_url: "https://example.com/pro",
             checkout_base: None,
             tier: "Pro",
+            // Money checkout is injected only into the CLI, never the MCP tools.
         };
         let a = app(policy);
         let upgrade = json!({"query": "upgrade", "package": "tiny-schema", "upgrade_to": "2.0.0", "root": root});
@@ -276,7 +277,7 @@ mod tests {
             pv.contains("tiny-schema 1.0.0 -> 2.0.0: 3 of the APIs your project calls change (1 removed, 1 renamed, 1 re-signed) across 3 call sites"),
             "{pv}"
         );
-        assert!(pv.contains("US$120/seat/yr") && pv.contains("https://example.com/pro"), "{pv}");
+        assert!(pv.contains("current per-seat pricing") && pv.contains("https://example.com/pro"), "{pv}");
         assert!(!pv.contains("was:") && !pv.contains("now:"), "{pv}");
         // JSON form keeps the marker and the counts.
         let pj = call(

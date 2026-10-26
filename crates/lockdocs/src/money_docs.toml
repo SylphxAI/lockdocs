@@ -1,0 +1,62 @@
+title = "lockdocs Pro"
+description = "The upgrade report and private sources for teams that pin versions."
+base_path = "/lockdocs"
+origin = "https://sylphxai.github.io"
+lang = "en"
+host = "github-pages"
+include = ["pricing.md", "recover.md"]
+edit_url = "https://github.com/SylphxAI/lockdocs/edit/main/docs/storefront/{path}"
+toc_max_level = 3
+
+[money]
+api_origin = "https://api.sylphx.com"
+parent = "orgs/org_fs01afbdccgn8xdk1ghj5y47w0vtph/projects/prj_fs01t5s6w8gc2pj6jzh9xdaw89qs89/envs/env_fs01k5qrkmbj8rvdks13t3d10br3vg"
+publishable_key = "sylphx_pk_live_fs011xLNgU7D9xCGWsAA"
+
+[money.trader]
+name = "Sylphx Limited"
+contact = "hi@sylphx.com"
+address = "128 City Road, London EC1V 2NX, United Kingdom"
+
+[money.offers.pro]
+product = "lockdocs_pro_seat_year"
+token_product = "lockdocs"
+title = "Buy lockdocs Pro"
+description = "Upgrade reports and private sources, with offline licence verification. Current prices and seat packs come from the live Money catalogue."
+consent_version = "waiver-v1"
+consent_text = "I ask for my licence to be supplied immediately after I pay. I understand that once it is supplied I lose my right to cancel this purchase and to a refund on that ground."
+success_url = "https://sylphxai.github.io/lockdocs/pricing?session_id={CHECKOUT_SESSION_ID}"
+cancel_url = "https://sylphxai.github.io/lockdocs/pricing?checkout=cancelled"
+recovery_url = "https://sylphxai.github.io/lockdocs/recover"
+cta_label = "Continue to payment"
+recovery_label = "Email my licence recovery link"
+
+[[money.offers.pro.prices]]
+id = "1"
+key = "lockdocs_pro_seat_year"
+label = "1 seat"
+quantity = 1
+
+[[money.offers.pro.prices]]
+id = "5"
+key = "lockdocs_pro_seat_year"
+label = "5 seats"
+quantity = 5
+
+[[money.offers.pro.prices]]
+id = "10"
+key = "lockdocs_pro_seat_year"
+label = "10 seats"
+quantity = 10
+
+[[money.offers.pro.prices]]
+id = "25"
+key = "lockdocs_pro_seat_year"
+label = "25 seats"
+quantity = 25
+
+[[money.offers.pro.prices]]
+id = "50"
+key = "lockdocs_pro_seat_year"
+label = "50 seats"
+quantity = 50

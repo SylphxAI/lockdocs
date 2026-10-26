@@ -4,17 +4,10 @@
 
 use std::time::Duration;
 
-use mcp_kit::licence::{self, Licence, LicencePolicy, ProRequired};
+use mcp_kit::licence::{self, Licence, LicencePolicy, MoneyCheckout, ProRequired};
 
 /// The lockdocs-pro issuer public key (base64url, raw Ed25519). Public, not a secret.
 pub const ISSUER_PUBLIC_KEY: &str = "3WKM0pn_td25hztpKOVCSFZvE8zs06uXrMWU1p5O4so";
-
-/// Base URL of the in-terminal checkout.
-pub const CHECKOUT_BASE: &str = "https://buy.sylphx.com";
-
-/// Yearly price per seat, quoted in the free upgrade preview. The pricing page
-/// reads the same value from `docs/.vitepress/config.ts`; a test keeps them equal.
-pub const PRICE: &str = "US$120";
 
 /// The lockdocs Pro licence policy.
 pub const POLICY: LicencePolicy<'static> = LicencePolicy {
@@ -25,13 +18,27 @@ pub const POLICY: LicencePolicy<'static> = LicencePolicy {
     public_keys: &[ISSUER_PUBLIC_KEY],
     env_var: "LOCKDOCS_LICENCE_TOKEN",
     file_name: "licence",
-    // Published pricing page (docs/pro.md). The price itself is `docs/pricing.json`.
-    upgrade_url: "https://sylphxai.github.io/lockdocs/pro",
-    checkout_base: Some(CHECKOUT_BASE),
+    upgrade_url: "https://sylphxai.github.io/lockdocs/pricing",
+    // Keel Money configuration is supplied to the Money-aware CLI entry point.
+    checkout_base: None,
 };
 
 pub const UPGRADE_REPORT: &str = "Upgrade report";
 pub const PRIVATE_SOURCES: &str = lockdocs_core::private::FEATURE;
+
+/// The product-owned Money checkout, parsed from the same Keel file the site uses.
+pub fn checkout() -> MoneyCheckout {
+    MoneyCheckout::from_docs_toml(include_str!("money_docs.toml"), "pro").expect("lockdocs' embedded Keel Money configuration must be valid")
+}
+
+/// `lockdocs licence status | activate <token> | buy`; returns the exit code.
+pub fn run_licence(arguments: &[String]) -> i32 {
+    if arguments.first().is_some_and(|command| command == "buy") {
+        licence::run_money_cli(&POLICY, &checkout(), arguments)
+    } else {
+        licence::run_cli(&POLICY, arguments)
+    }
+}
 
 /// Gate one Pro feature against a policy.
 pub fn require(policy: &LicencePolicy, feature: &str) -> Result<Licence, ProRequired> {
@@ -61,10 +68,19 @@ mod tests {
     #[test]
     fn checkout_policy_and_docs_use_the_live_product() {
         assert_eq!(POLICY.product, "lockdocs");
-        assert_eq!(POLICY.checkout_base, Some("https://buy.sylphx.com"));
+        assert_eq!(POLICY.checkout_base, None);
+        assert_eq!(POLICY.upgrade_url, "https://sylphxai.github.io/lockdocs/pricing");
         let config = include_str!("../../../docs/.vitepress/config.ts");
-        assert!(config.contains(&format!("price: '{PRICE}'")));
-        assert!(config.contains("checkoutUrl: 'https://buy.sylphx.com/buy/lockdocs?pack=1'"));
+        assert!(config.contains("checkoutUrl: 'https://sylphxai.github.io/lockdocs/pricing'"));
+        let storefront = checkout();
+        assert_eq!(storefront.product, "lockdocs_pro_seat_year");
+        assert!(storefront.checkout_enabled);
+        assert!(storefront.publishable_key.starts_with("sylphx_pk_"));
+        assert_eq!(storefront.prices.iter().map(|p| p.quantity).collect::<Vec<_>>(), [1, 5, 10, 25, 50]);
+        assert_eq!(
+            storefront.prices.iter().map(|p| p.id.as_str()).collect::<Vec<_>>(),
+            ["1", "5", "10", "25", "50"]
+        );
         let page = include_str!("../../../docs/pro.md");
         assert!(page.contains("Buy lockdocs Pro"));
         assert!(page.contains("lockdocs licence buy --pack 1"));

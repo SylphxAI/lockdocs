@@ -11,8 +11,10 @@ export default defineConfig({
   description: desc,
   appearance: 'force-dark',
   cleanUrls: true,
+  // Keel emits this static route after VitePress has checked the docs.
+  ignoreDeadLinks: [/^\/recover$/],
   // Product vision and capability table are for maintainers, not site pages.
-  srcExclude: ['vision.md', 'capabilities.md'],
+  srcExclude: ['vision.md', 'capabilities.md', 'storefront/**'],
   lastUpdated: true,
   markdown: { theme: { light: 'github-light', dark: 'github-dark-default' } },
   sitemap: { hostname: url },
@@ -46,8 +48,8 @@ export default defineConfig({
     )
   },
   themeConfig: {
-    // The one place the Pro price and checkout link live (docs/pro.md reads them).
-    pro: { price: 'US$120', checkoutUrl: 'https://buy.sylphx.com/buy/lockdocs?pack=1' },
+    // The product-owned Keel checkout/recovery pages live beside the docs.
+    pro: { checkoutUrl: 'https://sylphxai.github.io/lockdocs/pricing' },
     logo: { src: '/logo.svg', alt: '' },
     lastUpdated: { formatOptions: { dateStyle: 'medium' } },
     nav: [

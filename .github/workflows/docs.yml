@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - 'docs/**'
+      - 'crates/lockdocs/src/money_docs.toml'
+      - 'scripts/build-storefront.sh'
       - 'package.json'
       - 'bun.lock'
       - '.github/workflows/docs.yml'
@@ -28,6 +30,8 @@ jobs:
         with:
           bun-version: '1.4.3'
       - run: bun install --frozen-lockfile
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
       - run: bun run docs:build
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5

@@ -153,7 +153,7 @@ fn run() -> Result<()> {
     }
     let cmd = raw.remove(0);
     if cmd == "licence" || cmd == "license" {
-        std::process::exit(mcp_kit::licence::run_cli(&pro::POLICY, &raw));
+        std::process::exit(pro::run_licence(&raw));
     }
     let args = Args::parse(raw);
     // The Pro gate runs before any download or index work. Exit code 3: Pro required.
@@ -182,7 +182,7 @@ fn run() -> Result<()> {
                         let engine = Engine::new(&args.root(), args.opts());
                         match engine.upgrade_report(pkg, target, args.tokens()) {
                             Ok(answer) => {
-                                let p = preview::build(&answer.json, &required, pro::PRICE);
+                                let p = preview::build(&answer.json, &required);
                                 if json {
                                     println!("{}", serde_json::to_string_pretty(&p.json).unwrap_or_default());
                                 } else {

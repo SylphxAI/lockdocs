@@ -9,6 +9,8 @@ packages/npm/*/lockdocs
 packages/npm/*/lockdocs.exe
 docs/.vitepress/cache/
 docs/.vitepress/dist/
+# Generated from crates/lockdocs/src/money_docs.toml by scripts/build-storefront.sh
+docs/storefront/docs.toml
 bench/work/
 bench/results/*.tmp.json
 __pycache__/

@@ -11,7 +11,7 @@ pub struct Preview {
 }
 
 /// Build the preview from the report JSON (`upgrade::report`'s `json`).
-pub fn build(report: &Value, required: &ProRequired, price: &str) -> Preview {
+pub fn build(report: &Value, required: &ProRequired) -> Preview {
     let affected = report["affected"].as_array().cloned().unwrap_or_default();
     let count = |kind: &str| affected.iter().filter(|a| a["change"] == kind).count();
     let (removed, renamed, resigned, deprecated) = (count("removed"), count("renamed"), count("signature_changed"), count("deprecated"));
@@ -23,7 +23,7 @@ pub fn build(report: &Value, required: &ProRequired, price: &str) -> Preview {
         report["to"].as_str().unwrap_or("")
     );
     let pro = format!(
-        "The full report with each change, its replacement and your call sites is {} {} ({price}/seat/yr): {}",
+        "The full report with each change, its replacement and your call sites is {} {}; see current per-seat pricing: {}",
         required.product, required.tier, required.url
     );
     let text = if affected.is_empty() {
@@ -76,16 +76,16 @@ mod tests {
     }
 
     #[test]
-    fn counts_by_change_and_names_the_price_and_link() {
+    fn counts_by_change_and_links_to_current_pricing() {
         let r = json!({"package": "next", "from": "14.2.3", "to": "15.0.0", "unaffected_changes": 4, "affected": [
             {"change": "removed", "symbol": "next.a", "call_sites": [{"path": "a.ts", "line": 3}, {"path": "b.ts", "line": 9}]},
             {"change": "renamed", "symbol": "next.b", "call_sites": [{"path": "a.ts", "line": 5}]},
             {"change": "signature_changed", "symbol": "next.c", "call_sites": [{"path": "c.ts", "line": 1}]},
         ]});
-        let p = build(&r, &required(), "US$120");
+        let p = build(&r, &required());
         assert_eq!(
             p.text,
-            "next 14.2.3 -> 15.0.0: 3 of the APIs your project calls change (1 removed, 1 renamed, 1 re-signed) across 4 call sites. Sample: removed next.a at a.ts:3. The full report with each change, its replacement and your call sites is lockdocs Pro (US$120/seat/yr): https://example.com/pro"
+            "next 14.2.3 -> 15.0.0: 3 of the APIs your project calls change (1 removed, 1 renamed, 1 re-signed) across 4 call sites. Sample: removed next.a at a.ts:3. The full report with each change, its replacement and your call sites is lockdocs Pro; see current per-seat pricing: https://example.com/pro"
         );
         assert_eq!(p.json["call_sites"], 4);
         assert_eq!(p.json["pro_required"]["url"], "https://example.com/pro");
@@ -94,20 +94,11 @@ mod tests {
     #[test]
     fn nothing_affected_says_so() {
         let r = json!({"package": "p", "from": "1.0.0", "to": "2.0.0", "unaffected_changes": 2, "affected": []});
-        let p = build(&r, &required(), "US$120");
+        let p = build(&r, &required());
         assert!(
             p.text.contains("none of the APIs your project calls change (2 other API changes exist)"),
             "{}",
             p.text
         );
-    }
-
-    #[test]
-    fn price_matches_the_pricing_page() {
-        // Skipped when the docs are absent (the packaged crate).
-        let cfg = concat!(env!("CARGO_MANIFEST_DIR"), "/../../docs/.vitepress/config.ts");
-        if let Ok(c) = std::fs::read_to_string(cfg) {
-            assert!(c.contains(&format!("price: '{}'", crate::pro::PRICE)), "docs price differs from pro::PRICE");
-        }
     }
 }

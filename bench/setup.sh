@@ -4,6 +4,8 @@
 # by npm itself. Python projects: each has its own requirements.txt and venv.
 set -euo pipefail
 P=${1:-bench/projects}
+# Refuse drift before the first network call or install.
+python3 "$(dirname "${BASH_SOURCE[0]}")/fixtures.py" "$P"
 pids=()
 for d in "$P"/*/; do
   d=${d%/}

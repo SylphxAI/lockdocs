@@ -1,0 +1,40 @@
+version: 2
+# These are frozen inputs, not application dependencies. Ignore security updates
+# here too: replacing a version line changes the question being measured.
+# Version updates elsewhere remain owned by Renovate (no duplicate bot).
+updates:
+  - package-ecosystem: npm
+    directories:
+      - /bench/projects/*
+      - /crates/lockdocs-core/tests/**
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+    ignore:
+      - dependency-name: '*'
+  - package-ecosystem: pip
+    directories:
+      - /bench/projects/*
+      - /crates/lockdocs-core/tests/**
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+    ignore:
+      - dependency-name: '*'
+  - package-ecosystem: cargo
+    directories:
+      - /bench/projects/*
+      - /crates/lockdocs-core/tests/**
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+    ignore:
+      - dependency-name: '*'
+  - package-ecosystem: gomod
+    directories:
+      - /crates/lockdocs-core/tests/**
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+    ignore:
+      - dependency-name: '*'

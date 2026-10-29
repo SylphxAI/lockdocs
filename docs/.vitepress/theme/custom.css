@@ -23,3 +23,12 @@
 }
 /* Hero install command wraps instead of being cut off on narrow screens */
 .sx-hero-extras .sx-install code { white-space: normal; overflow-wrap: anywhere; overflow: visible; min-width: 0; }
+
+/* Keep all navigation links in view on tablets; search keeps its icon and accessible label. */
+@media (min-width: 768px) and (max-width: 959px) {
+  .VPNavBarSearch { padding-left: 12px; }
+  .VPNavBarSearch .DocSearch-Button { width: 40px; padding: 0; justify-content: center; }
+  .VPNavBarSearch .DocSearch-Button-Placeholder,
+  .VPNavBarSearch .DocSearch-Button-Keys { display: none; }
+  .VPNavBarSearch .DocSearch-Search-Icon { margin-right: 0; }
+}

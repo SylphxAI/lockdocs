@@ -94,10 +94,42 @@ symbol name. You can inspect both cited `.d.ts` files directly in `node_modules`
 `package-lock.json`, and `docs ready`.
 
 This demonstrates Lockdocs' installed-version and offline path. It is not a
-claim that Context7 cannot answer the same question. To compare your own
-question, follow Context7's documented version-prompt workflow, record the
-returned library ID, version, date and citations, and check both answers against
-the installed source. Hosted responses can change as the index changes.
+claim that Context7 cannot answer the same question.
+
+## Ask Context7 the same question
+
+Connect Context7 using its [documented MCP setup](https://github.com/upstash/context7/blob/5b623bfd383b3c0bb5479738caf74764e5280d76/README.md#installation).
+In a separate conversation, copy this prompt, then repeat with **4.1.5**:
+
+```text
+Use Context7 for zod 3.22.4. Resolve the library ID, then retrieve the exact
+TypeScript signature of ZodObject.strict. Include the source and version.
+If that exact release is not indexed, say which version the result covers.
+```
+
+For a direct MCP test, the corresponding first call is:
+
+```json
+{
+  "name": "resolve-library-id",
+  "arguments": {
+    "libraryName": "zod",
+    "query": "In zod 3.22.4, what is the exact TypeScript signature of ZodObject.strict?"
+  }
+}
+```
+
+Then call `query-docs` with the **`libraryId` returned by that resolution** and
+the same question as `query`. Do not invent an exact-version ID if the service
+does not return one. Both tool names and fields come from the dated README's
+[Available Tools](https://github.com/upstash/context7/blob/5b623bfd383b3c0bb5479738caf74764e5280d76/README.md#available-tools)
+section. Repeat both calls for 4.1.5.
+
+Record the date, returned library ID, reported version and citations. Compare
+the signature with the two installed files above. Treat a missing release or
+an answer without a version citation as a limitation of that run, not proof
+that another version's declaration is correct. Hosted responses can change as
+the index changes; this page does not publish a new Context7 result or score.
 
 ## What “offline” and “no query quota” mean
 

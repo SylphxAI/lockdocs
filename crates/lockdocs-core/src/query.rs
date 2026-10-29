@@ -1064,6 +1064,16 @@ impl Engine {
                 ));
             }
             if ambiguous {
+                for a in applicability.iter().take(8) {
+                    out.push_block(&format!(
+                        "Applicable import `{}` ({}) via {} → {}:{}\n",
+                        a["import"].as_str().unwrap_or(""),
+                        a["conditions"].as_str().unwrap_or(""),
+                        a["entrypoint"].as_str().unwrap_or(""),
+                        a["file"].as_str().unwrap_or(""),
+                        a["line"]
+                    ));
+                }
                 for (_, pi, ei) in cands.iter().take(8) {
                     let idx = &ready[*pi].0;
                     out.push_block(&render_entry(idx, &idx.entries[*ei], 500));

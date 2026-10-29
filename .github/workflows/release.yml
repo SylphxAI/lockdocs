@@ -54,7 +54,7 @@ jobs:
         run: cargo publish --locked --workspace
 
   release:
-    uses: SylphxAI/mcp-kit/.github/workflows/release.yml@65e471a6ef86551d8805eb30944d4c876f4630f9 # v0
+    uses: SylphxAI/mcp-kit/.github/workflows/release.yml@bfbaa7ed4be68018831ac1492d6c2e4521489612 # v0
     permissions:
       contents: write
       id-token: write

@@ -38,6 +38,7 @@ Commands:
 Options:
   -C, --root <dir>      Project directory (default: current directory)
   --pkg <package>       Package for docs/api: zod, npm:zod, pydantic@2.9.2, tokio
+                        For npm api, an import subpath selects that edition: zod/v4
   --tokens <n>          Answer budget in tokens (default 1200)
   --fetch               Also download missing exact packages and major-version docs sites
                         (cached; also LOCKDOCS_FETCH=1)

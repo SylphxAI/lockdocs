@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 /// Bump when extraction or the on-disk format changes.
-pub const FORMAT: u32 = 11;
+pub const FORMAT: u32 = 12;
 
 #[derive(Serialize, Deserialize)]
 pub struct PackageIndex {
@@ -24,6 +24,7 @@ pub struct PackageIndex {
     pub source: String,
     pub fetched: bool,
     pub entries: Vec<Entry>,
+    pub npm_api: Option<crate::npm_api::PublicApi>,
     pub terms: Vec<Vec<(String, u16)>>,
     pub lens: Vec<u32>,
     /// Terms of the heading or name plus the first sentence only, ranked on
@@ -155,6 +156,21 @@ pub fn embed_text(e: &Entry) -> String {
     format!("{} {parent}. {body}", e.name)
 }
 
+pub(crate) fn source_stamp(dep: &Dep, src: &Source, root: &Path) -> String {
+    npm_source_stamp(dep, src, types_pkg(dep, root).as_deref())
+}
+
+fn npm_source_stamp(dep: &Dep, src: &Source, types: Option<&Path>) -> String {
+    if dep.eco != Eco::Npm {
+        return stamp(src);
+    }
+    cache::hash(&[
+        &std::fs::read_to_string(src.dir.join("package.json")).unwrap_or_default(),
+        &extract::npm_stamp(src, types),
+        &types.and_then(|t| std::fs::read_to_string(t.join("package.json")).ok()).unwrap_or_default(),
+    ])
+}
+
 fn cache_path(dep: &Dep, src: &Source, types: Option<&Path>, up: Option<&(PathBuf, Manifest)>, embed: &str) -> PathBuf {
     let up_key = up
         .map(|(_, m)| {
@@ -172,7 +188,7 @@ fn cache_path(dep: &Dep, src: &Source, types: Option<&Path>, up: Option<&(PathBu
         &dep.name,
         &src.version,
         &src.dir.to_string_lossy(),
-        &stamp(src),
+        &npm_source_stamp(dep, src, types),
         &types.map(|t| t.to_string_lossy().to_string()).unwrap_or_default(),
     ]);
     let safe = format!("{}@{}", dep.name, src.version).replace(['/', '\\', ':'], "+");
@@ -196,6 +212,32 @@ pub fn build(dep: &Dep, src: &Source, root: &Path, up: Option<&(PathBuf, Manifes
     let types = types_pkg(dep, root);
     let up_dir = up.filter(|(_, m)| m.files > 0).map(|(d, _)| d.as_path());
     let entries = extract::extract(dep.eco, &dep.name, src, types.as_deref(), up_dir);
+    let npm_api = (dep.eco == Eco::Npm).then(|| {
+        let sources = extract::npm_sources(src, types.as_deref());
+        // Separate @types packages keep their real citation paths, but their
+        // own package.json supplies the declaration entrypoint.
+        if let Some(types) = &types {
+            let prefix = types
+                .iter()
+                .rev()
+                .take(2)
+                .collect::<Vec<_>>()
+                .into_iter()
+                .rev()
+                .map(|s| s.to_string_lossy())
+                .collect::<Vec<_>>()
+                .join("/")
+                + "/";
+            if sources.keys().any(|f| f.starts_with(&prefix)) {
+                let relative = sources
+                    .iter()
+                    .filter_map(|(f, s)| f.strip_prefix(&prefix).map(|f| (f.to_string(), s.clone())))
+                    .collect();
+                return crate::npm_api::PublicApi::build(&dep.name, types, &relative).prefixed(&prefix);
+            }
+        }
+        crate::npm_api::PublicApi::build(&dep.name, &src.dir, &sources)
+    });
     let (terms, lens): (Vec<_>, Vec<_>) = entries.iter().map(entry_tf).unzip();
     let (head, head_lens): (Vec<_>, Vec<_>) = entries.iter().map(head_tf).unzip();
     let model = embed::get();
@@ -214,6 +256,7 @@ pub fn build(dep: &Dep, src: &Source, root: &Path, up: Option<&(PathBuf, Manifes
         source: src.label.clone(),
         fetched: src.fetched,
         entries,
+        npm_api,
         terms,
         lens,
         head,

@@ -41,7 +41,7 @@ pub fn definitions() -> Value {
             "description": "The exact signature and doc comment of one symbol in the installed version, with overloads, members (for classes, interfaces, structs, traits) and other matches. Accepts `zod.z.object`, `z.object`, `tokio::spawn`, `axum::Router::route`, `pydantic.BaseModel.model_dump`, `gin.Context.JSON`.",
             "inputSchema": {"type": "object", "properties": {
                 "symbol": {"type": "string", "description": "Symbol path, optionally prefixed by the package name."},
-                "package": {"type": "string", "description": "Package to look in when the symbol has no package prefix."},
+                "package": {"type": "string", "description": "Package or npm public import path (e.g. zod/v4). Defaults to the package root export; unavailable or ambiguous imports are reported, not substituted."},
                 "tokens": tokens,
                 "root": root,
                 "offline": offline

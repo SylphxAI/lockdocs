@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.1
+
+- **API answers follow public npm imports.** `api` traces the installed package entrypoint through declaration imports and re-exports before selecting a signature. Same-named internal symbols and alternate editions no longer override the requested public API. Select another public import explicitly with `--pkg package/subpath` (or the MCP `package` argument). Answers include the import, declaration entrypoint and export conditions; unavailable, ambiguous and unresolved exports are reported without an exact signature.
+- **Fresh local declarations.** Index format 12 retains declaration provenance and the public export graph. Content changes to installed npm declarations, docs or package metadata invalidate both disk and live-process caches, even at the same package version. Offline queries stay local and free, with the same three MCP tools.
+
 ## 0.7.0
 
 - **Live Pro checkout and issuer key.** `lockdocs licence buy --pack 1` now starts the one-seat device checkout at `https://buy.sylphx.com`, and the Pro page links to the same pack. The binary verifies licences against the pinned production Ed25519 public key. This release ships the issuer and checkout changes that landed after 0.6.0. The pack is required by checkout and is now explicit in the instructions and CLI help.

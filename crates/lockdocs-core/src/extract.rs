@@ -139,7 +139,7 @@ fn doc_ext(ext: &str) -> bool {
     matches!(ext, "md" | "mdx" | "markdown" | "rst")
 }
 
-fn walk(dir: &Path, rel: &Path, depth: usize, out: &mut Vec<PathBuf>) {
+fn walk(dir: &Path, rel: &Path, depth: usize, out: &mut Vec<PathBuf>, public_npm: bool) {
     if depth > 14 || out.len() >= MAX_FILES {
         return;
     }
@@ -151,10 +151,10 @@ fn walk(dir: &Path, rel: &Path, depth: usize, out: &mut Vec<PathBuf>) {
         let Ok(ft) = e.file_type() else { continue };
         let r = rel.join(&name);
         if ft.is_dir() {
-            if SKIP_DIRS.contains(&name.as_str()) || name.starts_with('.') {
+            if (SKIP_DIRS.contains(&name.as_str()) && !(public_npm && name == "internal")) || name.starts_with('.') {
                 continue;
             }
-            walk(&e.path(), &r, depth + 1, out);
+            walk(&e.path(), &r, depth + 1, out, public_npm);
         } else if ft.is_file() || ft.is_symlink() {
             out.push(r);
         }
@@ -230,7 +230,7 @@ fn plan(eco: Eco, src: &Source, extra_types: Option<&Path>, upstream: Option<&Pa
     let mut rels = Vec::new();
     match &src.files {
         Some(list) => rels.extend(list.iter().cloned()),
-        None => walk(&src.dir, Path::new(""), 0, &mut rels),
+        None => walk(&src.dir, Path::new(""), 0, &mut rels, eco == Eco::Npm),
     }
     let mut jobs = Vec::new();
     let names: HashSet<String> = rels.iter().map(|r| r.to_string_lossy().replace('\\', "/")).collect();
@@ -244,7 +244,10 @@ fn plan(eco: Eco, src: &Source, extra_types: Option<&Path>, upstream: Option<&Pa
     let rs_crate_src = eco == Eco::Cargo;
     for r in rels {
         let rel = r.to_string_lossy().replace('\\', "/");
-        if rel.split('/').any(|seg| SKIP_DIRS.contains(&seg) && src.files.is_some()) {
+        if rel
+            .split('/')
+            .any(|seg| SKIP_DIRS.contains(&seg) && !(eco == Eco::Npm && seg == "internal") && src.files.is_some())
+        {
             continue;
         }
         let abs = src.dir.join(&r);
@@ -261,14 +264,7 @@ fn plan(eco: Eco, src: &Source, extra_types: Option<&Path>, upstream: Option<&Pa
             match eco {
                 Eco::Npm => match e.as_str() {
                     "d.ts" => Some(How::Ts),
-                    "d.mts" | "d.cts" => {
-                        let base = rel.trim_end_matches(".d.mts").trim_end_matches(".d.cts");
-                        if names.contains(&format!("{base}.d.ts")) {
-                            None
-                        } else {
-                            Some(How::Ts)
-                        }
-                    }
+                    "d.mts" | "d.cts" => Some(How::Ts),
                     "ts" | "mts" | "cts" | "tsx" if !has_dts => Some(How::Ts),
                     "js" | "mjs" | "cjs" if !has_dts && !fname.contains(".min.") => Some(How::Ts),
                     _ => None,
@@ -341,7 +337,7 @@ fn plan(eco: Eco, src: &Source, extra_types: Option<&Path>, upstream: Option<&Pa
     // Types that ship separately (`@types/react` for `react`).
     if let (Some(types), false) = (extra_types, has_dts) {
         let mut rels = Vec::new();
-        walk(types, Path::new(""), 0, &mut rels);
+        walk(types, Path::new(""), 0, &mut rels, true);
         let label = types
             .iter()
             .rev()
@@ -353,7 +349,7 @@ fn plan(eco: Eco, src: &Source, extra_types: Option<&Path>, upstream: Option<&Pa
             .collect::<Vec<_>>()
             .join("/");
         for r in rels {
-            if ext_of(&r) == "d.ts" {
+            if matches!(ext_of(&r).as_str(), "d.ts" | "d.cts" | "d.mts") {
                 let rel = format!("{label}/{}", r.to_string_lossy().replace('\\', "/"));
                 jobs.push(Job {
                     abs: types.join(&r),
@@ -419,8 +415,42 @@ pub fn extract(eco: Eco, pkg_name: &str, src: &Source, extra_types: Option<&Path
     }
     // Drop exact duplicates (the same declaration shipped twice).
     let mut seen = HashSet::new();
-    all.retain(|e| seen.insert((e.path.clone(), e.sig.clone(), e.doc.len())));
+    all.retain(|e| {
+        seen.insert((
+            if eco == Eco::Npm { e.file.clone() } else { String::new() },
+            e.path.clone(),
+            e.sig.clone(),
+            e.doc.len(),
+        ))
+    });
     all
+}
+
+/// Declaration graph inputs and cache identity use the same file selection as extraction.
+pub(crate) fn npm_sources(src: &Source, extra_types: Option<&Path>) -> std::collections::BTreeMap<String, String> {
+    plan(Eco::Npm, src, extra_types, None)
+        .into_iter()
+        .filter(|j| j.how == How::Ts)
+        .filter_map(|j| {
+            if std::fs::metadata(&j.abs).ok()?.len() > MAX_FILE_BYTES {
+                return None;
+            }
+            Some((j.rel, std::fs::read_to_string(j.abs).ok()?))
+        })
+        .collect()
+}
+
+/// Content identity, including names, catches edits, additions and removals even
+/// when a package's version and metadata timestamps did not change.
+pub(crate) fn npm_stamp(src: &Source, extra_types: Option<&Path>) -> String {
+    let mut parts = Vec::new();
+    for j in plan(Eco::Npm, src, extra_types, None) {
+        parts.push(j.rel);
+        if let Ok(bytes) = std::fs::read(&j.abs) {
+            parts.push(crate::cache::hash(&[&String::from_utf8_lossy(&bytes)]));
+        }
+    }
+    crate::cache::hash(&parts.iter().map(String::as_str).collect::<Vec<_>>())
 }
 
 fn rust_crate_name(dir: &Path) -> Option<String> {

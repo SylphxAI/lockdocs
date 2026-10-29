@@ -11,7 +11,7 @@ lockdocs upgrade <pkg> <ver>    Pro: API changes from the pinned version to <ver
 lockdocs licence status|activate <token>   Show or activate a lockdocs Pro licence (free to run)
 lockdocs cache [clean]          Show or delete the cache
 lockdocs setup                  Configure MCP clients (--client a,b --dry-run --remove --fetch)
-lockdocs mcp                    MCP server on stdio (the default when stdin is not a terminal)
+lockdocs mcp                    MCP server on stdio (also the default with no command and non-terminal stdin)
 lockdocs version
 ```
 
@@ -25,6 +25,24 @@ lockdocs version
 | `--no-fetch` | Disable query package/docs downloads; cached docs remain usable |
 | `--offline` | Never download, not even the embedding model |
 | `--json` | Machine-readable output |
+
+Global options work before or after the command, including the package-name
+shorthand. These pairs return the same pinned versions and file:line citations:
+
+```sh
+lockdocs resolve -C ./project --offline --json
+lockdocs --json --offline -C ./project resolve
+lockdocs docs "reject unknown keys" --pkg zod -C ./project --offline
+lockdocs --root ./project --offline docs "reject unknown keys" --pkg zod
+lockdocs api z.object -C ./project --offline
+lockdocs --offline -C ./project api z.object
+```
+
+An explicit command (or package name) always runs as a CLI query, even with
+closed or piped stdin; it does not wait for an MCP request. To launch the stdio
+server, use `lockdocs mcp`. The existing flags-only form, such as
+`lockdocs --offline -C ./project`, also starts MCP. With no arguments, lockdocs
+starts MCP when stdin is not a terminal and shows help in a terminal.
 
 Exit code 1 with a message on stderr when a package is not a dependency or not installed. Exit code 3: the command is part of lockdocs Pro and no valid licence is configured (set `LOCKDOCS_LICENCE_TOKEN` or run `lockdocs licence activate <token>`).
 

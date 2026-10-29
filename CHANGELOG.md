@@ -1,9 +1,18 @@
 # Changelog
 
-## 0.7.1
+## 0.7.2
 
 - **API answers follow public npm imports.** `api` traces the installed package entrypoint through declaration imports and re-exports before selecting a signature. Same-named internal symbols and alternate editions no longer override the requested public API. Select another public import explicitly with `--pkg package/subpath` (or the MCP `package` argument). Answers include the import, declaration entrypoint and export conditions; unavailable, ambiguous and unresolved exports are reported without an exact signature.
 - **Fresh local declarations.** Index format 12 retains declaration provenance and the public export graph. Content changes to installed npm declarations, docs or package metadata invalidate both disk and live-process caches, even at the same package version. Offline queries stay local and free, with the same three MCP tools.
+
+## 0.7.1
+
+- **Global CLI options work in either order.** `lockdocs --json resolve`,
+  `lockdocs --offline tiny-schema "reject unknown keys"`, and queries with
+  `-C` / `--root` before the command now run as CLI queries instead of waiting
+  for an MCP initialize request. Command-first queries, explicit `mcp`,
+  flags-only MCP launches, and the no-argument non-interactive server remain
+  supported. `--offline` still blocks model, package and upstream-doc downloads.
 
 ## 0.7.0
 

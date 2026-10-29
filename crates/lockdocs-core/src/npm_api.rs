@@ -72,7 +72,7 @@ fn resolve_file(from: &str, spec: &str, files: &BTreeSet<String>) -> String {
         return format!("external:{spec}");
     }
     let parent = from.rsplit_once('/').map_or("", |(p, _)| p);
-    let Some(base) = normalize(&format!("{parent}/{spec}").trim_start_matches('/')) else {
+    let Some(base) = normalize(format!("{parent}/{spec}").trim_start_matches('/')) else {
         return String::new();
     };
     let suffixes = [(".mjs", ".d.mts"), (".cjs", ".d.cts"), (".js", ".d.ts")];

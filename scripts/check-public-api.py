@@ -23,7 +23,10 @@ def run(args, **kwargs):
 def main():
     binary = str(Path(sys.argv[1]).resolve())
     with tempfile.TemporaryDirectory(prefix="lockdocs-public-api-") as tmp:
-        env = dict(os.environ, LOCKDOCS_OFFLINE="1", LOCKDOCS_EMBED="0", LOCKDOCS_CACHE=f"{tmp}/cache")
+        env = {k: v for k, v in os.environ.items() if k not in {
+            "GH_TOKEN", "GITHUB_TOKEN", "LOCKDOCS_LICENCE_TOKEN", "LOCKDOCS_TEST_LICENCE_TOKEN"
+        }}
+        env.update(LOCKDOCS_OFFLINE="1", LOCKDOCS_EMBED="0", LOCKDOCS_CACHE=f"{tmp}/cache")
         if len(sys.argv) == 4:
             roots = [Path(p).resolve() for p in sys.argv[2:]]
         else:
@@ -40,6 +43,7 @@ def main():
 
         def verify(answer, root, version, symbol, package="zod"):
             assert any(p["package"] == f"zod@{version}" for p in answer["provenance"]), answer
+            assert all(not p["registry_fetched"] and p["upstream"] is None for p in answer["provenance"]), answer
             if symbol == "z.email" and version == "3.25.76" and package == "zod":
                 assert answer["status"] == "not_exported", answer
                 assert "signature" not in answer, answer

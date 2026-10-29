@@ -86,6 +86,7 @@ fn default_public_entrypoint_beats_same_named_alternate_and_internal_symbols() {
         assert_eq!(a.json["import"], "@sample/forms");
     }
     let a = e.api("create", Some("@sample/forms"), 1200).unwrap();
+    assert_eq!(a.json["doc"], "Stable builder.");
     assert!(a.json["signature"].as_str().unwrap().contains("build(message?: string)"), "{}", a.text);
     let a = e.api("email", Some("@sample/forms"), 1200).unwrap();
     assert_eq!(a.json["status"], "not_exported", "{}", a.text);
@@ -177,4 +178,22 @@ fn separately_installed_types_keep_public_namespace_and_real_citation() {
     assert_eq!(a.json["status"], "exact", "{}", a.text);
     assert_eq!(a.json["file"], "@types/sample__forms/index.d.ts");
     assert!(a.text.contains("build(input: string)"), "{}", a.text);
+}
+
+#[test]
+fn npm_doc_content_changes_also_invalidate_the_live_and_disk_index() {
+    let dir = fixture();
+    let pkg = dir.path().join("node_modules/@sample/forms");
+    write(&pkg, "README.md", "# Cache example\n\nThe documentation generation is first.\n");
+    let e = engine(dir.path());
+    let a = e.docs(Some("@sample/forms"), "cache example", 1200).unwrap();
+    assert!(a.text.contains("generation is first"), "{}", a.text);
+    write(&pkg, "README.md", "# Cache example\n\nThe documentation generation is later.\n");
+    for a in [
+        e.docs(Some("@sample/forms"), "cache example", 1200).unwrap(),
+        engine(dir.path()).docs(Some("@sample/forms"), "cache example", 1200).unwrap(),
+    ] {
+        assert!(a.text.contains("generation is later"), "{}", a.text);
+        assert!(!a.text.contains("generation is first"), "{}", a.text);
+    }
 }

@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 /// Bump when extraction or the on-disk format changes.
-pub const FORMAT: u32 = 12;
+pub const FORMAT: u32 = 13;
 
 #[derive(Serialize, Deserialize)]
 pub struct PackageIndex {
@@ -43,6 +43,10 @@ pub struct PackageIndex {
 }
 
 impl PackageIndex {
+    pub fn api_entries(&self) -> &[Entry] {
+        self.npm_api.as_ref().map_or(self.entries.as_slice(), |api| api.entries.as_slice())
+    }
+
     pub fn id(&self) -> String {
         format!("{}@{}", self.name, self.version)
     }

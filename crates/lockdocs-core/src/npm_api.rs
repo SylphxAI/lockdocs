@@ -10,6 +10,7 @@ use tree_sitter::{Node, Parser};
 #[derive(Default, Serialize, Deserialize)]
 pub struct PublicApi {
     pub roots: Vec<Root>,
+    pub entries: Vec<Entry>,
     modules: BTreeMap<String, Module>,
 }
 
@@ -297,7 +298,11 @@ impl PublicApi {
                 }
             }
         }
-        Self { roots, modules }
+        Self {
+            roots,
+            entries: crate::extract::npm_entries(sources),
+            modules,
+        }
     }
 
     /// Rebase an @types declaration graph onto the extraction's citation labels.
@@ -311,6 +316,9 @@ impl PublicApi {
             Binding::Named(file, _) | Binding::Namespace(file) => rebase(file),
             _ => (),
         };
+        for e in &mut self.entries {
+            rebase(&mut e.file);
+        }
         for root in &mut self.roots {
             rebase(&mut root.file);
         }

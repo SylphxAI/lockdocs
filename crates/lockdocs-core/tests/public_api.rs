@@ -197,3 +197,34 @@ fn npm_doc_content_changes_also_invalidate_the_live_and_disk_index() {
         assert!(!a.text.contains("generation is first"), "{}", a.text);
     }
 }
+
+#[test]
+fn mirrored_declaration_files_do_not_change_the_documentation_ranking_corpus() {
+    use lockdocs_core::{index, locate::Source, Dep, Eco};
+    let dir = fixture();
+    let pkg = dir.path().join("node_modules/@sample/forms");
+    // The exact API graph must retain this alternate identity, but the docs
+    // corpus must keep its existing preference/deduplication rules.
+    let src = Source {
+        dir: pkg.clone(),
+        version: "1.2.3".into(),
+        label: "local".into(),
+        fetched: false,
+        files: None,
+        metadata: None,
+    };
+    let dep = Dep {
+        eco: Eco::Npm,
+        name: "@sample/forms".into(),
+        version: "1.2.3".into(),
+        direct: true,
+        from: "package-lock.json".into(),
+    };
+    let before = index::build(&dep, &src, dir.path(), None);
+    write(&pkg, "next/types.d.cts", &std::fs::read_to_string(pkg.join("next/types.d.ts")).unwrap());
+    let after = index::build(&dep, &src, dir.path(), None);
+    assert_eq!(serde_json::to_value(&before.entries).unwrap(), serde_json::to_value(&after.entries).unwrap());
+    assert_eq!(before.terms, after.terms);
+    assert_eq!(before.head, after.head);
+    assert!(after.npm_api.as_ref().unwrap().entries.len() > before.npm_api.as_ref().unwrap().entries.len());
+}

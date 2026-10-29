@@ -977,12 +977,12 @@ impl Engine {
                 let import = requested_import.as_deref().unwrap_or(&idx.name);
                 let mut has_root = false;
                 for root in &api.roots {
-                    let found = api.resolve(root, &public_path, &idx.entries);
+                    let found = api.resolve(root, &public_path, idx.api_entries());
                     if root.import == import {
                         has_root = true;
                         unresolved |= found.unresolved;
                         for ei in found.entries {
-                            let e = &idx.entries[ei];
+                            let e = &idx.api_entries()[ei];
                             cands.push((10.0, pi, ei));
                             applicability.push(
                                 json!({"import": root.import, "conditions": root.conditions.trim_start_matches('/'), "entrypoint": root.file,
@@ -991,7 +991,7 @@ impl Engine {
                         }
                     } else if !found.unresolved {
                         for ei in found.entries {
-                            let e = &idx.entries[ei];
+                            let e = &idx.api_entries()[ei];
                             alternatives.push(
                                 json!({"package": idx.id(), "import": root.import, "conditions": root.conditions.trim_start_matches('/'),
                                 "entrypoint": root.file, "path": e.path, "file": e.file, "line": e.line, "signature": e.sig}),
@@ -1002,7 +1002,7 @@ impl Engine {
                 unresolved |= !has_root;
                 continue;
             }
-            for (ei, e) in idx.entries.iter().enumerate() {
+            for (ei, e) in idx.api_entries().iter().enumerate() {
                 if e.kind == Kind::Prose {
                     continue;
                 }
@@ -1020,10 +1020,10 @@ impl Engine {
         // packages or conditional editions are not a license to guess.
         let locations: HashSet<_> = cands
             .iter()
-            .map(|(_, pi, ei)| (*pi, &ready[*pi].0.entries[*ei].file, &ready[*pi].0.entries[*ei].path))
+            .map(|(_, pi, ei)| (*pi, &ready[*pi].0.api_entries()[*ei].file, &ready[*pi].0.api_entries()[*ei].path))
             .collect();
         let ambiguous = npm_scoped && locations.len() > 1 && {
-            let signatures: HashSet<_> = cands.iter().map(|(_, pi, ei)| &ready[*pi].0.entries[*ei].sig).collect();
+            let signatures: HashSet<_> = cands.iter().map(|(_, pi, ei)| &ready[*pi].0.api_entries()[*ei].sig).collect();
             signatures.len() > 1
         };
         if npm_scoped && (cands.is_empty() || unresolved || ambiguous) {
@@ -1076,7 +1076,7 @@ impl Engine {
                 }
                 for (_, pi, ei) in cands.iter().take(8) {
                     let idx = &ready[*pi].0;
-                    out.push_block(&render_entry(idx, &idx.entries[*ei], 500));
+                    out.push_block(&render_entry(idx, &idx.api_entries()[*ei], 500));
                 }
             }
             return Ok(Answer {
@@ -1103,7 +1103,7 @@ impl Engine {
         }
         let (_, bpi, bei) = cands[0];
         let (idx, dep, note) = &ready[bpi];
-        let best0 = &idx.entries[bei];
+        let best0 = &idx.api_entries()[bei];
         let best = if idx.npm_api.is_some() { best0 } else { resolve_alias(idx, best0) };
         let mut out = Pack::new(tokens);
         out.push_raw(&format!(
@@ -1145,7 +1145,7 @@ impl Engine {
         out.push_block(&render_entry(idx, best, 6000));
         // Overloads and declaration merging: same path, other entries.
         let overloads: Vec<&Entry> = idx
-            .entries
+            .api_entries()
             .iter()
             .filter(|e| e.path == best.path && e.file == best.file && !std::ptr::eq(*e, best) && e.kind != Kind::Prose && e.kind != Kind::Alias)
             .take(8)
@@ -1162,7 +1162,7 @@ impl Engine {
             let sep = if idx.eco == Eco::Cargo { "::" } else { "." };
             let prefix = format!("{}{sep}", best.path);
             let members: Vec<&Entry> = idx
-                .entries
+                .api_entries()
                 .iter()
                 .filter(|e| {
                     e.path.starts_with(&prefix)
@@ -1192,13 +1192,13 @@ impl Engine {
             .iter()
             .skip(1)
             .filter(|(_, pi, ei)| {
-                let e = &ready[*pi].0.entries[*ei];
+                let e = &ready[*pi].0.api_entries()[*ei];
                 !(e.path == best.path && e.file == best.file) && !std::ptr::eq(e, best0)
             })
             .take(8)
             .map(|(_, pi, ei)| {
                 let (ix, _, _) = &ready[*pi];
-                let e = &ix.entries[*ei];
+                let e = &ix.api_entries()[*ei];
                 format!("- {} `{}` — {} {}:{}", e.kind.as_str(), e.path, ix.id(), e.file, e.line)
             })
             .collect();

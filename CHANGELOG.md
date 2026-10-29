@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.1
+
+- **Global CLI options work in either order.** `lockdocs --json resolve`,
+  `lockdocs --offline tiny-schema "reject unknown keys"`, and queries with
+  `-C` / `--root` before the command now run as CLI queries instead of waiting
+  for an MCP initialize request. Command-first queries, explicit `mcp`,
+  flags-only MCP launches, and the no-argument non-interactive server remain
+  supported. `--offline` still blocks model, package and upstream-doc downloads.
+
 ## 0.7.0
 
 - **Live Pro checkout and issuer key.** `lockdocs licence buy --pack 1` now starts the one-seat device checkout at `https://buy.sylphx.com`, and the Pro page links to the same pack. The binary verifies licences against the pinned production Ed25519 public key. This release ships the issuer and checkout changes that landed after 0.6.0. The pack is required by checkout and is now explicit in the instructions and CLI help.

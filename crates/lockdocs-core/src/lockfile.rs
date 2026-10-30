@@ -327,9 +327,9 @@ pub fn yarn_lock(text: &str, direct: &HashSet<String>) -> Vec<Dep> {
 
 pub fn cargo_lock(text: &str) -> anyhow::Result<Vec<Dep>> {
     let v: toml::Table = toml::from_str(text)?;
-    let pkgs = v.get("package").and_then(|p| p.as_array()).cloned().unwrap_or_default();
+    let pkgs = v.get("package").and_then(|p| p.as_array()).map(Vec::as_slice).unwrap_or_default();
     let mut direct = HashSet::new();
-    for p in &pkgs {
+    for p in pkgs {
         if p.get("source").is_none() {
             for d in p.get("dependencies").and_then(|d| d.as_array()).into_iter().flatten() {
                 if let Some(s) = d.as_str() {
@@ -339,7 +339,7 @@ pub fn cargo_lock(text: &str) -> anyhow::Result<Vec<Dep>> {
         }
     }
     let mut out = Vec::new();
-    for p in &pkgs {
+    for p in pkgs {
         let (Some(name), Some(ver)) = (p.get("name").and_then(|n| n.as_str()), p.get("version").and_then(|n| n.as_str())) else {
             continue;
         };
@@ -412,10 +412,10 @@ pub fn pyproject_direct(dir: &Path) -> HashSet<String> {
 
 pub fn uv_lock(text: &str) -> anyhow::Result<Vec<Dep>> {
     let v: toml::Table = toml::from_str(text)?;
-    let pkgs = v.get("package").and_then(|p| p.as_array()).cloned().unwrap_or_default();
+    let pkgs = v.get("package").and_then(|p| p.as_array()).map(Vec::as_slice).unwrap_or_default();
     let mut direct = HashSet::new();
     let mut local = HashSet::new();
-    for p in &pkgs {
+    for p in pkgs {
         let src = p.get("source");
         let is_local = src.is_some_and(|s| s.get("editable").is_some() || s.get("virtual").is_some() || s.get("directory").is_some());
         if is_local {
@@ -438,7 +438,7 @@ pub fn uv_lock(text: &str) -> anyhow::Result<Vec<Dep>> {
         }
     }
     let mut out = Vec::new();
-    for p in &pkgs {
+    for p in pkgs {
         let (Some(name), Some(ver)) = (p.get("name").and_then(|n| n.as_str()), p.get("version").and_then(|n| n.as_str())) else {
             continue;
         };
@@ -583,6 +583,93 @@ fn parse_replace(line: &str, out: &mut BTreeMap<String, String>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn toml_package_arrays_preserve_origins_and_direct_dependencies() {
+        let cargo = r#"version = 4
+[[package]]
+name = "workspace"
+version = "0.1.0"
+dependencies = ["registry-lib 1.2.3", "git-lib"]
+[[package]]
+name = "registry-lib"
+version = "1.2.3"
+source = "sparse+https://index.crates.io/"
+[[package]]
+name = "git-lib"
+version = "2.0.0"
+source = "git+https://github.com/example/lib#01234567"
+[[package]]
+name = "transitive"
+version = "3.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+[[package]]
+name = "local"
+version = "0.1.0"
+source = "path+file:///local"
+"#;
+        assert_eq!(
+            cargo_lock(cargo).unwrap(),
+            vec![
+                dep(Eco::Cargo, "registry-lib", "1.2.3", true, "Cargo.lock"),
+                dep(Eco::Cargo, "git-lib", "2.0.0", true, "Cargo.lock (git)"),
+                dep(Eco::Cargo, "transitive", "3.0.0", false, "Cargo.lock"),
+            ]
+        );
+        let uv = r#"version = 1
+[[package]]
+name = "workspace"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [{ name = "Registry_Lib" }]
+[package.optional-dependencies]
+extra = [{ name = "git-lib" }]
+[[package]]
+name = "editable"
+version = "0.1.0"
+source = { editable = "editable" }
+[package.dev-dependencies]
+test = [{ name = "dev-lib" }]
+[[package]]
+name = "directory"
+version = "0.1.0"
+source = { directory = "directory" }
+[[package]]
+name = "registry-lib"
+version = "1.2.3"
+source = { registry = "https://pypi.org/simple" }
+wheels = [{ url = "https://example.org/lib.whl", hash = "sha256:abc", size = 123 }]
+[[package]]
+name = "git-lib"
+version = "2.0.0"
+source = { git = "https://github.com/example/lib#01234567" }
+[[package]]
+name = "dev-lib"
+version = "3.0.0"
+[[package]]
+name = "transitive"
+version = "4.0.0"
+"#;
+        assert_eq!(
+            uv_lock(uv).unwrap(),
+            vec![
+                dep(Eco::PyPI, "registry-lib", "1.2.3", true, "uv.lock"),
+                dep(Eco::PyPI, "git-lib", "2.0.0", true, "uv.lock (git)"),
+                dep(Eco::PyPI, "dev-lib", "3.0.0", true, "uv.lock"),
+                dep(Eco::PyPI, "transitive", "4.0.0", false, "uv.lock"),
+            ]
+        );
+    }
+
+    #[test]
+    fn toml_package_arrays_handle_empty_missing_and_invalid_input() {
+        for parse in [cargo_lock, uv_lock] {
+            for text in ["", "version = 1", "package = []", "package = 1"] {
+                assert!(parse(text).unwrap().is_empty(), "{text}");
+            }
+            assert!(parse("[[package]\nname =").is_err());
+        }
+    }
 
     #[test]
     fn python_and_npm_git_origins_are_not_registry_releases() {

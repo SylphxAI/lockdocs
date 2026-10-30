@@ -72,6 +72,8 @@ jobs:
       scoop: true
       # A real project: zod pinned in a lockfile.
       smoke: |
+        export LOCKDOCS_OFFLINE=1 LOCKDOCS_EMBED=0
+        export LOCKDOCS_CACHE="$(mktemp -d)"
         npm init -y >/dev/null
         npm install --silent zod@3.23.8
         npx -y "@sylphx/lockdocs@$V" version
@@ -80,3 +82,17 @@ jobs:
         npx -y "@sylphx/lockdocs@$V" zod "reject unknown keys" | tee docs.out
         grep -q 'zod@3.23.8 README.md' docs.out
         npx -y "@sylphx/lockdocs@$V" api z.object | grep -q 'ZodObject'
+        for ZOD in 3.25.76 4.1.5 4.6.7; do
+          npm install --silent --ignore-scripts --no-audit --no-fund "zod@$ZOD"
+          npx -y "@sylphx/lockdocs@$V" docs 'reject unknown keys' --pkg zod --json > docs.json
+          python3 - "$ZOD" <<'PY'
+        import json, sys
+        version = sys.argv[1]
+        answer = json.load(open('docs.json'))
+        hits = [h for h in answer['hits'] if h['kind'] != 'doc']
+        assert answer['packages'] == ['zod@' + version], answer
+        assert hits and all(h['file'].startswith('v' + version[0] + '/') for h in hits), answer
+        assert any('strict' in h['path'].lower() for h in hits[:5]), answer
+        PY
+          npx -y "@sylphx/lockdocs@$V" api z.strictObject --pkg zod | grep -q 'strictObject'
+        done

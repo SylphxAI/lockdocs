@@ -3,6 +3,7 @@
 ## 0.7.3
 
 - **Search follows the selected npm import.** Default offline docs searches use the root declaration graph, so packages bundling multiple API editions no longer mix those editions in one answer. Search another public entrypoint with `--pkg package/subpath`. Declaration aliases and deprecation suggestions stay inside that import graph; mirrored declaration files are deduplicated after selection. Index format 14 rebuilds existing caches.
+- **UMD exports resolve correctly.** A declaration’s `export as namespace` global name no longer makes its explicit module exports appear unresolved.
 - **Strict validation is discoverable.** Questions about rejecting unknown keys or forbidding extra fields now rank strict validation APIs alongside their declarations. Offline CLI and MCP regressions cover Zod 3.25.76, 4.1.5 and 4.6.7, including exact signatures and explicit alternate imports.
 
 ## 0.7.2

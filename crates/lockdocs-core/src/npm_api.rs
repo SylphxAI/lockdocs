@@ -129,6 +129,10 @@ fn module(src: &str, file: &str, files: &BTreeSet<String>) -> Module {
         if n.kind() != "import_statement" && n.kind() != "export_statement" {
             continue;
         }
+        // A UMD global name does not alter the module's explicit exports.
+        if text(n, bytes).trim_start().starts_with("export as namespace ") {
+            continue;
+        }
         let target = n.child_by_field_name("source").map(|s| resolve_file(file, &string(s, bytes), files));
         if n.kind() == "import_statement" {
             if let Some(clause) = children(n).into_iter().find(|c| c.kind() == "import_clause") {

@@ -123,6 +123,17 @@ fn conditional_disagreement_and_missing_graph_are_not_exact_matches() {
     let a = e.api("build", Some("@sample/forms/cycle"), 1200).unwrap();
     assert_eq!(a.json["status"], "exact", "{}", a.text);
 }
+
+#[test]
+fn umd_global_namespace_does_not_make_explicit_module_exports_unresolved() {
+    let dir = fixture();
+    let pkg = dir.path().join("node_modules/@sample/forms");
+    let index = std::fs::read_to_string(pkg.join("index.d.cts")).unwrap();
+    write(&pkg, "index.d.cts", &format!("{index}\nexport as namespace Forms;\n"));
+    let a = engine(dir.path()).api("f.build", Some("@sample/forms"), 1200).unwrap();
+    assert_eq!(a.json["status"], "exact", "{}", a.text);
+    assert!(a.text.contains("build(message?: string)"), "{}", a.text);
+}
 #[test]
 fn same_version_declaration_and_export_edits_invalidate_disk_and_live_caches() {
     let dir = fixture();

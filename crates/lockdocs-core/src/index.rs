@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 /// Bump when extraction or the on-disk format changes.
-pub const FORMAT: u32 = 13;
+pub const FORMAT: u32 = 14;
 
 #[derive(Serialize, Deserialize)]
 pub struct PackageIndex {
@@ -45,6 +45,20 @@ pub struct PackageIndex {
 impl PackageIndex {
     pub fn api_entries(&self) -> &[Entry] {
         self.npm_api.as_ref().map_or(self.entries.as_slice(), |api| api.entries.as_slice())
+    }
+
+    pub fn docs_indices(&self, import: Option<&str>) -> Vec<usize> {
+        let files = self.npm_api.as_ref().map(|api| api.search_files(import.unwrap_or(&self.name)));
+        let mut seen = std::collections::HashSet::new();
+        self.entries
+            .iter()
+            .enumerate()
+            .filter(|(_, e)| e.kind == Kind::Prose || files.as_ref().is_none_or(|files| files.contains(&e.file)))
+            // Deduplicate only after import selection: an identical declaration
+            // in another edition must not erase the requested file identity.
+            .filter(|(_, e)| seen.insert((e.path.as_str(), e.sig.as_str(), e.doc.as_str())))
+            .map(|(i, _)| i)
+            .collect()
     }
 
     pub fn id(&self) -> String {
@@ -215,7 +229,7 @@ pub fn build(dep: &Dep, src: &Source, root: &Path, up: Option<&(PathBuf, Manifes
     let t = Instant::now();
     let types = types_pkg(dep, root);
     let up_dir = up.filter(|(_, m)| m.files > 0).map(|(d, _)| d.as_path());
-    let entries = extract::extract(dep.eco, &dep.name, src, types.as_deref(), up_dir);
+    let mut entries = extract::extract(dep.eco, &dep.name, src, types.as_deref(), up_dir);
     let npm_api = (dep.eco == Eco::Npm).then(|| {
         let sources = extract::npm_sources(src, types.as_deref());
         // Separate @types packages keep their real citation paths, but their
@@ -242,6 +256,12 @@ pub fn build(dep: &Dep, src: &Source, root: &Path, up: Option<&(PathBuf, Manifes
         }
         crate::npm_api::PublicApi::build(&dep.name, &src.dir, &sources)
     });
+    if let Some(api) = &npm_api {
+        entries.retain(|e| e.kind == Kind::Prose);
+        // Keep exact declaration identities, including .d.cts/.d.mts. The
+        // requested import selects and deduplicates its own search corpus.
+        entries.extend(api.entries.iter().cloned());
+    }
     let (terms, lens): (Vec<_>, Vec<_>) = entries.iter().map(entry_tf).unzip();
     let (head, head_lens): (Vec<_>, Vec<_>) = entries.iter().map(head_tf).unzip();
     let model = embed::get();

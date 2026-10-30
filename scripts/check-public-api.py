@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check actual installed declarations/runtime exports through CLI and MCP.
 
-Usage: check-public-api.py BINARY [ZOD3_PROJECT ZOD4_PROJECT]
+Usage: check-public-api.py BINARY [ZOD3_PROJECT ZOD4_PROJECT [ZOD4_LATEST_PROJECT]]
 Without project arguments, npm installs isolated regression projects first.
 All Lockdocs calls then run offline, without a model, account, or licence.
 This is separate from the benchmark corpus and its graders.
@@ -27,11 +27,14 @@ def main():
             "GH_TOKEN", "GITHUB_TOKEN", "LOCKDOCS_LICENCE_TOKEN", "LOCKDOCS_TEST_LICENCE_TOKEN"
         }}
         env.update(LOCKDOCS_OFFLINE="1", LOCKDOCS_EMBED="0", LOCKDOCS_CACHE=f"{tmp}/cache")
-        if len(sys.argv) == 4:
+        versions = ["3.25.76", "4.1.5", "4.6.7"]
+        if len(sys.argv) in {4, 5}:
             roots = [Path(p).resolve() for p in sys.argv[2:]]
+            if len(roots) == 2:
+                versions = ["3.25.76", "4.6.7"]
         else:
             roots = []
-            for version in ["3.25.76", "4.6.7"]:
+            for version in versions:
                 root = Path(tmp) / version
                 root.mkdir()
                 (root / "package.json").write_text('{"private":true}')
@@ -56,6 +59,9 @@ def main():
             if symbol == "ZodObject.strict":
                 assert "strict(message?: errorUtil.ErrMessage)" in answer["signature"], answer
                 assert "strict(message?: errorUtil.ErrMessage)" in line, line
+            elif symbol == "z.strictObject":
+                assert "strictObject" in answer["signature"] and "strictObject" in line, answer
+                assert ('"strict"' if version.startswith("3.") else "core.$strict") in answer["signature"], answer
             else:
                 assert answer["kind"] == "function" and "function email(" in answer["signature"] and "): ZodEmail" in answer["signature"], answer
                 assert "function email(" in line, line
@@ -63,12 +69,33 @@ def main():
                 assert (root / "node_modules/zod" / a["entrypoint"]).is_file(), a
 
         cases = [(roots[0], "3.25.76", "ZodObject.strict", "zod"),
+                 (roots[0], "3.25.76", "z.strictObject", "zod"),
                  (roots[0], "3.25.76", "z.email", "zod"),
                  (roots[0], "3.25.76", "z.email", "zod/v4"),
-                 (roots[1], "4.6.7", "z.email", "zod")]
+                 *[(root, version, symbol, "zod") for root, version in zip(roots[1:], versions[1:])
+                   for symbol in ["z.email", "z.strictObject"]]]
         for root, version, symbol, package in cases:
             verify(cli(root, symbol, package), root, version, symbol, package)
-        for root, version in zip(roots, ["3.25.76", "4.6.7"]):
+        def docs(root, package="zod", query="reject unknown keys"):
+            return json.loads(run([binary, "docs", query, "--pkg", package, "-C", str(root), "--offline", "--json", "--tokens", "4000"], env=env))
+
+        def verify_docs(answer, version, major):
+            assert answer["packages"] == [f"zod@{version}"], answer
+            hits = [h for h in answer["hits"] if h["kind"] != "doc"]
+            assert hits and all(h["file"].startswith(f"v{major}/") for h in hits), answer
+            return hits
+
+        for root, version in zip(roots, versions):
+            major = version[0]
+            hits = verify_docs(docs(root), version, major)
+            assert any("strict" in h["path"].lower() for h in hits[:5]), hits[:5]
+            if major == "4":
+                assert any(h["path"] == "strictObject" for h in hits), hits
+            print(f"docs: zod@{version}: " + ", ".join(h["path"] for h in hits[:5]))
+            other = "4" if major == "3" else "3"
+            verify_docs(docs(root, f"zod/v{other}"), version, other)
+            # Warm disk cache and exact selectors must choose the same edition.
+            verify_docs(docs(root, f"npm:zod@{version}"), version, major)
             runtime = json.loads(run(["node", "-e", """
 const z = require('zod'), v4 = require('zod/v4');
 const result = {email: typeof z.email, alternate: typeof v4.email};
@@ -118,6 +145,10 @@ console.log(JSON.stringify(result));
                 assert not result.get("isError"), result
                 answer = json.loads(result["content"][0]["text"])
                 verify(answer, root, version, symbol, package)
+            for root, version in zip(roots, versions):
+                result = send("tools/call", {"name": "docs", "arguments": {"query": "reject unknown keys", "package": "zod", "root": str(root), "offline": True, "format": "json", "tokens": 4000}})
+                assert not result.get("isError"), result
+                verify_docs(json.loads(result["content"][0]["text"]), version, version[0])
             for name, args in [("resolve", {}), ("docs", {"query": "schema", "package": "zod"})]:
                 result = send("tools/call", {"name": name, "arguments": dict(args, root=str(roots[0]), offline=True)})
                 assert not result.get("isError") and result["content"], result

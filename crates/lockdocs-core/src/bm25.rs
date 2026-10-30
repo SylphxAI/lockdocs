@@ -131,6 +131,17 @@ pub fn expand(terms: &[String]) -> Vec<(String, f32)> {
             }
         }
     }
+    // Rejecting extra input is strict validation. In this explicit context
+    // "strict" carries the question's intent, rather than the weak association
+    // of "unknown" alone (which also describes unknown types and errors).
+    let has = |words: &[&str]| terms.iter().any(|t| words.contains(&t.as_str()));
+    if has(&["reject", "forbid", "disallow"]) && has(&["unknown", "extra", "unrecogniz"]) && has(&["key", "field", "property", "properti"]) {
+        if let Some((_, weight)) = out.iter_mut().find(|(t, _)| t == "strict") {
+            *weight = 1.0;
+        } else {
+            out.push(("strict".into(), 1.0));
+        }
+    }
     out
 }
 
@@ -249,6 +260,17 @@ impl Bm25 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn rejecting_extra_input_finds_strict_validation_without_rewriting_unknown_types() {
+        let entries = [tf(&[("strictObject", 8)]), tf(&[("unknown key", 1)])];
+        let index = Bm25::build(entries.iter().map(|(terms, len)| (terms.as_slice(), *len)));
+        for q in ["reject unknown keys", "forbid extra fields", "disallow unknown properties"] {
+            let hits = index.search_weighted(&expand(&query_terms(q)));
+            assert!(hits.iter().any(|h| h.doc == 0), "{q}");
+        }
+        let hits = index.search_weighted(&expand(&query_terms("unknown key type")));
+        assert_eq!(hits[0].doc, 1);
+    }
     #[test]
     fn stems_and_ranks() {
         assert_eq!(stem("schemas"), "schema");

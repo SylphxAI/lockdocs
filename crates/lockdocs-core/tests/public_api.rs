@@ -272,6 +272,37 @@ fn docs_and_overview_search_only_the_requested_import_graph() {
 }
 
 #[test]
+fn legacy_packages_keep_unrestricted_subpath_docs_and_explicit_imports() {
+    let dir = fixture();
+    let pkg = dir.path().join("node_modules/@sample/forms");
+    write(&pkg, "package.json", r#"{"name":"@sample/forms","version":"1.2.3","types":"index.d.cts"}"#);
+    write(&pkg, "headers.d.ts", "export * from './request/headers.js';\n");
+    write(
+        &pkg,
+        "request/headers.d.ts",
+        "/** Read incoming request headers. */\nexport declare function headers(): ReadonlyHeaders;\n",
+    );
+    let e = engine(dir.path());
+    let a = e.docs(Some("@sample/forms"), "incoming request headers", 4000).unwrap();
+    assert!(a.text.contains("headers(): ReadonlyHeaders"), "{}", a.text);
+    for import in ["@sample/forms/headers", "@sample/forms/request/headers"] {
+        let a = e.docs(Some(import), "incoming request headers", 4000).unwrap();
+        assert!(a.text.contains("headers(): ReadonlyHeaders"), "{}", a.text);
+        assert!(
+            a.json["hits"].as_array().unwrap().iter().all(|h| h["file"] == "request/headers.d.ts"),
+            "{}",
+            a.text
+        );
+        let a = e.api("headers", Some(import), 1200).unwrap();
+        assert_eq!(a.json["status"], "exact", "{}", a.text);
+        assert_eq!(a.json["import"], import);
+    }
+    let a = e.api("headers", Some("@sample/forms"), 1200).unwrap();
+    assert_eq!(a.json["status"], "not_exported", "{}", a.text);
+    assert!(e.docs(Some("@sample/forms/absent"), "headers", 1200).is_err());
+}
+
+#[test]
 fn docs_aliases_and_deprecation_redirects_cannot_escape_the_import_graph() {
     let dir = fixture();
     let pkg = dir.path().join("node_modules/@sample/forms");

@@ -16,6 +16,7 @@ python3 scripts/check-public-api.py target/debug/lockdocs
 The Python check installs isolated packages, then compares offline CLI and MCP
 answers to the actual declaration files and Node runtime exports. It also checks
 root and alternate-import docs searches for Zod 3.25.76, 4.1.5 and 4.6.7. It does not
-change benchmark questions, fixture pins, scores, or public results. To reuse
-already-installed projects without network setup, pass their directories after
-the binary path.
+change benchmark questions, fixture pins, scores, or public results. Next 14.2.35
+also checks legacy package-wide docs and the explicit `next/headers` import.
+To reuse already-installed projects without network setup, pass the Zod
+directories after the binary path and set `LOCKDOCS_NEXT_PROJECT` to a Next project.

@@ -96,3 +96,12 @@ jobs:
         PY
           npx -y "@sylphx/lockdocs@$V" api z.strictObject --pkg zod | grep -q 'strictObject'
         done
+        npm install --silent --ignore-scripts --no-audit --no-fund next@14.2.35 react@18.3.1 react-dom@18.3.1
+        npx -y "@sylphx/lockdocs@$V" api cookies --pkg next/headers | grep -q 'cookies(): ReadonlyRequestCookies'
+        npx -y "@sylphx/lockdocs@$V" docs cookies --pkg next --tokens 4000 --json > legacy-docs.json
+        python3 - <<'PY'
+        import json
+        answer = json.load(open('legacy-docs.json'))
+        assert answer['packages'] == ['next@14.2.35'], answer
+        assert any(h['path'] == 'cookies' and h['file'] == 'dist/client/components/headers.d.ts' for h in answer['hits']), answer
+        PY

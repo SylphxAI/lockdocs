@@ -297,7 +297,14 @@ impl Engine {
     fn index(&self, dep: &Dep) -> Resolved {
         match self.source(dep) {
             Ok((src, mut note)) => {
-                let key = format!("{}:{}@{}:{}", dep.eco, dep.name, src.version, src.dir.display());
+                let key = format!(
+                    "{}:{}@{}:{}:{}",
+                    dep.eco,
+                    dep.name,
+                    src.version,
+                    src.dir.display(),
+                    index::source_stamp(dep, &src, &self.project.root)
+                );
                 if let Some(i) = self.indexes.lock().unwrap().get(&key) {
                     // Rebuild once the embedding model has arrived.
                     if !i.embed.is_empty() || !embed::available() {
@@ -918,9 +925,27 @@ impl Engine {
         if symbol.is_empty() {
             return Err("symbol is required, e.g. `z.object`, `tokio::spawn`, `BaseModel.model_dump`".into());
         }
+        let mut requested_import = None;
         let (deps, rest) = match package.filter(|p| !p.trim().is_empty()) {
-            Some(p) => (self.select(Some(p), "")?.0, symbol.to_string()),
-            None => match self.package_prefix(symbol) {
+            Some(p) => {
+                let spec = Spec::parse(p);
+                let base = npm_import_base(&spec.name);
+                if spec.eco.is_none_or(|e| e == Eco::Npm) && base != spec.name && self.project.find(&spec).is_empty() {
+                    let selector = format!("npm:{base}{}", spec.version.as_ref().map(|v| format!("@{v}")).unwrap_or_default());
+                    requested_import = Some(spec.name);
+                    (self.select(Some(&selector), "")?.0, symbol.to_string())
+                } else {
+                    (self.select(Some(p), "")?.0, symbol.to_string())
+                }
+            }
+            None => match self
+                .npm_import_prefix(symbol)
+                .map(|(dep, import, rest)| {
+                    requested_import = Some(import);
+                    (dep, rest)
+                })
+                .or_else(|| self.package_prefix(symbol))
+            {
                 Some((dep, rest)) => (vec![dep], rest),
                 None => (self.select(None, symbol)?.0, symbol.to_string()),
             },
@@ -940,9 +965,44 @@ impl Engine {
             return Err(missing.into_iter().map(|(_, e)| e).collect::<Vec<_>>().join("\n"));
         }
         let mut cands: Vec<(f32, usize, usize)> = Vec::new();
+        let mut applicability = Vec::new();
+        let mut alternatives = Vec::new();
+        let mut unresolved = false;
+        let mut npm_scoped = false;
         let last_l = last.to_ascii_lowercase();
+        let public_path = segs.join(".");
         for (pi, (idx, _, _)) in ready.iter().enumerate() {
-            for (ei, e) in idx.entries.iter().enumerate() {
+            if let Some(api) = &idx.npm_api {
+                npm_scoped = true;
+                let import = requested_import.as_deref().unwrap_or(&idx.name);
+                let mut has_root = false;
+                for root in &api.roots {
+                    let found = api.resolve(root, &public_path, idx.api_entries());
+                    if root.import == import {
+                        has_root = true;
+                        unresolved |= found.unresolved;
+                        for ei in found.entries {
+                            let e = &idx.api_entries()[ei];
+                            cands.push((10.0, pi, ei));
+                            applicability.push(
+                                json!({"import": root.import, "conditions": root.conditions.trim_start_matches('/'), "entrypoint": root.file,
+                                "file": e.file, "line": e.line, "path": e.path}),
+                            );
+                        }
+                    } else if !found.unresolved {
+                        for ei in found.entries {
+                            let e = &idx.api_entries()[ei];
+                            alternatives.push(
+                                json!({"package": idx.id(), "import": root.import, "conditions": root.conditions.trim_start_matches('/'),
+                                "entrypoint": root.file, "path": e.path, "file": e.file, "line": e.line, "signature": e.sig}),
+                            );
+                        }
+                    }
+                }
+                unresolved |= !has_root;
+                continue;
+            }
+            for (ei, e) in idx.api_entries().iter().enumerate() {
                 if e.kind == Kind::Prose {
                     continue;
                 }
@@ -953,6 +1013,77 @@ impl Engine {
                 }
                 cands.push((api_score(e, exact, &quals), pi, ei));
             }
+        }
+        cands.sort_by_key(|(_, pi, ei)| (*pi, *ei));
+        cands.dedup_by_key(|(_, pi, ei)| (*pi, *ei));
+        // Multiple overloads at one declaration are valid. Conflicting files,
+        // packages or conditional editions are not a license to guess.
+        let locations: HashSet<_> = cands
+            .iter()
+            .map(|(_, pi, ei)| (*pi, &ready[*pi].0.api_entries()[*ei].file, &ready[*pi].0.api_entries()[*ei].path))
+            .collect();
+        let ambiguous = npm_scoped && locations.len() > 1 && {
+            let signatures: HashSet<_> = cands.iter().map(|(_, pi, ei)| &ready[*pi].0.api_entries()[*ei].sig).collect();
+            signatures.len() > 1
+        };
+        if npm_scoped && (cands.is_empty() || unresolved || ambiguous) {
+            let status = if ambiguous {
+                "ambiguous"
+            } else if unresolved {
+                "unresolved"
+            } else {
+                "not_exported"
+            };
+            let imports: Vec<_> = ready
+                .iter()
+                .filter(|r| r.0.eco == Eco::Npm)
+                .map(|r| requested_import.as_deref().unwrap_or(&r.0.name))
+                .collect();
+            let mut out = Pack::new(tokens);
+            out.push_raw(&format!(
+                "No verified exact public API match for `{public_path}` from `{}` ({}).\n",
+                imports.join("`, `"),
+                status
+            ));
+            out.push_block(if ambiguous {
+                "Public declarations disagree across entrypoints or export conditions; no signature was selected.\n"
+            } else if unresolved {
+                "Import applicability could not be fully resolved from the installed declarations; no unrelated same-named symbol was substituted.\n"
+            } else {
+                "This symbol is not exported by the requested import entrypoint. Same-named internal declarations are not a match.\n"
+            });
+            for a in alternatives.iter().take(8) {
+                out.push_block(&format!(
+                    "Alternate import `{}` ({}): `{}` — {} {}:{}\n",
+                    a["import"].as_str().unwrap_or(""),
+                    a["conditions"].as_str().unwrap_or(""),
+                    a["signature"].as_str().unwrap_or(""),
+                    a["package"].as_str().unwrap_or(""),
+                    a["file"].as_str().unwrap_or(""),
+                    a["line"]
+                ));
+            }
+            if ambiguous {
+                for a in applicability.iter().take(8) {
+                    out.push_block(&format!(
+                        "Applicable import `{}` ({}) via {} → {}:{}\n",
+                        a["import"].as_str().unwrap_or(""),
+                        a["conditions"].as_str().unwrap_or(""),
+                        a["entrypoint"].as_str().unwrap_or(""),
+                        a["file"].as_str().unwrap_or(""),
+                        a["line"]
+                    ));
+                }
+                for (_, pi, ei) in cands.iter().take(8) {
+                    let idx = &ready[*pi].0;
+                    out.push_block(&render_entry(idx, &idx.api_entries()[*ei], 500));
+                }
+            }
+            return Ok(Answer {
+                json: json!({"status": status, "symbol": public_path, "imports": imports, "provenance": provenance(&ready),
+                "applicability": applicability, "alternatives": alternatives, "tokens": est_tokens(&out.text)}),
+                text: out.text,
+            });
         }
         cands.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
         if cands.is_empty() {
@@ -972,8 +1103,8 @@ impl Engine {
         }
         let (_, bpi, bei) = cands[0];
         let (idx, dep, note) = &ready[bpi];
-        let best0 = &idx.entries[bei];
-        let best = resolve_alias(idx, best0);
+        let best0 = &idx.api_entries()[bei];
+        let best = if idx.npm_api.is_some() { best0 } else { resolve_alias(idx, best0) };
         let mut out = Pack::new(tokens);
         out.push_raw(&format!(
             "{} · {} · {}{}\n",
@@ -998,10 +1129,23 @@ impl Engine {
                 best0.path, best.path, best0.file, best0.line
             ));
         }
+        if idx.npm_api.is_some() {
+            out.push_raw(&format!(
+                "Public import: `{}` · symbol `{public_path}`\n",
+                requested_import.as_deref().unwrap_or(&idx.name)
+            ));
+            for a in &applicability {
+                out.push_block(&format!(
+                    "Declaration entrypoint: {} ({})\n",
+                    a["entrypoint"].as_str().unwrap_or(""),
+                    a["conditions"].as_str().unwrap_or("")
+                ));
+            }
+        }
         out.push_block(&render_entry(idx, best, 6000));
         // Overloads and declaration merging: same path, other entries.
         let overloads: Vec<&Entry> = idx
-            .entries
+            .api_entries()
             .iter()
             .filter(|e| e.path == best.path && e.file == best.file && !std::ptr::eq(*e, best) && e.kind != Kind::Prose && e.kind != Kind::Alias)
             .take(8)
@@ -1018,9 +1162,14 @@ impl Engine {
             let sep = if idx.eco == Eco::Cargo { "::" } else { "." };
             let prefix = format!("{}{sep}", best.path);
             let members: Vec<&Entry> = idx
-                .entries
+                .api_entries()
                 .iter()
-                .filter(|e| e.path.starts_with(&prefix) && !e.path[prefix.len()..].contains(sep) && e.kind != Kind::Prose)
+                .filter(|e| {
+                    e.path.starts_with(&prefix)
+                        && !e.path[prefix.len()..].contains(sep)
+                        && e.kind != Kind::Prose
+                        && (idx.npm_api.is_none() || e.file == best.file)
+                })
                 .collect();
             if !members.is_empty() {
                 let mut s = format!("Members of {} ({}):\n", best.path, members.len());
@@ -1043,13 +1192,13 @@ impl Engine {
             .iter()
             .skip(1)
             .filter(|(_, pi, ei)| {
-                let e = &ready[*pi].0.entries[*ei];
+                let e = &ready[*pi].0.api_entries()[*ei];
                 !(e.path == best.path && e.file == best.file) && !std::ptr::eq(e, best0)
             })
             .take(8)
             .map(|(_, pi, ei)| {
                 let (ix, _, _) = &ready[*pi];
-                let e = &ix.entries[*ei];
+                let e = &ix.api_entries()[*ei];
                 format!("- {} `{}` — {} {}:{}", e.kind.as_str(), e.path, ix.id(), e.file, e.line)
             })
             .collect();
@@ -1060,9 +1209,26 @@ impl Engine {
             json: json!({
                 "provenance": provenance(&ready), "package": idx.id(), "kind": best.kind.as_str(), "path": best.path, "signature": best.sig, "doc": best.doc,
                 "file": best.file, "line": best.line, "members": members_json, "tokens": est_tokens(&out.text),
+                "status": "exact", "import": if idx.npm_api.is_some() { Some(requested_import.as_deref().unwrap_or(&idx.name)) } else { None },
+                "applicability": applicability, "alternatives": alternatives,
             }),
             text: out.text,
         })
+    }
+
+    fn npm_import_prefix(&self, symbol: &str) -> Option<(Dep, String, String)> {
+        for d in &self.project.deps {
+            if d.eco != Eco::Npm {
+                continue;
+            }
+            let Some(rest) = symbol.strip_prefix(&format!("{}/", d.name)) else {
+                continue;
+            };
+            if let Some((subpath, sym)) = rest.split_once('.') {
+                return Some((d.clone(), format!("{}/{subpath}", d.name), sym.to_string()));
+            }
+        }
+        None
     }
 
     /// `zod.z.object` -> (zod, `z.object`); `tokio::spawn` -> (tokio, `spawn`);
@@ -1094,6 +1260,15 @@ impl Engine {
         let rest = symbol[c..].trim_start_matches(['.', '#', ':']).to_string();
         Some((dep, rest))
     }
+}
+
+fn npm_import_base(name: &str) -> &str {
+    let skip = if name.starts_with('@') {
+        name.find('/').map_or(name.len(), |i| i + 1)
+    } else {
+        0
+    };
+    name[skip..].find('/').map_or(name, |i| &name[..skip + i])
 }
 
 fn split_symbol(s: &str) -> Vec<String> {

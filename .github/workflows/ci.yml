@@ -179,8 +179,11 @@ jobs:
     # superseded run held the next one (SylphxAI/agents#4222, 2026-10-02).
     runs-on: sylphx-linux-control
     timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
-      - uses: SylphxAI/.github/.github/actions/needs-pass@000d98547b68d07c4da1c62f534da85f1bd4001b # main
+      - uses: SylphxAI/.github/.github/actions/needs-pass@96195d86b550ab1205159acb1ae0d75b1fbed47f # main
         with:
           needs: ${{ toJSON(needs) }}
           # test and checks keep a job result of success even when a pull

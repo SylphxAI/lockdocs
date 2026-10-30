@@ -436,9 +436,8 @@ pub(crate) fn npm_sources(src: &Source, extra_types: Option<&Path>) -> std::coll
         .collect()
 }
 
-/// Exact API declarations retain all file identities separately from the
-/// deduplicated documentation corpus. No BM25/embedding terms are added for
-/// mirrored .d.cts/.d.mts declarations just to resolve an import correctly.
+/// Keep declaration identities until the requested import graph is selected.
+/// Mirrored declarations are deduplicated within that search scope.
 pub(crate) fn npm_entries(sources: &std::collections::BTreeMap<String, String>) -> Vec<Entry> {
     let mut entries = Vec::new();
     for (file, text) in sources {

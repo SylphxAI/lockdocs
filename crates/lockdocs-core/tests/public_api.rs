@@ -199,12 +199,12 @@ fn npm_doc_content_changes_also_invalidate_the_live_and_disk_index() {
 }
 
 #[test]
-fn mirrored_declaration_files_do_not_change_the_documentation_ranking_corpus() {
+fn mirrored_declaration_files_do_not_change_the_selected_documentation_corpus() {
     use lockdocs_core::{index, locate::Source, Dep, Eco};
     let dir = fixture();
     let pkg = dir.path().join("node_modules/@sample/forms");
-    // The exact API graph must retain this alternate identity, but the docs
-    // corpus must keep its existing preference/deduplication rules.
+    // Alternate identities stay available to API resolution, without
+    // multiplying the root import's BM25/embedding candidate population.
     let src = Source {
         dir: pkg.clone(),
         version: "1.2.3".into(),
@@ -223,8 +223,107 @@ fn mirrored_declaration_files_do_not_change_the_documentation_ranking_corpus() {
     let before = index::build(&dep, &src, dir.path(), None);
     write(&pkg, "next/types.d.cts", &std::fs::read_to_string(pkg.join("next/types.d.ts")).unwrap());
     let after = index::build(&dep, &src, dir.path(), None);
-    assert_eq!(serde_json::to_value(&before.entries).unwrap(), serde_json::to_value(&after.entries).unwrap());
-    assert_eq!(before.terms, after.terms);
-    assert_eq!(before.head, after.head);
+    let selected = |idx: &index::PackageIndex| {
+        idx.docs_indices(None)
+            .iter()
+            .map(|&i| serde_json::to_value(&idx.entries[i]).unwrap())
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(selected(&before), selected(&after));
     assert!(after.npm_api.as_ref().unwrap().entries.len() > before.npm_api.as_ref().unwrap().entries.len());
+}
+
+#[test]
+fn docs_and_overview_search_only_the_requested_import_graph() {
+    let dir = fixture();
+    let e = engine(dir.path());
+    for package in [Some("@sample/forms"), Some("npm:@sample/forms@1.2.3"), None] {
+        let a = e.docs(package, "build strict email", 4000).unwrap();
+        let hits = a.json["hits"].as_array().unwrap();
+        assert!(!hits.is_empty(), "{}", a.text);
+        assert!(hits.iter().all(|h| h["file"].as_str().unwrap().starts_with("stable/")), "{}", a.text);
+        assert!(a.text.contains("message?: string"), "{}", a.text);
+        assert!(
+            !a.text.contains("ModernForm") && !a.text.contains("WrongForm") && !a.text.contains("RegExp"),
+            "{}",
+            a.text
+        );
+    }
+    let a = e.docs(Some("@sample/forms"), "", 4000).unwrap();
+    assert!(!a.text.contains("email"), "{}", a.text);
+    for package in ["@sample/forms/next", "npm:@sample/forms/next@1.2.3"] {
+        let a = e.docs(Some(package), "build strict email", 4000).unwrap();
+        assert!(a.text.contains("ModernForm") && a.text.contains("EmailSchema"), "{}", a.text);
+        assert!(a.json["hits"].as_array().unwrap().iter().all(|h| h["file"] == "next/types.d.ts"), "{}", a.text);
+    }
+    assert!(e.docs(Some("@sample/forms/features/blocked"), "build", 4000).is_err());
+    assert!(e.docs(Some("@sample/forms/not-exported"), "build", 4000).is_err());
+}
+
+#[test]
+fn docs_aliases_and_deprecation_redirects_cannot_escape_the_import_graph() {
+    let dir = fixture();
+    let pkg = dir.path().join("node_modules/@sample/forms");
+    write(
+        &pkg,
+        "stable/types.d.cts",
+        "/** Use `email` instead to build strict forms. */\nexport declare function build(message?: string): StableForm;\n",
+    );
+    let a = engine(dir.path()).docs(Some("@sample/forms"), "create build", 4000).unwrap();
+    assert!(a.text.contains("StableForm"), "{}", a.text);
+    assert!(
+        !a.text.contains("ModernForm") && !a.text.contains("RegExp") && !a.text.contains("EmailSchema"),
+        "{}",
+        a.text
+    );
+    assert!(
+        a.json["hits"].as_array().unwrap().iter().all(|h| h["file"] == "stable/types.d.cts"),
+        "{}",
+        a.text
+    );
+}
+
+#[test]
+fn docs_keep_the_selected_identity_when_editions_ship_identical_declarations() {
+    let dir = fixture();
+    let pkg = dir.path().join("node_modules/@sample/forms");
+    let shared = "/** Shared behavior. */\nexport declare function shared(): string;\n";
+    write(&pkg, "stable/same.d.cts", shared);
+    write(&pkg, "next/same.d.ts", shared);
+    write(&pkg, "stable/index.d.cts", "export * from './same.cjs';\n");
+    write(&pkg, "next/index.d.ts", "export * from './same.js';\n");
+    let e = engine(dir.path());
+    for (package, file) in [("@sample/forms", "stable/same.d.cts"), ("@sample/forms/next", "next/same.d.ts")] {
+        let a = e.docs(Some(package), "shared behavior", 1200).unwrap();
+        assert_eq!(a.json["hits"].as_array().unwrap().len(), 1, "{}", a.text);
+        assert_eq!(a.json["hits"][0]["file"], file, "{}", a.text);
+    }
+}
+
+#[test]
+fn docs_refresh_export_selection_and_refuse_a_different_installed_version() {
+    let dir = fixture();
+    let pkg = dir.path().join("node_modules/@sample/forms");
+    let e = engine(dir.path());
+    assert!(!e.docs(Some("@sample/forms"), "build", 4000).unwrap().text.contains("ModernForm"));
+    let metadata = std::fs::read_to_string(pkg.join("package.json")).unwrap();
+    write(&pkg, "package.json", &metadata.replace("./index.d.cts", "./next/index.d.ts"));
+    for e in [&e, &engine(dir.path())] {
+        let a = e.docs(Some("@sample/forms"), "build strict", 4000).unwrap();
+        assert!(a.text.contains("ModernForm") && !a.text.contains("message?: string"), "{}", a.text);
+    }
+    write(
+        &pkg,
+        "package.json",
+        &metadata.replace("1.2.3", "2.0.0").replace("./index.d.cts", "./next/index.d.ts"),
+    );
+    let error = e.docs(Some("@sample/forms"), "build", 1200).err().unwrap();
+    assert!(error.contains("refusing to substitute"), "{error}");
+    let lock = std::fs::read_to_string(dir.path().join("package-lock.json")).unwrap();
+    write(dir.path(), "package-lock.json", &lock.replace("1.2.3", "2.0.0"));
+    let e = engine(dir.path());
+    let a = e.docs(Some("@sample/forms"), "build strict", 4000).unwrap();
+    assert_eq!(a.json["packages"][0], "@sample/forms@2.0.0");
+    assert!(a.text.contains("ModernForm") && !a.text.contains("message?: string"), "{}", a.text);
+    assert!(e.docs(Some("npm:@sample/forms@1.2.3"), "build", 1200).is_err());
 }

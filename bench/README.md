@@ -14,7 +14,8 @@ python3 scripts/check-public-api.py target/debug/lockdocs
 ```
 
 The Python check installs isolated packages, then compares offline CLI and MCP
-answers to the actual declaration files and Node runtime exports. It does not
+answers to the actual declaration files and Node runtime exports. It also checks
+root and alternate-import docs searches for Zod 3.25.76, 4.1.5 and 4.6.7. It does not
 change benchmark questions, fixture pins, scores, or public results. To reuse
 already-installed projects without network setup, pass their directories after
 the binary path.

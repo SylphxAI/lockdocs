@@ -759,27 +759,63 @@ impl Engine {
 
     pub fn docs(&self, package: Option<&str>, query: &str, tokens: usize) -> Result<Answer, String> {
         let tokens = tokens.clamp(200, 20000);
-        let (deps, broad) = self.select(package, query)?;
+        let mut imports = HashMap::new();
+        let selector = package.map(|p| {
+            p.split(',')
+                .map(|p| {
+                    let spec = Spec::parse(p.trim());
+                    let base = npm_import_base(&spec.name);
+                    let npm = spec.eco == Some(Eco::Npm) || spec.eco.is_none() && self.project.deps.iter().any(|d| d.eco == Eco::Npm && d.name == base);
+                    if npm && base != spec.name {
+                        imports.entry(base.to_string()).or_insert_with(Vec::new).push(spec.name.clone());
+                        format!("npm:{base}{}", spec.version.as_ref().map(|v| format!("@{v}")).unwrap_or_default())
+                    } else {
+                        if npm {
+                            imports.entry(base.to_string()).or_insert_with(Vec::new).push(base.to_string());
+                        }
+                        p.trim().to_string()
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join(",")
+        });
+        let (deps, broad) = self.select(selector.as_deref(), query)?;
         let (ready, missing) = self.resolve_all(&deps);
         if ready.is_empty() {
             return Err(missing.into_iter().map(|(_, e)| e).collect::<Vec<_>>().join("\n"));
         }
+        let mut scopes = Vec::new();
+        for (idx, _, _) in &ready {
+            let requested = imports.get(&idx.name).cloned().unwrap_or_else(|| vec![idx.name.clone()]);
+            if let Some(api) = &idx.npm_api {
+                for import in &requested {
+                    if import != &idx.name && !api.roots.iter().any(|r| &r.import == import) {
+                        return Err(format!("`{import}` has no public declaration entrypoint in {}.", idx.id()));
+                    }
+                }
+            }
+            let mut scope = std::collections::BTreeSet::new();
+            for import in requested {
+                scope.extend(idx.docs_indices(Some(&import)));
+            }
+            scopes.push(scope);
+        }
         let q = query.trim();
         if q.is_empty() {
-            return Ok(self.overview(&ready, tokens));
+            return Ok(self.overview(&ready, &scopes, tokens));
         }
         let qterms = bm25::query_terms(q);
         // One BM25 over the selected packages so scores compare.
         let mut refs: Vec<(usize, usize)> = Vec::new();
-        for (pi, (idx, _, _)) in ready.iter().enumerate() {
-            for ei in 0..idx.entries.len() {
+        for (pi, scope) in scopes.iter().enumerate() {
+            for &ei in scope {
                 refs.push((pi, ei));
             }
         }
         let bm = Bm25::build(refs.iter().map(|&(pi, ei)| (ready[pi].0.terms[ei].as_slice(), ready[pi].0.lens[ei])));
         let hb = Bm25::build(refs.iter().map(|&(pi, ei)| (ready[pi].0.head[ei].as_slice(), ready[pi].0.head_lens[ei])));
         let mut raw_idents = identifiers(q);
-        raw_idents.extend(api_words(&ready, q));
+        raw_idents.extend(api_words(&ready, &refs, q));
         let changes = change_intent(q);
         let scored = hybrid_rank(&ready, &refs, (&bm, &hb), &qterms, q, &raw_idents, changes);
         let mut out = Pack::new(tokens);
@@ -826,7 +862,7 @@ impl Engine {
             if !seen.insert((pi, e.file.clone(), e.line)) {
                 continue;
             }
-            let e = resolve_alias(idx, e);
+            let e = idx.npm_api.as_ref().map_or_else(|| resolve_alias(idx, e), |api| api.search_alias(e));
             // The top result also carries the lead of its page and parent
             // section, within the same budget.
             let ctx = if out.blocks == 0 { section_context(idx, e) } else { None };
@@ -872,9 +908,9 @@ impl Engine {
         })
     }
 
-    fn overview(&self, ready: &[ReadyPkg], tokens: usize) -> Answer {
+    fn overview(&self, ready: &[ReadyPkg], scopes: &[std::collections::BTreeSet<usize>], tokens: usize) -> Answer {
         let mut out = Pack::new(tokens);
-        for (idx, dep, note) in ready {
+        for ((idx, dep, note), scope) in ready.iter().zip(scopes) {
             out.push_raw(&format!("{} · {} · {} · pinned in {}\n", idx.id(), idx.eco, idx.source, dep.from));
             if let Some(u) = &idx.upstream {
                 out.push_raw(&format!("Upstream: {u}\n"));
@@ -882,17 +918,17 @@ impl Engine {
             if let Some(n) = note {
                 out.push_raw(&format!("Note: {n}\n"));
             }
-            let symbols = idx
-                .entries
+            let entries: Vec<&Entry> = scope.iter().map(|&i| &idx.entries[i]).collect();
+            let symbols = entries
                 .iter()
                 .filter(|e| e.kind != Kind::Prose && e.kind != Kind::Alias && !private_path(e))
                 .count();
-            let prose = idx.entries.len() - symbols;
+            let prose = entries.len() - symbols;
             out.push_raw(&format!("Indexed {symbols} API symbols and {prose} doc sections.\n"));
             // Top-level API names, shortest paths first.
-            let mut top: Vec<&Entry> = idx
-                .entries
+            let mut top: Vec<&Entry> = entries
                 .iter()
+                .copied()
                 .filter(|e| e.kind != Kind::Prose && !private_path(e) && !e.legacy && !e.doc.is_empty())
                 .collect();
             top.sort_by_key(|e| (e.path.matches(['.', ':']).count(), e.path.len()));
@@ -900,8 +936,7 @@ impl Engine {
             if !names.is_empty() {
                 out.push_raw(&format!("Key API: {}\n", names.join(", ")));
             }
-            for e in idx
-                .entries
+            for e in entries
                 .iter()
                 .filter(|e| e.kind == Kind::Prose && e.file.to_ascii_uppercase().starts_with("README"))
                 .take(3)
@@ -1309,7 +1344,7 @@ fn identifiers(q: &str) -> Vec<String> {
 /// Plain words in the question that name a documented top-level API of the
 /// searched packages ("run code *after* the response" in Next.js, which
 /// exports `after`). They count as identifiers.
-fn api_words(ready: &[ReadyPkg], q: &str) -> Vec<String> {
+fn api_words(ready: &[ReadyPkg], refs: &[(usize, usize)], q: &str) -> Vec<String> {
     let words: HashSet<String> = q
         .split(|c: char| !(c.is_ascii_alphanumeric() || c == '_'))
         .filter(|w| w.len() >= 4)
@@ -1317,17 +1352,16 @@ fn api_words(ready: &[ReadyPkg], q: &str) -> Vec<String> {
         .filter(|w| !bm25::is_stop(w))
         .collect();
     let mut out = Vec::new();
-    for (idx, _, _) in ready {
-        for e in &idx.entries {
-            let top = matches!(e.kind, Kind::Function | Kind::Macro | Kind::Class)
-                && !e.doc.is_empty()
-                && !private_path(e)
-                && !e.legacy
-                && e.path.matches(['.', ':']).count() <= 2;
-            let n = e.name.trim_end_matches('!').to_ascii_lowercase();
-            if top && words.contains(&n) && !out.contains(&n) {
-                out.push(n);
-            }
+    for &(pi, ei) in refs {
+        let e = &ready[pi].0.entries[ei];
+        let top = matches!(e.kind, Kind::Function | Kind::Macro | Kind::Class)
+            && !e.doc.is_empty()
+            && !private_path(e)
+            && !e.legacy
+            && e.path.matches(['.', ':']).count() <= 2;
+        let n = e.name.trim_end_matches('!').to_ascii_lowercase();
+        if top && words.contains(&n) && !out.contains(&n) {
+            out.push(n);
         }
     }
     out
@@ -1474,7 +1508,8 @@ fn hybrid_rank(
     if !lifted.is_empty() {
         let mut have: HashMap<(usize, usize), usize> = scored.iter().enumerate().map(|(i, (_, pi, ei))| ((*pi, *ei), i)).collect();
         for (s, pi, name) in lifted {
-            for (ei, e) in ready[pi].0.entries.iter().enumerate() {
+            for &(_, ei) in refs.iter().filter(|(p, _)| *p == pi) {
+                let e = &ready[pi].0.entries[ei];
                 if e.kind == Kind::Prose || e.kind == Kind::Alias || e.name != name || e.legacy {
                     continue;
                 }

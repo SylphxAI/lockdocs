@@ -344,6 +344,40 @@ impl PublicApi {
         out
     }
 
+    /// Search the declaration graph of this import, including referenced types
+    /// and members, without admitting other editions shipped in the tarball.
+    pub(crate) fn search_files(&self, import: &str) -> BTreeSet<String> {
+        let mut files = BTreeSet::new();
+        let mut pending: Vec<&str> = self.roots.iter().filter(|r| r.import == import).map(|r| r.file.as_str()).collect();
+        while let Some(file) = pending.pop() {
+            if !files.insert(file.to_string()) {
+                continue;
+            }
+            if let Some(m) = self.modules.get(file) {
+                pending.extend(m.stars.iter().map(String::as_str));
+                for b in m.exports.values().chain(m.imports.values()) {
+                    if let Binding::Named(target, _) | Binding::Namespace(target) = b {
+                        pending.push(target);
+                    }
+                }
+            }
+        }
+        files
+    }
+
+    pub(crate) fn search_alias<'a>(&'a self, entry: &'a Entry) -> &'a Entry {
+        if entry.alias_of.is_none() {
+            return entry;
+        }
+        let mut found = Resolution::default();
+        self.exported(&entry.file, &entry.path, &self.entries, &mut BTreeSet::new(), &mut found);
+        if !found.unresolved && found.entries.len() == 1 {
+            &self.entries[*found.entries.first().unwrap()]
+        } else {
+            entry
+        }
+    }
+
     fn exported(&self, file: &str, path: &str, entries: &[Entry], seen: &mut BTreeSet<(String, String)>, out: &mut Resolution) {
         if seen.len() > 128 {
             out.unresolved = true;

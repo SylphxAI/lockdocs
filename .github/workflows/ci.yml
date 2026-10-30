@@ -154,6 +154,8 @@ jobs:
           HOME=$(mktemp -d) $B setup --client cursor,codex | tee /tmp/setup.out
           grep -q 'Cursor' /tmp/setup.out
           LOCKDOCS_BIN=$B node packages/lockdocs/bin/lockdocs.js version
+      - name: Installed npm import and version regressions (CLI and MCP)
+        run: python3 scripts/check-public-api.py target/release/lockdocs
       - name: Embedding model download, verification and hybrid query
         env:
           LOCKDOCS_NO_SYSTEM_PYTHON: '1'

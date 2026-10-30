@@ -48,6 +48,12 @@ export default defineConfig({
     )
   },
   themeConfig: {
+    notFound: {
+      title: 'Page not found',
+      quote: 'This page may have moved. Return to lockdocs to open the quickstart or search the documentation.',
+      linkLabel: 'Return to lockdocs documentation',
+      linkText: 'Back to lockdocs',
+    },
     // The product-owned Keel checkout/recovery pages live beside the docs.
     pro: { checkoutUrl: 'https://sylphxai.github.io/lockdocs/pricing' },
     logo: { src: '/logo.svg', alt: '' },

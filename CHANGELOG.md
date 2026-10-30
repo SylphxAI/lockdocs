@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.4
+
+- **Legacy npm subpaths remain searchable.** Packages without an `exports` map keep package-wide docs search, and explicit subpaths such as `next/headers` resolve their declaration graphs in both `docs` and `api`. Packages with an `exports` map retain the version and import isolation added in 0.7.3. Index format 15 rebuilds cached package scopes.
+
 ## 0.7.3
 
 - **Search follows the selected npm import.** Default offline docs searches use the root declaration graph, so packages bundling multiple API editions no longer mix those editions in one answer. Search another public entrypoint with `--pkg package/subpath`. Declaration aliases and deprecation suggestions stay inside that import graph; mirrored declaration files are deduplicated after selection. Index format 14 rebuilds existing caches.

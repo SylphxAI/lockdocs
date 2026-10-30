@@ -12,6 +12,7 @@ pub struct PublicApi {
     pub roots: Vec<Root>,
     pub entries: Vec<Entry>,
     modules: BTreeMap<String, Module>,
+    legacy_subpaths: bool,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -302,10 +303,31 @@ impl PublicApi {
                 }
             }
         }
+        let legacy_subpaths = pkg.get("exports").is_none();
+        if legacy_subpaths {
+            // Without an exports map, package files remain importable through
+            // legacy subpaths. Keep those routes available to explicit API
+            // queries as well as package-wide documentation search.
+            for file in &files {
+                let stem = [".d.ts", ".d.cts", ".d.mts", ".tsx", ".ts", ".cts", ".mts", ".js", ".cjs", ".mjs"]
+                    .iter()
+                    .find_map(|suffix| file.strip_suffix(suffix));
+                if let Some(stem) = stem {
+                    for path in [Some(stem), stem.strip_suffix("/index")].into_iter().flatten() {
+                        roots.push(Root {
+                            import: format!("{name}/{path}"),
+                            conditions: "legacy".into(),
+                            file: file.clone(),
+                        });
+                    }
+                }
+            }
+        }
         Self {
             roots,
             entries: crate::extract::npm_entries(sources),
             modules,
+            legacy_subpaths,
         }
     }
 
@@ -351,6 +373,9 @@ impl PublicApi {
     /// Search the declaration graph of this import, including referenced types
     /// and members, without admitting other editions shipped in the tarball.
     pub(crate) fn search_files(&self, import: &str) -> BTreeSet<String> {
+        if self.legacy_subpaths && self.roots.first().is_some_and(|root| root.import == import) {
+            return self.modules.keys().cloned().collect();
+        }
         let mut files = BTreeSet::new();
         let mut pending: Vec<&str> = self.roots.iter().filter(|r| r.import == import).map(|r| r.file.as_str()).collect();
         while let Some(file) = pending.pop() {

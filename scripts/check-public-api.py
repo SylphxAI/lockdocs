@@ -112,6 +112,29 @@ console.log(JSON.stringify(result));
             assert run([binary, "docs", "schema", "--pkg", "zod", "-C", str(root), "--offline"], env=env).strip()
             print(f"runtime + CLI: zod@{version} passed")
 
+        next_root = Path(env.get("LOCKDOCS_NEXT_PROJECT", f"{tmp}/next14")).resolve()
+        if "LOCKDOCS_NEXT_PROJECT" not in env:
+            next_root.mkdir()
+            (next_root / "package.json").write_text('{"private":true}')
+            subprocess.run(["npm", "install", "--ignore-scripts", "--no-audit", "--no-fund", "next@14.2.35", "react@18.3.1", "react-dom@18.3.1"], cwd=next_root, check=True, timeout=120)
+        assert run(["node", "-e", "console.log(typeof require('next/headers').cookies)"], cwd=next_root).strip() == "function"
+
+        def verify_legacy_docs(answer):
+            assert answer["packages"] == ["next@14.2.35"], answer
+            assert any(h["path"] == "cookies" and h["file"] == "dist/client/components/headers.d.ts" for h in answer["hits"]), answer
+
+        def verify_legacy_api(answer):
+            assert answer["status"] == "exact" and answer["import"] == "next/headers", answer
+            assert answer["signature"] == "export declare function cookies(): ReadonlyRequestCookies", answer
+            assert answer["file"] == "dist/client/components/headers.d.ts", answer
+            line = (next_root / "node_modules/next" / answer["file"]).read_text().splitlines()[answer["line"] - 1]
+            assert "cookies(): ReadonlyRequestCookies" in line, line
+
+        for package in ["next", "next/headers"]:
+            verify_legacy_docs(docs(next_root, package, "cookies"))
+        verify_legacy_api(cli(next_root, "cookies", "next/headers"))
+        print("legacy npm: next@14.2.35 package docs and next/headers CLI passed")
+
         proc = subprocess.Popen([binary, "mcp", "--offline"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env)
         messages = queue.Queue()
         def read():
@@ -152,6 +175,13 @@ console.log(JSON.stringify(result));
             for name, args in [("resolve", {}), ("docs", {"query": "schema", "package": "zod"})]:
                 result = send("tools/call", {"name": name, "arguments": dict(args, root=str(roots[0]), offline=True)})
                 assert not result.get("isError") and result["content"], result
+            for package in ["next", "next/headers"]:
+                result = send("tools/call", {"name": "docs", "arguments": {"query": "cookies", "package": package, "root": str(next_root), "offline": True, "format": "json", "tokens": 4000}})
+                assert not result.get("isError"), result
+                verify_legacy_docs(json.loads(result["content"][0]["text"]))
+            result = send("tools/call", {"name": "api", "arguments": {"symbol": "cookies", "package": "next/headers", "root": str(next_root), "offline": True, "format": "json"}})
+            assert not result.get("isError"), result
+            verify_legacy_api(json.loads(result["content"][0]["text"]))
             print("MCP: exactly three tools; offline resolve/docs/api and all public API cases passed")
         finally:
             proc.terminate()

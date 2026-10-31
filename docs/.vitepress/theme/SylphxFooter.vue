@@ -15,7 +15,7 @@ const show = computed(() => (props.where === 'doc') === isDocLayout.value)
 
 const site = computed(() => theme.value.sylphx as {
   product: string
-  links: { text: string; href: string }[]
+  links: { text: string; href: string; target?: string }[]
   license: string
 })
 
@@ -35,7 +35,7 @@ const href = (link: string) => (link.startsWith('/') ? withBase(link) : link)
   <component :is="where === 'page' ? 'footer' : 'aside'" v-if="show" class="sx-footer" :class="`sx-footer--${where}`" aria-label="Sylphx">
     <div class="sx-footer__inner">
       <nav class="sx-footer__row" :aria-label="`${site.product} links`">
-        <a v-for="l in site.links" :key="l.href" :href="href(l.href)">{{ l.text }}</a>
+        <a v-for="l in site.links" :key="l.href" :href="href(l.href)" :target="l.target">{{ l.text }}</a>
       </nav>
       <nav class="sx-footer__row" aria-label="More from Sylphx">
         <span class="sx-footer__label">More from Sylphx</span>

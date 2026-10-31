@@ -32,12 +32,14 @@ Commands:
                         project calls, with call sites (also: docs --pkg <pkg> --upgrade-to <ver>)
   licence status|activate <token>|buy --pack <id>
                         Show or activate a lockdocs Pro licence, or buy with the device flow
-  mcp                   Run the MCP server on stdio (default when stdin is not a terminal)
+  mcp                   Run the MCP server on stdio (default with no command and non-terminal stdin)
   version               Print the version
 
 Options:
+  Global options work before or after a command or package name.
   -C, --root <dir>      Project directory (default: current directory)
   --pkg <package>       Package for docs/api: zod, npm:zod, pydantic@2.9.2, tokio
+                        For npm api, an import subpath selects that edition: zod/v4
   --tokens <n>          Answer budget in tokens (default 1200)
   --fetch               Also download missing exact packages and major-version docs sites
                         (cached; also LOCKDOCS_FETCH=1)
@@ -86,6 +88,18 @@ impl Args {
     }
     fn flag(&self, k: &str) -> Option<&str> {
         self.flags.get(k).map(|s| s.as_str())
+    }
+    fn take_command(&mut self) -> String {
+        if self.on("help") || self.on("h") {
+            "help".into()
+        } else if self.on("version") || self.on("V") {
+            "version".into()
+        } else if self.positional.is_empty() {
+            // Flags only (`lockdocs --fetch`): the MCP server.
+            "mcp".into()
+        } else {
+            self.positional.remove(0)
+        }
     }
     fn on(&self, k: &str) -> bool {
         self.flags.get(k).is_some_and(|v| v != "false")
@@ -138,7 +152,7 @@ fn print(a: Answer, json: bool) -> Result<()> {
 }
 
 fn run() -> Result<()> {
-    let mut raw: Vec<String> = std::env::args().skip(1).collect();
+    let raw: Vec<String> = std::env::args().skip(1).collect();
     if raw.is_empty() {
         if std::io::stdin().is_terminal() {
             println!("{HELP}");
@@ -147,15 +161,14 @@ fn run() -> Result<()> {
         std::thread::spawn(|| ensure_model(false));
         return mcp::serve(None, Options::default());
     }
-    if raw[0].starts_with('-') && !matches!(raw[0].as_str(), "-h" | "--help" | "-V" | "--version") {
-        // Flags only (`lockdocs --fetch`): the MCP server.
-        raw.insert(0, "mcp".into());
+    // The licence CLI owns its argument grammar; forward it unchanged.
+    if matches!(raw[0].as_str(), "licence" | "license") {
+        std::process::exit(pro::run_licence(&raw[1..]));
     }
-    let cmd = raw.remove(0);
-    if cmd == "licence" || cmd == "license" {
-        std::process::exit(pro::run_licence(&raw));
-    }
-    let args = Args::parse(raw);
+    // Select the command after parsing options and their values. A leading
+    // global option does not mean flags-only when a CLI command follows it.
+    let mut args = Args::parse(raw);
+    let cmd = args.take_command();
     // The Pro gate runs before any download or index work. Exit code 3: Pro required.
     let upgrade_target = match cmd.as_str() {
         "upgrade" => args.positional.get(1).map(String::as_str),
@@ -370,6 +383,32 @@ fn cache(args: &Args) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn command_selection_skips_option_values_and_preserves_positionals() {
+        for (raw, command, rest) in [
+            (vec!["--json", "resolve"], "resolve", vec![]),
+            (vec!["--root", "mcp", "docs", "question"], "docs", vec!["question"]),
+            (vec!["--root=resolve", "--pkg", "api", "docs", "question"], "docs", vec!["question"]),
+            (
+                vec!["--offline", "tiny-schema", "reject unknown keys"],
+                "tiny-schema",
+                vec!["reject unknown keys"],
+            ),
+            (vec!["--offline", "mcp"], "mcp", vec![]),
+            (vec!["--root", "docs", "--offline"], "mcp", vec![]),
+            (vec!["--offline", "--help"], "help", vec![]),
+            (vec!["--json", "--version"], "version", vec![]),
+            (
+                vec!["--offline", "--", "tiny-schema", "--literal-question"],
+                "tiny-schema",
+                vec!["--literal-question"],
+            ),
+        ] {
+            let mut args = Args::parse(raw.into_iter().map(String::from).collect());
+            assert_eq!(args.take_command(), command);
+            assert_eq!(args.positional, rest);
+        }
+    }
     #[test]
     fn offline_and_opt_out_override_fetch() {
         for flag in ["--offline", "--no-fetch", "--fetch=false"] {

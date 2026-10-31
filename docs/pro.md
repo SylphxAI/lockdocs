@@ -104,3 +104,16 @@ calling `upgrade_to` gets a normal answer with the preview above and the Pro
 link, marked `pro_required` so the agent can tell you.
 
 Everything free in lockdocs stays free, under MIT.
+
+## Money signer trust and test activation
+
+The production policy accepts both the historical issuer key and the current
+live Money signer. Existing licences keep their terms; signature, plan, product
+and expiry checks still apply across CLI and MCP callers.
+
+`lockdocs licence --test status` and `lockdocs licence --test activate <token>`
+select the separate Money test signer and report `Pro (TEST)`. This policy reads
+`LOCKDOCS_TEST_LICENCE_TOKEN` and uses a `test-licence` file, leaving the ordinary
+`LOCKDOCS_LICENCE_TOKEN` and `licence` file untouched. Test mode does not buy a
+licence or unlock production Pro operations. Keep real tokens out of shell
+history and logs.

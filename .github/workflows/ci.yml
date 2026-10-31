@@ -90,7 +90,7 @@ jobs:
         if: github.event_name != 'pull_request' || steps.c.outputs.code != 'false'
       - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
         if: github.event_name != 'pull_request' || steps.c.outputs.code != 'false'
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         if: github.event_name != 'pull_request' || steps.c.outputs.code != 'false'
       - run: cargo test --workspace --locked
         if: github.event_name != 'pull_request' || steps.c.outputs.code != 'false'
@@ -102,11 +102,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: '1.4.3'
+          bun-version: '1.4.4'
       - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
         with:
           components: clippy, rustfmt
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
       - run: bun install --frozen-lockfile
       - name: Manifests agree on one version and one tagline; capability paths exist
         env:
@@ -154,6 +154,8 @@ jobs:
           HOME=$(mktemp -d) $B setup --client cursor,codex | tee /tmp/setup.out
           grep -q 'Cursor' /tmp/setup.out
           LOCKDOCS_BIN=$B node packages/lockdocs/bin/lockdocs.js version
+      - name: Installed npm import and version regressions (CLI and MCP)
+        run: python3 scripts/check-public-api.py target/release/lockdocs
       - name: Embedding model download, verification and hybrid query
         env:
           LOCKDOCS_NO_SYSTEM_PYTHON: '1'
@@ -179,8 +181,11 @@ jobs:
     # superseded run held the next one (SylphxAI/agents#4222, 2026-10-02).
     runs-on: sylphx-linux-control
     timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
-      - uses: SylphxAI/.github/.github/actions/needs-pass@000d98547b68d07c4da1c62f534da85f1bd4001b # main
+      - uses: SylphxAI/.github/.github/actions/needs-pass@96195d86b550ab1205159acb1ae0d75b1fbed47f # main
         with:
           needs: ${{ toJSON(needs) }}
           # test and checks keep a job result of success even when a pull

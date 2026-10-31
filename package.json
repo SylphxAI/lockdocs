@@ -1,12 +1,12 @@
 {
   "name": "lockdocs-workspace",
-  "version": "0.7.0",
+  "version": "0.7.4",
   "private": true,
   "type": "module",
   "description": "lockdocs monorepo: Rust engine (crates/), npm packages (packages/), docs (docs/), benchmark (bench/).",
   "homepage": "https://sylphxai.github.io/lockdocs/",
   "license": "MIT",
-  "packageManager": "bun@1.4.3",
+  "packageManager": "bun@1.4.4",
   "scripts": {
     "build": "cargo build --release -p lockdocs",
     "test": "cargo test --workspace",

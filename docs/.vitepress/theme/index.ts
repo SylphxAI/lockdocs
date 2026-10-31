@@ -1,4 +1,6 @@
-import { h } from 'vue'
+import { h, onMounted, onUnmounted } from 'vue'
+import { installFencedCodeCopy } from './fenced-code-copy'
+import './fenced-code-copy.css'
 import DefaultTheme from 'vitepress/theme'
 import type { Theme } from 'vitepress'
 import SylphxFooter from './SylphxFooter.vue'
@@ -10,6 +12,13 @@ import './sylphx.css'
 
 export default {
   extends: DefaultTheme,
+  setup() {
+    let dispose: (() => void) | undefined
+    onMounted(() => {
+      dispose = installFencedCodeCopy()
+    })
+    onUnmounted(() => dispose?.())
+  },
   Layout: () =>
     h(DefaultTheme.Layout, null, {
       'nav-bar-content-after': () => h(ProNavLink),

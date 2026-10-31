@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.7.4
+
+- **Legacy npm subpaths remain searchable.** Packages without an `exports` map keep package-wide docs search, and explicit subpaths such as `next/headers` resolve their declaration graphs in both `docs` and `api`. Packages with an `exports` map retain the version and import isolation added in 0.7.3. Index format 15 rebuilds cached package scopes.
+
+## 0.7.3
+
+- **Search follows the selected npm import.** Default offline docs searches use the root declaration graph, so packages bundling multiple API editions no longer mix those editions in one answer. Search another public entrypoint with `--pkg package/subpath`. Declaration aliases and deprecation suggestions stay inside that import graph; mirrored declaration files are deduplicated after selection. Index format 14 rebuilds existing caches.
+- **UMD exports resolve correctly.** A declaration’s `export as namespace` global name no longer makes its explicit module exports appear unresolved.
+- **Strict validation is discoverable.** Questions about rejecting unknown keys or forbidding extra fields now rank strict validation APIs alongside their declarations. Offline CLI and MCP regressions cover Zod 3.25.76, 4.1.5 and 4.6.7, including exact signatures and explicit alternate imports.
+
+## 0.7.2
+
+- **API answers follow public npm imports.** `api` traces the installed package entrypoint through declaration imports and re-exports before selecting a signature. Same-named internal symbols and alternate editions no longer override the requested public API. Select another public import explicitly with `--pkg package/subpath` (or the MCP `package` argument). Answers include the import, declaration entrypoint and export conditions; unavailable, ambiguous and unresolved exports are reported without an exact signature.
+- **Fresh local declarations.** Index format 13 retains declaration provenance and the public export graph separately from the unchanged, deduplicated docs-ranking corpus. Content changes to installed npm declarations, docs or package metadata invalidate both disk and live-process caches, even at the same package version. Offline queries stay local and free, with the same three MCP tools.
+
+## 0.7.1
+
+- **Global CLI options work in either order.** `lockdocs --json resolve`,
+  `lockdocs --offline tiny-schema "reject unknown keys"`, and queries with
+  `-C` / `--root` before the command now run as CLI queries instead of waiting
+  for an MCP initialize request. Command-first queries, explicit `mcp`,
+  flags-only MCP launches, and the no-argument non-interactive server remain
+  supported. `--offline` still blocks model, package and upstream-doc downloads.
+
 ## 0.7.0
 
 - **Live Pro checkout and issuer key.** `lockdocs licence buy --pack 1` now starts the one-seat device checkout at `https://buy.sylphx.com`, and the Pro page links to the same pack. The binary verifies licences against the pinned production Ed25519 public key. This release ships the issuer and checkout changes that landed after 0.6.0. The pack is required by checkout and is now explicit in the instructions and CLI help.

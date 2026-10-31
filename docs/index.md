@@ -17,6 +17,10 @@ hero:
       text: Benchmarks
       link: /benchmarks
     - theme: alt
+      text: Pro pricing
+      link: /pricing
+      target: _self
+    - theme: alt
       text: GitHub
       link: https://github.com/SylphxAI/lockdocs
 install: npx -y @sylphx/lockdocs setup

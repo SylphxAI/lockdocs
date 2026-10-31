@@ -11,8 +11,8 @@ export default defineConfig({
   description: desc,
   appearance: 'force-dark',
   cleanUrls: true,
-  // Keel emits this static route after VitePress has checked the docs.
-  ignoreDeadLinks: [/^\/recover$/],
+  // Keel emits these static routes after VitePress has checked the docs.
+  ignoreDeadLinks: [/^\/(pricing|recover)$/],
   // Product vision and capability table are for maintainers, not site pages.
   srcExclude: ['vision.md', 'capabilities.md', 'storefront/**'],
   lastUpdated: true,
@@ -63,6 +63,8 @@ export default defineConfig({
       { text: 'Tools', link: '/reference/tools' },
       { text: 'Benchmarks', link: '/benchmarks' },
       { text: 'Compare', link: '/compare' },
+      // Leave the docs router: pricing is a separately built Keel page.
+      { text: 'Pricing', link: '/pricing', target: '_self' },
       { text: 'npm', link: 'https://www.npmjs.com/package/@sylphx/lockdocs' },
     ],
     sidebar: [

@@ -31,7 +31,7 @@ pub struct Repo {
 
 /// Bump when what `fetch` downloads changes, so `lockdocs fetch` refreshes
 /// older copies (a stale copy is still used until then).
-pub const FORMAT: u32 = 6;
+pub const FORMAT: u32 = 7;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Manifest {
@@ -67,6 +67,7 @@ pub struct Manifest {
 /// describe one major: the latest one on `branch`, an older one on a
 /// `v{major}` / `{major}.x` branch or, when `before_next_major` is set, at the
 /// last commit before the next major was released.
+#[derive(Clone)]
 struct DocsSite {
     eco: Eco,
     names: &'static [&'static str],
@@ -211,14 +212,37 @@ struct SiteDocs {
     pages: Vec<String>,
 }
 
+/// Resolve the mapped site, including older-major archive destinations. Fetch
+/// and failure cleanup must agree on the repository directory they own.
+fn docs_site(dep: &Dep) -> Option<DocsSite> {
+    let mut site = DOCS_SITES.iter().find(|s| s.eco == dep.eco && s.names.contains(&dep.name.as_str()))?.clone();
+    // react.dev includes APIs before release. Use the official frozen legacy
+    // site for React 18 and its version archives for 16/17, never a date guess.
+    if site.repo == ("reactjs", "react.dev") {
+        let archive = match dep.version.split('.').next()? {
+            "16" => Some("16.reactjs.org"),
+            "17" => Some("17.reactjs.org"),
+            "18" => Some("main"),
+            _ => None,
+        };
+        if let Some(branch) = archive {
+            site.repo = ("reactjs", "legacy.reactjs.org");
+            site.branch = branch;
+            site.current = &["content/docs"];
+        }
+    }
+    Some(site)
+}
+
 /// Download the files of the docs site that describe `dep`'s major into
 /// `<out>/<site repo name>/`, if any.
 fn site_docs(agent: &Client, dep: &Dep, pkg_repo: Option<&Repo>, out: &Path) -> Result<Option<SiteDocs>> {
-    let Some(site) = DOCS_SITES.iter().find(|s| s.eco == dep.eco && s.names.contains(&dep.name.as_str())) else {
+    let Some(site) = docs_site(dep) else {
         return Ok(None);
     };
     let major: u64 = dep.version.split('.').next().and_then(|m| m.parse().ok()).unwrap_or(0);
-    let latest = latest_major(agent, dep)?;
+    let archive = site.repo == ("reactjs", "legacy.reactjs.org");
+    let latest = if archive { Some(major) } else { latest_major(agent, dep)? };
     let repo = Repo {
         owner: site.repo.0.into(),
         name: site.repo.1.into(),
@@ -229,7 +253,11 @@ fn site_docs(agent: &Client, dep: &Dep, pkg_repo: Option<&Repo>, out: &Path) -> 
     let is_latest = latest.is_some_and(|l| major >= l);
     // Where the current-major folders come from for this version.
     let mut reference = site.branch.to_string();
-    let mut how = String::from("current docs; your major is the latest");
+    let mut how = if archive {
+        format!("official archive for major {major}")
+    } else {
+        String::from("current docs; your major is the latest")
+    };
     let mut current = is_latest;
     if !is_latest && latest.is_some() && (!site.current.is_empty() || !site.pages.is_empty()) {
         let branches = [format!("v{major}"), format!("{major}.x")];
@@ -329,7 +357,10 @@ fn site_docs(agent: &Client, dep: &Dep, pkg_repo: Option<&Repo>, out: &Path) -> 
 /// page written as a JS/TSX component, `None` skip.
 fn site_kind(p: &str, major: u64, versioned: &[String], versioned_ok: bool, docs_dirs: &[String], page_dirs: &[String]) -> Option<bool> {
     let under = |dirs: &[String]| dirs.iter().any(|d| p.starts_with(&format!("{d}/")));
-    if doc_file(p) && !p.ends_with(".txt") && !later_major_file(p, major) && ((versioned_ok && under(versioned)) || under(docs_dirs)) {
+    if later_major_file(p, major) {
+        return None;
+    }
+    if doc_file(p) && !p.ends_with(".txt") && ((versioned_ok && under(versioned)) || under(docs_dirs)) {
         Some(false)
     } else if page_file(p) && under(page_dirs) {
         Some(true)
@@ -341,8 +372,8 @@ fn site_kind(p: &str, major: u64, versioned: &[String], versioned_ok: bool, docs
 /// A page about a later major than the pinned one (`v4-beta.mdx` on the v3
 /// branch): it would answer with APIs this version does not have.
 fn later_major_file(p: &str, major: u64) -> bool {
-    let name = p.rsplit('/').next().unwrap_or(p).to_ascii_lowercase();
-    name.split(|c: char| !c.is_ascii_alphanumeric())
+    let path = p.to_ascii_lowercase();
+    path.split(|c: char| !c.is_ascii_alphanumeric())
         .any(|w| w.strip_prefix('v').and_then(|n| n.parse::<u64>().ok()).is_some_and(|n| n > major))
 }
 
@@ -1528,7 +1559,7 @@ fn site_step(agent: &Client, dep: &Dep, repo: &Repo, automatic: bool, out: &Path
     match site_docs(agent, dep, Some(repo), out) {
         Ok(s) => Ok((s, None)),
         Err(e) if automatic => {
-            if let Some(site) = DOCS_SITES.iter().find(|s| s.eco == dep.eco && s.names.contains(&dep.name.as_str())) {
+            if let Some(site) = docs_site(dep) {
                 let _ = std::fs::remove_dir_all(out.join(site.repo.1));
             }
             Ok((None, Some(format!("docs site skipped: {e:#}"))))
@@ -1813,6 +1844,8 @@ mod tests {
         PrivateWithSite,
         /// Answers after a pause longer than a short deadline.
         Slow,
+        /// Legacy docs fallback writes one file and fails another.
+        PartialLegacy,
     }
 
     const SHA: &str = "1111111111111111111111111111111111111111";
@@ -1826,6 +1859,10 @@ mod tests {
         let tag = tag.map(String::from);
         let site_docs_present = codeload == Codeload::PrivateWithSite;
         let site_archive = tarball(&[("src/content/learn/a.md", b"# learn")]);
+        let legacy_archive = tarball(&[
+            ("content/docs/hooks-reference.md", b"# Hooks API Reference"),
+            ("content/blog/new-api.md", b"# Future API"),
+        ]);
         let archive = tarball(&[("README.md", b"# readme"), ("docs/guide.md", b"# guide"), ("src/lib.rs", b"fn x() {}")]);
         std::thread::spawn(move || {
             for stream in listener.incoming() {
@@ -1889,7 +1926,7 @@ mod tests {
                     (200, "application/x-git-upload-pack-result", resp.into_bytes())
                 } else if path.starts_with("/o/r/tar.gz/") {
                     match codeload {
-                        Codeload::Ok => (200, "application/gzip", archive.clone()),
+                        Codeload::Ok | Codeload::PartialLegacy => (200, "application/gzip", archive.clone()),
                         Codeload::Private | Codeload::PrivateWithSite => (404, "text/plain", Vec::new()),
                         Codeload::Fail => (500, "text/plain", b"boom".to_vec()),
                         Codeload::MissingWithAuth if authed => (404, "text/plain", Vec::new()),
@@ -1902,6 +1939,10 @@ mod tests {
                 } else if path.starts_with("/repos/") {
                     if api_blocked {
                         (403, "application/json", br#"{"message":"API rate limit exceeded"}"#.to_vec())
+                    } else if codeload == Codeload::PartialLegacy && path.starts_with("/repos/reactjs/legacy.reactjs.org/git/trees/") {
+                        json(serde_json::json!({"tree":[
+                            {"path":"content/docs/good.md","type":"blob","sha":"b1","size":6},
+                            {"path":"content/docs/bad.md","type":"blob","sha":"b2","size":6}]}))
                     } else if path.contains("/git/trees/docs-sha") {
                         json(serde_json::json!({"tree":[{"path":"guide.md","type":"blob","sha":"b2","size":7}]}))
                     } else if path.contains("/git/trees/") {
@@ -1914,12 +1955,20 @@ mod tests {
                     }
                 } else if path == "/npm/react/latest" {
                     json(serde_json::json!({"version":"19.0.0"}))
+                } else if path.starts_with("/reactjs/legacy.reactjs.org/tar.gz/") {
+                    if codeload == Codeload::PartialLegacy {
+                        (500, "text/plain", b"boom".to_vec())
+                    } else {
+                        (200, "application/gzip", legacy_archive.clone())
+                    }
                 } else if path.starts_with("/reactjs/react.dev/tar.gz/") {
                     if site_docs_present {
                         (200, "application/gzip", site_archive.clone())
                     } else {
                         (404, "text/plain", Vec::new())
                     }
+                } else if path.starts_with("/raw/reactjs/legacy.reactjs.org/") && path.ends_with("/good.md") {
+                    (200, "text/markdown", b"# good".to_vec())
                 } else if path.starts_with("/raw/o/r/") {
                     (200, "text/markdown", b"# raw".to_vec())
                 } else {
@@ -2169,6 +2218,23 @@ mod tests {
     }
 
     #[test]
+    fn partial_legacy_fallback_failure_removes_site_but_preserves_package_docs() {
+        for major in [16, 17, 18] {
+            let version = format!("{major}.0.0");
+            let f = fake(Codeload::PartialLegacy, false, Some(&format!("v{version}")));
+            let out = tempfile::tempdir().unwrap();
+            let m = build(&client(&f, MAX_ARCHIVE), &dep("react", &version), &repo(None), true, out.path()).unwrap();
+            assert_eq!(m.files, 2, "{m:?}");
+            assert!(m.site.is_none() && m.pages.is_empty() && !m.docs_sites_checked, "{m:?}");
+            assert!(m.note.as_deref().unwrap_or("").contains("docs site skipped"), "{m:?}");
+            assert!(out.path().join("README.md").exists());
+            assert!(out.path().join("docs/guide.md").exists());
+            assert_eq!(requests(&f, "/raw/reactjs/legacy.reactjs.org/"), 2);
+            assert!(!out.path().join("legacy.reactjs.org").exists());
+        }
+    }
+
+    #[test]
     fn unavailable_repository_without_docs_site_is_a_clear_error() {
         let f = fake(Codeload::Private, false, Some("v1.2.3"));
         let out = tempfile::tempdir().unwrap();
@@ -2314,6 +2380,24 @@ mod tests {
     }
 
     #[test]
+    fn older_react_majors_use_the_official_archives() {
+        for name in ["react", "react-dom", "@types/react"] {
+            for (major, branch) in [(16, "16.reactjs.org"), (17, "17.reactjs.org"), (18, "main")] {
+                let f = fake(Codeload::Ok, false, None);
+                let out = tempfile::tempdir().unwrap();
+                let got = site_docs(&client(&f, MAX_ARCHIVE), &dep(name, &format!("{major}.0.0")), None, out.path()).unwrap();
+                let got = got.expect("older React docs must be available");
+                assert_eq!(got.files, 1);
+                assert!(got.label.contains(&format!("legacy.reactjs.org@{branch}")));
+                assert!(got.label.contains(&format!("official archive for major {major}")));
+                assert!(out.path().join("legacy.reactjs.org/content/docs/hooks-reference.md").exists());
+                assert!(!out.path().join("legacy.reactjs.org/content/blog/new-api.md").exists());
+                assert_eq!(requests(&f, "/reactjs/react.dev/tar.gz/"), 0);
+            }
+        }
+    }
+
+    #[test]
     fn docs_site_files_follow_the_major_rules() {
         let (docs, pages): (Vec<String>, Vec<String>) = (vec!["src/content/docs/en".into()], vec!["src/app/installation".into()]);
         let versioned = vec!["src/content/api/4x".to_string()];
@@ -2321,11 +2405,36 @@ mod tests {
         assert_eq!(k("src/content/docs/en/a.md", false), Some(false));
         assert_eq!(k("src/content/docs/en/a.txt", false), None);
         assert_eq!(k("src/content/docs/en/v5-beta.md", false), None);
+        assert_eq!(k("src/content/docs/en/v5/migration.md", false), None);
+        assert_eq!(k("src/app/installation/v5/page.tsx", false), None);
         assert_eq!(k("src/content/api/4x/req.md", true), Some(false));
         assert_eq!(k("src/content/api/4x/req.md", false), None);
         assert_eq!(k("src/app/installation/page.tsx", false), Some(true));
         assert_eq!(k("src/app/installation/layout.tsx", false), None);
         assert_eq!(k("README.md", true), None);
+    }
+
+    #[test]
+    fn all_five_docs_sites_exclude_later_major_pages() {
+        for (site, major) in DOCS_SITES.iter().zip([18, 4, 3, 5, 1]) {
+            let docs: Vec<String> = site.current.iter().map(|p| p.to_string()).collect();
+            let pages: Vec<String> = site.pages.iter().map(|p| p.to_string()).collect();
+            let versioned: Vec<String> = site.versioned.iter().map(|p| p.replace("{major}", &major.to_string())).collect();
+            let k = |p: &str| site_kind(p, major, &versioned, true, &docs, &pages);
+            for dir in &docs {
+                assert_eq!(k(&format!("{dir}/guide.md")), Some(false), "{}", site.repo.1);
+                assert_eq!(k(&format!("{dir}/v{}/guide.mdx", major + 1)), None, "{}", site.repo.1);
+                assert_eq!(k(&format!("{dir}/v{major}/guide.md")), Some(false), "{}", site.repo.1);
+            }
+            for dir in &pages {
+                assert_eq!(k(&format!("{dir}/page.tsx")), Some(true));
+                assert_eq!(k(&format!("{dir}/v{}/page.tsx", major + 1)), None);
+            }
+            if !versioned.is_empty() {
+                assert_eq!(k("src/content/api/4x/req.md"), Some(false));
+                assert_eq!(k("src/content/api/5x/req.md"), None);
+            }
+        }
     }
 
     #[test]

@@ -92,6 +92,7 @@ export default defineConfig({
       license: 'https://github.com/SylphxAI/lockdocs/blob/main/LICENSE',
       links: [
         { text: 'Quickstart', href: '/guide/quickstart' },
+        { text: 'Pricing', href: '/pricing', target: '_self' },
         { text: 'Benchmarks', href: '/benchmarks' },
         { text: 'Changelog', href: 'https://github.com/SylphxAI/lockdocs/blob/main/CHANGELOG.md' },
         { text: 'GitHub', href: 'https://github.com/SylphxAI/lockdocs' },

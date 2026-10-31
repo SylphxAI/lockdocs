@@ -185,7 +185,7 @@ jobs:
       contents: read
       pull-requests: read
     steps:
-      - uses: SylphxAI/.github/.github/actions/needs-pass@b3b5ee92786a2aa9d5e64d21dc3105975df1fa9c # main
+      - uses: SylphxAI/.github/.github/actions/needs-pass@b3b5ee92780e4979f2b23a09543e3064a91ec33b # main
         with:
           needs: ${{ toJSON(needs) }}
           # test and checks keep a job result of success even when a pull

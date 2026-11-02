@@ -54,13 +54,13 @@ jobs:
         run: cargo publish --locked --workspace
 
   release:
-    uses: SylphxAI/mcp-kit/.github/workflows/release.yml@956cb970402c3cfd8dcd25119f13eb7cc031e538 # v0.8.7
+    uses: SylphxAI/mcp-kit/.github/workflows/release.yml@88381cc3c4569df51af49612a94b27a72523067e # v0.8.8
     permissions:
       contents: write
       id-token: write
       packages: write
     with:
-      kit-ref: 956cb970402c3cfd8dcd25119f13eb7cc031e538
+      kit-ref: 88381cc3c4569df51af49612a94b27a72523067e
       name: lockdocs
       npm-package: '@sylphx/lockdocs'
       mcp-name: io.github.SylphxAI/lockdocs
@@ -117,7 +117,7 @@ jobs:
           echo "value=$(node -p 'require("./packages/lockdocs/package.json").version')" >> "$GITHUB_OUTPUT"
       # The source job's OIDC identity is declared as lockdocs-package-managers.
       # Missing Access/Broker authority fails this delivery instead of skipping it.
-      - uses: SylphxAI/mcp-kit/.github/actions/package-managers@956cb970402c3cfd8dcd25119f13eb7cc031e538 # v0.8.7
+      - uses: SylphxAI/mcp-kit/.github/actions/package-managers@88381cc3c4569df51af49612a94b27a72523067e # v0.8.8
         with:
           name: lockdocs
           version: ${{ steps.version.outputs.value }}

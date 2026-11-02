@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 /// Bump when extraction or the on-disk format changes.
-pub const FORMAT: u32 = 15;
+pub const FORMAT: u32 = 16;
 
 #[derive(Serialize, Deserialize)]
 pub struct PackageIndex {
@@ -48,12 +48,25 @@ impl PackageIndex {
     }
 
     pub fn docs_indices(&self, import: Option<&str>) -> Vec<usize> {
-        let files = self.npm_api.as_ref().map(|api| api.search_files(import.unwrap_or(&self.name)));
+        let import = import.unwrap_or(&self.name);
+        let files = self.npm_api.as_ref().map(|api| api.search_files(import));
+        let compatible = self.npm_api.as_ref().map(|api| api.compatible_imports(import, &self.name));
         let mut seen = std::collections::HashSet::new();
         self.entries
             .iter()
             .enumerate()
-            .filter(|(_, e)| e.kind == Kind::Prose || files.as_ref().is_none_or(|files| files.contains(&e.file)))
+            .filter(|(_, e)| {
+                if e.kind == Kind::Prose {
+                    compatible.as_ref().is_none_or(|imports| {
+                        e.prose_imports
+                            .iter()
+                            .filter(|s| crate::markdown::import_base(s) == self.name)
+                            .all(|s| imports.contains(s.as_str()))
+                    })
+                } else {
+                    files.as_ref().is_none_or(|files| files.contains(&e.file))
+                }
+            })
             // Deduplicate only after import selection: an identical declaration
             // in another edition must not erase the requested file identity.
             .filter(|(_, e)| seen.insert((e.path.as_str(), e.sig.as_str(), e.doc.as_str())))

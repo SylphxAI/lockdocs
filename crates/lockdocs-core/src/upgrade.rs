@@ -386,6 +386,8 @@ mod tests {
             doc: doc.into(),
             alias_of: None,
             legacy: false,
+            prose_imports: Vec::new(),
+            prose_parents: Vec::new(),
         }
     }
 

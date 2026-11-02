@@ -74,6 +74,12 @@ pub struct Entry {
     /// `pydantic/v1` inside pydantic 2): ranked below the current API.
     #[serde(default)]
     pub legacy: bool,
+    /// Effective module imports in this prose section and its setup examples.
+    #[serde(default)]
+    pub prose_imports: Vec<String>,
+    /// Citation lines of the logical ancestor sections, before chunking.
+    #[serde(default)]
+    pub prose_parents: Vec<u32>,
 }
 
 /// A path segment `vN` with N below the package's major version.
@@ -561,6 +567,8 @@ fn example(text: &str, rel: &str, out: &mut Vec<Entry>) {
         doc: format!("```{lang}\n{}\n```", text.trim_end()),
         alias_of: None,
         legacy: false,
+        prose_imports: Vec::new(),
+        prose_parents: Vec::new(),
     });
 }
 
@@ -960,6 +968,8 @@ fn entry(kind: Kind, name: &str, path: String, file: &str, line: u32, sig: Strin
         doc,
         alias_of: None,
         legacy: false,
+        prose_imports: Vec::new(),
+        prose_parents: Vec::new(),
     }
 }
 
@@ -976,6 +986,8 @@ fn prose_section(s: crate::markdown::Section, rel: &str, line_off: u32) -> Entry
         doc: s.text,
         alias_of: None,
         legacy: false,
+        prose_imports: s.imports,
+        prose_parents: s.parents.into_iter().map(|line| line + line_off).collect(),
     }
 }
 

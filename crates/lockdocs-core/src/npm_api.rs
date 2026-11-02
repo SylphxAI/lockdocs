@@ -394,6 +394,89 @@ impl PublicApi {
         files
     }
 
+    /// Identical entrypoints and transparent full-surface barrels share prose.
+    /// Root searches also cover additive public helpers with disjoint names.
+    /// Shared dependencies and legacy search widening never establish edition
+    /// compatibility.
+    pub(crate) fn compatible_imports(&self, selected: &str, package: &str) -> BTreeSet<&str> {
+        let mut targets: BTreeMap<&str, Option<BTreeSet<&str>>> = BTreeMap::new();
+        for root in &self.roots {
+            let files = targets.entry(&root.import).or_insert_with(|| Some(BTreeSet::new()));
+            match (files.as_mut(), self.canonical_barrel(&root.file)) {
+                (Some(files), Some(file)) => {
+                    files.insert(file);
+                }
+                _ => *files = None,
+            }
+        }
+        let Some(Some(selected_files)) = targets.get(selected) else {
+            return BTreeSet::new();
+        };
+        // A root package search also covers additive public helpers. Their
+        // names must be fully known and disjoint from the root surface; graph
+        // intersection never establishes compatibility between API editions.
+        let public_names = |import: &str| -> Option<BTreeSet<String>> {
+            let mut names = BTreeSet::new();
+            for root in self.roots.iter().filter(|r| r.import == import) {
+                names.extend(self.export_names(&root.file, &mut BTreeSet::new())?);
+            }
+            (!names.is_empty()).then_some(names)
+        };
+        let selected_names = (selected == package).then(|| public_names(selected)).flatten();
+        targets
+            .iter()
+            .filter_map(|(&import, files)| {
+                (import == selected
+                    || selected_files.len() == 1 && files.as_ref() == Some(selected_files)
+                    || selected_names
+                        .as_ref()
+                        .is_some_and(|names| public_names(import).is_some_and(|other| names.is_disjoint(&other))))
+                .then_some(import)
+            })
+            .collect()
+    }
+
+    fn export_names(&self, file: &str, seen: &mut BTreeSet<String>) -> Option<BTreeSet<String>> {
+        if seen.len() > 128 || !seen.insert(file.to_string()) {
+            return None;
+        }
+        let m = self.modules.get(file)?;
+        if m.incomplete || m.assignment.is_some() {
+            return None;
+        }
+        let mut names: BTreeSet<String> = m.exports.keys().cloned().collect();
+        for target in &m.stars {
+            let mut forwarded = self.export_names(target, seen)?;
+            forwarded.remove("default");
+            names.extend(forwarded);
+        }
+        seen.remove(file);
+        Some(names)
+    }
+
+    fn canonical_barrel<'a>(&'a self, mut file: &'a str) -> Option<&'a str> {
+        let mut seen = BTreeSet::new();
+        while seen.insert(file) {
+            let m = self.modules.get(file)?;
+            if !m.incomplete && m.assignment.is_none() && m.stars.len() == 1 {
+                let target = m.stars[0].as_str();
+                let forwarded = |(export, b): (&String, &Binding)| match b {
+                    Binding::Named(f, name) => f == target && name == export && name != "default",
+                    Binding::Local(name) => {
+                        matches!(m.imports.get(name), Some(Binding::Named(f, original)) if f == target && original == export && original != "default")
+                    }
+                    Binding::Namespace(_) => false,
+                };
+                if m.exports.iter().all(forwarded) && self.modules.contains_key(target) {
+                    file = target;
+                    continue;
+                }
+            }
+            return Some(file);
+        }
+        None
+    }
+
     pub(crate) fn search_alias<'a>(&'a self, entry: &'a Entry) -> &'a Entry {
         if entry.alias_of.is_none() {
             return entry;

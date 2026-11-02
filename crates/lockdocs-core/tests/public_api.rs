@@ -369,3 +369,139 @@ fn docs_refresh_export_selection_and_refuse_a_different_installed_version() {
     assert!(a.text.contains("ModernForm") && !a.text.contains("message?: string"), "{}", a.text);
     assert!(e.docs(Some("npm:@sample/forms@1.2.3"), "build", 1200).is_err());
 }
+
+#[test]
+fn docs_honor_public_imports_named_in_the_question_without_overriding_an_explicit_edition() {
+    let dir = fixture();
+    let e = engine(dir.path());
+    let question = "What does build() from @sample/forms/next return?";
+    for package in [Some("@sample/forms"), None] {
+        let a = e.docs(package, question, 1200).unwrap();
+        assert!(a.text.contains("build(): ModernForm"), "{}", a.text);
+        assert!(!a.text.contains("message?: string"), "{}", a.text);
+    }
+    let a = e.docs(Some("@sample/forms/features/one"), question, 1200).unwrap();
+    assert!(a.text.contains("one: boolean"), "{}", a.text);
+    assert!(!a.text.contains("ModernForm"), "{}", a.text);
+    // A package-looking substring is not an import token.
+    let a = e.docs(Some("@sample/forms"), "build not-@sample/forms/next-extra", 1200).unwrap();
+    assert!(a.text.contains("message?: string"), "{}", a.text);
+}
+
+#[test]
+fn an_explicit_callable_uses_the_public_export_before_same_named_transitive_members() {
+    let dir = fixture();
+    let pkg = dir.path().join("node_modules/@sample/forms");
+    write(
+        &pkg,
+        "next/types.d.ts",
+        "import { Config } from '../config.js';\nexport declare function build(): ModernForm;\n",
+    );
+    write(
+        &pkg,
+        "config.d.ts",
+        "export interface Request {\n/** Is build synchronous or does it return a Promise? The build return is synchronous. */\nbuild: Promise<string>;\n}\n",
+    );
+    let a = engine(dir.path())
+        .docs(
+            Some("@sample/forms"),
+            "Is build() from @sample/forms/next synchronous or does it return a Promise?",
+            500,
+        )
+        .unwrap();
+    assert_eq!(a.json["hits"][0]["path"], "build", "{}", a.text);
+    assert!(a.text.contains("build(): ModernForm"), "{}", a.text);
+}
+
+#[test]
+fn docs_prose_and_parent_context_respect_the_documented_import_edition() {
+    let dir = fixture();
+    let pkg = dir.path().join("node_modules/@sample/forms");
+    write(&pkg, "README.md", "# Forms\n\nCommon introduction for all editions.\n\n## Modern setup\n\nUse the modern edition.\n\n```ts\nimport { build } from '@sample/forms/next';\n```\n\n### Modern validation\n\nA modern-only validation recipe.\n\n## Stable setup\n\n```ts\nimport { build } from '@sample/forms';\n```\n\n### Stable validation\n\nA stable-only validation recipe.\n");
+    let e = engine(dir.path());
+    for (package, wanted, excluded) in [
+        ("@sample/forms", "stable-only validation", "modern-only validation"),
+        ("@sample/forms/next", "modern-only validation", "stable-only validation"),
+    ] {
+        let a = e.docs(Some(package), "validation recipe", 4000).unwrap();
+        assert!(a.text.contains(wanted), "{}", a.text);
+        assert!(!a.text.contains(excluded), "{}", a.text);
+    }
+}
+
+#[test]
+fn a_child_can_override_its_edition_without_quoting_the_incompatible_parent() {
+    let dir = fixture();
+    let pkg = dir.path().join("node_modules/@sample/forms");
+    write(&pkg, "README.md", "# Guide\n\nCommon introduction across all editions.\n\n## Setup\n\nThe incompatible parent-only setup.\n\n```ts\nimport { build } from '@sample/forms/next';\n```\n\n### Recipe\n\nA stable-only frobnication recipe.\n\n```ts\nimport { build } from '@sample/forms';\n```\n");
+    let a = engine(dir.path()).docs(Some("@sample/forms"), "frobnication recipe", 1200).unwrap();
+    assert!(a.text.contains("stable-only frobnication"), "{}", a.text);
+    assert!(!a.text.contains("incompatible parent-only"), "{}", a.text);
+    assert!(!a.text.contains("@sample/forms/next"), "{}", a.text);
+    assert!(a.text.contains("Common introduction"), "{}", a.text);
+}
+
+#[test]
+fn mixed_and_unknown_imports_are_not_unrestricted_and_cache_reloads_keep_scope() {
+    let dir = fixture();
+    let pkg = dir.path().join("node_modules/@sample/forms");
+    write(&pkg, "README.md", "# Recipes\n\n## Mixed\n\nMixed-only frobnication recipe.\n\n```ts\nimport '@sample/forms';\nimport '@sample/forms/next';\n```\n\n## Unknown\n\nUnknown-only frobnication recipe.\n\n```js\nconst f = require('@sample/forms/not-exported');\n```\n\n## Unrelated\n\nUnrelated-only frobnication recipe.\n\n```ts\nimport 'other/dependency';\n```\n");
+    let e = engine(dir.path());
+    for e in [&e, &engine(dir.path())] {
+        for import in ["@sample/forms", "@sample/forms/next"] {
+            let a = e.docs(Some(import), "frobnication recipe", 4000).unwrap();
+            assert!(a.text.contains("Unrelated-only frobnication"), "{}", a.text);
+            assert!(!a.text.contains("Mixed-only frobnication"), "{}", a.text);
+            assert!(!a.text.contains("Unknown-only frobnication"), "{}", a.text);
+        }
+    }
+    write(
+        &pkg,
+        "README.md",
+        "# Recipe\n\nRefreshed-only frobnication recipe.\n\n```ts\nimport '@sample/forms/next';\n```\n",
+    );
+    assert!(!e
+        .docs(Some("@sample/forms"), "frobnication recipe", 4000)
+        .unwrap()
+        .text
+        .contains("Refreshed-only"));
+    assert!(e
+        .docs(Some("@sample/forms/next"), "frobnication recipe", 4000)
+        .unwrap()
+        .text
+        .contains("Refreshed-only"));
+}
+
+#[test]
+fn transparent_aliases_share_prose_but_shared_helpers_and_added_aliases_do_not() {
+    let dir = fixture();
+    let pkg = dir.path().join("node_modules/@sample/forms");
+    let mut meta: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(pkg.join("package.json")).unwrap()).unwrap();
+    meta["exports"]["./alias"] = json!("./alias.d.ts");
+    meta["exports"]["./renamed"] = json!("./renamed.d.ts");
+    write(&pkg, "package.json", &meta.to_string());
+    write(&pkg, "alias.d.ts", "export * from './next/index.js';\n");
+    write(
+        &pkg,
+        "renamed.d.ts",
+        "export * from './next/index.js';\nexport { build as renamed } from './next/index.js';\n",
+    );
+    for file in ["stable/types.d.cts", "next/types.d.ts"] {
+        let text = std::fs::read_to_string(pkg.join(file)).unwrap();
+        write(
+            &pkg,
+            file,
+            &format!("import {{ Helper }} from '../helper.js';\nimport {{ External }} from 'external-dependency';\n{text}"),
+        );
+    }
+    write(&pkg, "helper.d.ts", "export declare class Helper {}\n");
+    write(&pkg, "README.md", "# Guide\n\n## Alias\n\nTransparent-only frobnication recipe.\n\n```ts\nimport '@sample/forms/alias';\n```\n\n## Renamed\n\nRenamed-only frobnication recipe.\n\n```ts\nimport '@sample/forms/renamed';\n```\n\n## Stable\n\nStable-only frobnication recipe.\n\n```ts\nimport '@sample/forms';\n```\n");
+    let e = engine(dir.path());
+    let a = e.docs(Some("@sample/forms/next"), "frobnication recipe", 4000).unwrap();
+    assert!(a.text.contains("Transparent-only frobnication"), "{}", a.text);
+    assert!(!a.text.contains("Stable-only frobnication"), "{}", a.text);
+    assert!(!a.text.contains("Renamed-only frobnication"), "{}", a.text);
+    let a = e.docs(Some("@sample/forms"), "frobnication recipe", 4000).unwrap();
+    assert!(a.text.contains("Stable-only frobnication"), "{}", a.text);
+    assert!(!a.text.contains("Transparent-only frobnication"), "{}", a.text);
+}

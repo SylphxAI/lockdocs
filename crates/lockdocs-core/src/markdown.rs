@@ -8,6 +8,10 @@ pub struct Section {
     /// 1-based line of the section start.
     pub line: u32,
     pub text: String,
+    /// Effective example imports, inherited by package before section chunking.
+    pub imports: Vec<String>,
+    /// Lines of nonempty ancestor sections in this page, outermost first.
+    pub parents: Vec<u32>,
 }
 
 const MAX_CHARS: usize = 1800;
@@ -34,23 +38,111 @@ fn noise(line: &str) -> bool {
         || t.starts_with("<!--") && t.ends_with("-->")
 }
 
+struct Scope {
+    level: usize,
+    title: String,
+    imports: Vec<String>,
+    line: Option<u32>,
+}
+
+pub(crate) fn import_base(import: &str) -> &str {
+    let skip = usize::from(import.starts_with('@'));
+    import.match_indices('/').nth(skip).map_or(import, |(i, _)| &import[..i])
+}
+
+/// Read module specifiers from actual JS/TS examples, not prose or MDX imports.
+fn example_imports(body: &str) -> Vec<String> {
+    fn walk(n: tree_sitter::Node, src: &[u8], out: &mut Vec<String>) {
+        let source = if matches!(n.kind(), "import_statement" | "export_statement") {
+            n.child_by_field_name("source")
+        } else if n.kind() == "call_expression"
+            && n.child_by_field_name("function")
+                .and_then(|f| f.utf8_text(src).ok())
+                .is_some_and(|f| f == "require" || f == "import")
+        {
+            n.child_by_field_name("arguments")
+                .and_then(|a| a.named_child(0))
+                .filter(|s| s.kind() == "string")
+        } else {
+            None
+        };
+        if let Some(source) = source {
+            if let Ok(s) = source.utf8_text(src) {
+                out.push(s.trim_matches(['\'', '"']).to_string());
+            }
+        }
+        for child in n.named_children(&mut n.walk()) {
+            walk(child, src, out);
+        }
+    }
+    let mut out = Vec::new();
+    let mut fence: Option<String> = None;
+    let mut code = String::new();
+    let mut javascript = false;
+    let mut parser = tree_sitter::Parser::new();
+    let _ = parser.set_language(&tree_sitter_typescript::LANGUAGE_TSX.into());
+    for line in body.lines() {
+        let t = line.trim_start();
+        if let Some(marker) = &fence {
+            if t.starts_with(marker) {
+                if javascript {
+                    if let Some(tree) = parser.parse(&code, None) {
+                        walk(tree.root_node(), code.as_bytes(), &mut out);
+                    }
+                }
+                fence = None;
+                code.clear();
+            } else {
+                code.push_str(line);
+                code.push('\n');
+            }
+        } else if t.starts_with("```") || t.starts_with("~~~") {
+            fence = Some(t[..3].to_string());
+            let lang = t[3..].split_whitespace().next().unwrap_or("");
+            javascript = ["", "js", "jsx", "ts", "tsx", "javascript", "typescript", "mjs", "cjs"].contains(&lang);
+        }
+    }
+    if fence.is_some() && javascript {
+        if let Some(tree) = parser.parse(&code, None) {
+            walk(tree.root_node(), code.as_bytes(), &mut out);
+        }
+    }
+    out
+}
+
 pub fn split(text: &str, title: &str) -> Vec<Section> {
     let lines: Vec<&str> = text.lines().collect();
     let mut out: Vec<Section> = Vec::new();
-    let mut stack: Vec<(usize, String)> = Vec::new();
+    let mut stack = vec![Scope {
+        level: 0,
+        title: title.to_string(),
+        imports: Vec::new(),
+        line: None,
+    }];
     let mut rst_levels: Vec<char> = Vec::new();
     let mut cur = String::new();
     let mut cur_line = 1u32;
     let mut fence: Option<String> = None;
-    let heading = |stack: &Vec<(usize, String)>| {
-        let mut parts: Vec<&str> = vec![title];
-        parts.extend(stack.iter().map(|(_, h)| h.as_str()));
-        parts.join(" › ")
-    };
-    let flush = |out: &mut Vec<Section>, cur: &mut String, head: String, line: u32| {
+    let flush = |out: &mut Vec<Section>, cur: &mut String, stack: &mut Vec<Scope>, line: u32| {
         let body = cur.trim();
         if !body.is_empty() {
-            push_sized(out, &head, line, body);
+            let own = example_imports(body);
+            let scope = stack.last_mut().unwrap();
+            for import in &own {
+                scope.imports.retain(|old| import_base(old) != import_base(import));
+            }
+            scope.imports.extend(own);
+            scope.imports.sort();
+            scope.imports.dedup();
+            let section = Section {
+                heading: stack.iter().map(|s| s.title.as_str()).collect::<Vec<_>>().join(" › "),
+                line,
+                text: body.to_string(),
+                imports: stack.last().unwrap().imports.clone(),
+                parents: stack[..stack.len() - 1].iter().filter_map(|s| s.line).collect(),
+            };
+            push_sized(out, &section);
+            stack.last_mut().unwrap().line = Some(line);
         }
         cur.clear();
     };
@@ -81,9 +173,14 @@ pub fn split(text: &str, title: &str) -> Vec<Section> {
             let rest = &line[level..];
             if level <= 6 && (rest.is_empty() || rest.starts_with(' ')) {
                 let h = rest.trim().trim_end_matches('#').trim().to_string();
-                flush(&mut out, &mut cur, heading(&stack), cur_line);
-                stack.retain(|(l, _)| *l < level);
-                stack.push((level, clean_heading(&h)));
+                flush(&mut out, &mut cur, &mut stack, cur_line);
+                stack.retain(|s| s.level < level);
+                stack.push(Scope {
+                    level,
+                    title: clean_heading(&h),
+                    imports: stack.last().unwrap().imports.clone(),
+                    line: None,
+                });
                 cur_line = i as u32 + 1;
                 i += 1;
                 continue;
@@ -108,9 +205,14 @@ pub fn split(text: &str, title: &str) -> Vec<Section> {
                         }
                     }
                 };
-                flush(&mut out, &mut cur, heading(&stack), cur_line);
-                stack.retain(|(l, _)| *l < level);
-                stack.push((level, clean_heading(line.trim())));
+                flush(&mut out, &mut cur, &mut stack, cur_line);
+                stack.retain(|s| s.level < level);
+                stack.push(Scope {
+                    level,
+                    title: clean_heading(line.trim()),
+                    imports: stack.last().unwrap().imports.clone(),
+                    line: None,
+                });
                 cur_line = i as u32 + 1;
                 i += 2;
                 continue;
@@ -122,7 +224,7 @@ pub fn split(text: &str, title: &str) -> Vec<Section> {
         }
         i += 1;
     }
-    flush(&mut out, &mut cur, heading(&stack), cur_line);
+    flush(&mut out, &mut cur, &mut stack, cur_line);
     out
 }
 
@@ -209,12 +311,16 @@ fn clean_heading(h: &str) -> String {
 
 /// Split long sections at blank lines outside code fences.
 #[allow(clippy::explicit_counter_loop)]
-fn push_sized(out: &mut Vec<Section>, head: &str, line: u32, body: &str) {
+fn push_sized(out: &mut Vec<Section>, section: &Section) {
+    let body = &section.text;
+    let line = section.line;
     if body.len() <= MAX_CHARS {
         out.push(Section {
-            heading: head.to_string(),
+            heading: section.heading.clone(),
             line,
             text: body.to_string(),
+            imports: section.imports.clone(),
+            parents: section.parents.clone(),
         });
         return;
     }
@@ -229,18 +335,22 @@ fn push_sized(out: &mut Vec<Section>, head: &str, line: u32, body: &str) {
         }
         if !in_fence && l.trim().is_empty() && buf.len() > MAX_CHARS * 2 / 3 {
             out.push(Section {
-                heading: head.to_string(),
+                heading: section.heading.clone(),
                 line: start,
                 text: buf.trim().to_string(),
+                imports: section.imports.clone(),
+                parents: section.parents.clone(),
             });
             buf.clear();
             start = ln + 1;
         } else if buf.len() > MAX_CHARS * 3 {
             // A giant fence or paragraph: cut hard.
             out.push(Section {
-                heading: head.to_string(),
+                heading: section.heading.clone(),
                 line: start,
                 text: buf.trim().to_string(),
+                imports: section.imports.clone(),
+                parents: section.parents.clone(),
             });
             buf.clear();
             start = ln;
@@ -251,9 +361,11 @@ fn push_sized(out: &mut Vec<Section>, head: &str, line: u32, body: &str) {
     }
     if !buf.trim().is_empty() {
         out.push(Section {
-            heading: head.to_string(),
+            heading: section.heading.clone(),
             line: start,
             text: buf.trim().to_string(),
+            imports: section.imports.clone(),
+            parents: section.parents.clone(),
         });
     }
 }
@@ -378,6 +490,34 @@ pub fn metadata_body(text: &str) -> (String, u32) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn imports_and_ancestry_follow_logical_sections_before_chunking() {
+        let md = format!("# Guide\n\nCommon introduction.\n\n## Setup\n\n```ts\nimport {{ build }} from '@sample/forms/next';\n```\n\n{}\n\n### Recipe\n\nInherited recipe.\n\n## Setup\n\nUnrelated setup.\n\n### Recipe\n\nIndependent recipe.\n", ("Long paragraph. ".repeat(100) + "\n\n").repeat(3));
+        let sections = split(&md, "README");
+        let chunks: Vec<_> = sections
+            .iter()
+            .filter(|s| s.heading.ends_with("Setup") && !s.text.contains("Unrelated"))
+            .collect();
+        assert!(chunks.len() > 1);
+        assert!(chunks.iter().all(|s| s.imports == ["@sample/forms/next"]));
+        let inherited = sections.iter().find(|s| s.text == "Inherited recipe.").unwrap();
+        assert_eq!(inherited.imports, ["@sample/forms/next"]);
+        assert!(inherited.parents.contains(&chunks[0].line));
+        let independent = sections.iter().find(|s| s.text == "Independent recipe.").unwrap();
+        assert!(independent.imports.is_empty());
+        assert!(!independent.parents.contains(&chunks[0].line));
+    }
+
+    #[test]
+    fn imports_come_from_examples_and_override_only_their_package() {
+        let md = "import X from 'component/plumbing';\n\n# Setup\n\n```js\nconst f = require('@sample/forms/next');\nconst other = import('other/setup');\n```\n\n## Override\n\n```ts\nimport { build } from '@sample/forms';\nexport { build } from '@sample/forms/unknown';\n// import x from 'ignored/comment';\nconst label = \"import x from 'ignored/string'\";\n```\n\n### Child\n\nAn inherited example.\n";
+        let sections = split(md, "README");
+        assert!(sections[0].imports.is_empty());
+        let child = sections.last().unwrap();
+        assert_eq!(child.imports, ["@sample/forms", "@sample/forms/unknown", "other/setup"]);
+        assert_eq!(example_imports("```ts\nimport f from 'unfinished/example';"), ["unfinished/example"]);
+    }
 
     #[test]
     fn sections_follow_headings_and_skip_fences() {

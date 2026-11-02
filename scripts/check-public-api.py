@@ -130,6 +130,21 @@ console.log(JSON.stringify(result));
             line = (next_root / "node_modules/next" / answer["file"]).read_text().splitlines()[answer["line"] - 1]
             assert "cookies(): ReadonlyRequestCookies" in line, line
 
+        scoped_cases = [
+            (roots[0], "zod", "How does zod/v4 email validation work?", "3.25.76", "4"),
+            (roots[0], "zod/v3", "How does zod/v4 email validation work?", "3.25.76", "3"),
+        ]
+        for root, package, query, version, major in scoped_cases:
+            verify_docs(docs(root, package, query), version, major)
+        legacy_question = "What does cookies() from next/headers return?"
+        verify_legacy_docs(docs(next_root, "next", legacy_question))
+        # The README's Basic usage examples import zod/v4, including the
+        # inherited Handling errors subsection. They cannot describe v3.
+        for package, present in [("zod", False), ("zod/v4", True)]:
+            answer = docs(roots[0], package, "Handling errors")
+            found = any(h["kind"] == "doc" and "Handling errors" in h["path"] for h in answer["hits"])
+            assert found == present, answer
+
         for package in ["next", "next/headers"]:
             verify_legacy_docs(docs(next_root, package, "cookies"))
         verify_legacy_api(cli(next_root, "cookies", "next/headers"))
@@ -179,6 +194,18 @@ console.log(JSON.stringify(result));
                 result = send("tools/call", {"name": "docs", "arguments": {"query": "cookies", "package": package, "root": str(next_root), "offline": True, "format": "json", "tokens": 4000}})
                 assert not result.get("isError"), result
                 verify_legacy_docs(json.loads(result["content"][0]["text"]))
+            for root, package, query, version, major in scoped_cases:
+                result = send("tools/call", {"name": "docs", "arguments": {"query": query, "package": package, "root": str(root), "offline": True, "format": "json", "tokens": 4000}})
+                assert not result.get("isError"), result
+                verify_docs(json.loads(result["content"][0]["text"]), version, major)
+            result = send("tools/call", {"name": "docs", "arguments": {"query": legacy_question, "package": "next", "root": str(next_root), "offline": True, "format": "json", "tokens": 4000}})
+            assert not result.get("isError"), result
+            verify_legacy_docs(json.loads(result["content"][0]["text"]))
+            for package, present in [("zod", False), ("zod/v4", True)]:
+                result = send("tools/call", {"name": "docs", "arguments": {"query": "Handling errors", "package": package, "root": str(roots[0]), "offline": True, "format": "json", "tokens": 4000}})
+                assert not result.get("isError"), result
+                answer = json.loads(result["content"][0]["text"])
+                assert any(h["kind"] == "doc" and "Handling errors" in h["path"] for h in answer["hits"]) == present, answer
             result = send("tools/call", {"name": "api", "arguments": {"symbol": "cookies", "package": "next/headers", "root": str(next_root), "offline": True, "format": "json"}})
             assert not result.get("isError"), result
             verify_legacy_api(json.loads(result["content"][0]["text"]))

@@ -785,8 +785,24 @@ impl Engine {
             return Err(missing.into_iter().map(|(_, e)| e).collect::<Vec<_>>().join("\n"));
         }
         let mut scopes = Vec::new();
-        for (idx, _, _) in &ready {
-            let requested = imports.get(&idx.name).cloned().unwrap_or_else(|| vec![idx.name.clone()]);
+        let mut public_calls = HashSet::new();
+        for (pi, (idx, _, _)) in ready.iter().enumerate() {
+            let mut requested = imports.get(&idx.name).cloned().unwrap_or_else(|| vec![idx.name.clone()]);
+            // A question naming known public imports can narrow a root search,
+            // but must never override an explicitly selected alternate edition.
+            if requested.iter().all(|import| import == &idx.name) {
+                if let Some(api) = &idx.npm_api {
+                    let named: std::collections::BTreeSet<String> = api
+                        .roots
+                        .iter()
+                        .filter(|r| r.import != idx.name && mentions_import(query, &r.import))
+                        .map(|r| r.import.clone())
+                        .collect();
+                    if !named.is_empty() {
+                        requested = named.into_iter().collect();
+                    }
+                }
+            }
             if let Some(api) = &idx.npm_api {
                 for import in &requested {
                     if import != &idx.name && !api.roots.iter().any(|r| &r.import == import) {
@@ -797,6 +813,7 @@ impl Engine {
             let mut scope = std::collections::BTreeSet::new();
             for import in requested {
                 scope.extend(idx.docs_indices(Some(&import)));
+                public_calls.extend(public_call_entries(idx, &import, query).into_iter().map(|ei| (pi, ei)));
             }
             scopes.push(scope);
         }
@@ -817,7 +834,10 @@ impl Engine {
         let mut raw_idents = identifiers(q);
         raw_idents.extend(api_words(&ready, &refs, q));
         let changes = change_intent(q);
-        let scored = hybrid_rank(&ready, &refs, (&bm, &hb), &qterms, q, &raw_idents, changes);
+        let mut scored = hybrid_rank(&ready, &refs, (&bm, &hb), &qterms, q, &raw_idents, changes);
+        // An explicitly called public API is the subject of the question.
+        // Referenced type members with the same name remain supporting hits.
+        scored.sort_by_key(|&(_, pi, ei)| !public_calls.contains(&(pi, ei)));
         let mut out = Pack::new(tokens);
         let mut header = String::new();
         for (idx, dep, note) in &ready {
@@ -865,7 +885,7 @@ impl Engine {
             let e = idx.npm_api.as_ref().map_or_else(|| resolve_alias(idx, e), |api| api.search_alias(e));
             // The top result also carries the lead of its page and parent
             // section, within the same budget.
-            let ctx = if out.blocks == 0 { section_context(idx, e) } else { None };
+            let ctx = if out.blocks == 0 { section_context(idx, e, &scopes[pi]) } else { None };
             let max_doc = if out.blocks == 0 {
                 2000 - ctx.as_ref().map_or(0, |c| c.len().min(800) / 2)
             } else {
@@ -1816,25 +1836,28 @@ fn lead(doc: &str) -> String {
 /// Leads of a prose section's page and parent section, quoted, when they
 /// say something the section does not (a deprecation notice on the page,
 /// the setup a subsection builds on).
-fn section_context(idx: &PackageIndex, e: &Entry) -> Option<String> {
+fn section_context(idx: &PackageIndex, e: &Entry, scope: &std::collections::BTreeSet<usize>) -> Option<String> {
     if e.kind != Kind::Prose {
         return None;
     }
-    let parts: Vec<&str> = e.name.split(" › ").collect();
-    if parts.len() < 2 {
-        return None;
+    // Keep the page and closest nonempty parent, using logical ancestry rather
+    // than heading text (which can repeat), and the same applicability filter
+    // as retrieval. A permitted child must not quote an incompatible setup.
+    let mut wanted = Vec::new();
+    if let Some(line) = e.prose_parents.first() {
+        wanted.push(*line);
     }
-    let mut wanted = vec![parts[0].to_string()];
-    if parts.len() > 2 {
-        wanted.push(parts[..parts.len() - 1].join(" › "));
+    if let Some(line) = e.prose_parents.last() {
+        if !wanted.contains(line) {
+            wanted.push(*line);
+        }
     }
     let mut out = String::new();
-    for name in wanted {
-        let Some(p) = idx
-            .entries
+    for line in wanted {
+        let Some(p) = scope
             .iter()
-            .filter(|x| x.kind == Kind::Prose && x.file == e.file && x.name == name)
-            .min_by_key(|x| x.line)
+            .map(|&i| &idx.entries[i])
+            .find(|p| p.kind == Kind::Prose && p.file == e.file && p.line == line)
         else {
             continue;
         };
@@ -1842,13 +1865,66 @@ fn section_context(idx: &PackageIndex, e: &Entry) -> Option<String> {
         if l.len() < 20 || e.doc.contains(&l) || out.contains(&l) {
             continue;
         }
-        for line in format!("{}: {l}", p.name.rsplit(" › ").next().unwrap_or("")).lines() {
+        for line in format!("{} ({}:{}): {l}", p.name.rsplit(" › ").next().unwrap_or(""), p.file, p.line).lines() {
             out.push_str("> ");
             out.push_str(line);
             out.push('\n');
         }
     }
     (!out.is_empty()).then(|| out + "\n")
+}
+
+/// Exact case-sensitive module token, not a prefix or package-looking substring.
+fn mentions_import(query: &str, import: &str) -> bool {
+    let module_char = |c: char| c.is_alphanumeric() || matches!(c, '@' | '/' | '_' | '-' | '.');
+    query.match_indices(import).any(|(i, _)| {
+        let before = query[..i].chars().next_back();
+        let after = &query[i + import.len()..];
+        before.is_none_or(|c| !module_char(c))
+            && (after.chars().next().is_none_or(|c| !module_char(c)) || after.starts_with('.') && after[1..].chars().next().is_none_or(|c| !module_char(c)))
+    })
+}
+
+/// Resolve explicit calls through the selected public entrypoint, rather than
+/// treating every same-named member in its transitive type graph as the API.
+fn public_call_entries(idx: &PackageIndex, import: &str, query: &str) -> Vec<usize> {
+    let Some(api) = &idx.npm_api else {
+        return Vec::new();
+    };
+    let names: HashSet<&str> = api
+        .entries
+        .iter()
+        .flat_map(|e| [e.name.as_str(), e.path.as_str()])
+        .filter(|name| {
+            query.match_indices(*name).any(|(i, _)| {
+                query[i + name.len()..].starts_with('(')
+                    && query[..i]
+                        .chars()
+                        .next_back()
+                        .is_none_or(|c| !(c.is_alphanumeric() || matches!(c, '_' | '$' | '.' | ':' | '/' | '-' | '@')))
+            })
+        })
+        .collect();
+    let roots: Vec<_> = api.roots.iter().filter(|r| r.import == import).collect();
+    let mut targets = HashSet::new();
+    for name in names {
+        let resolved: Vec<_> = roots.iter().map(|root| api.resolve(root, name, &api.entries)).collect();
+        let Some(first) = resolved.first() else {
+            continue;
+        };
+        if first.entries.is_empty() || resolved.iter().any(|r| r.unresolved || r.entries != first.entries) {
+            continue;
+        }
+        for &i in &first.entries {
+            let e = &api.entries[i];
+            targets.insert((e.file.as_str(), e.path.as_str(), e.line));
+        }
+    }
+    idx.entries
+        .iter()
+        .enumerate()
+        .filter_map(|(i, e)| targets.contains(&(e.file.as_str(), e.path.as_str(), e.line)).then_some(i))
+        .collect()
 }
 
 /// Token-budgeted output.
@@ -2027,6 +2103,8 @@ mod tests {
             doc: String::new(),
             alias_of: None,
             legacy: false,
+            prose_imports: Vec::new(),
+            prose_parents: Vec::new(),
         };
         assert!(old_upgrade_guide(
             &e("Migrating to v6.0.0 › x", "upstream:docs/src/use/migrating-to-6.0.0.md"),

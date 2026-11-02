@@ -394,6 +394,52 @@ impl PublicApi {
         files
     }
 
+    /// Only identical entrypoints or transparent full-surface barrels establish
+    /// edition compatibility. Shared helpers, dependencies and legacy search
+    /// widening are not evidence that two public imports mean the same API.
+    pub(crate) fn compatible_imports(&self, selected: &str) -> BTreeSet<&str> {
+        let mut targets: BTreeMap<&str, Option<BTreeSet<&str>>> = BTreeMap::new();
+        for root in &self.roots {
+            let files = targets.entry(&root.import).or_insert_with(|| Some(BTreeSet::new()));
+            match (files.as_mut(), self.canonical_barrel(&root.file)) {
+                (Some(files), Some(file)) => {
+                    files.insert(file);
+                }
+                _ => *files = None,
+            }
+        }
+        let Some(Some(selected_files)) = targets.get(selected) else {
+            return BTreeSet::new();
+        };
+        targets
+            .iter()
+            .filter_map(|(&import, files)| (import == selected || selected_files.len() == 1 && files.as_ref() == Some(selected_files)).then_some(import))
+            .collect()
+    }
+
+    fn canonical_barrel<'a>(&'a self, mut file: &'a str) -> Option<&'a str> {
+        let mut seen = BTreeSet::new();
+        while seen.insert(file) {
+            let m = self.modules.get(file)?;
+            if !m.incomplete && m.assignment.is_none() && m.stars.len() == 1 {
+                let target = m.stars[0].as_str();
+                let forwarded = |(export, b): (&String, &Binding)| match b {
+                    Binding::Named(f, name) => f == target && name == export && name != "default",
+                    Binding::Local(name) => {
+                        matches!(m.imports.get(name), Some(Binding::Named(f, original)) if f == target && original == export && original != "default")
+                    }
+                    Binding::Namespace(_) => false,
+                };
+                if m.exports.iter().all(forwarded) && self.modules.contains_key(target) {
+                    file = target;
+                    continue;
+                }
+            }
+            return Some(file);
+        }
+        None
+    }
+
     pub(crate) fn search_alias<'a>(&'a self, entry: &'a Entry) -> &'a Entry {
         if entry.alias_of.is_none() {
             return entry;

@@ -50,7 +50,7 @@ impl PackageIndex {
     pub fn docs_indices(&self, import: Option<&str>) -> Vec<usize> {
         let import = import.unwrap_or(&self.name);
         let files = self.npm_api.as_ref().map(|api| api.search_files(import));
-        let compatible = self.npm_api.as_ref().map(|api| api.compatible_imports(import));
+        let compatible = self.npm_api.as_ref().map(|api| api.compatible_imports(import, &self.name));
         let mut seen = std::collections::HashSet::new();
         self.entries
             .iter()

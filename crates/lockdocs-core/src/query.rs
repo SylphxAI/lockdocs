@@ -1865,7 +1865,9 @@ fn section_context(idx: &PackageIndex, e: &Entry, scope: &std::collections::BTre
         if l.len() < 20 || e.doc.contains(&l) || out.contains(&l) {
             continue;
         }
-        for line in format!("{} ({}:{}): {l}", p.name.rsplit(" › ").next().unwrap_or(""), p.file, p.line).lines() {
+        // The enclosing hit already cites this same file. Keep the ancestor
+        // line explicit without repeating its long path in the token budget.
+        for line in format!("line {}: {l}", p.line).lines() {
             out.push_str("> ");
             out.push_str(line);
             out.push('\n');

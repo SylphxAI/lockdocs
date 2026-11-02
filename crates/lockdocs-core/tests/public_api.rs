@@ -505,3 +505,21 @@ fn transparent_aliases_share_prose_but_shared_helpers_and_added_aliases_do_not()
     assert!(a.text.contains("Stable-only frobnication"), "{}", a.text);
     assert!(!a.text.contains("Transparent-only frobnication"), "{}", a.text);
 }
+
+#[test]
+fn root_docs_include_additive_public_helpers_without_mixing_alternate_editions() {
+    let dir = fixture();
+    let pkg = dir.path().join("node_modules/@sample/forms");
+    let mut meta: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(pkg.join("package.json")).unwrap()).unwrap();
+    meta["exports"]["./config"] = json!("./config.d.ts");
+    write(&pkg, "package.json", &meta.to_string());
+    // A package's public helper can forward an external implementation. Its
+    // public names are known even when that implementation is not indexed.
+    write(&pkg, "config.d.ts", "export { configure } from 'external-helper';\n");
+    write(&pkg, "README.md", "# Guide\n\n## Configuration\n\nAdditive-only configuration recipe.\n\n```ts\nimport { configure } from '@sample/forms/config';\n```\n\n## Alternate\n\nAlternate-only configuration recipe.\n\n```ts\nimport { build } from '@sample/forms/next';\n```\n");
+    let a = engine(dir.path()).docs(Some("@sample/forms"), "configuration recipe", 4000).unwrap();
+    assert!(a.text.contains("Additive-only configuration"), "{}", a.text);
+    assert!(!a.text.contains("Alternate-only configuration"), "{}", a.text);
+    let a = engine(dir.path()).docs(Some("@sample/forms/next"), "configuration recipe", 4000).unwrap();
+    assert!(!a.text.contains("Additive-only configuration"), "{}", a.text);
+}

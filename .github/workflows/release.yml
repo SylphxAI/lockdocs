@@ -54,22 +54,17 @@ jobs:
         run: cargo publish --locked --workspace
 
   release:
-    uses: SylphxAI/mcp-kit/.github/workflows/release.yml@bfbaa7ed4be68018831ac1492d6c2e4521489612 # v0
+    uses: SylphxAI/mcp-kit/.github/workflows/release.yml@489359be8aecd43652582b0611b47ac6a2eaecb9 # v0.8.6
     permissions:
       contents: write
       id-token: write
       packages: write
-    # Only the tap/bucket publisher credentials reach the shared workflow.
-    secrets:
-      TAP_APP_ID: ${{ secrets.TAP_APP_ID }}
-      TAP_APP_PRIVATE_KEY: ${{ secrets.TAP_APP_PRIVATE_KEY }}
     with:
+      kit-ref: 489359be8aecd43652582b0611b47ac6a2eaecb9
       name: lockdocs
       npm-package: '@sylphx/lockdocs'
       mcp-name: io.github.SylphxAI/lockdocs
       mcpb: true
-      homebrew: true
-      scoop: true
       # A real project: zod pinned in a lockfile.
       smoke: |
         export LOCKDOCS_OFFLINE=1 LOCKDOCS_EMBED=0
@@ -105,3 +100,29 @@ jobs:
         assert answer['packages'] == ['next@14.2.35'], answer
         assert any(h['path'] == 'cookies' and h['file'] == 'dist/client/components/headers.d.ts' for h in answer['hits']), answer
         PY
+
+  package-managers:
+    needs: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - id: version
+        run: |
+          echo "value=$(node -p 'require("./packages/lockdocs/package.json").version')" >> "$GITHUB_OUTPUT"
+      # The source job's OIDC identity is declared as lockdocs-package-managers.
+      # Missing Access/Broker authority fails this delivery instead of skipping it.
+      - uses: SylphxAI/mcp-kit/.github/actions/package-managers@489359be8aecd43652582b0611b47ac6a2eaecb9 # v0.8.6
+        with:
+          name: lockdocs
+          version: ${{ steps.version.outputs.value }}
+          package-json: packages/lockdocs/package.json
+          trust-policy: orgs/org_fs01afbdccgn8xdk1ghj5y47w0vtph/trust_policies/lockdocs-package-managers
+          ci-name: lockdocs-package-managers
+          homebrew-tap: SylphxAI/homebrew-tap
+          scoop-bucket: SylphxAI/scoop-bucket

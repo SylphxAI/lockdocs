@@ -2,6 +2,7 @@
 
 ## 0.7.5
 
+- **Homebrew and Scoop publish through the release job's identity.** The caller-owned publisher uses the existing Access/Broker path from mcp-kit 0.8.6 and fails visibly when a declared destination cannot be authorized, replacing the old credential-dependent silent skip.
 - **Docs respect example imports.** Markdown sections inherit their setup's npm import scope, including across long-section chunks. A section for another API edition and its parent context no longer appear in the selected edition's answers. Unknown or mixed-edition examples are excluded conservatively; shared helpers do not make two editions interchangeable. Index format 16 rebuilds cached sections.
 - **Questions can name a public import.** A root docs search narrows to exact public imports named in the question, while an explicit alternate selection takes precedence. Explicit calls such as `cookies()` resolve through that entrypoint before same-named members in referenced types. Legacy package-wide search remains available.
 

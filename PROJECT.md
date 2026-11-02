@@ -33,6 +33,12 @@ the npm version is new: 5 native targets on GitHub-hosted runners, the natives
 and `@sylphx/lockdocs`, an `npx` smoke on a real project, the GitHub release,
 and the MCP Registry entry.
 
+The caller-owned `package-managers` job then updates Homebrew and Scoop from
+those release archives, including on a no-op release run. It exchanges its
+GitHub OIDC identity `lockdocs-package-managers` through Access and the Broker
+for separate repository-scoped tokens. Missing authorization fails the job;
+the company App key stays in the Broker.
+
 npm publishing uses trusted publishing (OIDC): every package
 (`@sylphx/lockdocs` and the five `@sylphx/lockdocs-*` natives) trusts
 `SylphxAI/lockdocs` `.github/workflows/release.yml`; there is no npm token.

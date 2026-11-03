@@ -54,3 +54,10 @@ features:
   - title: Three obvious tools
     details: resolve (which versions), docs (a question, optionally scoped to a package), api (the exact signature of z.object or tokio::spawn).
 ---
+
+## Comparing documentation servers?
+
+[Lockdocs vs Context7](./compare) explains installed-version selection, offline
+queries and query quotas, with a reproducible two-version example.
+[Copy-paste MCP setup](./guide/setup) covers Claude Code, Codex, Cursor, VS Code,
+Claude Desktop, Windsurf and Gemini CLI.

@@ -42,8 +42,9 @@ Answers then cite `next@15.1.0 upstream:docs/01-app/.../cookies.mdx:12` and name
 Some projects keep their docs in a separate website repository: React (react.dev), Express (expressjs.com), Tailwind CSS (tailwindcss.com), Prisma (prisma/docs) and tokio (tokio-rs/website). For these, `fetch` also takes the docs that describe your major:
 
 - your major is the latest: the site's default branch;
-- an older major: the site's `vN` or `N.x` branch when it has one (Tailwind CSS `v3`, Prisma `v6`), otherwise the last commit before the next major was released (the date of its `N+1.0.0` tag). React is excluded from the second rule because react.dev documents APIs before they ship;
-- pages about a later major (`v4-beta.mdx` on the v3 branch) are skipped.
+- React 16, 17 and 18: the official `reactjs/legacy.reactjs.org` archives (`16.reactjs.org`, `17.reactjs.org` and `main`, respectively), including `react-dom` and `@types/react`. No date-based fallback to react.dev is used because it documents APIs before they ship;
+- other older majors: the site's `vN` or `N.x` branch when it has one (Tailwind CSS `v3`, Prisma `v6`), otherwise, for Tailwind and Prisma, the last commit before the next major was released (the date of its `N+1.0.0` tag). Express includes only the pinned major's versioned API pages when no older branch exists; tokio skips the site when no matching older branch exists;
+- pages about a later major (`v4-beta.mdx` or `v4/guide.mdx` on the v3 branch), including JS/TSX installation pages, are skipped.
 
 The header says which: `github.com/prisma/docs@v6 (branch v6 for major 6)`. After upgrading lockdocs, run `lockdocs fetch` again to refresh copies made by an older version. For explicit `fetch` / `--fetch` only, `GITHUB_TOKEN` (or `GH_TOKEN`) is optional and is sent to api.github.com only (the REST API). It is never sent to github.com (git), codeload.github.com or raw.githubusercontent.com, so private repositories cannot be read: a fetch for one fails with "private repository: not supported". Explicit docs-site fetches download the whole docs-site repository as a tarball and keep only the docs; over the cap they fall back to per-file requests. Docs-site date lookups (`before the next major`) still use the REST API, and a token raises its 60-requests-an-hour limit.
 

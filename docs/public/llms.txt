@@ -1,0 +1,26 @@
+# lockdocs
+
+> Exact-version library docs from your lockfile — local, offline, no rate limits.
+
+lockdocs is a Rust command-line tool and Model Context Protocol (MCP) server published by Sylphx (`https://sylphx.com`). It reads your project's lockfile (`Cargo.lock`, `bun.lock`, `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `uv.lock`, `poetry.lock`, `go.sum`) and serves the documentation and API symbols for the exact versions your project installed — locally and offline, with no API key and no rate limits.
+
+## Install and Setup
+
+- npm: `npx -y @sylphx/lockdocs setup --client cursor,claude,codex`
+- Cargo: `cargo install lockdocs`
+- Homebrew: `brew install sylphxai/tap/lockdocs`
+
+## Documentation
+
+- [Home](https://sylphxai.github.io/lockdocs/)
+- [Quickstart](https://sylphxai.github.io/lockdocs/guide/quickstart)
+- [Editors and agents](https://sylphxai.github.io/lockdocs/guide/setup)
+- [Ecosystems](https://sylphxai.github.io/lockdocs/guide/ecosystems)
+- [Upstream docs and fetching](https://sylphxai.github.io/lockdocs/guide/fetch)
+- [How it works](https://sylphxai.github.io/lockdocs/guide/how-it-works)
+- [MCP tools](https://sylphxai.github.io/lockdocs/reference/tools)
+- [CLI reference](https://sylphxai.github.io/lockdocs/reference/cli)
+- [Benchmarks](https://sylphxai.github.io/lockdocs/benchmarks)
+- [Comparison](https://sylphxai.github.io/lockdocs/compare)
+- [Pricing](https://sylphxai.github.io/lockdocs/pricing)
+- [GitHub repository](https://github.com/SylphxAI/lockdocs)

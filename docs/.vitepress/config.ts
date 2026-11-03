@@ -31,6 +31,42 @@ export default defineConfig({
     ['meta', { property: 'og:image:alt', content: 'lockdocs: the docs for the version you actually installed' }],
     ['meta', { name: 'twitter:image', content: `${url}og.png` }],
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+    [
+      'script',
+      { type: 'application/ld+json' },
+      JSON.stringify({
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'Organization',
+            name: 'Sylphx',
+            legalName: 'Sylphx Limited',
+            url: 'https://sylphx.com',
+            sameAs: ['https://github.com/SylphxAI', 'https://sylphx.com'],
+          },
+          {
+            '@type': 'WebSite',
+            name: 'lockdocs',
+            url,
+            description: desc,
+          },
+          {
+            '@type': 'SoftwareApplication',
+            name: 'lockdocs',
+            applicationCategory: 'DeveloperApplication',
+            operatingSystem: 'macOS, Linux, Windows',
+            url,
+            downloadUrl: 'https://www.npmjs.com/package/@sylphx/lockdocs',
+            description: desc,
+            offers: {
+              '@type': 'Offer',
+              price: '0',
+              priceCurrency: 'USD',
+            },
+          },
+        ],
+      }),
+    ],
   ],
   // Each page names its own URL, so search engines index every page, not just the home page.
   transformPageData(pageData) {

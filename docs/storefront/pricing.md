@@ -74,7 +74,7 @@ lockdocs Pro, with the link. Nothing is sent to the private host.
 
 ## Price
 
-**Current prices and seat packs are shown from the live Money catalogue**, paid upfront. No
+**One yearly price per seat**, paid upfront. Pick a pack below to see your total. No
 per-call charges, no parsing fees, no usage caps. Seats come in packs of 1, 5,
 10, 25 and 50. CI runners don't count as seats. Pro includes email support with
 a reply within two business days.

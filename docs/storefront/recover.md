@@ -1,12 +1,12 @@
 ---
 title: Recover your lockdocs Pro licence
-description: Retrieve an existing lockdocs Pro licence through Sylphx Money.
+description: Get your existing lockdocs Pro licence back by email.
 money_checkout: pro
 ---
 
 # Recover your lockdocs Pro licence
 
-Enter the email address used at checkout. If a paid licence exists, Money sends
+Enter the email address used at checkout. If a paid licence exists, we send
 an expiring recovery link. The response never says whether that address has a
 purchase, and no licence token is shown to an unverified browser.
 

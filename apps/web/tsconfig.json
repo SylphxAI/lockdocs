@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "ES2022", "lib": ["DOM", "DOM.Iterable", "ES2023"],
+    "module": "ESNext", "moduleResolution": "Bundler", "isolatedModules": true,
+    "jsx": "preserve", "jsxImportSource": "solid-js", "strict": true, "esModuleInterop": true,
+    "noEmit": true, "skipLibCheck": true, "resolveJsonModule": true,
+    "paths": { "@/*": ["./src/*"] }, "types": ["node", "vinxi/types/client"]
+  },
+  "include": ["src", "app.config.ts", "playwright.config.ts", "tests"]
+}

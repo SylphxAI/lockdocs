@@ -905,11 +905,18 @@ dependencies = [
  "base64 0.23.1",
  "ed25519-dalek 3.0.0",
  "flate2",
+ "getrandom 0.4.3",
+ "httparse",
  "lockdocs-core",
+ "serde",
  "serde_json",
+ "sha2 0.10.9",
+ "subtle",
  "sylphx-mcp-kit",
  "tar",
  "tempfile",
+ "ureq",
+ "url",
 ]
 
 [[package]]

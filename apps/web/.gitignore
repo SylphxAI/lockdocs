@@ -1,0 +1,7 @@
+/node_modules/
+/.vinxi/
+/.output/
+/.solid/
+/*.tsbuildinfo
+/test-results/
+/playwright-report/

@@ -14,7 +14,7 @@ const PUBLIC_KEYS: &[&str] = &[ISSUER_PUBLIC_KEY, "Pd65t04wyYv5wZRz5I9WZb8Imwn9e
 
 /// Test Money signers never unlock ordinary Pro operations.
 const TEST_PUBLIC_KEYS: &[&str] = &["FSZx75Ybp9KpOeqCzgXcf2CrmUil8oDXkPz1Z-deEN4"];
-const TEST_POLICY: LicencePolicy<'static> = LicencePolicy {
+pub(crate) const TEST_POLICY: LicencePolicy<'static> = LicencePolicy {
     public_keys: TEST_PUBLIC_KEYS,
     env_var: "LOCKDOCS_TEST_LICENCE_TOKEN",
     file_name: "test-licence",

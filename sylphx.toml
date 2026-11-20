@@ -1,0 +1,19 @@
+version = "1"
+
+[project]
+name = "Lockdocs"
+default_env = "preview"
+
+[build]
+strategy = "dockerfile"
+dockerfile = "Dockerfile"
+context = "."
+
+[[services]]
+name = "web"
+port = 3000
+public_networking = true
+
+[services.health]
+mode = "http"
+path = "/api/health"

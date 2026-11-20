@@ -1,0 +1,16 @@
+**
+!apps/
+!apps/web/
+!apps/web/**
+apps/web/node_modules
+apps/web/.output
+apps/web/.vinxi
+apps/web/.solid
+apps/web/.env*
+apps/web/playwright-report
+apps/web/test-results
+apps/web/*.tsbuildinfo
+!config/
+!config/money-catalogue.json
+!docs/
+!docs/**/*.md

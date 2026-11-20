@@ -170,11 +170,52 @@ jobs:
       - name: Brand home (hashes and surface copies agree)
         uses: SylphxAI/.github/.github/actions/brand@a6c81b4bcda66bf624f0a68e25e63b3c0ed043eb # shared brand generator
 
+  web-preview:
+    name: SolidStart preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '22.23.5'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+      - run: cargo build --locked -p lockdocs
+      - name: Check the web app and native login
+        working-directory: apps/web
+        run: |
+          npm ci --no-audit --no-fund
+          npm run typecheck
+          npm run lint
+          LOCKDOCS_TEST_BINARY="$GITHUB_WORKSPACE/target/debug/lockdocs" npm test
+      - name: Verify the production server in Chromium
+        working-directory: apps/web
+        run: |
+          npm run build
+          npx --no-install playwright install --with-deps chromium
+          npm run test:browser
+      - name: Verify the preview container
+        run: |
+          docker build -t lockdocs-preview-check .
+          container=$(docker run -d -p 127.0.0.1::3000 lockdocs-preview-check)
+          trap 'docker rm -f "$container"' EXIT
+          address=$(docker port "$container" 3000/tcp)
+          curl --fail --silent --show-error --retry 10 --retry-connrefused "http://$address/api/health" | grep -Fx '{"status":"ok"}'
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: always()
+        with:
+          name: lockdocs-preview-chromium
+          path: apps/web/test-results/
+          if-no-files-found: ignore
+
   # The org-wide required check name: every lane passes or is skipped, except
   # chat-senders, which must actually succeed.
   ci-ok:
     if: always()
-    needs: [plain-language, identifiers, chat-senders, test, checks]
+    needs: [plain-language, identifiers, chat-senders, test, checks, web-preview]
     # The reserved gate pool (Kueue queue scale-set-gate, never lends): an
     # `if: always()` verdict still runs after its run is cancelled, and that run
     # keeps its concurrency group until it does, so on a busy build pool a
@@ -191,7 +232,7 @@ jobs:
           # test and checks keep a job result of success even when a pull
           # request touches no code (their heavy steps are skipped inside), so
           # a non-skipped verdict is required only of the fast lanes.
-          required: plain-language,identifiers,test,checks
+          required: plain-language,identifiers,test,checks,web-preview
       # chat-senders is never skipped, so its success is required directly:
       # on a pull request, on a merge group and on the main push alike.
       - name: Require the chat-senders proof (skipped or cancelled fails)

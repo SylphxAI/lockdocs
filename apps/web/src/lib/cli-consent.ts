@@ -10,4 +10,3 @@ export function readConsent(values: Record<string, unknown>): Consent | null {
       !isVerifier(state) || !isVerifier(challenge)) return null;
   return { port: Number(port), state, challenge };
 }
-

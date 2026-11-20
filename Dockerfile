@@ -14,7 +14,7 @@ RUN npm run build
 
 FROM node:22.23.5-bookworm-slim AS runtime
 WORKDIR /app
-ENV NODE_ENV=production HOST=0.0.0.0 PORT=3000
+ENV NODE_ENV=production HOST=0.0.0.0 NITRO_HOST=0.0.0.0 PORT=3000
 COPY --from=build --chown=node:node /workspace/apps/web/.output ./.output
 USER node
 EXPOSE 3000

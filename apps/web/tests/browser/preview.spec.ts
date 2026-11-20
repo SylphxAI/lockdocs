@@ -82,12 +82,23 @@ test("all technical docs load with working internal links and anchors", async ({
 
 test("preview host is noindexed and missing bindings fail closed", async ({ request, page }) => {
   const ordinary = await request.get("/api/health");
-  expect(ordinary.headers()["x-robots-tag"]).toBeUndefined();
+  expect(ordinary.headers()["x-robots-tag"]).toBe("noindex, nofollow");
   const preview = await request.get("/api/health", { headers: { Host: "preview.lockdocs.sylphx.app" } });
   expect(preview.headers()["x-robots-tag"]).toBe("noindex, nofollow");
   expect(await preview.json()).toEqual({ status: "ok" });
   const lookalike = await request.get("/api/health", { headers: { Host: "lockdocs.sylphx.app.example.org" } });
-  expect(lookalike.headers()["x-robots-tag"]).toBeUndefined();
+  expect(lookalike.headers()["x-robots-tag"]).toBe("noindex, nofollow");
+  const liveHeaders = { Host: "Lockdocs.sylphx.com:443", "X-Forwarded-Host": "lockdocs.sylphx.com" };
+  expect((await request.get("/api/health", { headers: liveHeaders })).headers()["x-robots-tag"]).toBeUndefined();
+  const conflict = { ...liveHeaders, "X-Forwarded-Host": "preview.lockdocs.sylphx.app:443" };
+  expect((await request.get("/api/health", { headers: conflict })).headers()["x-robots-tag"]).toBe("noindex, nofollow");
+  for (const [headers, rule] of [[liveHeaders, "Allow: /"], [conflict, "Disallow: /"]] as const) {
+    const robots = await request.get("/robots.txt", { headers });
+    expect(robots.status()).toBe(200);
+    expect(await robots.text()).toBe(`User-agent: *
+${rule}
+`);
+  }
   await page.goto("/dashboard");
   await expect(page.getByText("Sign-in isn’t available", { exact: false })).toBeVisible();
   expect((await request.post("/api/billing/checkout")).status()).toBe(503);

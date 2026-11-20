@@ -5,7 +5,7 @@ import { PageMeta } from "@/components/page-meta";
 import { A as Link } from "@solidjs/router";
 import { Terminal } from "lucide-solid";
 import { SignIn } from "@/components/sign-in";
-import { readConsent } from "@/lib/cli-envelope";
+import { readConsent } from "@/lib/cli-consent";
 
 
 export default function Authorize() {

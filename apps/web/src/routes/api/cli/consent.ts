@@ -1,6 +1,7 @@
 import type { APIEvent } from "@solidjs/start/server";
 import { appOrigin, getSession, privateJson, privateRedirect, sameOrigin } from "@/lib/auth";
-import { readConsent, sealGrant } from "@/lib/cli-envelope";
+import { readConsent } from "@/lib/cli-consent";
+import { sealGrant } from "@/lib/cli-envelope";
 import { getEntitlement, listMine } from "@/lib/money";
 
 export async function POST({ request }: APIEvent) {

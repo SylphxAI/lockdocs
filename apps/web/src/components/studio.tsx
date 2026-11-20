@@ -1,6 +1,6 @@
 
 
-import { createMemo, createSignal, For, Show, type JSX } from "solid-js";
+import { createMemo, createSignal, For, Show } from "solid-js";
 import { A as Link } from "@solidjs/router";
 import { ArrowRight, ArrowUpRight, Braces, FileCode2, GitCompareArrows, ListTree } from "lucide-solid";
 import { CopyButton } from "@/components/copy-button";
@@ -13,8 +13,9 @@ export function Studio() {
   const [format, setFormat] = createSignal<Format>(formats[0]);
   const [input, setInput] = createSignal(samples[formats[0]]);
   const [formatUsed, setFormatUsed] = createSignal<Format>(formats[0]);
-  const [rows, setRows] = createSignal(resolveLockfile(formats[0], samples[formats[0]]));
-  const [selected, setSelected] = createSignal<Dependency | null>(rows()[0] ?? null);
+  const initialRows = resolveLockfile(formats[0], samples[formats[0]]);
+  const [rows, setRows] = createSignal(initialRows);
+  const [selected, setSelected] = createSignal<Dependency | null>(initialRows[0] ?? null);
   const [message, setMessage] = createSignal("");
   const [count, setCount] = createSignal(35);
   const [upgrade, setUpgrade] = createSignal<keyof typeof upgrades>("next");

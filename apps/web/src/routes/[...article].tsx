@@ -9,7 +9,7 @@ import { visit } from "unist-util-visit";
 import { PageMeta } from "@/components/page-meta";
 import { docGroups, docHref, docPages } from "@/lib/docs";
 
-const files = import.meta.glob("../../../../docs/**/*.md", { eager: true, query: "?raw", import: "default" }) as Record<string, string>;
+const files = import.meta.glob(["../../../../docs/**/*.md", "!../../../../docs/storefront/**"], { eager: true, query: "?raw", import: "default" }) as Record<string, string>;
 const redirects: Record<string, string> = { "/guide/quickstart": "/guide", "/reference/cli": "/reference", "/recover": "/dashboard" };
 function customAnchors() {
   return (tree: Parameters<typeof visit>[0]) => visit(tree, "element", (node) => {
@@ -32,7 +32,7 @@ export default function Article() {
         <aside class="docs-sidebar"><nav aria-label="Documentation"><A class="docs-brand" href="/docs"><BookOpen size={16}/> Lockdocs docs</A><For each={docGroups}>{group => <div class="docs-group"><div>{group.label}</div><For each={group.pages}>{item => <A href={item.route} end>{item.title}</A>}</For></div>}</For></nav></aside>
         <article class="doc-body"><div class="kicker"><span/> LOCKDOCS MANUAL</div>
         <Show when={page.route === "/docs"}><h1>Documentation</h1><p>Look up APIs for the version you installed. Start in the terminal, then give the same answers to your coding agent.</p><div class="doc-start"><A href="/guide"><Terminal size={18}/> Quickstart <ArrowRight size={15}/></A><A href="/reference"><BookOpen size={18}/> CLI reference <ArrowRight size={15}/></A></div></Show>
-        <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[customAnchors,rehypeSlug]} transformLinkUri={(url) => docHref(url,page)} components={{ img: ({ alt }) => <span>{alt}</span>, table: (props) => <div class="table-scroll" tabindex="0"><table>{props.children}</table></div> }}>{files["../../../../docs/" + page.source]?.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, "")}</Markdown>
+        <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[customAnchors,rehypeSlug]} transformLinkUri={(url) => docHref(url,page)} components={{ img: (props) => <span>{props.alt}</span>, table: (props) => <div class="table-scroll" tabindex="0"><table>{props.children}</table></div> }}>{files["../../../../docs/" + page.source]?.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, "")}</Markdown>
         </article>
       </div>}
     </Show>

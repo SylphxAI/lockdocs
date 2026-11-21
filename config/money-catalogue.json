@@ -1,5 +1,14 @@
 {
   "spec": {
+    "checkout_branding": {
+      "display_name": "Lockdocs",
+      "icon": {
+        "url": "https://sylphx.com/icon-512.png"
+      },
+      "background_color": "#FAFBFD",
+      "button_color": "#0F172A",
+      "border_style": "rounded"
+    },
     "features": [
       {
         "key": "lockdocs_pro_seat_year",

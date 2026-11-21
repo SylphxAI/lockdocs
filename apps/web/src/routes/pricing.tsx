@@ -20,7 +20,9 @@ export default function Pricing() {
   const details = createAsync(() => account(), { deferStream: true });
   const session = () => details()?.user;
   const entitlement = () => details()?.entitlement;
-  return <Suspense><div class="wrap content-section"><PageMeta title="Pricing · Lockdocs" description="Compare Free and Lockdocs Pro, with tax-inclusive annual pricing in four currencies."/>
+  return <>
+    <PageMeta title="Pricing · Lockdocs" description="Compare Free and Lockdocs Pro, with tax-inclusive annual pricing in four currencies."/>
+    <Suspense><div class="wrap content-section">
     <div class="page-intro"><div class="kicker"><span/> PLANS / 01</div><h1>Pay for the hard parts.</h1><p>Exact-version docs are free. Pro is for the upgrades and private dependencies you can’t leave to guesswork.</p></div>
     <nav class="segmented currency-picker" aria-label="Billing currency"><For each={currencies}>{(code) => <Link aria-current={code === currency() ? "page" : undefined} href={code === "USD" ? "/pricing" : "/pricing?currency=" + code}>{code}</Link>}</For></nav>
     <div class="plan-grid">
@@ -31,5 +33,6 @@ export default function Pricing() {
       </article>
     </div>
     <section class="terms"><LockKeyhole size={19}/><div><h2>Annual billing and cancellation</h2><p>The full annual amount is billed upfront. UK and EU consumers generally have 14 days from purchase to cancel a new subscription. See the <Link href="/legal/terms">subscription terms</Link> for how to cancel and when exceptions apply. Manage renewal and invoices in your <Link href="/dashboard">account</Link>.</p><p class="mono quiet">US$120/yr · £99/yr · €109/yr · HK$938/yr · Tax included</p></div></section>
-  </div></Suspense>;
+  </div></Suspense>
+  </>;
 }

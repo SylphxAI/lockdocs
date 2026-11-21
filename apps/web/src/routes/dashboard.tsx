@@ -19,7 +19,7 @@ const notices: Record<string, string> = {
 
 export default function Dashboard() {
   const [query] = useSearchParams();
-  const details = createAsync(() => account());
+  const details = createAsync(() => account(), { deferStream: true });
   const session = () => details()?.user;
   const entitlement = () => details()?.entitlement;
   const messages = () => ["billing", "auth", "cli"].flatMap((key) => notices[key + ":" + query[key as keyof typeof query]] ?? []);
@@ -28,7 +28,7 @@ export default function Dashboard() {
     <For each={messages()}>{(text) => <p role="status" class="notice account-notice">{text}</p>}</For>
     <div class="plan-grid account-grid">
       <section class="surface plan"><div class="plan-label"><BadgeCheck size={17}/> IDENTITY &amp; ACCESS</div>
-        {session() ? <><h2>{session()?.name || "Signed in"}</h2><p>Plan: <strong>{entitlement()?.status === "unavailable" ? "Couldn’t check right now" : entitlement()?.entitled ? "Lockdocs Pro · Active" : "Free"}</strong></p><div class="inline-actions">{!entitlement()?.entitled && <Link class="button primary" href="/pricing">See plans <ArrowRight size={15}/></Link>}<form action="/api/auth/sign-out" method="post"><button class="button secondary">Sign out</button></form></div></> : <><h2>Sign in to Lockdocs</h2><p class="quiet">Use the same sign-in you use for Pro.</p><SignIn enabled={Boolean(details()?.auth)} next="/dashboard"/></>}
+        {session() ? <><h2>{session()?.name || "Signed in"}</h2><p>Plan: <strong>{entitlement()?.status === "unavailable" ? "Couldn’t check right now" : entitlement()?.entitled ? "Lockdocs Pro · Active" : "Free"}</strong></p><div class="inline-actions">{!entitlement()?.entitled && <Link class="button primary" href="/pricing">See plans <ArrowRight size={15}/></Link>}<form action="/api/auth/sign-out" method="post"><button class="button secondary">Sign out</button></form></div></> : <><h2>Sign in to Lockdocs</h2><p class="quiet">Use the same sign-in you use for Pro.</p><SignIn capabilities={details()?.auth} next="/dashboard"/></>}
       </section>
       <section class="surface plan"><div class="plan-label"><CreditCard size={17}/> SUBSCRIPTION</div><h2>Billing &amp; recovery</h2><p class="quiet">View invoices, manage renewal, or find a purchase with the account you used at checkout.</p>
         {session() && entitlement()?.status !== "unavailable" ? <form method="post" action="/api/billing/portal"><button type="submit" class="button secondary">Open Billing Portal <ArrowRight size={15}/></button></form> : <p class="quiet">{session() ? "Billing isn’t available right now." : "Sign in to manage billing."}</p>}

@@ -4,10 +4,13 @@ import { randomBytes, timingSafeEqual } from "node:crypto";
 
 export type Session = Readonly<{ id: string; name?: string; email?: string; token: string }>;
 export type OAuthProvider = "github" | "google";
+const methods = ["email_otp", "password", "passkey", "sign_up"] as const;
+export type AuthCapabilities = Record<OAuthProvider | typeof methods[number], boolean>;
 
 type AuthConfig = { origin: string; base: string; key: string; secret: string; instance: string };
 const SESSION = "__Host-lockdocs-session";
 const OAUTH = "__Host-lockdocs-oauth";
+const EMAIL_FLOW = "__Host-lockdocs-email-flow";
 const PASSKEY = "__Host-lockdocs-passkey";
 const privateHeaders = { "Cache-Control": "no-store", "Referrer-Policy": "no-referrer" };
 const verified = new WeakMap<Session, { agent: string | null; expires: number }>();
@@ -178,18 +181,46 @@ function equal(left: string, right: string) {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
-export function startOAuth(request: Request) {
+function clientEndpoint(auth: AuthConfig, path: string) {
+  const url = new URL("/v1/client/" + path, auth.base);
+  url.searchParams.set("publishable_key", auth.key);
+  return url;
+}
+
+export async function getCapabilities(request: Request, auth = config()): Promise<AuthCapabilities | null> {
+  if (!auth || new URL(request.url).origin !== auth.origin) return null;
+  try {
+    const response = await providerFetch(clientEndpoint(auth, "config"), {
+      headers: authHeaders(request.headers.get("user-agent")),
+    });
+    if (!response.ok) return null;
+    const body = await response.json();
+    if (body?.instance?.id !== auth.instance) return null;
+    // Auth returns `social`; also accept deployments that name this list `providers`.
+    const providers = body.social ?? body.providers;
+    const hasProvider = (name: OAuthProvider) => Array.isArray(providers) && providers.some(
+      item => item?.provider === name && item.enabled !== false && Boolean(item.credentials));
+    return {
+      github: hasProvider("github"), google: hasProvider("google"),
+      email_otp: body.methods?.email_otp === true, passkey: body.methods?.passkey === true,
+      password: body.methods?.password === true, sign_up: body.methods?.sign_up === true,
+    };
+  } catch { return null; }
+}
+
+function signInRetry(origin: string, next: string) {
+  return privateRedirect(new URL("/sign-in?" + new URLSearchParams({ auth: "failed", next }), origin));
+}
+
+export async function startOAuth(request: Request, provider: OAuthProvider) {
   const auth = config();
   if (!auth) return privateJson({ error: "auth_unavailable" }, 503);
-  const params = new URL(request.url).searchParams;
-  const providers = params.getAll("provider");
-  const provider = providers[0] ?? "github";
-  if (providers.length > 1 || (provider !== "github" && provider !== "google")) {
-    return privateJson({ error: "invalid_provider" }, 400);
-  }
-  const state = randomBytes(32).toString("base64url");
+  const { origin, searchParams: params } = new URL(request.url);
+  if (origin !== auth.origin) return privateJson({ error: "invalid_origin" }, 403);
   const next = validateNext(params.getAll("next").length === 1 ? params.get("next") : null);
-  const callback = new URL("/api/auth/callback", auth.origin);
+  if (!(await getCapabilities(request, auth))?.[provider]) return signInRetry(origin, next);
+  const state = randomBytes(32).toString("base64url");
+  const callback = new URL("/api/auth/callback", origin);
   callback.searchParams.set("state", state);
   const url = new URL("/v1/client/oauth/" + provider + "/start", auth.base);
   url.search = new URLSearchParams({ publishable_key: auth.key, redirect_url: callback.href, session_mode: "server" }).toString();
@@ -209,7 +240,8 @@ export async function finishOAuth(request: Request) {
   const auth = config();
   if (!auth) return privateJson({ error: "auth_unavailable" }, 503);
   const [state, encodedNext] = (cookie(request, OAUTH) ?? "").split(".");
-  const params = new URL(request.url).searchParams;
+  const { origin, searchParams: params } = new URL(request.url);
+  if (origin !== auth.origin) return privateJson({ error: "invalid_origin" }, 403);
   const states = params.getAll("state");
   if (!isCliCode(state) || states.length !== 1 || !equal(state, states[0])) {
     return privateJson({ error: "invalid_oauth_state" }, 400);
@@ -219,7 +251,7 @@ export async function finishOAuth(request: Request) {
   const error = aliased(params, "auth_error", "sylphx_error");
   const login = error === "" && ticket && ticket.length <= 2048
     ? await redeem(auth, ticket, request.headers.get("user-agent")) : null;
-  const response = privateRedirect(new URL(login ? next : "/dashboard?auth=failed", auth.origin));
+  const response = login ? privateRedirect(new URL(next, origin)) : signInRetry(origin, next);
   setPrivateCookie(response, OAUTH, "", { maxAge: 0 });
   if (login) setPrivateCookie(response, SESSION, login.token, { maxAge: login.maxAge });
   return response;
@@ -242,23 +274,18 @@ export async function signOut(request: Request) {
     } catch { /* Still clear the local session. */ }
   }
   const response = privateRedirect(new URL(revoked ? "/dashboard" : "/dashboard?auth=sign_out_partial", origin));
-  for (const name of [SESSION, OAUTH, PASSKEY]) setPrivateCookie(response, name, "", { maxAge: 0 });
+  for (const name of [SESSION, OAUTH, PASSKEY, EMAIL_FLOW]) setPrivateCookie(response, name, "", { maxAge: 0 });
   return response;
-}
-
-function passkeyEndpoint(auth: AuthConfig, phase: "begin" | "verify") {
-  const url = new URL("/v1/client/sign-in/passkey/" + phase, auth.base);
-  url.searchParams.set("publishable_key", auth.key);
-  return url;
 }
 
 export async function beginPasskey(request: Request) {
   const auth = config();
   if (!auth) return privateJson({ error: "auth_unavailable" }, 503);
   if (!sameOrigin(request, auth.origin)) return privateJson({ error: "invalid_origin" }, 403);
+  if (!(await getCapabilities(request, auth))?.passkey) return privateJson({ error: "passkey_unavailable" }, 503);
   const rp = new URL(auth.origin).hostname;
   try {
-    const upstream = await providerFetch(passkeyEndpoint(auth, "begin"), {
+    const upstream = await providerFetch(clientEndpoint(auth, "sign-in/passkey/begin"), {
       method: "POST", headers: authHeaders(request.headers.get("user-agent"), undefined, true),
       body: JSON.stringify({ rp_id: rp, origin: auth.origin }),
     });
@@ -283,6 +310,7 @@ export async function verifyPasskey(request: Request) {
   const auth = config();
   if (!auth) return privateJson({ error: "auth_unavailable" }, 503);
   if (!sameOrigin(request, auth.origin)) return privateJson({ error: "invalid_origin" }, 403);
+  if (!(await getCapabilities(request, auth))?.passkey) return privateJson({ error: "passkey_unavailable" }, 503);
   const body = await boundedJson(request, 24_000);
   const challenge = cookie(request, PASSKEY);
   if (!body || !challenge || typeof body.challenge_id !== "string" || !equal(challenge, body.challenge_id)) {
@@ -298,7 +326,7 @@ export async function verifyPasskey(request: Request) {
   let login = null;
   try {
     const agent = request.headers.get("user-agent");
-    const upstream = await providerFetch(passkeyEndpoint(auth, "verify"), {
+    const upstream = await providerFetch(clientEndpoint(auth, "sign-in/passkey/verify"), {
       method: "POST", headers: authHeaders(agent, undefined, true), body: JSON.stringify(assertion),
     });
     if (upstream.ok) {
@@ -310,4 +338,68 @@ export async function verifyPasskey(request: Request) {
   setPrivateCookie(response, PASSKEY, "", { maxAge: 0 });
   if (login) setPrivateCookie(response, SESSION, login.token, { maxAge: login.maxAge });
   return response;
+}
+
+export async function sessionStatus(request: Request) {
+  const session = await getSession(request);
+  return privateJson({ user: session ? { id: session.id, name: session.name, email: session.email } : null });
+}
+
+export async function emailSignIn(request: Request) {
+  const auth = config();
+  if (!auth) return privateJson({ error: "auth_unavailable" }, 503);
+  if (!sameOrigin(request, auth.origin) || new URL(request.url).origin !== auth.origin) return privateJson({ error: "invalid_origin" }, 403);
+  const body = await boundedJson(request, 8192);
+  if (!body) return privateJson({ error: "invalid_input" }, 400);
+  const { action, password, code } = body;
+  const email = typeof body.email === "string" ? body.email.trim() : "";
+  const next = validateNext(typeof body.next === "string" ? body.next : null);
+  const caps = await getCapabilities(request, auth);
+  let path: string;
+  let input: object;
+  if (action === "verify") {
+    const flow = cookie(request, EMAIL_FLOW);
+    if (!caps?.email_otp || !isCliCode(flow ?? null) || typeof code !== "string" || !/^\d{6}$/.test(code)) {
+      return privateJson({ error: "invalid_code" }, 400);
+    }
+    path = "continue/verify";
+    input = { flow, code };
+  } else {
+    if (!/^[^\s@]+@[^\s@]+$/.test(email) || email.length > 254) return privateJson({ error: "invalid_input" }, 400);
+    if (action === "send" && caps?.email_otp) {
+      path = "continue";
+      input = { email, method: "email_otp", session_mode: "server" };
+    } else if ((action === "password" || action === "sign_up") && caps?.password &&
+      (action === "password" || caps.sign_up) && typeof password === "string" && password.length > 0 && password.length <= 1024) {
+      path = action === "password" ? "sign-in/password" : "sign-up";
+      input = action === "password" ? { email, password, session_mode: "server" } :
+        { email, password, redirect_url: new URL("/sign-in?" + new URLSearchParams({ next }), auth.origin).href };
+    } else return privateJson({ error: "method_unavailable" }, 403);
+  }
+  try {
+    const agent = request.headers.get("user-agent");
+    const upstream = await providerFetch(clientEndpoint(auth, path), {
+      method: "POST", headers: authHeaders(agent, undefined, true), body: JSON.stringify(input),
+    });
+    if (upstream.status === 429) return privateJson({ error: "try_later" }, 429);
+    if (action === "sign_up" && upstream.status === 202) return privateJson({ step: "check_email" });
+    if (!upstream.ok) return privateJson({ error: "auth_failed" }, 401);
+    const result = await upstream.json();
+    if (action === "send" && result?.step === "email_otp" && isCliCode(result.flow) &&
+        Number.isSafeInteger(result.expires_in) && result.expires_in > 0) {
+      const response = privateJson({ step: "email_otp" });
+      setPrivateCookie(response, EMAIL_FLOW, result.flow, { maxAge: Math.min(result.expires_in, 600) });
+      return response;
+    }
+    if ((action === "password" || action === "verify") && typeof result?.ticket === "string" && result.ticket.length <= 2048) {
+      const login = await redeem(auth, result.ticket, agent);
+      if (login) {
+        const response = privateJson({ next });
+        setPrivateCookie(response, SESSION, login.token, { maxAge: login.maxAge });
+        setPrivateCookie(response, EMAIL_FLOW, "", { maxAge: 0 });
+        return response;
+      }
+    }
+  } catch { /* Never return upstream credentials or errors. */ }
+  return privateJson({ error: "auth_unavailable" }, 503);
 }

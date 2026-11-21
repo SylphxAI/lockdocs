@@ -1,0 +1,11 @@
+# Lockdocs
+
+> Lockdocs gives developers and coding agents documentation for the exact library versions in their project's lockfile. It searches local material and cites source files and lines. Once indexed, lookups work offline.
+
+## Documentation
+
+- [Quickstart](https://lockdocs.sylphx.com/guide): Install Lockdocs and look up an API for a pinned dependency.
+- [Agent setup](https://lockdocs.sylphx.com/guide/setup): Connect the local MCP server to a coding agent.
+- [MCP tools](https://lockdocs.sylphx.com/reference/tools): `resolve` reports pinned versions, `docs` searches indexed documentation, and `api` looks up a symbol's signatures and types.
+- [CLI reference](https://lockdocs.sylphx.com/reference): Index, resolve, and query dependencies from the terminal.
+- [Supported ecosystems](https://lockdocs.sylphx.com/guide/ecosystems): Lockfile support for JavaScript, Python, Rust, and Go.

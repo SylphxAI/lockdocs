@@ -220,6 +220,9 @@ jobs:
     if: needs.scope.outputs.kind != 'rust'
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
@@ -239,12 +242,35 @@ jobs:
           npm run build
           npx --no-install playwright install --with-deps --only-shell chromium
           npm run test:browser
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        if: always()
+      # Fork and Dependabot PRs still run the tests but cannot publish via OIDC.
+      - name: Gather Chromium results
+        id: chromium-results
+        if: >-
+          always() &&
+          (github.event_name != 'pull_request' ||
+           (github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'))
+        shell: bash
+        run: |
+          # Match the previous upload: keep relative paths and skip hidden files.
+          shopt -s globstar nullglob
+          bundle=$(mktemp -d "$RUNNER_TEMP/lockdocs-preview-chromium.XXXXXX")
+          has_results=false
+          for file in apps/web/test-results/**/*; do
+            [[ -f "$file" ]] || continue
+            dest="$bundle/${file#apps/web/test-results/}"
+            mkdir -p -- "${dest%/*}"
+            cp -- "$file" "$dest"
+            has_results=true
+          done
+          if $has_results; then echo "path=$bundle" >> "$GITHUB_OUTPUT"; fi
+      - name: Store Chromium results
+        if: always() && steps.chromium-results.outputs.path != ''
+        uses: SylphxAI/.github/.github/actions/run-store@724d4c9c87e736ced2068bc22eb57385adabd14d
         with:
+          mode: put
           name: lockdocs-preview-chromium
-          path: apps/web/test-results/
-          if-no-files-found: ignore
+          path: ${{ steps.chromium-results.outputs.path }}
+          retention-days: 1
 
   web-container:
     name: SolidStart container
@@ -256,6 +282,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        env:
+          DOCKER_BUILD_RECORD_UPLOAD: "false"
         with:
           context: .
           load: true

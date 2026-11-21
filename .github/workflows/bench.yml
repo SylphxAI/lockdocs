@@ -2,7 +2,7 @@ name: bench
 
 # Version-specific questions against real installs of popular libraries, on a
 # GitHub-hosted runner, with Context7's anonymous tier for comparison.
-# Results land in the job summary and the `bench` artifact.
+# Results land in the job summary and the `bench` run-store bundle.
 
 on:
   workflow_dispatch:
@@ -29,6 +29,9 @@ concurrency:
 jobs:
   bench:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
@@ -67,10 +70,27 @@ jobs:
         run: |
           set -euo pipefail
           python3 bench/cloud.py --out cloud.json --depth standard | tee -a "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+      - name: Gather benchmark results
+        id: bench-results
+        shell: bash
+        run: |
+          files=()
+          for file in bench.json cloud.json; do
+            if [[ -f "$file" ]]; then files+=("$file"); fi
+          done
+          if (( ${#files[@]} == 0 )); then exit 0; fi
+          bundle=$(mktemp -d "$RUNNER_TEMP/bench.XXXXXX")
+          cp -- "${files[@]}" "$bundle/"
+          echo "path=$bundle" >> "$GITHUB_OUTPUT"
+      # Fork and Dependabot PRs do not have a writable OIDC token.
+      - name: Store benchmark results
+        if: >-
+          steps.bench-results.outputs.path != '' &&
+          (github.event_name != 'pull_request' ||
+           (github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'))
+        uses: SylphxAI/.github/.github/actions/run-store@724d4c9c87e736ced2068bc22eb57385adabd14d
         with:
+          mode: put
           name: bench
-          path: |
-            bench.json
-            cloud.json
-          if-no-files-found: ignore
+          path: ${{ steps.bench-results.outputs.path }}
+          retention-days: 7

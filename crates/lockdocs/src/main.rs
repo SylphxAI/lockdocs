@@ -1,3 +1,4 @@
+mod login;
 mod mcp;
 mod preview;
 mod pro;
@@ -30,6 +31,8 @@ Commands:
   cache [clean]         Show or delete the cache (indexes and fetched packages)
   upgrade <pkg> <ver>   Pro: API changes from the pinned version to <ver>, limited to what this
                         project calls, with call sites (also: docs --pkg <pkg> --upgrade-to <ver>)
+  login [--test] [--no-browser]
+                        Sign in and activate a licence (requires LOCKDOCS_WEB_URL)
   licence status|activate <token>|buy --pack <id>
                         Show or activate a lockdocs Pro licence, or buy with the device flow
   mcp                   Run the MCP server on stdio (default with no command and non-terminal stdin)
@@ -169,6 +172,16 @@ fn run() -> Result<()> {
     // global option does not mean flags-only when a CLI command follows it.
     let mut args = Args::parse(raw);
     let cmd = args.take_command();
+    if cmd == "login" {
+        if !args.positional.is_empty() {
+            bail!("usage: lockdocs login [--test] [--no-browser]");
+        }
+        if args.on("offline") || std::env::var("LOCKDOCS_OFFLINE").is_ok_and(|v| v != "0") {
+            bail!("login needs network access; use `lockdocs licence activate <token>` to activate offline");
+        }
+        let policy = if args.on("test") { &pro::TEST_POLICY } else { &pro::POLICY };
+        return login::run(policy, args.on("no-browser"));
+    }
     // The Pro gate runs before any download or index work. Exit code 3: Pro required.
     let upgrade_target = match cmd.as_str() {
         "upgrade" => args.positional.get(1).map(String::as_str),

@@ -1,0 +1,51 @@
+{
+  "name": "lockdocs-web",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "vinxi dev",
+    "build": "vinxi build",
+    "start": "node .output/server/index.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "test:browser": "playwright test",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5",
+    "@fontsource-variable/jetbrains-mono": "^5",
+    "@solidjs/meta": "0.29.4",
+    "@solidjs/router": "0.16.3",
+    "@solidjs/start": "1.5.1",
+    "@tailwindcss/vite": "4.3.5",
+    "gray-matter": "4.0.3",
+    "h3": "^1.15.11",
+    "jsonc-parser": "3.3.1",
+    "lucide-solid": "1.77.0",
+    "rehype-slug": "6.0.0",
+    "remark-gfm": "4.0.1",
+    "smol-toml": "1.9.1",
+    "solid-js": "1.9.20",
+    "solid-markdown": "2.1.1",
+    "unist-util-visit": "5.1.0",
+    "vinxi": "0.5.11"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "@types/node": "^22.0.0",
+    "eslint": "^9",
+    "eslint-plugin-solid": "0.20.1",
+    "tailwindcss": "4.3.5",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3",
+    "typescript-eslint": "^8"
+  },
+  "overrides": {
+    "vinxi": {
+      "h3": "$h3"
+    }
+  }
+}

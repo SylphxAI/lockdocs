@@ -58,42 +58,64 @@ jobs:
         with:
           mode: fail
 
+  scope:
+    runs-on: ubuntu-latest
+    outputs:
+      kind: ${{ steps.paths.outputs.kind }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        if: github.event_name == 'pull_request'
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Classify the change against the tested base
+        id: paths
+        shell: bash
+        run: |
+          kind=all
+          if [[ "$GITHUB_EVENT_NAME" == pull_request ]]; then
+            # Compare the tested merge commit to its base parent. No API path
+            # limits; renames count as a removal and an addition.
+            paths="$RUNNER_TEMP/lockdocs-changed-paths"
+            git rev-parse --verify HEAD^2 >/dev/null
+            git diff --no-renames --name-only -z HEAD^1 HEAD -- > "$paths"
+            kind=
+            while IFS= read -r -d '' path; do
+              case "$path" in
+                apps/web/*|Dockerfile|sylphx.toml) lane=web ;;
+                crates/*|Cargo.toml|Cargo.lock) lane=rust ;;
+                *) lane=all ;;
+              esac
+              if [[ "$lane" == all || ( -n "$kind" && "$kind" != "$lane" ) ]]; then
+                kind=all
+                break
+              fi
+              kind=$lane
+            done < "$paths"
+          fi
+          echo "kind=${kind:-all}" >> "$GITHUB_OUTPUT"
+
   test:
     name: test (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    needs: scope
+    # A job-level skip would not expand the required check names. Publish the
+    # three named no-op receipts on Linux for a web-only PR.
+    runs-on: ${{ needs.scope.outputs.kind == 'web' && 'ubuntu-latest' || matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-    # Not skipped at job level: a skipped matrix job reports an unexpanded
-    # name and would leave the required `test (<os>)` checks pending. Instead
-    # the job always runs and its heavy steps are skipped for pull requests
-    # that touch only files no test reads.
-    permissions:
-      contents: read
-      pull-requests: read
     steps:
-      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
-        id: c
-        if: github.event_name == 'pull_request'
-        with:
-          predicate-quantifier: every
-          filters: |
-            code:
-              - '**'
-              - '!.github/ISSUE_TEMPLATE/**'
-              - '!LICENSE'
-              - '!CHANGELOG.md'
-              - '!CONTRIBUTING.md'
-              - '!SECURITY.md'
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        if: github.event_name != 'pull_request' || steps.c.outputs.code != 'false'
+        if: needs.scope.outputs.kind != 'web'
       - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
-        if: github.event_name != 'pull_request' || steps.c.outputs.code != 'false'
+        if: needs.scope.outputs.kind != 'web'
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
-        if: github.event_name != 'pull_request' || steps.c.outputs.code != 'false'
+        if: needs.scope.outputs.kind != 'web'
       - run: cargo test --workspace --locked
-        if: github.event_name != 'pull_request' || steps.c.outputs.code != 'false'
+        if: needs.scope.outputs.kind != 'web'
+      - run: echo 'Web-only PR; platform Rust tests are not affected.'
+        if: needs.scope.outputs.kind == 'web'
 
   checks:
     name: manifests, smoke, docs
@@ -170,8 +192,8 @@ jobs:
       - name: Brand home (hashes and surface copies agree)
         uses: SylphxAI/.github/.github/actions/brand@a6c81b4bcda66bf624f0a68e25e63b3c0ed043eb # shared brand generator
 
-  web-preview:
-    name: SolidStart preview
+  web-native:
+    name: Web checks and native login
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -191,21 +213,32 @@ jobs:
           npm run typecheck
           npm run lint
           LOCKDOCS_TEST_BINARY="$GITHUB_WORKSPACE/target/debug/lockdocs" npm test
+
+  web-preview:
+    name: SolidStart preview
+    needs: scope
+    if: needs.scope.outputs.kind != 'rust'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '22.23.5'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Cache Playwright Chromium
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-shell-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('apps/web/package-lock.json') }}
       - name: Verify the production server in Chromium
         working-directory: apps/web
         run: |
+          npm ci --no-audit --no-fund
           npm run build
-          npx --no-install playwright install --with-deps chromium
+          npx --no-install playwright install --with-deps --only-shell chromium
           npm run test:browser
-      - name: Verify the preview container
-        run: |
-          docker build -t lockdocs-preview-check .
-          container=$(docker run -d -p 127.0.0.1::3000 lockdocs-preview-check)
-          trap 'if [ "$?" -ne 0 ]; then docker logs --tail 80 "$container" >&2 || true; fi; docker rm -f "$container" >/dev/null' EXIT
-          address=$(docker port "$container" 3000/tcp)
-          # The published socket can reset connections before Node starts listening.
-          body=$(curl --fail --silent --show-error --retry 10 --retry-all-errors --retry-connrefused --retry-delay 1 --retry-max-time 15 --max-time 2 "http://$address/api/health")
-          printf '%s\n' "$body" | grep -Fx '{"status":"ok"}'
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: always()
         with:
@@ -213,11 +246,36 @@ jobs:
           path: apps/web/test-results/
           if-no-files-found: ignore
 
+  web-container:
+    name: SolidStart container
+    needs: scope
+    if: needs.scope.outputs.kind != 'rust'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          load: true
+          tags: lockdocs-preview-check
+          cache-from: type=gha,scope=lockdocs-preview
+          cache-to: ${{ github.event_name == 'push' && 'type=gha,scope=lockdocs-preview,mode=max' || '' }}
+      - name: Verify the preview container
+        run: |
+          container=$(docker run -d -p 127.0.0.1::3000 lockdocs-preview-check)
+          trap 'if [ "$?" -ne 0 ]; then docker logs --tail 80 "$container" >&2 || true; fi; docker rm -f "$container" >/dev/null' EXIT
+          address=$(docker port "$container" 3000/tcp)
+          # The published socket can reset connections before Node starts listening.
+          body=$(curl --fail --silent --show-error --retry 10 --retry-all-errors --retry-connrefused --retry-delay 1 --retry-max-time 15 --max-time 2 "http://$address/api/health")
+          printf '%s\n' "$body" | grep -Fx '{"status":"ok"}'
+
   # The org-wide required check name: every lane passes or is skipped, except
   # chat-senders, which must actually succeed.
   ci-ok:
     if: always()
-    needs: [plain-language, identifiers, chat-senders, test, checks, web-preview]
+    needs: [scope, plain-language, identifiers, chat-senders, test, checks, web-native, web-preview, web-container]
     # The reserved gate pool (Kueue queue scale-set-gate, never lends): an
     # `if: always()` verdict still runs after its run is cancelled, and that run
     # keeps its concurrency group until it does, so on a busy build pool a
@@ -231,10 +289,9 @@ jobs:
       - uses: SylphxAI/.github/.github/actions/needs-pass@b3b5ee92780e4979f2b23a09543e3064a91ec33b # main
         with:
           needs: ${{ toJSON(needs) }}
-          # test and checks keep a job result of success even when a pull
-          # request touches no code (their heavy steps are skipped inside), so
-          # a non-skipped verdict is required only of the fast lanes.
-          required: plain-language,identifiers,test,checks,web-preview
+          # Only a proven Rust-only PR may omit Chromium and Docker. The
+          # native-login integration still has to exercise the same CLI.
+          required: scope,plain-language,identifiers,test,checks,web-native${{ needs.scope.outputs.kind != 'rust' && ',web-preview,web-container' || '' }}
       # chat-senders is never skipped, so its success is required directly:
       # on a pull request, on a merge group and on the main push alike.
       - name: Require the chat-senders proof (skipped or cancelled fails)

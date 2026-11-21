@@ -6,12 +6,17 @@ const allDocs = ["/docs", "/guide", "/guide/setup", "/guide/how-it-works", "/gui
 test("public HTML protects package versions without changing selectable commands", async ({ page, request }) => {
   const sitemap = await request.get("/sitemap.xml");
   expect(sitemap.ok()).toBeTruthy();
-  const routes = [...(await sitemap.text()).matchAll(/<loc>(.*?)<\/loc>/g)].map(([, url]) => new URL(url).pathname);
+  const urls = [...(await sitemap.text()).matchAll(/<loc>(.*?)<\/loc>/g)].map(([, url]) => new URL(url));
+  for (const url of urls) expect(url.origin).toBe("https://lockdocs.sylphx.com");
+  const routes = urls.map((url) => url.pathname);
   expect(routes).toEqual(["/", "/pricing", "/playground", "/legal/privacy", "/legal/terms", ...allDocs]);
   await Promise.all(routes.map(async (route) => {
-    const response = await request.get(route);
+    const response = await request.get(route + "?ref=canonical-test");
     expect(response.status(), route).toBe(200);
-    expect(await response.text(), route).not.toMatch(/[\w.-]@[vV]?\d|__cf_email__/);
+    const html = await response.text();
+    expect([...html.matchAll(/<link[^>]* rel="canonical" href="([^"]+)"[^>]*>/g)].map(([, url]) => url), route)
+      .toEqual([`https://lockdocs.sylphx.com${route}`]);
+    expect(html, route).not.toMatch(/[\w.-]@[vV]?\d|__cf_email__/);
   }));
   await page.goto("/guide/fetch");
   await expect(page.locator("pre code").filter({ hasText: "github.com/vercel/next.js@v15.1.0" })).toBeVisible();
@@ -114,6 +119,10 @@ test("preview host is noindexed and missing bindings fail closed", async ({ requ
   expect(lookalike.headers()["x-robots-tag"]).toBe("noindex, nofollow");
   const liveHeaders = { Host: "Lockdocs.sylphx.com:443", "X-Forwarded-Host": "lockdocs.sylphx.com" };
   expect((await request.get("/api/health", { headers: liveHeaders })).headers()["x-robots-tag"]).toBeUndefined();
+  const home = await request.get("/", { headers: liveHeaders, maxRedirects: 0 });
+  expect(home.status()).toBe(200);
+  expect(home.headers()["x-robots-tag"]).toBeUndefined();
+  expect(await home.text()).toContain('rel="canonical" href="https://lockdocs.sylphx.com/"');
   const conflict = { ...liveHeaders, "X-Forwarded-Host": "preview.lockdocs.sylphx.app:443" };
   expect((await request.get("/api/health", { headers: conflict })).headers()["x-robots-tag"]).toBe("noindex, nofollow");
   for (const [headers, rule] of [[liveHeaders, "Allow: /"], [conflict, "Disallow: /"]] as const) {
@@ -124,6 +133,7 @@ ${rule}
 `);
   }
   await page.goto("/dashboard");
+  await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
   await expect(page.getByText("Sign-in isn’t available", { exact: false })).toBeVisible();
   expect((await request.post("/api/billing/checkout")).status()).toBe(503);
 });

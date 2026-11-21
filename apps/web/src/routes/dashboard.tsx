@@ -23,7 +23,9 @@ export default function Dashboard() {
   const session = () => details()?.user;
   const entitlement = () => details()?.entitlement;
   const messages = () => ["billing", "auth", "cli"].flatMap((key) => notices[key + ":" + query[key as keyof typeof query]] ?? []);
-  return <Suspense><div class="wrap content-section"><PageMeta title="Account · Lockdocs" description="Manage your Lockdocs Pro subscription and connect your CLI."/>
+  return <>
+    <PageMeta title="Account · Lockdocs" description="Manage your Lockdocs Pro subscription and connect your CLI." unlisted/>
+    <Suspense><div class="wrap content-section">
     <div class="page-intro"><div class="kicker"><span/> YOUR WORKSPACE</div><h1>Account</h1><p>Manage Pro and connect the terminal you work in.</p></div>
     <For each={messages()}>{(text) => <p role="status" class="notice account-notice">{text}</p>}</For>
     <div class="plan-grid account-grid">
@@ -35,5 +37,6 @@ export default function Dashboard() {
       </section>
       <section class="surface plan account-cli"><div class="plan-label"><Terminal size={17}/> TERMINAL</div><h2>Connect this CLI</h2><p>With Pro active, run <code>lockdocs login</code> in your terminal and approve access in the browser. You won’t need to copy anything back.</p></section>
     </div>
-  </div></Suspense>;
+  </div></Suspense>
+  </>;
 }

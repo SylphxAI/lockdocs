@@ -2,18 +2,26 @@ version = "1"
 
 [project]
 name = "Lockdocs"
-default_env = "preview"
+default_env = "production"
 
 [build]
 strategy = "dockerfile"
 dockerfile = "Dockerfile"
 context = "."
 
+[environments.production.env.LOCKDOCS_APP_ORIGIN]
+value = "https://lockdocs.sylphx.com"
+
 [[services]]
 name = "web"
+type = "web"
 port = 3000
-public_networking = true
+watch_paths = ["apps/web/**", "docs/**", "config/money-catalogue.json", "Dockerfile", ".dockerignore", "sylphx.toml"]
 
 [services.health]
 mode = "http"
 path = "/api/health"
+
+[[domains]]
+hostname = "lockdocs.sylphx.com"
+service = "web"

@@ -27,7 +27,7 @@ export default function Article() {
   const location = useLocation();
   const article = createMemo(() => docPages.find(({ route }) => route === location.pathname));
   return <Show when={redirects[location.pathname]} fallback={
-    <Show when={article()} keyed fallback={<div class="wrap content-section"><HttpStatusCode code={404}/><PageMeta title="Page not found · Lockdocs" description="This Lockdocs page does not exist."/><h1>Page not found</h1><A href="/docs">Open the docs</A></div>}>
+    <Show when={article()} keyed fallback={<div class="wrap content-section"><HttpStatusCode code={404}/><PageMeta title="Page not found · Lockdocs" description="This Lockdocs page does not exist." unlisted/><h1>Page not found</h1><A href="/docs">Open the docs</A></div>}>
       {(page) => <div class="wrap docs-layout">
         <PageMeta title={page.title + " · Lockdocs"} description={page.description}/>
         <aside class="docs-sidebar"><nav aria-label="Documentation"><A class="docs-brand" href="/docs"><BookOpen size={16}/> Lockdocs docs</A><For each={docGroups}>{group => <div class="docs-group"><div>{group.label}</div><For each={group.pages}>{item => <A href={item.route} end>{item.title}</A>}</For></div>}</For></nav></aside>

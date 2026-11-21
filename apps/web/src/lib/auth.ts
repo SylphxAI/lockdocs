@@ -1,5 +1,6 @@
 import { cookie, setPrivateCookie } from "./http";
 import { boundedJson } from "./bounded-json";
+import { hasPublicOrigin } from "./public-origin";
 import { randomBytes, timingSafeEqual } from "node:crypto";
 
 export type Session = Readonly<{ id: string; name?: string; email?: string; token: string }>;
@@ -188,7 +189,7 @@ function clientEndpoint(auth: AuthConfig, path: string) {
 }
 
 export async function getCapabilities(request: Request, auth = config()): Promise<AuthCapabilities | null> {
-  if (!auth || new URL(request.url).origin !== auth.origin) return null;
+  if (!auth || !hasPublicOrigin(request, auth.origin)) return null;
   try {
     const response = await providerFetch(clientEndpoint(auth, "config"), {
       headers: authHeaders(request.headers.get("user-agent")),
@@ -215,8 +216,9 @@ function signInRetry(origin: string, next: string) {
 export async function startOAuth(request: Request, provider: OAuthProvider) {
   const auth = config();
   if (!auth) return privateJson({ error: "auth_unavailable" }, 503);
-  const { origin, searchParams: params } = new URL(request.url);
-  if (origin !== auth.origin) return privateJson({ error: "invalid_origin" }, 403);
+  const { origin } = auth;
+  if (!hasPublicOrigin(request, origin)) return privateJson({ error: "invalid_origin" }, 403);
+  const params = new URL(request.url).searchParams;
   const next = validateNext(params.getAll("next").length === 1 ? params.get("next") : null);
   if (!(await getCapabilities(request, auth))?.[provider]) return signInRetry(origin, next);
   const state = randomBytes(32).toString("base64url");
@@ -240,8 +242,9 @@ export async function finishOAuth(request: Request) {
   const auth = config();
   if (!auth) return privateJson({ error: "auth_unavailable" }, 503);
   const [state, encodedNext] = (cookie(request, OAUTH) ?? "").split(".");
-  const { origin, searchParams: params } = new URL(request.url);
-  if (origin !== auth.origin) return privateJson({ error: "invalid_origin" }, 403);
+  const { origin } = auth;
+  if (!hasPublicOrigin(request, origin)) return privateJson({ error: "invalid_origin" }, 403);
+  const params = new URL(request.url).searchParams;
   const states = params.getAll("state");
   if (!isCliCode(state) || states.length !== 1 || !equal(state, states[0])) {
     return privateJson({ error: "invalid_oauth_state" }, 400);
@@ -348,7 +351,7 @@ export async function sessionStatus(request: Request) {
 export async function emailSignIn(request: Request) {
   const auth = config();
   if (!auth) return privateJson({ error: "auth_unavailable" }, 503);
-  if (!sameOrigin(request, auth.origin) || new URL(request.url).origin !== auth.origin) return privateJson({ error: "invalid_origin" }, 403);
+  if (!sameOrigin(request, auth.origin) || !hasPublicOrigin(request, auth.origin)) return privateJson({ error: "invalid_origin" }, 403);
   const body = await boundedJson(request, 8192);
   if (!body) return privateJson({ error: "invalid_input" }, 400);
   const { action, password, code } = body;

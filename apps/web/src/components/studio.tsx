@@ -3,6 +3,7 @@
 import { createMemo, createSignal, For, Show } from "solid-js";
 import { A as Link } from "@solidjs/router";
 import { ArrowRight, ArrowUpRight, Braces, FileCode2, GitCompareArrows, ListTree } from "lucide-solid";
+import { PackageText } from "@/components/package-text";
 import { CopyButton } from "@/components/copy-button";
 import { formats, samples, resolveLockfile, sampleCitation, upgrades, type Dependency, type Format } from "@/lib/playground";
 
@@ -43,13 +44,13 @@ export function Studio() {
         {message() && <p class="notice" role="status">{message()}</p>}
         <ul class="package-list"><For each={rows().slice(0,count())}>{(row) => <li><button type="button" aria-pressed={selected() ? keyFor(selected()!) === keyFor(row) : false} onClick={() => setSelected(row)}><strong>{row.name}</strong><span>{row.version}</span><small>{row.ecosystem}</small></button></li>}</For></ul>
         {rows().length > count() && <button class="button secondary small" type="button" onClick={() => setCount(count()+35)}>Show more packages</button>}
-        <Show when={selected()} keyed>{(item) => <div class="inspect"><div class="plan-label">DOC LOOKUP</div><h3>{item.name}@{item.version}</h3><p class="quiet">Pinned in <code>{formatUsed()}</code>{item.source === "git" && " · Git source"}.</p>{sampleCitation(item) ? <p class="citation">{sampleCitation(item)}</p> : <p class="quiet">No bundled citation for this version. Run the CLI in your project to search the installed files.</p>}<code>lockdocs {item.name} --offline</code></div>}</Show>
+        <Show when={selected()} keyed>{(item) => <div class="inspect"><div class="plan-label">DOC LOOKUP</div><h3><PackageText text={`${item.name}@${item.version}`}/></h3><p class="quiet">Pinned in <code>{formatUsed()}</code>{item.source === "git" && " · Git source"}.</p>{sampleCitation(item) ? <p class="citation"><PackageText text={sampleCitation(item) ?? ""}/></p> : <p class="quiet">No bundled citation for this version. Run the CLI in your project to search the installed files.</p>}<code>lockdocs {item.name} --offline</code></div>}</Show>
       </section>
     </div>
     <section class="snippet-box surface"><button type="button" class="snippet-toggle" aria-expanded={snippetOpen()} onClick={() => setSnippetOpen(!snippetOpen())}><Braces size={18}/> MCP agent setup <span>{snippetOpen() ? "−" : "+"}</span></button><Show when={snippetOpen()}><><p class="quiet">Run your agent from the project root so Lockdocs sees its lockfile.</p><pre>{snippet}</pre><CopyButton value={snippet}/></></Show></section>
     <section class="upgrade-section" id="upgrade"><div class="page-intro"><div class="kicker"><span/> PRO / REPORT PREVIEW</div><h2>See exactly what breaks.</h2><p>Explore two representative call sites. These examples use release citations; paste a lockfile above to inspect versions, not to scan your own source code.</p></div>
       <div class="segmented" aria-label="Upgrade example"><For each={Object.entries(upgrades)}>{([id, item]) => <button type="button" aria-pressed={id === upgrade()} onClick={() => setUpgrade(id as keyof typeof upgrades)}>{item.label}</button>}</For></div>
-      <article class="surface upgrade-card"><div class="panel-title"><GitCompareArrows size={17}/><code>{active().command}</code></div><div class="upgrade-body"><h3>{active().change}</h3><p class="quiet">Example call site <code>{active().path}</code></p><div class="sample-diff"><div><pre>- {active().before}</pre><p>{active().oldSource}</p></div><div><pre>+ {active().after}</pre><p>{active().newSource}</p></div></div><p>{active().note}</p><For each={active().links}>{([label,href]) => <a class="doc-source" href={href}>{label} <ArrowUpRight size={14}/></a>}</For></div></article>
+      <article class="surface upgrade-card"><div class="panel-title"><GitCompareArrows size={17}/><code>{active().command}</code></div><div class="upgrade-body"><h3>{active().change}</h3><p class="quiet">Example call site <code>{active().path}</code></p><div class="sample-diff"><div><pre>- {active().before}</pre><p><PackageText text={active().oldSource}/></p></div><div><pre>+ {active().after}</pre><p><PackageText text={active().newSource}/></p></div></div><p>{active().note}</p><For each={active().links}>{([label,href]) => <a class="doc-source" href={href}>{label} <ArrowUpRight size={14}/></a>}</For></div></article>
       <div class="upgrade-cta"><div><strong>Get the full report with Pro.</strong><p>Upgrade Reports for every affected call site, plus Private Package Docs.</p></div><Link href="/pricing" class="button primary">See Pro plans <ArrowRight size={16}/></Link></div>
     </section>
   </>;

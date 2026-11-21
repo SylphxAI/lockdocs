@@ -1,6 +1,7 @@
 import { PageMeta } from "@/components/page-meta";
 import { A as Link } from "@solidjs/router";
 import { ArrowRight, ArrowUpRight, Box, Command, FileCode2, GitCompareArrows, ShieldCheck, Terminal } from 'lucide-solid';
+import { PackageText } from '@/components/package-text';
 import { CopyButton } from '@/components/copy-button';
 
 const install = 'npx -y @sylphx/lockdocs setup';
@@ -17,7 +18,7 @@ export default function Home() {
       </div>
       <div class="hero-preview">
         <div class="preview-chrome"><span><FileCode2 size={15}/> VERSION INSPECTOR</span><span class="preview-live"><span class="signal"/> SAMPLE PROJECT</span></div>
-        <div class="preview-files"><span><span class="mint">{ '{ }' }</span> package-lock.json</span><span>next<span>@</span>14.2.3</span></div>
+        <div class="preview-files"><span><span class="mint">{ '{ }' }</span> package-lock.json</span><span><PackageText text="next@14.2.3"/></span></div>
         <div class="preview-body"><div class="code-line"><i>12</i><span><b>"node_modules/next"</b>: {'{'}</span></div><div class="code-line focus-line"><i>13</i><span>&nbsp; "version": <em>"14.2.3"</em>,</span></div><div class="code-line"><i>14</i><span>{'}'}</span></div></div>
         <div class="preview-result">
           <div class="preview-label"><Command size={14}/> API LOOKUP <span>next/headers</span></div>

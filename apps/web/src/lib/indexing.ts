@@ -1,4 +1,5 @@
-const live = "lockdocs.sylphx.com";
+export const canonicalOrigin = "https://lockdocs.sylphx.com";
+const live = new URL(canonicalOrigin).hostname;
 function hostname(authority: string | null) {
   if (!authority || !/^[a-zA-Z0-9.-]+(?::[0-9]{1,5})?$/.test(authority)) return null;
   return authority.split(":")[0].toLowerCase();

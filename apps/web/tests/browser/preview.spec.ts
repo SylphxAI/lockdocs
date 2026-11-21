@@ -11,8 +11,10 @@ test("public HTML protects package versions without changing selectable commands
   await Promise.all(routes.map(async (route) => {
     const response = await request.get(route);
     expect(response.status(), route).toBe(200);
-    expect(await response.text(), route).not.toMatch(/[\w.-]@\d|__cf_email__/);
+    expect(await response.text(), route).not.toMatch(/[\w.-]@[vV]?\d|__cf_email__/);
   }));
+  await page.goto("/guide/fetch");
+  await expect(page.locator("pre code").filter({ hasText: "github.com/vercel/next.js@v15.1.0" })).toBeVisible();
   await page.goto("/guide/setup");
   for (const command of ["npx -y @sylphx/lockdocs@0.7.0 setup", "claude mcp add --scope user lockdocs -- npx -y @sylphx/lockdocs@0.7.0 mcp"]) {
     const code = page.locator("pre code").filter({ hasText: command });

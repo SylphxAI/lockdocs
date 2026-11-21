@@ -3,6 +3,28 @@ import { expect, test } from "@playwright/test";
 const pages = ["/", "/playground", "/pricing", "/dashboard", "/docs", "/guide", "/reference", "/benchmarks", "/compare"];
 const allDocs = ["/docs", "/guide", "/guide/setup", "/guide/how-it-works", "/guide/ecosystems", "/guide/fetch", "/reference", "/reference/tools", "/benchmarks", "/compare", "/capabilities", "/vision", "/pro"];
 
+test("public HTML protects package versions without changing selectable commands", async ({ page, request }) => {
+  const sitemap = await request.get("/sitemap.xml");
+  expect(sitemap.ok()).toBeTruthy();
+  const routes = [...(await sitemap.text()).matchAll(/<loc>(.*?)<\/loc>/g)].map(([, url]) => new URL(url).pathname);
+  expect(routes).toEqual(["/", "/pricing", "/playground", "/legal/privacy", "/legal/terms", ...allDocs]);
+  await Promise.all(routes.map(async (route) => {
+    const response = await request.get(route);
+    expect(response.status(), route).toBe(200);
+    expect(await response.text(), route).not.toMatch(/[\w.-]@\d|__cf_email__/);
+  }));
+  await page.goto("/guide/setup");
+  for (const command of ["npx -y @sylphx/lockdocs@0.7.0 setup", "claude mcp add --scope user lockdocs -- npx -y @sylphx/lockdocs@0.7.0 mcp"]) {
+    const code = page.locator("pre code").filter({ hasText: command });
+    await expect(code).toBeVisible();
+    expect(await code.evaluate((element) => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      return range.toString().trim();
+    })).toBe(command);
+  }
+});
+
 test("routes render without errors, overflow, broken images or repeated metadata", async ({ page, baseURL }, info) => {
   const errors: string[] = [];
   const titles: string[] = [];

@@ -17,4 +17,12 @@
 @media(max-width:740px){.content-section{padding-block:34px 55px}.page-intro{margin-bottom:21px}.page-intro p{font-size:15px}.plan-grid,.studio-grid,.docs-layout{grid-template-columns:minmax(0,1fr)}.studio-output{border-left:0;border-top:1px solid var(--line)}.studio-input,.studio-output{padding:13px}.studio-input textarea{height:174px;min-height:120px}.docs-layout{padding-block:32px 52px;gap:25px}.docs-sidebar{position:static;grid-row:2;border:0;border-top:1px solid var(--line);padding-top:12px}.docs-sidebar nav{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px}.docs-brand{grid-column:1/-1;margin:0}.doc-body h1{font-size:40px}.upgrade-section{margin-top:36px}.upgrade-body{padding:14px}}
 
 .legal-body{max-width:66ch;margin-inline:auto}.footer-inner nav{flex-wrap:wrap}
+.button.auth-button {
+  background: var(--raised);
+  border-color: color-mix(in srgb, var(--strong), var(--muted) 40%);
+  color: var(--ink);
+}
+.button.auth-button:hover {
+  border-color: var(--brand);
+}
 .email-choice summary{list-style:none}.email-choice summary::-webkit-details-marker{display:none}.email-choice form,.email-choice label{display:grid;gap:7px}.email-choice form{padding:12px 0}.email-choice input{width:100%;min-height:42px;padding:7px 10px;border:1px solid var(--strong);border-radius:6px;background:var(--canvas);color:var(--ink)}

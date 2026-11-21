@@ -9,6 +9,10 @@ export function PageMeta(props: {title: string; description: string; unlisted?: 
     <Meta name="description" content={props.description}/>
     {props.unlisted
       ? <Meta name="robots" content="noindex, nofollow"/>
-      : <Link rel="canonical" href={canonicalOrigin + location.pathname}/>}
+      : <>
+          <Link rel="canonical" href={canonicalOrigin + location.pathname}/>
+          <Meta property="og:image" content={canonicalOrigin + "/og-image.png"}/>
+          <Meta name="twitter:image" content={canonicalOrigin + "/og-image.png"}/>
+        </>}
   </>;
 }

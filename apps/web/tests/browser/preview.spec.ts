@@ -117,15 +117,24 @@ test("preview host is noindexed and missing bindings fail closed", async ({ requ
   expect(await preview.json()).toEqual({ status: "ok" });
   const lookalike = await request.get("/api/health", { headers: { Host: "lockdocs.sylphx.app.example.org" } });
   expect(lookalike.headers()["x-robots-tag"]).toBe("noindex, nofollow");
-  const liveHeaders = { Host: "Lockdocs.sylphx.com:443", "X-Forwarded-Host": "lockdocs.sylphx.com" };
+  const liveHeaders = { Host: "web.mad-coal-42in6b.svc.cluster.local", "X-Forwarded-Host": "lockdocs.sylphx.com" };
   expect((await request.get("/api/health", { headers: liveHeaders })).headers()["x-robots-tag"]).toBeUndefined();
   const home = await request.get("/", { headers: liveHeaders, maxRedirects: 0 });
   expect(home.status()).toBe(200);
   expect(home.headers()["x-robots-tag"]).toBeUndefined();
   expect(await home.text()).toContain('rel="canonical" href="https://lockdocs.sylphx.com/"');
+  const html = await home.text();
+  const ogImage = "https://lockdocs.sylphx.com/og-image.png";
+  expect(html).toContain('property="og:image" content="' + ogImage + '"');
+  expect(html).toContain('name="twitter:image" content="' + ogImage + '"');
+  const image = await request.get("/og-image.png");
+  expect(image.status()).toBe(200);
+  expect(image.headers()["content-type"]).toContain("image/png");
+  const png = await image.body();
+  expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([1200, 630]);
   const conflict = { ...liveHeaders, "X-Forwarded-Host": "preview.lockdocs.sylphx.app:443" };
   expect((await request.get("/api/health", { headers: conflict })).headers()["x-robots-tag"]).toBe("noindex, nofollow");
-  for (const [headers, rule] of [[liveHeaders, "Allow: /"], [conflict, "Disallow: /"]] as const) {
+  for (const [headers, rule] of [[liveHeaders, "Allow: /\nSitemap: https://lockdocs.sylphx.com/sitemap.xml"], [conflict, "Disallow: /"]] as const) {
     const robots = await request.get("/robots.txt", { headers });
     expect(robots.status()).toBe(200);
     expect(await robots.text()).toBe(`User-agent: *

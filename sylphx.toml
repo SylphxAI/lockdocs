@@ -12,6 +12,15 @@ context = "."
 [environments.production.env.LOCKDOCS_APP_ORIGIN]
 value = "https://lockdocs.sylphx.com"
 
+[environments.production.env.SYLPHX_MONEY_URL]
+value = "https://api.sylphx.com"
+
+[environments.production.env.LOCKDOCS_CCR_TERMS_VERSION]
+value = "lockdocs-pro-ccr-2026-11-21"
+
+[environments.production.env.LOCKDOCS_CCR_TERMS_TEXT]
+value = "I request immediate access to Lockdocs Pro (provided by Sylphx Limited, England & Wales company no. 16438428, 128 City Road, London EC1V 2NX) and agree to the Lockdocs Terms of Service (https://lockdocs.sylphx.com/legal/terms). Lockdocs Pro is billed annually in advance at the tax-inclusive total shown at checkout and renews annually unless cancelled before renewal in Account billing settings. UK and EU consumers have a 14-day right to cancel a new subscription by emailing hi@sylphx.com; because I am requesting immediate access, a proportionate amount may be retained for service already provided up to cancellation, and statutory rights are unaffected."
+
 [[services]]
 name = "web"
 type = "web"

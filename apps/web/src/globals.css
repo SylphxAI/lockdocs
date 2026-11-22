@@ -60,8 +60,9 @@ body{padding-bottom:var(--cookie-bar-height,0px)}
 .cookie-choice:not(:disabled):hover{border-color:var(--brand);background:var(--canvas)}
 @media(max-width:850px){
   .cookie-panel{flex-direction:column;align-items:stretch;gap:7px;padding:8px max(12px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
-  .cookie-copy h2,.cookie-copy p{display:inline;font-size:.75rem}
-  .cookie-copy h2{margin-inline-end:.45em}
+  .cookie-copy{font-size:.75rem;line-height:1.35}
+  .cookie-copy h2,.cookie-copy p{display:inline;font:inherit}
+  .cookie-copy h2{font-weight:650;margin-inline-end:.45em}
   .cookie-actions{gap:6px}
   .cookie-choice{padding-inline:6px;font-size:.75rem}
 }

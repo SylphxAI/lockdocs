@@ -67,8 +67,15 @@ test("the compact consent bar leaves the workbench and footer controls usable", 
   const box = (await banner.boundingBox())!;
   expect(box.height).toBeLessThanOrEqual(width === 390 ? 110 : 72);
   expect(box.y + box.height).toBeCloseTo(height, 0);
-  await expect(page.locator("body")).toHaveCSS("padding-bottom", box.height + "px");
-  await expect(page.locator("html")).toHaveCSS("scroll-padding-bottom", box.height + "px");
+  // Chromium rounds serialized CSS pixel values, unlike boundingBox().
+  for (const [selector, property] of [["body", "padding-bottom"], ["html", "scroll-padding-bottom"]]) {
+    await expect.poll(() => page.locator(selector).evaluate(
+      (el, prop) => Number.parseFloat(getComputedStyle(el).getPropertyValue(prop)), property,
+    )).toBeCloseTo(box.height, 2);
+  }
+  const choices = await banner.getByRole("button").all();
+  expect(choices).toHaveLength(3);
+  for (const choice of choices) expect((await choice.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   const resolve = page.getByRole("button", { name: "Resolve versions" });
   await resolve.click({ trial: true });
   expect((await resolve.boundingBox())!.y + (await resolve.boundingBox())!.height).toBeLessThan(box.y);

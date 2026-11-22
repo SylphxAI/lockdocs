@@ -194,7 +194,7 @@ export function CookieSettings(props: ParentProps) {
       ref={panel} onKeyDown={event => { if (event.key === "Escape" && trigger) close(); }}>
       <div class="cookie-copy">
         <h2 id="cookie-heading">Cookie settings</h2>
-        <p><Show when={protectedByGpc()} fallback="Optional cookies measure site use and ad performance.">
+        <p><Show when={protectedByGpc()} fallback="Optional cookies measure usage and ads.">
           <span role="status">Global Privacy Control blocks optional cookies.</span>
         </Show>{" "}<a href="/legal/privacy">Privacy policy</a></p>
       </div>

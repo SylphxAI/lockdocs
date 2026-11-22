@@ -1,11 +1,14 @@
 import { createContext, createEffect, createSignal, onCleanup, onMount, Show, useContext, type ParentProps } from "solid-js";
 import { useLocation } from "@solidjs/router";
 import { allowsDefault, clearAnalyticsCookies, gpc } from "@/lib/analytics-browser";
+import { analyticsPage } from "@/lib/analytics-page";
 import { items, pathByEvent, type FunnelEvent } from "@/lib/analytics-events";
 import { campaignCookie, campaignMaxAge, checkoutCampaign } from "@/lib/checkout-campaign";
 import { consent, preferenceKey, preferenceLifetime, savedChoice, type Choice } from "@/lib/analytics-policy";
 
-type Tag = Window & { startAnalytics?: (settings: ReturnType<typeof consent>) => void; gtag?: (...args: unknown[]) => void };
+type Page = NonNullable<ReturnType<typeof analyticsPage>>;
+type Tag = Window & { startAnalytics?: (settings: ReturnType<typeof consent>, page: Page) => void; gtag?: (...args: unknown[]) => void };
+const home = (origin: string) => ({ page_location: origin + "/", page_referrer: "", page_title: "Lockdocs" });
 const CookieContext = createContext<{ checkoutChoice: () => Choice; beginCheckout: () => void; open: (button: HTMLButtonElement) => void; configured: () => boolean }>();
 export const useCookieSettings = () => useContext(CookieContext)!;
 
@@ -26,6 +29,10 @@ export function CookieSettings(props: ParentProps) {
   let remembered: Choice | null = null;
   let generation = 0;
   let priced = false;
+  let measuredPage: Page | null = null;
+  let previousLocation = "";
+  let focusedAt: number | undefined;
+  let engagementTimer: number | undefined;
 
   function stop() {
     const frame = tag?.contentWindow as Tag | undefined;
@@ -33,6 +40,9 @@ export function CookieSettings(props: ParentProps) {
     tag?.remove();
     tag = undefined;
     setActive(false);
+    measuredPage = null;
+    previousLocation = "";
+    endEngagement(false);
     clearAnalyticsCookies();
   }
 
@@ -51,8 +61,9 @@ export function CookieSettings(props: ParentProps) {
     frame.sandbox.add("allow-scripts", "allow-same-origin");
     frame.addEventListener("load", () => {
       const client = frame.contentWindow as Tag | null;
-      if (frame !== tag || next !== choice() || gpc() || !client?.startAnalytics) return;
-      client.startAnalytics(consent(next));
+      if (frame !== tag || next !== currentChoice() || !client?.startAnalytics) return;
+      const { origin } = window.location;
+      client.startAnalytics(consent(next), analyticsPage(origin + route.pathname, document.referrer, origin) ?? home(origin));
       setActive(Boolean(client.gtag));
     }, { once: true });
     frame.src = "/api/analytics/tag";
@@ -100,7 +111,14 @@ export function CookieSettings(props: ParentProps) {
         void resolve();
       }
     }, options);
-    window.addEventListener("pageshow", event => { if (event.persisted && id()) void resolve(); }, options);
+    window.addEventListener("pageshow", event => {
+      if (event.persisted && id()) void resolve();
+      syncEngagement();
+    }, options);
+    window.addEventListener("focus", syncEngagement, options);
+    window.addEventListener("blur", () => endEngagement(), options);
+    window.addEventListener("pagehide", () => endEngagement(), options);
+    document.addEventListener("visibilitychange", syncEngagement, options);
     void fetch("/api/analytics/config", { cache: "no-store", credentials: "omit", signal: controller.signal })
       .then(response => response.ok ? response.json() : null)
       .then(config => {
@@ -134,10 +152,57 @@ export function CookieSettings(props: ParentProps) {
     }
   });
 
+  function emit(event: string, params: Record<string, unknown>) {
+    if (checkoutChoice() === "reject") return;
+    (tag?.contentWindow as Tag | null)?.gtag?.("event", event, { ...params, send_to: id() });
+  }
+
+  // The hidden frame never takes focus. Use the parent clock so GA4 receives
+  // actual post-consent foreground time; gtag still owns the session ID.
+  function endEngagement(report = true) {
+    window.clearTimeout(engagementTimer);
+    engagementTimer = undefined;
+    if (focusedAt === undefined) return;
+    const elapsed = Math.floor(performance.now() - focusedAt);
+    focusedAt = undefined;
+    if (report && measuredPage && elapsed > 0) {
+      emit("user_engagement", { ...measuredPage, engagement_time_msec: elapsed });
+    }
+  }
+
+  function syncEngagement() {
+    if (!measuredPage || checkoutChoice() === "reject" || document.hidden || !document.hasFocus()) {
+      endEngagement();
+    } else if (focusedAt === undefined) {
+      focusedAt = performance.now();
+      engagementTimer = window.setTimeout(() => {
+        endEngagement();
+        // Let the final visibility or navigation boundary flush the remaining time.
+        if (!document.hidden && document.hasFocus()) focusedAt = performance.now();
+      }, 10_000);
+    }
+  }
+
+  createEffect(() => {
+    // The router publishes the new pathname before browser history is updated.
+    const pathname = route.pathname;
+    if (checkoutChoice() === "reject") return;
+    const { origin } = window.location;
+    const page = analyticsPage(origin + pathname, previousLocation || document.referrer, origin);
+    if (measuredPage && measuredPage.page_location === page?.page_location) return;
+    endEngagement();
+    measuredPage = page;
+    previousLocation = page?.page_location ?? "";
+    (tag?.contentWindow as Tag | null)?.gtag?.("set", page ?? home(origin));
+    if (page) {
+      emit("page_view", page);
+      syncEngagement();
+    }
+  });
+
   function send(event: FunnelEvent) {
-    if (!active() || gpc()) return;
-    (tag?.contentWindow as Tag | null)?.gtag?.("event", event, {
-      ...(event !== "pricing_view" ? { items } : {}), send_to: id(),
+    emit(event, {
+      ...(event !== "pricing_view" ? { items } : {}),
       page_location: window.location.origin + pathByEvent[event], page_referrer: "", page_title: "Lockdocs",
     });
   }

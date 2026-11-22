@@ -3,11 +3,42 @@ import { expect, test, type Page } from "@playwright/test";
 const settings = (page: Page) => page.getByRole("region", { name: "Cookie settings" });
 const google = /https:\/\/([^/]+\.)?(googletagmanager\.com|google-analytics\.com|doubleclick\.net|google\.com|googleadservices\.com)\//;
 
-async function install(page: Page, trace: string | null) {
+// Exercise the browser-to-collector boundary without sending data to a real
+// property. Model the stream's bootstrap page view before its config command,
+// then forward event parameters using the Google tag's collection fields.
+const wireTag = `(() => {
+  const globals = {};
+  const config = {};
+  const sid = Math.floor(Date.now() / 1000);
+  function send(event, params) {
+    const eventParams = {...globals, ...config, ...params};
+    const query = new URLSearchParams({en:event, sid, dl:eventParams.page_location ?? location.href,
+      dr:eventParams.page_referrer ?? document.referrer, dt:eventParams.page_title ?? document.title});
+    if (eventParams.engagement_time_msec !== undefined) query.set("_et", eventParams.engagement_time_msec);
+    fetch("https://www.google-analytics.com/g/collect?" + query, {mode:"no-cors", keepalive:true});
+  }
+  function run([command, name, params]) {
+    if (command === "set") Object.assign(globals, name);
+    if (command === "js" && globals.send_page_view !== false) send("page_view", {});
+    if (command === "config") Object.assign(config, params);
+    if (command === "event") send(name, params);
+  }
+  dataLayer.forEach(run);
+  const push = dataLayer.push.bind(dataLayer);
+  dataLayer.push = (...args) => { args.forEach(run); return push(...args); };
+})();`;
+
+async function install(page: Page, trace: string | null, collect?: URLSearchParams[]) {
   const hits: string[] = [];
   await page.route(google, async route => {
-    hits.push(route.request().url());
-    await route.fulfill({ contentType: "text/javascript", body: "document.cookie = '_ga_analytics_fixture=1; Path=/';" });
+    const url = new URL(route.request().url());
+    if (url.pathname === "/g/collect") {
+      collect?.push(url.searchParams);
+      await route.fulfill({ status: 204 });
+      return;
+    }
+    hits.push(url.href);
+    await route.fulfill({ contentType: "text/javascript", body: collect ? wireTag : "document.cookie = '_ga_analytics_fixture=1; Path=/';" });
   });
   await page.route("**/cdn-cgi/trace", route => trace === null
     ? route.abort("failed") : route.fulfill({ contentType: "text/plain", body: trace }));
@@ -58,6 +89,63 @@ test("EEA waits for a choice, records only the permitted pricing event, and stop
   expect(hits).toHaveLength(1);
 });
 
+test("collector sees one sanitized page view per route and foreground time on the same GA4 session", async ({ page }) => {
+  const wire: URLSearchParams[] = [];
+  const hits = await install(page, "loc=DE\n", wire);
+  await page.clock.install();
+  await page.goto("/pricing?token=fixture-secret&email=fixture%40example.test&code=fixture-code#secret", {
+    referer: "https://example.test/?email=external-fixture",
+  });
+  await expect(settings(page)).toBeVisible();
+  expect(hits).toEqual([]);
+  expect(wire).toEqual([]);
+  await settings(page).getByRole("button", { name: "Analytics only" }).click();
+  const origin = new URL(page.url()).origin;
+  const views = () => wire.filter(params => params.get("en") === "page_view");
+  await expect.poll(() => views().map(params => params.get("dl"))).toEqual([origin + "/pricing"]);
+  expect(views()[0].get("dt")).toBe("Pricing · Lockdocs");
+  expect(views()[0].get("dr")).toBe("");
+  const sid = views()[0].get("sid");
+  expect(sid).toMatch(/^\d+$/);
+  await expect.poll(() => page.evaluate(() => document.hasFocus() && !document.hidden)).toBe(true);
+  await page.clock.runFor(10_100);
+  const foreground = () => wire.find(params => params.get("en") === "user_engagement");
+  await expect.poll(() => Number(foreground()?.get("_et") ?? 0)).toBeGreaterThanOrEqual(10_000);
+  expect(foreground()?.get("sid")).toBe(sid);
+  expect(foreground()?.get("dl")).toBe(origin + "/pricing");
+  await page.getByRole("navigation", { name: "Billing currency" }).getByRole("link", { name: "EUR", exact: true }).click();
+  await expect(page).toHaveURL(/currency=EUR$/);
+  expect(views()).toHaveLength(1);
+  const navigation = page.getByRole("navigation", { name: "Main navigation" });
+  await navigation.getByRole("link", { name: "Playground", exact: true }).click();
+  await expect.poll(() => views().map(params => params.get("dl"))).toEqual([origin + "/pricing", origin + "/playground"]);
+  expect(views()[1].get("dr")).toBe(origin + "/pricing");
+  expect(views()[1].get("dt")).toBe("Lockfile Playground · Lockdocs");
+  expect(views()[1].get("sid")).toBe(sid);
+  await navigation.getByRole("link", { name: "Docs", exact: true }).click();
+  await expect.poll(() => views().map(params => params.get("dl"))).toEqual([origin + "/pricing", origin + "/playground", origin + "/docs"]);
+  expect(wire.map(params => params.toString()).join(" ")).not.toMatch(/analytics%2Ftag|fixture|secret/);
+  await page.getByRole("button", { name: "Cookie settings", exact: true }).click();
+  await settings(page).getByRole("button", { name: "Reject optional" }).click();
+  await expect(page.locator("iframe")).toHaveCount(0);
+  const prior = wire.length;
+  await navigation.getByRole("link", { name: "Pricing", exact: true }).click();
+  await page.clock.runFor(11_000);
+  expect(wire).toHaveLength(prior);
+  expect(hits).toHaveLength(1);
+});
+
+test("Sec-GPC blocks frame startup even when the navigator signal is unavailable", async ({ page }) => {
+  const wire: URLSearchParams[] = [];
+  const hits = await install(page, "loc=US\n", wire);
+  await page.setExtraHTTPHeaders({ "Sec-GPC": "1" });
+  const refused = page.waitForResponse(response => new URL(response.url()).pathname === "/api/analytics/tag");
+  await page.goto("/pricing");
+  expect((await refused).status()).toBe(404);
+  expect(hits).toEqual([]);
+  expect(wire).toEqual([]);
+});
+
 test("the compact consent bar leaves the workbench and footer controls usable", async ({ page }, info) => {
   const hits = await install(page, "loc=DE\n");
   await page.goto("/playground");
@@ -102,10 +190,12 @@ for (const [region, trace] of [["UK", "loc=GB"], ["Switzerland", "loc=CH"], ["un
 }
 
 test("recognized outside region grants measurement without allowing personalized ads", async ({ page }) => {
-  const hits = await install(page, "loc=US\n");
+  const wire: URLSearchParams[] = [];
+  const hits = await install(page, "loc=US\n", wire);
   await page.goto("/pricing");
   await expect.poll(() => hits.length).toBe(1);
   await expect(settings(page)).toHaveCount(0);
+  await expect.poll(() => wire.filter(params => params.get("en") === "page_view").map(params => params.get("dl"))).toEqual([page.url()]);
   expect(await commands(page)).toContainEqual(["consent", "default", {
     analytics_storage: "granted", ad_storage: "granted", ad_user_data: "granted", ad_personalization: "denied",
   }]);

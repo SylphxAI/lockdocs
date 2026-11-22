@@ -66,8 +66,8 @@ test("headless proofs use the public credential; only a ticket redeemed for the 
     return Response.json({ ticket: "one-time-ticket-test" });
   });
 
-  const options = () => signInOptions(new Request(origin + "/api/auth/options", { headers: { cookie: "__Host-lockdocs-last-auth-method=google" } }));
-  assert.deepEqual(await (await options()).json(), { capabilities: { github: false, google: true, email_otp: false, passkey: false, password: true }, lastUsed: "google" });
+  const options = (last = "google") => signInOptions(new Request(origin + "/api/auth/options", { headers: { cookie: "__Host-lockdocs-last-auth-method=" + last } }));
+  assert.deepEqual(await (await options()).json(), { capabilities: { github: false, google: true, email_otp: false, passkey: false }, lastUsed: "google" });
   configuredInstance = "another-instance";
   assert.equal((await options()).status, 503);
   configuredInstance = instance;
@@ -80,11 +80,11 @@ test("headless proofs use the public credential; only a ticket redeemed for the 
   assert.equal((await emailSignIn(post("/api/auth/sign-in", { action: "send" }, "", "https://foreign.example.test"))).status, 403);
   assert.equal(seen.length, before);
 
-  // Legacy password remains usable before Auth enables OTP or passkeys.
-  const legacy = await email("password", { password: "fixture-password", next: "/pricing" });
-  assert.deepEqual(await legacy.json(), { next: "/pricing" });
-  assert.match(legacy.headers.get("set-cookie")!, /__Host-lockdocs-session=.*; Path=\/; Secure; HttpOnly; SameSite=Lax/);
-  assert.deepEqual(seen.at(-3)?.body, { email: "someone@example.test", password: "fixture-password", session_mode: "server" });
+  // An upstream legacy flag never reopens the product password endpoint.
+  const callsBeforePassword = seen.length;
+  assert.equal((await email("password", { next: "/pricing" })).status, 400);
+  assert.equal(seen.length, callsBeforePassword);
+  assert.equal((await (await options("password")).json()).lastUsed, null);
 
   methods.email_otp = methods.passkey = true;
   const send = await email("send");

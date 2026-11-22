@@ -2,7 +2,7 @@
   "name": "bench-express4",
   "version": "0.0.0",
   "private": true,
-  "dependencies": {
+  "devDependencies": {
     "express": "4.22.3",
     "@types/express": "5.0.6"
   }

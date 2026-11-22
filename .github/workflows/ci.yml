@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
-      - uses: SylphxAI/.github/.github/actions/plain-language@f9176dad2e49c6b99d75f1506fafac84632fe870
+      - uses: SylphxAI/.github/.github/actions/plain-language@f9176dad2e49c6b99d75f1506fafac84632fe870 # main
 
   identifiers:
     name: Identifiers
@@ -34,7 +34,7 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
       - name: Non-v7 ids on added lines (owner standards/identifiers.md)
-        uses: SylphxAI/.github/.github/actions/identifiers@e4a5ea41cbcc87cd93914f89f0d7c3981c868bf9
+        uses: SylphxAI/.github/.github/actions/identifiers@e4a5ea41cbcc87cd93914f89f0d7c3981c868bf9 # main
 
   chat-senders:
     name: Chat senders
@@ -54,9 +54,23 @@ jobs:
           fetch-depth: 0
       # Fails a change that adds a direct chat-API host (Telegram, Slack,
       # Discord) outside Notify. The allow-list is owned by the action.
-      - uses: SylphxAI/.github/.github/actions/chat-senders@5cfd55a41435cca8e4b7caf6506faf04ca08d200
+      - uses: SylphxAI/.github/.github/actions/chat-senders@5cfd55a41435cca8e4b7caf6506faf04ca08d200 # main
         with:
           mode: fail
+
+  stack-conformance:
+    name: Stack conformance
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - uses: SylphxAI/.github/.github/actions/stack-conformance@badfd7af0ea30267ccd709c68df81e5b1e66d5bd # main
+        with:
+          base: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || (github.event_name == 'push' && github.event.before) || '' }}
+          auth-surface: full
 
   scope:
     runs-on: ubuntu-latest
@@ -190,7 +204,7 @@ jobs:
       - name: Docs build
         run: bun run docs:build
       - name: Brand home (hashes and surface copies agree)
-        uses: SylphxAI/.github/.github/actions/brand@a6c81b4bcda66bf624f0a68e25e63b3c0ed043eb # shared brand generator
+        uses: SylphxAI/.github/.github/actions/brand@a6c81b4bcda66bf624f0a68e25e63b3c0ed043eb # main
 
   web-native:
     name: Web checks and native login
@@ -242,13 +256,10 @@ jobs:
           npm run build
           npx --no-install playwright install --with-deps --only-shell chromium
           npm run test:browser
-      # Fork and Dependabot PRs still run the tests but cannot publish via OIDC.
+      # Keep local test results on PRs; publish diagnostics only on main pushes.
       - name: Gather Chromium results
         id: chromium-results
-        if: >-
-          always() &&
-          (github.event_name != 'pull_request' ||
-           (github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'))
+        if: always() && github.event_name == 'push'
         shell: bash
         run: |
           # Match the previous upload: keep relative paths and skip hidden files.
@@ -265,7 +276,7 @@ jobs:
           if $has_results; then echo "path=$bundle" >> "$GITHUB_OUTPUT"; fi
       - name: Store Chromium results
         if: always() && steps.chromium-results.outputs.path != ''
-        uses: SylphxAI/.github/.github/actions/run-store@724d4c9c87e736ced2068bc22eb57385adabd14d
+        uses: SylphxAI/.github/.github/actions/run-store@724d4c9c87e736ced2068bc22eb57385adabd14d # main
         with:
           mode: put
           name: lockdocs-preview-chromium
@@ -303,7 +314,7 @@ jobs:
   # chat-senders, which must actually succeed.
   ci-ok:
     if: always()
-    needs: [scope, plain-language, identifiers, chat-senders, test, checks, web-native, web-preview, web-container]
+    needs: [scope, plain-language, identifiers, stack-conformance, chat-senders, test, checks, web-native, web-preview, web-container]
     # The reserved gate pool (Kueue queue scale-set-gate, never lends): an
     # `if: always()` verdict still runs after its run is cancelled, and that run
     # keeps its concurrency group until it does, so on a busy build pool a
@@ -319,7 +330,7 @@ jobs:
           needs: ${{ toJSON(needs) }}
           # Only a proven Rust-only PR may omit Chromium and Docker. The
           # native-login integration still has to exercise the same CLI.
-          required: scope,plain-language,identifiers,test,checks,web-native${{ needs.scope.outputs.kind != 'rust' && ',web-preview,web-container' || '' }}
+          required: scope,plain-language,identifiers,stack-conformance,test,checks,web-native${{ needs.scope.outputs.kind != 'rust' && ',web-preview,web-container' || '' }}
       # chat-senders is never skipped, so its success is required directly:
       # on a pull request, on a merge group and on the main push alike.
       - name: Require the chat-senders proof (skipped or cancelled fails)

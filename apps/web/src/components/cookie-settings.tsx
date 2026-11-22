@@ -2,10 +2,11 @@ import { createContext, createEffect, createSignal, onCleanup, onMount, Show, us
 import { useLocation } from "@solidjs/router";
 import { allowsDefault, clearAnalyticsCookies, gpc } from "@/lib/analytics-browser";
 import { isPurchaseReference, items, pathByEvent, type FunnelEvent, type Purchase } from "@/lib/analytics-events";
+import { campaignCookie, campaignMaxAge, checkoutCampaign } from "@/lib/checkout-campaign";
 import { consent, preferenceKey, preferenceLifetime, savedChoice, type Choice } from "@/lib/analytics-policy";
 
 type Tag = Window & { startAnalytics?: (settings: ReturnType<typeof consent>) => void; gtag?: (...args: unknown[]) => void };
-const CookieContext = createContext<{ active: () => boolean; beginCheckout: () => void; open: (button: HTMLButtonElement) => void; configured: () => boolean }>();
+const CookieContext = createContext<{ checkoutChoice: () => Choice; beginCheckout: () => void; open: (button: HTMLButtonElement) => void; configured: () => boolean }>();
 export const useCookieSettings = () => useContext(CookieContext)!;
 
 function preference() {
@@ -38,6 +39,7 @@ export function CookieSettings(props: ParentProps) {
   function apply(next: Choice) {
     if (gpc()) next = "reject";
     if (next === "reject" || (next !== choice() && tag)) stop();
+    if (next !== "all") setCampaignCookie("", 0);
     setChoice(next);
     if (next === "reject") return;
     if (tag || !id()) return;
@@ -95,6 +97,29 @@ export function CookieSettings(props: ParentProps) {
     onCleanup(() => { controller.abort(); generation++; stop(); });
   });
 
+  function currentChoice(): Choice {
+    if (gpc()) return "reject";
+    const saved = preference();
+    // Refuse stale grants (expiry, revocation or a change in another tab).
+    if ((saved && saved !== choice()) || (remembered && !saved)) return "reject";
+    return choice();
+  }
+
+  const checkoutChoice = (): Choice => active() ? currentChoice() : "reject";
+
+  function setCampaignCookie(value: string, maxAge: number) {
+    document.cookie = campaignCookie + "=" + value + "; Max-Age=" + maxAge + "; Path=/; Secure; SameSite=Lax";
+  }
+
+  createEffect(() => {
+    const query = route.search;
+    if (currentChoice() !== "all") return;
+    const clicks = checkoutCampaign(new URLSearchParams(query));
+    if (Object.keys(clicks).length) {
+      setCampaignCookie(encodeURIComponent(new URLSearchParams(clicks).toString()), campaignMaxAge);
+    }
+  });
+
   function send(event: FunnelEvent, details?: Purchase) {
     if (!active() || gpc()) return;
     (tag?.contentWindow as Tag | null)?.gtag?.("event", event, {
@@ -149,7 +174,7 @@ export function CookieSettings(props: ParentProps) {
     queueMicrotask(() => panel?.focus());
   }
 
-  return <CookieContext.Provider value={{ active: () => active() && !gpc(), beginCheckout: () => send("begin_checkout"), open: showFrom, configured: () => Boolean(id()) }}>
+  return <CookieContext.Provider value={{ checkoutChoice, beginCheckout: () => send("begin_checkout"), open: showFrom, configured: () => Boolean(id()) }}>
     {props.children}
     <Show when={id() && open()}><section id="cookie-settings" class="cookie-panel" aria-labelledby="cookie-heading" tabIndex={-1}
       ref={panel} onKeyDown={event => { if (event.key === "Escape" && trigger) close(); }}>

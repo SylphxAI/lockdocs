@@ -7,7 +7,7 @@ import { randomBytes, timingSafeEqual } from "node:crypto";
 
 export type Session = Readonly<{ id: string; name?: string; email?: string; token: string }>;
 export type OAuthProvider = "github" | "google";
-const methods = ["email_otp", "password", "passkey"] as const;
+const methods = ["email_otp", "passkey"] as const;
 export type AuthCapabilities = Record<OAuthProvider | typeof methods[number], boolean>;
 
 type AuthConfig = { origin: string; base: string; key: string; secret: string; instance: string };
@@ -190,7 +190,6 @@ export async function getCapabilities(request: Request, auth = config()): Promis
     return {
       github: hasProvider("github"), google: hasProvider("google"),
       email_otp: body.methods?.email_otp === true, passkey: body.methods?.passkey === true,
-      password: body.methods?.password === true,
     };
   } catch { return null; }
 }
@@ -355,8 +354,8 @@ export async function emailSignIn(request: Request) {
   if (!sameOrigin(request, auth.origin) || !hasPublicOrigin(request, auth.origin)) return privateJson({ error: "invalid_origin" }, 403);
   const body = await boundedJson(request, 8192);
   if (!body) return privateJson({ error: "invalid_input" }, 400);
-  const { action, password, code } = body;
-  if (action !== "send" && action !== "verify" && action !== "password") return privateJson({ error: "invalid_input" }, 400);
+  const { action, code } = body;
+  if (action !== "send" && action !== "verify") return privateJson({ error: "invalid_input" }, 400);
   const email = typeof body.email === "string" ? body.email.trim() : "";
   const next = validateNext(typeof body.next === "string" ? body.next : null);
   const caps = await getCapabilities(request, auth);
@@ -371,13 +370,9 @@ export async function emailSignIn(request: Request) {
     input = { flow, code };
   } else {
     if (!/^[^\s@]+@[^\s@]+$/.test(email) || email.length > 254) return privateJson({ error: "invalid_input" }, 400);
-    if (action === "send" && caps?.email_otp) {
-      path = "continue";
-      input = { email, method: "email_otp", session_mode: "server" };
-    } else if (action === "password" && caps?.password && typeof password === "string" && password.length > 0 && password.length <= 1024) {
-      path = "sign-in/password";
-      input = { email, password, session_mode: "server" };
-    } else return privateJson({ error: "method_unavailable" }, 403);
+    if (!caps?.email_otp) return privateJson({ error: "method_unavailable" }, 403);
+    path = "continue";
+    input = { email, method: "email_otp", session_mode: "server" };
   }
   try {
     const agent = request.headers.get("user-agent");
@@ -393,13 +388,13 @@ export async function emailSignIn(request: Request) {
       setPrivateCookie(response, EMAIL_FLOW, result.flow, { maxAge: Math.min(result.expires_in, 600) });
       return response;
     }
-    if ((action === "password" || action === "verify") && typeof result?.ticket === "string" && result.ticket.length <= 2048) {
+    if (action === "verify" && typeof result?.ticket === "string" && result.ticket.length <= 2048) {
       const login = await redeem(auth, result.ticket, agent);
       if (login) {
         const response = privateJson({ next });
         setPrivateCookie(response, SESSION, login.token, { maxAge: login.maxAge });
         setPrivateCookie(response, EMAIL_FLOW, "", { maxAge: 0 });
-        setPrivateCookie(response, LAST_USED, action === "verify" ? "email_otp" : "password", { maxAge: lastUsedAge });
+        setPrivateCookie(response, LAST_USED, "email_otp", { maxAge: lastUsedAge });
         return response;
       }
     }

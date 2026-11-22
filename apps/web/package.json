@@ -22,7 +22,6 @@
     "@solidjs/start": "1.5.1",
     "@tailwindcss/vite": "4.3.5",
     "gray-matter": "4.0.3",
-    "h3": "^1.15.11",
     "jsonc-parser": "3.3.1",
     "lucide-solid": "1.77.0",
     "rehype-slug": "6.0.0",
@@ -45,7 +44,7 @@
   },
   "overrides": {
     "vinxi": {
-      "h3": "$h3"
+      "h3": "1.15.11"
     }
   }
 }

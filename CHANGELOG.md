@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.6
+
+- The checkout return page no longer polls for purchase status in the browser.
+- Package and MCP Registry metadata now point to `https://lockdocs.sylphx.com`.
+
 ## 0.7.5
 
 - **Homebrew and Scoop publish through the release job's identity.** The caller-owned publisher uses the existing Access/Broker path from mcp-kit 0.8.6 and fails visibly when a declared destination cannot be authorized, replacing the old credential-dependent silent skip.

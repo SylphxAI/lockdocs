@@ -1,7 +1,7 @@
 import { createContext, createEffect, createSignal, onCleanup, onMount, Show, useContext, type ParentProps } from "solid-js";
 import { useLocation } from "@solidjs/router";
 import { allowsDefault, clearAnalyticsCookies, gpc } from "@/lib/analytics-browser";
-import { isPurchaseReference, items, pathByEvent, type FunnelEvent, type Purchase } from "@/lib/analytics-events";
+import { items, pathByEvent, type FunnelEvent } from "@/lib/analytics-events";
 import { campaignCookie, campaignMaxAge, checkoutCampaign } from "@/lib/checkout-campaign";
 import { consent, preferenceKey, preferenceLifetime, savedChoice, type Choice } from "@/lib/analytics-policy";
 
@@ -134,10 +134,10 @@ export function CookieSettings(props: ParentProps) {
     }
   });
 
-  function send(event: FunnelEvent, details?: Purchase) {
+  function send(event: FunnelEvent) {
     if (!active() || gpc()) return;
     (tag?.contentWindow as Tag | null)?.gtag?.("event", event, {
-      ...details, ...(event !== "pricing_view" ? { items } : {}), send_to: id(),
+      ...(event !== "pricing_view" ? { items } : {}), send_to: id(),
       page_location: window.location.origin + pathByEvent[event], page_referrer: "", page_title: "Lockdocs",
     });
   }
@@ -146,28 +146,6 @@ export function CookieSettings(props: ParentProps) {
     const pricing = route.pathname === "/pricing";
     if (!pricing) priced = false;
     if (pricing && active() && !priced) { priced = true; send("pricing_view"); }
-  });
-
-  createEffect(() => {
-    if (route.pathname !== "/dashboard" || new URLSearchParams(route.search).get("billing") !== "return" || !active()) return;
-    const controller = new AbortController();
-    let retry: number | undefined;
-    async function check(remaining: number) {
-      try {
-        const response = await fetch("/api/analytics/purchase", { method: "POST", cache: "no-store", signal: controller.signal });
-        if (response.status === 202 && remaining > 0) retry = window.setTimeout(() => void check(remaining - 1), 2500);
-        if (response.status === 200) {
-          const { transaction_id, value, currency } = await response.json();
-          if (!controller.signal.aborted && isPurchaseReference(transaction_id) &&
-              typeof value === "number" && Number.isFinite(value) && value >= 0 &&
-              typeof currency === "string" && /^[A-Z]{3}$/.test(currency)) {
-            send("purchase", { transaction_id, value, currency });
-          }
-        }
-      } catch { /* Analytics must never interrupt billing or account access. */ }
-    }
-    void check(2);
-    onCleanup(() => { controller.abort(); window.clearTimeout(retry); });
   });
 
   function choose(next: Choice) {

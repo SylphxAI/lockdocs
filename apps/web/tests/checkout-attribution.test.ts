@@ -39,7 +39,10 @@ function fixture(t: TestContext) {
       session: { id: "fixture-session", instance_id: config.SYLPHX_AUTH_ORGANIZATION_ID, expires_at: Math.floor(Date.now() / 1000) + 300 },
       user: { id: "usr_checkout_fixture" },
     });
-    if (url.href === api + "/v1/" + parent + "/checkout_sessions") return Response.json(billing);
+    if (url.href === api + "/v1/" + parent + "/checkout_sessions") {
+      assert.equal(JSON.parse(String(init.body)).success_url, app + "/dashboard?billing=return");
+      return Response.json(billing);
+    }
     calls.push({ url: url.href, init });
     return events(init);
   });
@@ -51,6 +54,8 @@ function fixture(t: TestContext) {
     choices.forEach(choice => body.append("checkout_consent", choice));
     const response = await checkout(new Request(app + "/api/billing/checkout?gclid=not-from-url", { method: "POST", headers, body }));
     assert.equal(response.status, 303);
+    // Checkout must not set the retired browser purchase proof cookie.
+    assert.equal(response.headers.get("set-cookie"), null);
     return response;
   }
   return { calls, start, billing, setEvents: (handler: typeof events) => { events = handler; } };

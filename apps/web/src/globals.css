@@ -43,3 +43,10 @@
 .unified-auth p{margin:0}
 .unified-auth .auth-terms{margin-top:8px;color:var(--dim);font-size:12px}
 .auth-terms a{color:var(--blue);text-decoration:underline;text-underline-offset:3px}
+
+.footer-cookie{font:inherit;color:inherit;background:transparent;border:0;padding:0;text-align:left}.footer-cookie:hover{text-decoration:underline}.footer-cookie:disabled{cursor:default}
+.cookie-panel{position:fixed;z-index:20;inset:auto max(1rem,env(safe-area-inset-right)) max(1rem,env(safe-area-inset-bottom)) max(1rem,env(safe-area-inset-left));max-width:64rem;margin-inline:auto;max-height:52dvh;overflow:auto;display:flex;align-items:center;gap:1rem;padding:1rem 1.25rem;background:var(--raised);border:1px solid var(--strong);border-radius:12px;box-shadow:0 10px 32px #0009}
+.cookie-panel h2{margin:0 0 .25rem;font-size:1rem}.cookie-panel p{margin:0;color:var(--dim);font-size:.875rem;line-height:1.45}.cookie-panel p+p{margin-top:.5rem}.cookie-panel a{color:var(--blue);text-decoration:underline}
+.cookie-actions{display:grid;grid-template-columns:repeat(3,minmax(8rem,1fr));gap:.5rem;flex:none}.cookie-actions .button{white-space:normal;min-height:44px;text-align:center;justify-content:center;font-size:.8rem;padding:.5rem}
+@media(max-width:800px){.cookie-panel{display:block}.cookie-actions{margin-top:.75rem;grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:360px){.cookie-actions{grid-template-columns:1fr}}

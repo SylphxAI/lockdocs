@@ -16,7 +16,7 @@ export default defineConfig({
     { name: "mobile", use: { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true } },
   ],
   webServer: {
-    command: "npm run start", env: { HOST: "127.0.0.1", PORT: String(port) },
+    command: "npm run start", env: { HOST: "127.0.0.1", PORT: String(port), LOCKDOCS_GA4_MEASUREMENT_ID: "G-TEST123456" },
     url: "http://127.0.0.1:" + port + "/api/health",
     reuseExistingServer: !process.env.CI,
   },

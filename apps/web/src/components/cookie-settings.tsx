@@ -76,6 +76,20 @@ export function CookieSettings(props: ParentProps) {
     setOpen(!allow || gpc());
   }
 
+  createEffect(() => {
+    if (!id() || !open() || !panel) return;
+    const element = panel;
+    const root = document.documentElement;
+    const reserveSpace = () => root.style.setProperty("--cookie-bar-height", element.offsetHeight + "px");
+    const observer = new ResizeObserver(reserveSpace);
+    reserveSpace();
+    observer.observe(element);
+    onCleanup(() => {
+      observer.disconnect();
+      root.style.removeProperty("--cookie-bar-height");
+    });
+  });
+
   onMount(() => {
     const controller = new AbortController();
     const options = { signal: controller.signal };
@@ -178,13 +192,16 @@ export function CookieSettings(props: ParentProps) {
     {props.children}
     <Show when={id() && open()}><section id="cookie-settings" class="cookie-panel" aria-labelledby="cookie-heading" tabIndex={-1}
       ref={panel} onKeyDown={event => { if (event.key === "Escape" && trigger) close(); }}>
-      <div><h2 id="cookie-heading">Cookie settings</h2><p>Essential cookies keep the site working. Optional Google Analytics cookies help us measure usage and ad performance. We never enable personalized ads. <a href="/legal/privacy">Privacy policy</a></p>
-        <Show when={protectedByGpc()}><p role="status">Your browser’s Global Privacy Control is on. Optional cookies are blocked.</p></Show>
+      <div class="cookie-copy">
+        <h2 id="cookie-heading">Cookie settings</h2>
+        <p><Show when={protectedByGpc()} fallback="Optional Google Analytics cookies measure site use and ad performance.">
+          <span role="status">Global Privacy Control blocks optional cookies.</span>
+        </Show>{" "}<a href="/legal/privacy">Privacy policy</a></p>
       </div>
       <div class="cookie-actions">
-        <button type="button" class="button secondary" onClick={() => choose("reject")}>Reject optional</button>
-        <button type="button" class="button secondary" disabled={protectedByGpc()} onClick={() => choose("analytics")}>Analytics only</button>
-        <button type="button" class="button secondary" disabled={protectedByGpc()} onClick={() => choose("all")}>Allow analytics &amp; ads</button>
+        <button type="button" class="cookie-choice" onClick={() => choose("reject")}>Reject optional</button>
+        <button type="button" class="cookie-choice" disabled={protectedByGpc()} onClick={() => choose("analytics")}>Analytics only</button>
+        <button type="button" class="cookie-choice" disabled={protectedByGpc()} onClick={() => choose("all")}>Allow analytics &amp; ads</button>
       </div>
     </section></Show>
   </CookieContext.Provider>;

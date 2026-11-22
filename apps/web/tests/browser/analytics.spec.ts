@@ -28,7 +28,8 @@ test("EEA waits for a choice, records only the permitted pricing event, and stop
   for (const label of ["Reject optional", "Analytics only", "Allow analytics & ads"]) {
     const button = banner.getByRole("button", { name: label, exact: true });
     await expect(button).toBeEnabled();
-    await expect(button).toHaveClass("button secondary");
+    await expect(button).toHaveCSS("border-radius", "999px");
+    await expect(button).toHaveCSS("border-top-width", "1px");
     expect((await button.boundingBox())?.height).toBeGreaterThanOrEqual(44);
   }
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
@@ -55,6 +56,29 @@ test("EEA waits for a choice, records only the permitted pricing event, and stop
   await expect(footer).toBeEnabled();
   await expect(banner).toHaveCount(0);
   expect(hits).toHaveLength(1);
+});
+
+test("the compact consent bar leaves the workbench and footer controls usable", async ({ page }, info) => {
+  const hits = await install(page, "loc=DE\n");
+  await page.goto("/playground");
+  const banner = settings(page);
+  await expect(banner).toBeVisible();
+  const { width, height } = page.viewportSize()!;
+  const box = (await banner.boundingBox())!;
+  expect(box.height).toBeLessThanOrEqual(width === 390 ? 110 : 72);
+  expect(box.y + box.height).toBeCloseTo(height, 0);
+  await expect(page.locator("body")).toHaveCSS("padding-bottom", box.height + "px");
+  await expect(page.locator("html")).toHaveCSS("scroll-padding-bottom", box.height + "px");
+  const resolve = page.getByRole("button", { name: "Resolve versions" });
+  await resolve.click({ trial: true });
+  expect((await resolve.boundingBox())!.y + (await resolve.boundingBox())!.height).toBeLessThan(box.y);
+  if (process.env.LOCKDOCS_LOCAL_CAPTURES) await page.screenshot({ path: info.outputPath("playground-consent.png") });
+  const footer = page.getByRole("button", { name: "Cookie settings", exact: true });
+  await footer.click({ trial: true });
+  expect(hits).toEqual([]);
+  await expect(page.locator('iframe[src="/api/analytics/tag"]')).toHaveCount(0);
+  await banner.getByRole("button", { name: "Reject optional" }).click();
+  await expect(page.locator("body")).toHaveCSS("padding-bottom", "0px");
 });
 
 for (const [region, trace] of [["UK", "loc=GB"], ["Switzerland", "loc=CH"], ["unknown", "loc=XX"], ["unreachable", null]] as const) {

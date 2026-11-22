@@ -4,7 +4,7 @@ import type { AuthCapabilities, SignInMethod } from "@/lib/auth";
 import { requestPasskey, supportsPasskeys } from "@/lib/passkey-client";
 
 type Options = { capabilities: AuthCapabilities; lastUsed: SignInMethod | null };
-type EmailAction = "send" | "verify" | "password";
+type EmailAction = "send" | "verify";
 const mask = (address: string) => address[0] + "•••" + address.slice(address.lastIndexOf("@"));
 
 function GoogleMark() {
@@ -25,7 +25,7 @@ export function SignIn(props: { next: string }) {
   const [loading, setLoading] = createSignal(true);
   const [message, setMessage] = createSignal("");
   const [email, setEmail] = createSignal("");
-  const [step, setStep] = createSignal<"email" | "proof" | "password">("email");
+  const [step, setStep] = createSignal<"email" | "proof">("email");
   const [pending, setPending] = createSignal<EmailAction | "passkey">();
   const [code, setCode] = createSignal("");
   const [delivery, setDelivery] = createSignal<{ email: string; expiresAt: number; resendAt: number }>();
@@ -38,7 +38,6 @@ export function SignIn(props: { next: string }) {
   let ceremony: { cancel: AbortController; done: Promise<void> } | undefined;
   let emailField: HTMLInputElement | undefined;
   let codeField: HTMLInputElement | undefined;
-  let passwordField: HTMLInputElement | undefined;
   let proofHeading: HTMLHeadingElement | undefined;
 
   async function loadOptions() {
@@ -113,19 +112,18 @@ export function SignIn(props: { next: string }) {
     onCleanup(() => { active = false; });
   });
 
-  async function submitProof(action: EmailAction, password?: string) {
+  async function submitProof(action: EmailAction) {
     if (pending() || (action === "verify" && (!sent() || code().length !== 6)) || (action === "send" && cooldown())) return;
     setPending(action);
     setMessage("");
     try {
       const response = await fetch("/api/auth/sign-in", {
         method: "POST", headers: { "Content-Type": "application/json" }, signal: life.signal,
-        body: JSON.stringify({ action, next: props.next, ...(action === "verify" ? { code: code() } : { email: email(), password }) }),
+        body: JSON.stringify({ action, next: props.next, ...(action === "verify" ? { code: code() } : { email: email() }) }),
       });
       if (!response.ok) {
         setMessage(response.status === 429 ? "Too many attempts. Wait a moment and try again." : action === "verify"
-          ? "Couldn’t verify that code. Check it or request a new one." : action === "password"
-          ? "Couldn’t sign in with that email and password." : "Couldn’t send a code. Try again or choose another method.");
+          ? "Couldn’t verify that code. Check it or request a new one." : "Couldn’t send a code. Try again or choose another method.");
         return;
       }
       const result = await response.json();
@@ -183,50 +181,25 @@ export function SignIn(props: { next: string }) {
     <Show when={!loading()} fallback={<p class="quiet" role="status">Loading sign-in options…</p>}>
       <Show when={options()} fallback={<button class="button secondary auth-button" type="button" onClick={loadOptions}>Try again</button>}>
         <Show when={step() === "email"} fallback={<>
-          <h2 class="proof-heading" tabIndex={-1} ref={proofHeading}>{step() === "password" ? "Enter your password" : caps()?.email_otp ? "Check your email" : "Choose a sign-in method"}</h2>
-          <Show when={step() === "proof"} fallback={<>
-            <form method="post" onSubmit={event => {
-              event.preventDefault();
-              void submitProof("password", String(new FormData(event.currentTarget).get("password")));
-            }}>
-              <input hidden type="email" name="username" autocomplete="username" value={email()} readOnly/>
-              <label for="signin-password">Password</label>
-              <input id="signin-password" ref={passwordField} type="password" name="password" autocomplete="current-password" maxlength="1024" required readOnly={Boolean(pending())}/>
-              <button type="submit" class="button auth-button" disabled={Boolean(pending())}>{pending() ? "Signing in…" : "Sign in"}</button>
-            </form>
-            <Show when={caps()?.email_otp || passkeys()}>
-              <button class="auth-text-button" type="button" disabled={Boolean(pending())} onClick={() => {
-                setStep("proof");
-                setMessage("");
-                const target = sent() ? codeField : proofHeading;
-                queueMicrotask(() => target?.focus());
-              }}>Other sign-in methods</button>
-            </Show>
-          </>}>
-            <Show when={caps()?.email_otp}>
-              <Show when={sent()} fallback={
-                <Show when={pending() !== "send"} fallback={<p role="status" class="quiet">Requesting a code…</p>}>
-                  <button type="button" class="button secondary auth-button" disabled={Boolean(pending())} onClick={() => void submitProof("send")}>Send me a code</button>
-                </Show>
-              }>
-                <p class="quiet">Sent to <strong>{mask(email())}</strong></p>
-                <form method="post" onSubmit={event => { event.preventDefault(); void submitProof("verify"); }}>
-                  <label for="signin-code">Six-digit code</label>
-                  <input id="signin-code" ref={codeField} name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" value={code()} required
-                    readOnly={Boolean(pending())} onInput={event => enterCode(event.currentTarget, event.currentTarget.value)}
-                    onPaste={event => { if (pending()) return; event.preventDefault(); enterCode(event.currentTarget, event.clipboardData?.getData("text") ?? ""); }}/>
-                  <button class="button auth-button" type="submit" disabled={code().length !== 6 || Boolean(pending())}>{pending() === "verify" ? "Verifying…" : "Verify code"}</button>
-                </form>
-                <button class="auth-text-button" type="button" disabled={Boolean(pending()) || cooldown() > 0} onClick={() => void submitProof("send")}>{cooldown() ? "Resend in " + cooldown() + "s" : "Resend code"}</button>
+          <h2 class="proof-heading" tabIndex={-1} ref={proofHeading}>{caps()?.email_otp ? "Check your email" : "Choose a sign-in method"}</h2>
+          <Show when={caps()?.email_otp}>
+            <Show when={sent()} fallback={
+              <Show when={pending() !== "send"} fallback={<p role="status" class="quiet">Requesting a code…</p>}>
+                <button type="button" class="button secondary auth-button" disabled={Boolean(pending())} onClick={() => void submitProof("send")}>Send me a code</button>
               </Show>
-            </Show>
-            <PasskeyButton/>
-            <Show when={caps()?.password}>
-              <button class="auth-text-button" type="button" disabled={Boolean(pending())} onClick={() => {
-                setStep("password"); setMessage(""); queueMicrotask(() => passwordField?.focus());
-              }}>Use password instead</button>
+            }>
+              <p class="quiet">Sent to <strong>{mask(email())}</strong></p>
+              <form method="post" onSubmit={event => { event.preventDefault(); void submitProof("verify"); }}>
+                <label for="signin-code">Six-digit code</label>
+                <input id="signin-code" ref={codeField} name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" value={code()} required
+                  readOnly={Boolean(pending())} onInput={event => enterCode(event.currentTarget, event.currentTarget.value)}
+                  onPaste={event => { if (pending()) return; event.preventDefault(); enterCode(event.currentTarget, event.clipboardData?.getData("text") ?? ""); }}/>
+                <button class="button auth-button" type="submit" disabled={code().length !== 6 || Boolean(pending())}>{pending() === "verify" ? "Verifying…" : "Verify code"}</button>
+              </form>
+              <button class="auth-text-button" type="button" disabled={Boolean(pending()) || cooldown() > 0} onClick={() => void submitProof("send")}>{cooldown() ? "Resend in " + cooldown() + "s" : "Resend code"}</button>
             </Show>
           </Show>
+          <PasskeyButton/>
           <button class="auth-text-button" type="button" disabled={Boolean(pending())} onClick={changeEmail}>Use a different email</button>
         </>}>
           <Show when={caps()?.google || caps()?.github}>
@@ -235,7 +208,7 @@ export function SignIn(props: { next: string }) {
               <Show when={caps()?.github}><a rel="external" class="button secondary auth-button" href={providerHref("github")}><GitHubMark/> Continue with GitHub {lastUsed("github")}</a></Show>
             </div>
           </Show>
-          <Show when={caps()?.email_otp || caps()?.password || passkeys()}>
+          <Show when={caps()?.email_otp || passkeys()}>
             <Show when={caps()?.google || caps()?.github}><div class="auth-divider" aria-hidden="true">or</div></Show>
             <form method="post" onSubmit={continueWithEmail}>
               <label for="signin-email">Email address</label>

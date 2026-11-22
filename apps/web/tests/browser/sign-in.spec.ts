@@ -1,5 +1,5 @@
 import { expect, type Page } from "@playwright/test";
-import { test, code, email, password } from "./auth-fixture";
+import { test, code, email } from "./auth-fixture";
 
 function consoleErrors(page: Page) {
   const errors: string[] = [];
@@ -41,7 +41,7 @@ async function observeMediation(page: Page) {
   });
 }
 
-test("current flags preserve Google, remembered method, and non-enumerating legacy password sign-in", async ({ page, auth }, info) => {
+test("Google and last-used work when it is the only enabled passwordless method", async ({ page, auth }, info) => {
   const errors = consoleErrors(page);
   await page.goto(auth.origin + "/pricing?currency=GBP");
   await expect(page.locator(".plan-pro")).toContainText("£99/yr upfront · Tax included");
@@ -53,9 +53,7 @@ test("current flags preserve Google, remembered method, and non-enumerating lega
   await expect(page.locator(".auth-providers a").first()).toContainText("Continue with Google");
   await expect(google).toHaveCSS("background-color", "rgb(18, 25, 35)");
   await expect(google).toHaveCSS("border-top-color", "rgb(90, 106, 127)");
-  await expect(emailField(page)).toHaveAttribute("autocomplete", "username webauthn");
-  await expect(emailField(page)).toHaveCSS("border-top-color", "rgb(90, 106, 127)");
-  await expect(page.locator("input[type=email]")).toHaveCount(1);
+  await expect(emailField(page)).toHaveCount(0);
   await expect(page.locator("input[type=password], input[autocomplete=new-password]")).toHaveCount(0);
   await expect(page.locator("main")).not.toContainText(/Create an account|passkey|email code/i);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
@@ -69,23 +67,6 @@ test("current flags preserve Google, remembered method, and non-enumerating lega
   await expect(page.getByRole("link", { name: "Sign in", exact: true })).toBeVisible();
   await page.goto(auth.origin + "/sign-in");
   await expect(google).toContainText("Last used");
-  const callsBeforeEmail = auth.calls.length;
-  await enterEmail(page, "unknown@example.test");
-  await expect(page.getByRole("heading", { name: "Choose a sign-in method" })).toBeVisible();
-  const stepTwo = await page.locator(".unified-auth").innerText();
-  await page.getByRole("button", { name: "Use a different email" }).click();
-  await expect(emailField(page)).toBeFocused();
-  await enterEmail(page);
-  await expect(page.locator(".unified-auth")).toHaveText(stepTwo, { useInnerText: true });
-  expect(auth.calls.slice(callsBeforeEmail)).toEqual([]);
-  await page.getByRole("button", { name: "Use password instead" }).click();
-  const field = page.getByLabel("Password", { exact: true });
-  await expect(field).toHaveAttribute("autocomplete", "current-password");
-  await expect(field).toBeFocused();
-  await field.fill(password);
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page).toHaveURL(auth.origin + "/dashboard");
-  expect((await (await page.request.get(auth.origin + "/api/auth/session")).json()).user.id).toBe("usr_reader");
   expect(auth.calls.filter(path => /\/continue|\/passkey/.test(path))).toEqual([]);
   expect(auth.rejections).toEqual([]);
   expect(errors).toEqual([]);
@@ -95,10 +76,12 @@ test("a runtime flag flip enables OTP, inline six-digit paste and auto-submit, a
   const errors = consoleErrors(page);
   await page.clock.install();
   await page.goto(auth.origin + "/sign-in");
-  await expect(emailField(page)).toBeVisible();
+  await expect(page.getByRole("link", { name: /Continue with Google/ })).toBeVisible();
+  await expect(emailField(page)).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Continue with a passkey" })).toHaveCount(0);
   Object.assign(auth.methods, { email_otp: true, passkey: true, password: false });
   await page.reload();
+  await expect(emailField(page)).toHaveAttribute("autocomplete", "username webauthn");
   await expect(page.getByRole("button", { name: "Continue with a passkey" })).toBeVisible();
   const firstResponse = page.waitForResponse(response => response.url().endsWith("/api/auth/sign-in"));
   await enterEmail(page, "new-reader@example.test");

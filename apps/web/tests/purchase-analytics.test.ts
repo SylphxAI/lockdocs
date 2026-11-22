@@ -46,6 +46,7 @@ test("purchase requires a signed, account-bound checkout and confirmation of tha
       session: { id: "fixture-session", instance_id: config.SYLPHX_AUTH_ORGANIZATION_ID, expires_at: Math.floor(Date.now() / 1000) + 300 },
       user: { id: subject },
     });
+    if (url.href === money + "/v1/events/attribution_bindings") return new Response(null, { status: 204 });
     assert.equal(new Headers(init.headers).get("authorization"), "Bearer " + config.SYLPHX_MONEY_API_KEY);
     if (url.href === money + "/v1/" + collection) {
       assert.equal(init.method, "POST");
@@ -58,7 +59,7 @@ test("purchase requires a signed, account-bound checkout and confirmation of tha
     return Response.json(result);
   });
   const start = (measure: boolean, extraHeaders?: Record<string, string>) => checkout(request("/api/billing/checkout", session,
-    { currency: "GBP", ...(measure ? { measure_checkout: "1" } : {}) }, extraHeaders));
+    { currency: "GBP", ...(measure ? { checkout_consent: "analytics" } : {}) }, extraHeaders));
   const verify = (cookies: string, extraHeaders?: Record<string, string>) => verifiedPurchase(request("/api/analytics/purchase", cookies, undefined, extraHeaders));
 
   assert.match((await start(false)).headers.get("set-cookie")!, /Max-Age=0/);

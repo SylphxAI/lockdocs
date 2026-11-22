@@ -13,7 +13,6 @@ const pk = "pk_lockdocs_fixture";
 const sk = "sk_lockdocs_fixture";
 const instance = "lockdocs-fixture";
 export const email = "reader@example.test";
-export const password = "fixture existing password";
 export const code = "012345";
 const random = () => randomBytes(32).toString("base64url");
 const hash = (value: string) => createHash("sha256").update(value).digest();
@@ -108,10 +107,6 @@ async function startFixture() {
         res.writeHead(303, { location: target.href }).end();
         return;
       }
-      case "/v1/client/sign-in/password":
-        if (req.method !== "POST" || body.session_mode !== "server") return rejectContract("password request shape");
-        if (!methods.password || body.email !== email || body.password !== password) return json(res, {}, 401);
-        return json(res, { ticket: ticket(body.email) });
       case "/v1/client/continue": {
         if (!methods.email_otp) return rejectContract("OTP is disabled");
         if (req.method !== "POST" || body.method !== "email_otp" || body.session_mode !== "server" || typeof body.email !== "string") {

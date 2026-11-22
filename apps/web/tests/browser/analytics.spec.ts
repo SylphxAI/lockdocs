@@ -125,3 +125,25 @@ test("GPC overrides an existing grant outside the restricted regions", async ({ 
   await expect(page.locator("iframe")).toHaveCount(0);
   expect(hits).toEqual([]);
 });
+
+
+test("campaign cookies require ad consent, survive navigation, and are removed on downgrade", async ({ page }) => {
+  await install(page, "loc=DE\n");
+  await page.goto("/pricing?gclid=fixture-click&gbraid=fixture-braid&wbraid=bad%2Fid");
+  const campaign = async () => (await page.context().cookies()).find(cookie => cookie.name === "__Host-lockdocs-checkout-campaign");
+  await expect(settings(page)).toBeVisible();
+  expect(await campaign()).toBeUndefined();
+  await settings(page).getByRole("button", { name: "Analytics only" }).click();
+  await expect.poll(() => commands(page)).not.toEqual([]);
+  expect(await campaign()).toBeUndefined();
+  const footer = page.getByRole("button", { name: "Cookie settings", exact: true });
+  await footer.click();
+  await settings(page).getByRole("button", { name: "Allow analytics & ads" }).click();
+  await expect.poll(campaign).toMatchObject({ value: "gclid%3Dfixture-click%26gbraid%3Dfixture-braid", path: "/", secure: true, sameSite: "Lax" });
+  await page.goto("/pricing");
+  expect(await campaign()).toBeDefined();
+  await expect(footer).toBeEnabled();
+  await footer.click();
+  await settings(page).getByRole("button", { name: "Analytics only" }).click();
+  await expect.poll(campaign).toBeUndefined();
+});

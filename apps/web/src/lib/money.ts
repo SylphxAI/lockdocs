@@ -3,6 +3,8 @@ import {
   appOrigin, authConfigured, getSession, httpsOrigin, isVerifiedSession, moneyAccessToken,
   privateJson, privateRedirect, providerFetch, sameOrigin, type Session,
 } from "./auth";
+import { bindCheckoutAttribution, checkoutConsent, sendsGpc } from "./checkout-attribution";
+import { consent, type Choice } from "./analytics-policy";
 import { measurementId } from "./analytics-config";
 import { forgetCheckout, pendingCheckout, rememberCheckout } from "./purchase-proof";
 
@@ -68,12 +70,12 @@ export async function checkout(request: Request) {
     return privateJson({ error: "invalid_currency" }, 400);
   }
   let currency: FormDataEntryValue | null;
-  let measure = false;
+  const ga = measurementId();
+  let choice: Choice = "reject";
   try {
     const form = await request.formData();
     currency = form.getAll("currency").length === 1 ? form.get("currency") : null;
-    measure = Boolean(measurementId()) && request.headers.get("sec-gpc") !== "1" &&
-      form.getAll("measure_checkout").length === 1 && form.get("measure_checkout") === "1";
+    if (ga && !sendsGpc(request)) choice = checkoutConsent(form);
   } catch {
     return privateJson({ error: "invalid_currency" }, 400);
   }
@@ -100,9 +102,15 @@ export async function checkout(request: Request) {
       if (location) {
         const redirect = privateRedirect(location);
         const prefix = cfg.parent + "/checkout_sessions/";
-        if (measurementId()) {
+        if (ga) {
           const id = typeof body.name === "string" && body.name.startsWith(prefix) ? body.name.slice(prefix.length) : "";
-          if (!measure || !rememberCheckout(redirect, cfg.secret, session.id, id)) forgetCheckout(redirect);
+          const allowed = consent(choice).analytics_storage === "granted";
+          if (allowed) {
+            // Money normally returns a resource name; also accept an explicit ID if no name is supplied.
+            const bindingId = body.name == null && typeof body.checkout_session_id === "string" ? body.checkout_session_id : id;
+            void bindCheckoutAttribution(request, cfg, bindingId, choice, ga);
+          }
+          if (!allowed || !rememberCheckout(redirect, cfg.secret, session.id, id)) forgetCheckout(redirect);
         }
         return redirect;
       }
@@ -120,7 +128,7 @@ function minorUnits(value: unknown) {
 export async function verifiedPurchase(request: Request) {
   const cfg = checkoutConfig();
   if (!cfg || !measurementId()) return privateJson({}, 404);
-  if (!sameOrigin(request, cfg.origin) || request.headers.get("sec-gpc") === "1") return privateJson({}, 403);
+  if (!sameOrigin(request, cfg.origin) || sendsGpc(request)) return privateJson({}, 403);
   const session = await getSession(request);
   if (!session || !isVerifiedSession(session)) return privateJson({}, 401);
   const pending = pendingCheckout(request, cfg.secret, session.id);

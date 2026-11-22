@@ -41,6 +41,60 @@ async function observeMediation(page: Page) {
   });
 }
 
+for (const { source, link, next } of [
+  { source: "/pricing?currency=GBP", link: "Get Lockdocs Pro — £99/yr", next: "/pricing?currency=GBP" },
+  { source: "/dashboard", link: "Sign in", next: "/dashboard" },
+]) {
+  test(`opens all enabled sign-in methods from ${source} without a sign-in RPC`, async ({ page, auth }, info) => {
+    auth.methods.email_otp = true;
+    auth.methods.passkey = true;
+    const errors = consoleErrors(page);
+    const httpErrors: string[] = [];
+    const signInRpc: string[] = [];
+    page.on("response", response => {
+      if (response.status() >= 400) httpErrors.push(response.status() + " " + new URL(response.url()).pathname);
+    });
+    page.on("request", request => {
+      const url = new URL(request.url());
+      if (url.pathname.startsWith("/_server") && url.searchParams.get("id")?.includes("signInDetails")) signInRpc.push(url.pathname);
+    });
+
+    await page.goto(auth.origin + source);
+    await page.locator("html").evaluate(html => html.setAttribute("data-entry-document", "original"));
+    const session = page.waitForResponse(response => new URL(response.url()).pathname === "/api/auth/session");
+    await page.getByRole("link", { name: link, exact: true }).click();
+    await expect(page).toHaveURL(auth.origin + "/sign-in?" + new URLSearchParams({ next }));
+    await expect(page.locator("html")).toHaveAttribute("data-entry-document", "original");
+    const card = page.locator(".sign-in-card");
+    const google = card.getByRole("link", { name: "Continue with Google" });
+    await expect(google).toBeVisible();
+    await expect(google).toHaveAttribute("href", "/api/auth/google?" + new URLSearchParams({ next }));
+    await expect(google).toHaveAttribute("rel", "external");
+    await expect(card.getByLabel("Email address")).toBeVisible();
+    await expect(card.getByRole("button", { name: "Continue with a passkey" })).toBeVisible();
+    expect((await session).status()).toBe(200);
+    const layout = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth,
+      broken: [...document.images].filter(image => !image.complete || !image.naturalWidth).map(image => image.getAttribute("src")) }));
+    expect(layout.scrollWidth).toBeLessThanOrEqual(page.viewportSize()!.width);
+    expect(layout.broken).toEqual([]);
+    expect(signInRpc).toEqual([]);
+    expect(httpErrors).toEqual([]);
+    expect(errors).toEqual([]);
+    expect(auth.rejections).toEqual([]);
+    await card.screenshot({ path: info.outputPath("sign-in-entry.png"), animations: "disabled" });
+  });
+}
+
+test("sign-in keeps a visible recovery action when the session request fails", async ({ page, auth }) => {
+  await page.route("**/api/auth/session", route => route.fulfill({ status: 503 }), { times: 1 });
+  await page.goto(auth.origin + "/sign-in?next=%2Fpricing");
+  const card = page.locator(".sign-in-card");
+  await expect(card.getByRole("alert")).toHaveText("Couldn’t load sign-in. Try again.");
+  await card.getByRole("button", { name: "Try again" }).click();
+  await expect(card.getByRole("link", { name: "Continue with Google" })).toHaveAttribute("href", "/api/auth/google?next=%2Fpricing");
+  await expect(card.getByRole("alert")).toHaveCount(0);
+});
+
 test("Google and last-used work when it is the only enabled passwordless method", async ({ page, auth }, info) => {
   const errors = consoleErrors(page);
   await page.goto(auth.origin + "/pricing?currency=GBP");
@@ -64,6 +118,12 @@ test("Google and last-used work when it is the only enabled passwordless method"
   await expect(page).toHaveURL(auth.origin + "/pricing?currency=GBP");
   const googleSession = await page.request.get(auth.origin + "/api/auth/session");
   expect((await googleSession.json()).user.id).toBe("usr_reader");
+  await page.goto(auth.origin + "/sign-in?next=%2Fpricing%3Fcurrency%3DGBP");
+  const resume = page.getByRole("link", { name: "Continue", exact: true });
+  await expect(resume).toHaveAttribute("href", "/pricing?currency=GBP");
+  await expect(google).toHaveCount(0);
+  await page.goto(auth.origin + "/sign-in?next=%2F%2Fexample.org");
+  await expect(resume).toHaveAttribute("href", "/dashboard");
   await page.goto(auth.origin + "/dashboard");
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await expect(page.getByRole("link", { name: "Sign in", exact: true })).toBeVisible();

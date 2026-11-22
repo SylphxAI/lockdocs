@@ -103,6 +103,10 @@ test("workbench resolves pasted text and switches cited migrations", async ({ pa
   await page.getByRole("button", { name: "Resolve versions" }).click();
   await expect(page.getByRole("heading", { name: "django@5.1.3" })).toBeVisible();
   await expect(page.getByText("1 pinned")).toBeVisible();
+  const preview = page.getByRole("region", { name: "Pro Upgrade Preview" });
+  await expect(preview).toContainText("Free resolves the exact versions in your lockfile.");
+  await expect(preview).toContainText("which call sites an upgrade affects, with citations");
+  await expect(preview.getByRole("link", { name: "See Pro plans" })).toHaveAttribute("href", "/pricing");
   await page.getByRole("button", { name: "MCP agent setup" }).click();
   await expect(page.locator(".snippet-box pre")).toContainText("@sylphx/lockdocs");
   await page.getByRole("button", { name: "Pydantic 1.10 → 2.9" }).click();

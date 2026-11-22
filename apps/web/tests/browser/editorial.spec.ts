@@ -58,7 +58,7 @@ for (const { path, from, heading, type } of [
         await expect(page.locator(anchor).getByText(step.text, { exact: true })).toBeVisible();
       }
       const config = await page.getByLabel("Cursor project configuration", { exact: true }).textContent();
-      expect(JSON.parse(config!)).toEqual({ mcpServers: { lockdocs: { command: "npx", args: ["-y", "@sylphx/lockdocs@0.7.5", "mcp"] } } });
+      expect(JSON.parse(config!)).toEqual({ mcpServers: { lockdocs: { command: "npx", args: ["-y", "@sylphx/lockdocs", "mcp"] } } });
     } else {
       expect(schema[0]).toMatchObject({ name: "Lockdocs", url: origin, offers: { price: 0, priceCurrency: "USD" } });
       await expect(page.locator('main a[href="/playground"]')).toBeVisible();

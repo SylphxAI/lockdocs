@@ -1,6 +1,6 @@
 ---
 title: Lockdocs vs Context7 — installed versions and offline docs
-description: Compare Lockdocs and Context7 by documentation source, version selection, offline use and query limits. Reproduce an exact-version example with release 0.7.0.
+description: Compare Lockdocs and Context7 by documentation source, version selection, offline use and query limits. Run an exact-version example with two installed versions of Zod.
 ---
 
 # Lockdocs vs Context7
@@ -36,13 +36,13 @@ needs a connection the first time. For website-only material, Context7 may be
 the better starting point. This page is a workflow comparison, not a new
 head-to-head accuracy or latency measurement.
 
-## Reproduce it: the installed version changes the answer
+## Try it: the installed version changes the answer
 
 This example asks for the same `ZodObject.strict` declaration in two small npm
-projects. It uses published **Lockdocs 0.7.0**, **zod 3.22.4** and **zod 4.1.5**.
-Verified on Linux with Node.js 20.19.2 and npm 9.2.0 on **29 October 2026**. Initial npm
-installation needs a connection. After that, the queries use the installed
-binary directly, not `npx`, and work without fetching a model or upstream docs.
+projects. It uses **zod 3.22.4** and **zod 4.1.5** with the current npm release
+of Lockdocs. Initial npm installation needs a connection. After that, the
+queries use the installed binary directly, without fetching a model or
+upstream docs.
 
 Run in a POSIX shell (macOS, Linux, or WSL):
 
@@ -51,7 +51,7 @@ Run in a POSIX shell (macOS, Linux, or WSL):
 mkdir lockdocs-version-demo
 cd lockdocs-version-demo
 mkdir runner zod3 zod4
-npm install --prefix runner --ignore-scripts --no-audit --no-fund @sylphx/lockdocs@0.7.0
+npm install --prefix runner --ignore-scripts --no-audit --no-fund @sylphx/lockdocs
 BIN="$PWD/runner/node_modules/.bin/lockdocs"
 "$BIN" version
 
@@ -67,8 +67,8 @@ for project in zod3 zod4; do
 done
 ```
 
-The relevant output from that run (paths and line numbers are from the pinned
-packages):
+Sample output recorded with Lockdocs 0.7.0 on 29 October 2026 (paths and line
+numbers are from the pinned Zod versions; output formatting may differ):
 
 ````text
 zod@3.22.4 · npm · node_modules/zod · pinned in package-lock.json

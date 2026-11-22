@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const pages = ["/", "/playground", "/pricing", "/dashboard", "/docs", "/guide", "/reference", "/benchmarks", "/compare", "/context7-alternative", "/guides/up-to-date-docs-for-cursor-and-claude-code"];
+const pages = ["/", "/playground", "/pricing", "/dashboard", "/docs", "/guide", "/reference", "/benchmarks", "/compare", "/pro", "/context7-alternative", "/guides/up-to-date-docs-for-cursor-and-claude-code"];
 // These smoke tests exercise the unconfigured preview; analytics.spec.ts covers consent separately.
 test.beforeEach(async ({ page }) => {
   await page.route("**/api/analytics/config", route => route.fulfill({ json: { measurementId: null } }));
@@ -26,8 +26,13 @@ test("public HTML protects package versions without changing selectable commands
   }));
   await page.goto("/guide/fetch");
   await expect(page.locator("pre code").filter({ hasText: "github.com/vercel/next.js@v15.1.0" })).toBeVisible();
+  for (const route of ["/guide/setup", "/compare", "/context7-alternative", "/guides/up-to-date-docs-for-cursor-and-claude-code"]) {
+    await page.goto(route);
+    await expect(page.locator("main")).not.toContainText(/@sylphx\/lockdocs@0\.7\.[05]\b/);
+  }
+  await expect(page.getByLabel("Terminal cross-check", { exact: true })).toContainText("npx -y @sylphx/lockdocs api z.strictObject");
   await page.goto("/guide/setup");
-  for (const command of ["npx -y @sylphx/lockdocs@0.7.0 setup", "claude mcp add --scope user lockdocs -- npx -y @sylphx/lockdocs@0.7.0 mcp"]) {
+  for (const command of ["npx -y @sylphx/lockdocs setup", "claude mcp add --scope user lockdocs -- npx -y @sylphx/lockdocs mcp"]) {
     const code = page.locator("pre code").filter({ hasText: command });
     await expect(code).toBeVisible();
     expect(await code.evaluate((element) => {
@@ -36,6 +41,30 @@ test("public HTML protects package versions without changing selectable commands
       return range.toString().trim();
     })).toBe(command);
   }
+});
+
+test("legacy guide links permanently redirect only with safe campaign parameters", async ({ request }) => {
+  for (const path of ["/quickstart", "/download"]) {
+    const bare = await request.head(path, { maxRedirects: 0 });
+    expect(bare.status()).toBe(301);
+    expect(bare.headers().location).toBe("/guide");
+    const alias = await request.get(path + "/?utm_source=release+notes&utm_medium=email&ref=oct&ref=dec&gclid=test-id&next=//example.org&url=https://example.org&utm_term=%0D%0Ax&token=secret", { maxRedirects: 0 });
+    expect(alias.status()).toBe(301);
+    expect(alias.headers().location).toBe("/guide?gclid=test-id&utm_source=release+notes&utm_medium=email");
+    expect((await request.get(path)).status()).toBe(200);
+    expect((await request.post(path, { maxRedirects: 0 })).status()).not.toBe(301);
+  }
+});
+
+test("Pro reference replaces the placeholder and links directly to pricing", async ({ page }) => {
+  await page.goto("/pro");
+  await expect(page.locator("main")).not.toContainText("<this page>");
+  await expect(page.getByText("12 call sites", { exact: false })).toBeVisible();
+  const cta = page.getByRole("link", { name: "See Lockdocs Pro pricing" });
+  await expect(cta).toHaveAttribute("href", "/pricing");
+  await expect(cta).toHaveCSS("background-color", "rgb(124, 156, 255)");
+  await cta.click();
+  await expect(page.getByRole("heading", { name: "Lockdocs Pro", exact: true })).toBeVisible();
 });
 
 test("home and pricing show matching offers and FAQs; sign-in is not indexed", async ({ page }) => {

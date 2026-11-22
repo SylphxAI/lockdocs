@@ -14,6 +14,8 @@ Your agent already gets the right docs for every package you install, free,
 forever. Pro gives your team a clear answer to "what breaks if we upgrade?",
 and the same exact-version docs for the packages your company keeps private.
 
+[See Lockdocs Pro pricing](/pricing)
+
 ## Upgrade report
 
 Ask for `next 15` from `next 14` and get every API you actually call that was
@@ -32,7 +34,7 @@ sample. Pro adds the full list: each change, its replacement, your call sites an
 the migration sections.
 
 ```text
-next 14.2.3 -> 15.0.0: 7 of the APIs your project calls change (3 removed, 2 renamed, 2 deprecated) across 12 call sites. Sample: removed next.foo at app/page.tsx:8. The full report is lockdocs Pro: <this page>
+next 14.2.3 -> 15.0.0: 7 of the APIs your project calls change (3 removed, 2 renamed, 2 deprecated) across 12 call sites. Sample: removed next.foo at app/page.tsx:8.
 ```
 
 The preview downloads nothing the report would not: the target version comes

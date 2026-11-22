@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import type { APIEvent } from "@solidjs/start/server";
-import { sendsGpc } from "@/lib/checkout-attribution";
+import { sendsGpc } from "@/lib/analytics-policy";
 import { measurementId } from "@/lib/analytics-config";
 
 // Run the tag in a blank document rather than the app document. It has no links,

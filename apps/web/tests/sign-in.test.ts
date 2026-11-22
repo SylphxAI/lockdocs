@@ -41,12 +41,20 @@ test("legacy aliases keep safe product destinations without carrying untrusted s
 test("headless proofs use the public credential; only a ticket redeemed for the bound instance opens a session", async t => {
   Object.assign(process.env, { LOCKDOCS_APP_ORIGIN: origin, SYLPHX_AUTH_URL: auth, SYLPHX_AUTH_ORGANIZATION_ID: instance,
     SYLPHX_PUBLISHABLE_KEY: key, SYLPHX_AUTH_SECRET_KEY: secret });
+  t.mock.method(Date, "now", () => 1_800_000_000_000);
+  const priorMeasurementId = process.env.LOCKDOCS_GA4_MEASUREMENT_ID;
+  process.env.LOCKDOCS_GA4_MEASUREMENT_ID = "G-TEST123456";
+  t.after(() => {
+    if (priorMeasurementId === undefined) delete process.env.LOCKDOCS_GA4_MEASUREMENT_ID;
+    else process.env.LOCKDOCS_GA4_MEASUREMENT_ID = priorMeasurementId;
+  });
   const methods = { email_otp: false, passkey: false, password: true, sign_up: true };
   const seen: Array<{ path: string; key: string | null; bearer: string | null; body: unknown }> = [];
   const expiry = Math.floor(Date.now() / 1000) + 3600;
   let sessionInstance = instance;
   let providerError = 0;
   let configuredInstance = instance;
+  let signupFlag: unknown;
   t.mock.method(globalThis, "fetch", async (url: URL, init: RequestInit) => {
     const path = url.pathname.slice("/v1/client/".length);
     const body = init.body ? JSON.parse(String(init.body)) : undefined;
@@ -55,7 +63,7 @@ test("headless proofs use the public credential; only a ticket redeemed for the 
     seen.push({ path, key: publishable, bearer, body });
     if (url.origin !== auth) return Response.json({}, { status: 500 });
     if (path === "tickets:redeem") return bearer === "Bearer " + secret && !publishable
-      ? Response.json({ session: { token: "identity_org_session_test", expires_at: expiry } }) : Response.json({}, { status: 403 });
+      ? Response.json({ session: { token: "identity_org_session_test", expires_at: expiry }, is_new_user: signupFlag }) : Response.json({}, { status: 403 });
     if (path === "session") return bearer === "Bearer identity_org_session_test" && !publishable
       ? Response.json({ session: { id: "session", expires_at: expiry, instance_id: sessionInstance }, user: { id: "usr_test" } }) : Response.json({}, { status: 401 });
     if (bearer || publishable !== key) return Response.json({}, { status: 403 });
@@ -121,4 +129,32 @@ test("headless proofs use the public credential; only a ticket redeemed for the 
   assert.deepEqual(seen.at(-3)?.body, { ...assertion, session_mode: "server" });
   assert.ok(seen.filter(entry => !["session", "tickets:redeem"].includes(entry.path)).every(entry => entry.key === key && !entry.bearer));
   assert.ok(!seen.some(entry => entry.path === "sign-up"));
+
+  const grant = "__Host-lockdocs-signup-consent=" + (Date.now() + 60_000);
+  const marker = "__Host-lockdocs-signup=";
+  for (const [flag, cookie, gpc, expected] of [
+    [true, grant, false, "email_otp.pricing"],
+    [false, grant, false, null],
+    [undefined, grant, false, null],
+    ["true", grant, false, null],
+    [true, "", false, null],
+    [true, "__Host-lockdocs-signup-consent=" + Date.now(), false, null],
+    [true, grant, true, null],
+  ] as const) {
+    signupFlag = flag;
+    const request = post("/api/auth/sign-in", { action: "verify", code: "012345", next: "/pricing?currency=HKD" },
+      flowCookie + (cookie ? "; " + cookie : ""));
+    if (gpc) request.headers.set("sec-gpc", "1");
+    const response = await emailSignIn(request);
+    assert.deepEqual(await response.json(), { next: "/pricing?currency=HKD" });
+    assert.deepEqual(response.headers.getSetCookie().filter(value => value.startsWith(marker)), expected ? [
+      marker + expected + "; Max-Age=60; Path=/; Secure; SameSite=Lax",
+    ] : []);
+  }
+  signupFlag = true;
+  const cliSignup = await verifyPasskey(post("/api/auth/passkey/verify", { ...assertion, next: cli }, passkeyCookie + "; " + grant));
+  assert.deepEqual(await cliSignup.json(), { next: cli });
+  assert.deepEqual(cliSignup.headers.getSetCookie().filter(value => value.startsWith(marker)), [
+    marker + "passkey.cli; Max-Age=60; Path=/; Secure; SameSite=Lax",
+  ]);
 });

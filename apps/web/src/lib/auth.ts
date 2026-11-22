@@ -1,5 +1,6 @@
 import { cookie, setPrivateCookie } from "./http";
 import { boundedJson } from "./bounded-json";
+import { clearSignupMarker, markSignup } from "./signup-analytics";
 import { hasPublicOrigin } from "./public-origin";
 import { isCliCode, validateNext } from "./auth-entry";
 export { validateNext } from "./auth-entry";
@@ -150,12 +151,12 @@ async function redeem(auth: AuthConfig, ticket: string, agent: string | null) {
       body: JSON.stringify({ ticket }),
     });
     if (!response.ok) return null;
-    const { session } = await response.json();
+    const { session, is_new_user } = await response.json();
     if (!opaqueSession(session?.token) || !Number.isSafeInteger(session.expires_at)) return null;
     const identity = await inspect(auth, session.token, agent);
     if (!identity) return null;
     const maxAge = Math.floor(Math.min(session.expires_at, verified.get(identity)!.expires) - Date.now() / 1000);
-    return maxAge > 0 ? { token: identity.token, maxAge } : null;
+    return maxAge > 0 ? { token: identity.token, maxAge, isNewUser: is_new_user === true } : null;
   } catch {
     return null;
   }
@@ -251,7 +252,10 @@ export async function finishOAuth(request: Request) {
   setPrivateCookie(response, OAUTH, "", { maxAge: 0 });
   if (login) {
     setPrivateCookie(response, SESSION, login.token, { maxAge: login.maxAge });
-    if (provider === "google" || provider === "github") setPrivateCookie(response, LAST_USED, provider, { maxAge: lastUsedAge });
+    if (provider === "google" || provider === "github") {
+      setPrivateCookie(response, LAST_USED, provider, { maxAge: lastUsedAge });
+      markSignup(request, response, login.isNewUser, provider, next);
+    }
   }
   return response;
 }
@@ -274,6 +278,7 @@ export async function signOut(request: Request) {
   }
   const response = privateRedirect(new URL(revoked ? "/dashboard" : "/dashboard?auth=sign_out_partial", origin));
   for (const name of [SESSION, OAUTH, PASSKEY, EMAIL_FLOW]) setPrivateCookie(response, name, "", { maxAge: 0 });
+  clearSignupMarker(request, response);
   return response;
 }
 
@@ -333,11 +338,13 @@ export async function verifyPasskey(request: Request) {
       if (typeof ticket === "string" && ticket.length <= 2048) login = await redeem(auth, ticket, agent);
     }
   } catch { /* Do not reflect provider response details. */ }
-  const response = login ? privateJson({ next: validateNext(typeof body.next === "string" ? body.next : null) }) : privateJson({ error: "passkey_failed" }, 401);
+  const next = validateNext(typeof body.next === "string" ? body.next : null);
+  const response = login ? privateJson({ next }) : privateJson({ error: "passkey_failed" }, 401);
   setPrivateCookie(response, PASSKEY, "", { maxAge: 0 });
   if (login) {
     setPrivateCookie(response, SESSION, login.token, { maxAge: login.maxAge });
     setPrivateCookie(response, LAST_USED, "passkey", { maxAge: lastUsedAge });
+    markSignup(request, response, login.isNewUser, "passkey", next);
     setPrivateCookie(response, EMAIL_FLOW, "", { maxAge: 0 });
   }
   return response;
@@ -395,6 +402,7 @@ export async function emailSignIn(request: Request) {
         setPrivateCookie(response, SESSION, login.token, { maxAge: login.maxAge });
         setPrivateCookie(response, EMAIL_FLOW, "", { maxAge: 0 });
         setPrivateCookie(response, LAST_USED, "email_otp", { maxAge: lastUsedAge });
+        markSignup(request, response, login.isNewUser, "email_otp", next);
         return response;
       }
     }

@@ -1,5 +1,5 @@
 import { execFileSync, spawn } from "node:child_process";
-import { createHash, generateKeyPairSync, randomBytes, randomUUID, verify } from "node:crypto";
+import { createHash, generateKeyPairSync, randomBytes, verify } from "node:crypto";
 import { once } from "node:events";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { request, type IncomingMessage, type ServerResponse } from "node:http";
@@ -133,10 +133,10 @@ async function startFixture() {
         if (!methods.passkey || req.method !== "POST" || body.rp_id !== "localhost" || body.origin !== origin || Object.hasOwn(body, "email")) {
           return rejectContract("passkey begin must be discoverable and bound to the correct RP and origin");
         }
-        const id = randomUUID();
+        const challengeId = random();
         const challenge = random();
-        challenges.set(id, challenge);
-        return json(res, { challenge_id: id, challenge, rp_id: "localhost", allowed_credential_ids: [], expires_at: expiry });
+        challenges.set(challengeId, challenge);
+        return json(res, { challenge_id: challengeId, challenge, rp_id: "localhost", allowed_credential_ids: [], expires_at: expiry });
       }
       case "/v1/client/sign-in/passkey/verify": {
         if (!methods.passkey || req.method !== "POST" || body.session_mode !== "server") return rejectContract("passkey verify request shape");

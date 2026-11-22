@@ -1,7 +1,7 @@
 import { createContext, createEffect, createSignal, onCleanup, onMount, Show, useContext, type ParentProps } from "solid-js";
 import { useLocation } from "@solidjs/router";
 import { allowsDefault, clearAnalyticsCookies, gpc } from "@/lib/analytics-browser";
-import { items, pathByEvent, type FunnelEvent, type Purchase } from "@/lib/analytics-events";
+import { isPurchaseReference, items, pathByEvent, type FunnelEvent, type Purchase } from "@/lib/analytics-events";
 import { consent, preferenceKey, preferenceLifetime, savedChoice, type Choice } from "@/lib/analytics-policy";
 
 type Tag = Window & { startAnalytics?: (settings: ReturnType<typeof consent>) => void; gtag?: (...args: unknown[]) => void };
@@ -119,8 +119,8 @@ export function CookieSettings(props: ParentProps) {
         if (response.status === 202 && remaining > 0) retry = window.setTimeout(() => void check(remaining - 1), 2500);
         if (response.status === 200) {
           const { transaction_id, value, currency } = await response.json();
-          if (!controller.signal.aborted && typeof transaction_id === "string" &&
-              /^[0-9a-f-]{36}$/.test(transaction_id) && typeof value === "number" && Number.isFinite(value) && value >= 0 &&
+          if (!controller.signal.aborted && isPurchaseReference(transaction_id) &&
+              typeof value === "number" && Number.isFinite(value) && value >= 0 &&
               typeof currency === "string" && /^[A-Z]{3}$/.test(currency)) {
             send("purchase", { transaction_id, value, currency });
           }

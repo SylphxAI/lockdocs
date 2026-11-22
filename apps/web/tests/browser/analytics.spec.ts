@@ -84,7 +84,7 @@ test("dashboard return sends only the verified purchase fields and never treats 
   const hits = await install(page, "loc=DE");
   let status = 404;
   let checks = 0;
-  const transaction_id = "cfc9090a-e4f4-4677-8ec5-c1e9000bd465";
+  const transaction_id = "95a19ce7e909322bfb8d68b26c5836a25dccac1f";
   await page.route("**/api/analytics/purchase", async route => {
     expect(route.request().method()).toBe("POST");
     checks++;

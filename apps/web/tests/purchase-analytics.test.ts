@@ -105,7 +105,7 @@ test("purchase requires a signed, account-bound checkout and confirmation of tha
   assert.equal(success.headers.get("cache-control"), "no-store");
   assert.match(success.headers.get("set-cookie")!, /Max-Age=0/);
   const payload = await success.json();
-  assert.match(payload.transaction_id, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+  assert.match(payload.transaction_id, /^[0-9a-f]{40}$/);
   assert.deepEqual(payload, { transaction_id: payload.transaction_id, currency: "GBP", value: 82.5 });
   assert.deepEqual(await (await verify(signedIn)).json(), payload, "concurrent returns use the same GA deduplication ID");
   const next = (await start(true)).headers.get("set-cookie")!.split(";", 1)[0];

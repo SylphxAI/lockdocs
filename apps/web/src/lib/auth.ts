@@ -1,11 +1,13 @@
 import { cookie, setPrivateCookie } from "./http";
 import { boundedJson } from "./bounded-json";
 import { hasPublicOrigin } from "./public-origin";
+import { isCliCode, validateNext } from "./auth-entry";
+export { validateNext } from "./auth-entry";
 import { randomBytes, timingSafeEqual } from "node:crypto";
 
 export type Session = Readonly<{ id: string; name?: string; email?: string; token: string }>;
 export type OAuthProvider = "github" | "google";
-const methods = ["email_otp", "password", "passkey", "sign_up"] as const;
+const methods = ["email_otp", "password", "passkey"] as const;
 export type AuthCapabilities = Record<OAuthProvider | typeof methods[number], boolean>;
 
 type AuthConfig = { origin: string; base: string; key: string; secret: string; instance: string };
@@ -13,6 +15,9 @@ const SESSION = "__Host-lockdocs-session";
 const OAUTH = "__Host-lockdocs-oauth";
 const EMAIL_FLOW = "__Host-lockdocs-email-flow";
 const PASSKEY = "__Host-lockdocs-passkey";
+const LAST_USED = "__Host-lockdocs-last-auth-method";
+const lastUsedAge = 90 * 24 * 60 * 60;
+export type SignInMethod = OAuthProvider | typeof methods[number];
 const privateHeaders = { "Cache-Control": "no-store", "Referrer-Policy": "no-referrer" };
 const verified = new WeakMap<Session, { agent: string | null; expires: number }>();
 const base64url = /^[A-Za-z0-9_-]+$/;
@@ -37,7 +42,7 @@ function config(): AuthConfig | null {
   const origin = appOrigin();
   const base = httpsOrigin(process.env.SYLPHX_AUTH_URL);
   const key = process.env.SYLPHX_PUBLISHABLE_KEY;
-  const secret = process.env.SYLPHX_AUTH_SECRET_KEY;
+  const secret = process.env.SYLPHX_AUTH_SECRET_KEY ?? process.env.SYLPHX_SECRET_KEY;
   const instance = process.env.SYLPHX_AUTH_ORGANIZATION_ID;
   return origin && base && key && secret && instance ? { origin, base, key, secret, instance } : null;
 }
@@ -60,26 +65,6 @@ export function privateRedirect(url: URL) {
 
 export function sameOrigin(request: Request, origin: string) {
   return request.headers.get("origin") === origin;
-}
-
-/** Accept only product-owned pages or the CLI's exact loopback-consent input. */
-export function validateNext(value: string | null): string {
-  if (value === "/dashboard" || value === "/pricing") return value;
-  const prefix = "/cli/authorize?";
-  if (!value?.startsWith(prefix) || value.length > 300 || /[^a-zA-Z0-9_?&=/-]/.test(value)) return "/dashboard";
-  const query = value.slice(prefix.length);
-  if (!/^[a-z]+=[A-Za-z0-9_-]+(?:&[a-z]+=[A-Za-z0-9_-]+){2}$/.test(query)) return "/dashboard";
-  const params = new URLSearchParams(query);
-  const port = params.get("port");
-  const state = params.get("state");
-  const challenge = params.get("challenge");
-  if (!port || !/^[1-9][0-9]{0,4}$/.test(port) || Number(port) > 65535 ||
-      !isCliCode(state) || !isCliCode(challenge)) return "/dashboard";
-  return prefix + new URLSearchParams({ port, state, challenge });
-}
-
-function isCliCode(value: string | null): value is string {
-  return value !== null && /^[A-Za-z0-9_-]{42}[AEIMQUYcgkosw048]$/.test(value);
 }
 
 function authHeaders(agent: string | null, credential?: string, json = false) {
@@ -182,6 +167,7 @@ function equal(left: string, right: string) {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
+// The headless API takes an instance reference, not the ticket exchange secret.
 function clientEndpoint(auth: AuthConfig, path: string) {
   const url = new URL("/v1/client/" + path, auth.base);
   url.searchParams.set("publishable_key", auth.key);
@@ -204,9 +190,17 @@ export async function getCapabilities(request: Request, auth = config()): Promis
     return {
       github: hasProvider("github"), google: hasProvider("google"),
       email_otp: body.methods?.email_otp === true, passkey: body.methods?.passkey === true,
-      password: body.methods?.password === true, sign_up: body.methods?.sign_up === true,
+      password: body.methods?.password === true,
     };
   } catch { return null; }
+}
+
+export async function signInOptions(request: Request) {
+  const capabilities = await getCapabilities(request);
+  if (!capabilities) return privateJson({ error: "auth_unavailable" }, 503);
+  const last = cookie(request, LAST_USED);
+  const lastUsed = last && Object.hasOwn(capabilities, last) && capabilities[last as SignInMethod] ? last : null;
+  return Response.json({ capabilities, lastUsed }, { headers: { ...privateHeaders, "Cache-Control": "private, no-store" } });
 }
 
 function signInRetry(origin: string, next: string) {
@@ -227,7 +221,7 @@ export async function startOAuth(request: Request, provider: OAuthProvider) {
   const url = new URL("/v1/client/oauth/" + provider + "/start", auth.base);
   url.search = new URLSearchParams({ publishable_key: auth.key, redirect_url: callback.href, session_mode: "server" }).toString();
   const response = privateRedirect(url);
-  setPrivateCookie(response, OAUTH, state + "." + Buffer.from(next).toString("base64url"), { maxAge: 600 });
+  setPrivateCookie(response, OAUTH, state + "." + Buffer.from(next).toString("base64url") + "." + provider, { maxAge: 600 });
   return response;
 }
 
@@ -241,7 +235,7 @@ function aliased(params: URLSearchParams, canonical: string, legacy: string) {
 export async function finishOAuth(request: Request) {
   const auth = config();
   if (!auth) return privateJson({ error: "auth_unavailable" }, 503);
-  const [state, encodedNext] = (cookie(request, OAUTH) ?? "").split(".");
+  const [state, encodedNext, provider] = (cookie(request, OAUTH) ?? "").split(".");
   const { origin } = auth;
   if (!hasPublicOrigin(request, origin)) return privateJson({ error: "invalid_origin" }, 403);
   const params = new URL(request.url).searchParams;
@@ -256,7 +250,10 @@ export async function finishOAuth(request: Request) {
     ? await redeem(auth, ticket, request.headers.get("user-agent")) : null;
   const response = login ? privateRedirect(new URL(next, origin)) : signInRetry(origin, next);
   setPrivateCookie(response, OAUTH, "", { maxAge: 0 });
-  if (login) setPrivateCookie(response, SESSION, login.token, { maxAge: login.maxAge });
+  if (login) {
+    setPrivateCookie(response, SESSION, login.token, { maxAge: login.maxAge });
+    if (provider === "google" || provider === "github") setPrivateCookie(response, LAST_USED, provider, { maxAge: lastUsedAge });
+  }
   return response;
 }
 
@@ -339,7 +336,11 @@ export async function verifyPasskey(request: Request) {
   } catch { /* Do not reflect provider response details. */ }
   const response = login ? privateJson({ next: validateNext(typeof body.next === "string" ? body.next : null) }) : privateJson({ error: "passkey_failed" }, 401);
   setPrivateCookie(response, PASSKEY, "", { maxAge: 0 });
-  if (login) setPrivateCookie(response, SESSION, login.token, { maxAge: login.maxAge });
+  if (login) {
+    setPrivateCookie(response, SESSION, login.token, { maxAge: login.maxAge });
+    setPrivateCookie(response, LAST_USED, "passkey", { maxAge: lastUsedAge });
+    setPrivateCookie(response, EMAIL_FLOW, "", { maxAge: 0 });
+  }
   return response;
 }
 
@@ -355,6 +356,7 @@ export async function emailSignIn(request: Request) {
   const body = await boundedJson(request, 8192);
   if (!body) return privateJson({ error: "invalid_input" }, 400);
   const { action, password, code } = body;
+  if (action !== "send" && action !== "verify" && action !== "password") return privateJson({ error: "invalid_input" }, 400);
   const email = typeof body.email === "string" ? body.email.trim() : "";
   const next = validateNext(typeof body.next === "string" ? body.next : null);
   const caps = await getCapabilities(request, auth);
@@ -372,11 +374,9 @@ export async function emailSignIn(request: Request) {
     if (action === "send" && caps?.email_otp) {
       path = "continue";
       input = { email, method: "email_otp", session_mode: "server" };
-    } else if ((action === "password" || action === "sign_up") && caps?.password &&
-      (action === "password" || caps.sign_up) && typeof password === "string" && password.length > 0 && password.length <= 1024) {
-      path = action === "password" ? "sign-in/password" : "sign-up";
-      input = action === "password" ? { email, password, session_mode: "server" } :
-        { email, password, redirect_url: new URL("/sign-in?" + new URLSearchParams({ next }), auth.origin).href };
+    } else if (action === "password" && caps?.password && typeof password === "string" && password.length > 0 && password.length <= 1024) {
+      path = "sign-in/password";
+      input = { email, password, session_mode: "server" };
     } else return privateJson({ error: "method_unavailable" }, 403);
   }
   try {
@@ -385,12 +385,11 @@ export async function emailSignIn(request: Request) {
       method: "POST", headers: authHeaders(agent, undefined, true), body: JSON.stringify(input),
     });
     if (upstream.status === 429) return privateJson({ error: "try_later" }, 429);
-    if (action === "sign_up" && upstream.status === 202) return privateJson({ step: "check_email" });
     if (!upstream.ok) return privateJson({ error: "auth_failed" }, 401);
     const result = await upstream.json();
     if (action === "send" && result?.step === "email_otp" && isCliCode(result.flow) &&
         Number.isSafeInteger(result.expires_in) && result.expires_in > 0) {
-      const response = privateJson({ step: "email_otp" });
+      const response = privateJson({ step: "email_otp", expiresIn: Math.min(result.expires_in, 600) });
       setPrivateCookie(response, EMAIL_FLOW, result.flow, { maxAge: Math.min(result.expires_in, 600) });
       return response;
     }
@@ -400,6 +399,7 @@ export async function emailSignIn(request: Request) {
         const response = privateJson({ next });
         setPrivateCookie(response, SESSION, login.token, { maxAge: login.maxAge });
         setPrivateCookie(response, EMAIL_FLOW, "", { maxAge: 0 });
+        setPrivateCookie(response, LAST_USED, action === "verify" ? "email_otp" : "password", { maxAge: lastUsedAge });
         return response;
       }
     }

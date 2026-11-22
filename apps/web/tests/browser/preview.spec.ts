@@ -6,6 +6,7 @@ const allDocs = ["/docs", "/guide", "/guide/setup", "/guide/how-it-works", "/gui
 test("public HTML protects package versions without changing selectable commands", async ({ page, request }) => {
   const sitemap = await request.get("/sitemap.xml");
   expect(sitemap.ok()).toBeTruthy();
+  expect(sitemap.headers()["cache-control"]).toBe("public, max-age=3600");
   const urls = [...(await sitemap.text()).matchAll(/<loc>(.*?)<\/loc>/g)].map(([, url]) => new URL(url));
   for (const url of urls) expect(url.origin).toBe("https://lockdocs.sylphx.com");
   const routes = urls.map((url) => url.pathname);
@@ -143,6 +144,11 @@ ${rule}
   }
   await page.goto("/dashboard");
   await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
-  await expect(page.getByText("Sign-in isn’t available", { exact: false })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Sign in", exact: true })).toHaveAttribute("href", "/sign-in?next=%2Fdashboard");
+  const signIn = await request.get("/sign-in");
+  expect(signIn.headers()["cache-control"]).toBe("private, no-store");
+  expect(await signIn.text()).not.toMatch(/sign-in isn.t available|couldn.t load sign-in options/i);
+  await page.goto("/sign-in");
+  await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
   expect((await request.post("/api/billing/checkout")).status()).toBe(503);
 });

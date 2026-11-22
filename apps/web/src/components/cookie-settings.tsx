@@ -80,7 +80,7 @@ export function CookieSettings(props: ParentProps) {
     if (!id() || !open() || !panel) return;
     const element = panel;
     const root = document.documentElement;
-    const reserveSpace = () => root.style.setProperty("--cookie-bar-height", element.offsetHeight + "px");
+    const reserveSpace = () => root.style.setProperty("--cookie-bar-height", element.getBoundingClientRect().height + "px");
     const observer = new ResizeObserver(reserveSpace);
     reserveSpace();
     observer.observe(element);
@@ -194,7 +194,7 @@ export function CookieSettings(props: ParentProps) {
       ref={panel} onKeyDown={event => { if (event.key === "Escape" && trigger) close(); }}>
       <div class="cookie-copy">
         <h2 id="cookie-heading">Cookie settings</h2>
-        <p><Show when={protectedByGpc()} fallback="Optional Google Analytics cookies measure site use and ad performance.">
+        <p><Show when={protectedByGpc()} fallback="Optional cookies measure site use and ad performance.">
           <span role="status">Global Privacy Control blocks optional cookies.</span>
         </Show>{" "}<a href="/legal/privacy">Privacy policy</a></p>
       </div>

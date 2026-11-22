@@ -7,6 +7,7 @@ import { bindCheckoutAttribution, checkoutConsent } from "./checkout-attribution
 import { sendsGpc } from "./analytics-policy";
 import { consent, type Choice } from "./analytics-policy";
 import { measurementId } from "./analytics-config";
+import { pricingCheckoutSurface } from "./analytics-events";
 
 const feature = "lockdocs_pro_seat_year";
 const product = catalogue.spec.products.find((item) => item.key === feature);
@@ -75,6 +76,11 @@ export async function checkout(request: Request) {
   try {
     const form = await request.formData();
     currency = form.getAll("currency").length === 1 ? form.get("currency") : null;
+    // Pricing is the only checkout form. Requests without the new field still start there.
+    const surfaces = form.getAll("entry_surface");
+    if (surfaces.length > 0 && (surfaces.length !== 1 || surfaces[0] !== pricingCheckoutSurface)) {
+      return privateJson({ error: "invalid_entry_surface" }, 400);
+    }
     if (ga && !sendsGpc(request)) choice = checkoutConsent(form);
   } catch {
     return privateJson({ error: "invalid_currency" }, 400);
@@ -91,6 +97,7 @@ export async function checkout(request: Request) {
         subject: { end_user: session.id },
         line_items: [{ price: cfg.price.key, quantity: 1 }],
         currency_code: currency,
+        metadata: { entry_surface: pricingCheckoutSurface },
         success_url: new URL("/dashboard?billing=return", cfg.origin).href,
         cancel_url: new URL("/pricing", cfg.origin).href,
         consent_collection: { terms_required: true, terms_text: cfg.termsText, terms_version: cfg.termsVersion },

@@ -3,6 +3,8 @@ import {
   appOrigin, authConfigured, getSession, httpsOrigin, isVerifiedSession, moneyAccessToken,
   privateJson, privateRedirect, providerFetch, sameOrigin, type Session,
 } from "./auth";
+import { measurementId } from "./analytics-config";
+import { forgetCheckout, pendingCheckout, rememberCheckout } from "./purchase-proof";
 
 const feature = "lockdocs_pro_seat_year";
 const product = catalogue.spec.products.find((item) => item.key === feature);
@@ -66,9 +68,12 @@ export async function checkout(request: Request) {
     return privateJson({ error: "invalid_currency" }, 400);
   }
   let currency: FormDataEntryValue | null;
+  let measure = false;
   try {
     const form = await request.formData();
     currency = form.getAll("currency").length === 1 ? form.get("currency") : null;
+    measure = Boolean(measurementId()) && request.headers.get("sec-gpc") !== "1" &&
+      form.getAll("measure_checkout").length === 1 && form.get("measure_checkout") === "1";
   } catch {
     return privateJson({ error: "invalid_currency" }, 400);
   }
@@ -90,11 +95,56 @@ export async function checkout(request: Request) {
       }),
     });
     if (response.ok) {
-      const location = stripeUrl((await response.json())?.url, "checkout.stripe.com");
-      if (location) return privateRedirect(location);
+      const body = await response.json();
+      const location = stripeUrl(body?.url, "checkout.stripe.com");
+      if (location) {
+        const redirect = privateRedirect(location);
+        const prefix = cfg.parent + "/checkout_sessions/";
+        if (measurementId()) {
+          const id = typeof body.name === "string" && body.name.startsWith(prefix) ? body.name.slice(prefix.length) : "";
+          if (!measure || !rememberCheckout(redirect, cfg.secret, session.id, id)) forgetCheckout(redirect);
+        }
+        return redirect;
+      }
     }
   } catch { /* Fail closed on upstream errors and unexpected data. */ }
   return privateRedirect(new URL("/pricing?billing=unavailable", cfg.origin));
+}
+
+function minorUnits(value: unknown) {
+  const amount = typeof value === "string" && /^\d{1,15}$/.test(value) ? Number(value) : value;
+  return typeof amount === "number" && Number.isSafeInteger(amount) && amount >= 0 ? amount : null;
+}
+
+/** Only the verified account's specific checkout can confirm a new purchase. */
+export async function verifiedPurchase(request: Request) {
+  const cfg = checkoutConfig();
+  if (!cfg || !measurementId()) return privateJson({}, 404);
+  if (!sameOrigin(request, cfg.origin) || request.headers.get("sec-gpc") === "1") return privateJson({}, 403);
+  const session = await getSession(request);
+  if (!session || !isVerifiedSession(session)) return privateJson({}, 401);
+  const pending = pendingCheckout(request, cfg.secret, session.id);
+  if (!pending) return privateJson({}, 404);
+  function finish(response: Response) { forgetCheckout(response); return response; }
+  const path = "checkout_sessions/" + pending.id;
+  try {
+    const response = await providerFetch(resource(cfg, path, false), {
+      headers: { authorization: "Bearer " + cfg.secret, accept: "application/json" },
+    });
+    if (!response.ok) return privateJson({}, 503);
+    const result = await response.json();
+    if (!isVerifiedSession(session) || result?.name !== cfg.parent + "/" + path || result.subject?.end_user !== session.id ||
+        !Array.isArray(result.line_items) || result.line_items.length !== 1 || result.line_items[0]?.price !== cfg.price.key ||
+        ![1, "1"].includes(result.line_items[0]?.quantity) || result.denied_reason || result.payment_status === "revoked" ||
+        result.payment_status === "no_payment_required" || result.state === "expired") return finish(privateJson({}, 404));
+    if (result.state !== "complete" || result.payment_status !== "paid") return privateJson({}, 202);
+    const total = minorUnits(result.amount_total);
+    const tax = minorUnits(result.amount_tax ?? 0);
+    const currency = result.currency_code;
+    if (total === null || total === 0 || tax === null || tax > total || typeof currency !== "string" ||
+        !Object.hasOwn(cfg.price.unit_amounts, currency)) return finish(privateJson({}, 404));
+    return finish(privateJson({ transaction_id: pending.transactionId, currency, value: (total - tax) / 100 }));
+  } catch { return privateJson({}, 503); }
 }
 
 export async function portal(request: Request) {

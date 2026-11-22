@@ -8,6 +8,7 @@ import { ArrowUpRight, Braces, GitFork } from 'lucide-solid';
 import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
 import './globals.css';
+import { CookieSettings, CookieSettingsButton } from "@/components/cookie-settings";
 
 
 const github = 'https://github.com/SylphxAI/lockdocs';
@@ -23,10 +24,10 @@ function Layout(props: ParentProps) {
       <div class="header-tools"><a class="repo-link" href={github} aria-label="Lockdocs on GitHub"><GitFork size={17}/></a><Link href="/dashboard" class="account-link">Account <ArrowUpRight size={13}/></Link></div>
     </div></header>
     <main id="main"><Suspense>{props.children}</Suspense></main>
-    <footer class="site-footer"><div class="wrap footer-inner"><Wordmark/><p>Exact-version docs, by Sylphx.</p><nav aria-label="Footer navigation"><Link href="/benchmarks">Benchmarks</Link><Link href="/compare">Compare</Link><a href={github}><Braces size={14}/> Source</a><Link href="/legal/privacy">Privacy</Link><Link href="/legal/terms">Terms</Link></nav></div></footer>
+    <footer class="site-footer"><div class="wrap footer-inner"><Wordmark/><p>Exact-version docs, by Sylphx.</p><nav aria-label="Footer navigation"><Link href="/benchmarks">Benchmarks</Link><Link href="/compare">Compare</Link><a href={github}><Braces size={14}/> Source</a><Link href="/legal/privacy">Privacy</Link><Link href="/legal/terms">Terms</Link><CookieSettingsButton /></nav></div></footer>
   </>;
 }
 
 export default function App() {
- return <Router root={props => <MetaProvider><Layout>{props.children}</Layout></MetaProvider>}><FileRoutes /></Router>;
+ return <Router root={props => <MetaProvider><CookieSettings><Layout>{props.children}</Layout></CookieSettings></MetaProvider>}><FileRoutes /></Router>;
 }

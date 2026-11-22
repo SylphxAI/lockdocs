@@ -1,6 +1,11 @@
 import { expect, test } from "@playwright/test";
 
 const pages = ["/", "/playground", "/pricing", "/dashboard", "/docs", "/guide", "/reference", "/benchmarks", "/compare"];
+// These smoke tests exercise the unconfigured preview; analytics.spec.ts covers consent separately.
+test.beforeEach(async ({ page }) => {
+  await page.route("**/api/analytics/config", route => route.fulfill({ json: { measurementId: null } }));
+});
+
 const allDocs = ["/docs", "/guide", "/guide/setup", "/guide/how-it-works", "/guide/ecosystems", "/guide/fetch", "/reference", "/reference/tools", "/benchmarks", "/compare", "/capabilities", "/vision", "/pro"];
 
 test("public HTML protects package versions without changing selectable commands", async ({ page, request }) => {

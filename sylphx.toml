@@ -12,6 +12,9 @@ context = "."
 [environments.production.env.LOCKDOCS_APP_ORIGIN]
 value = "https://lockdocs.sylphx.com"
 
+[environments.production.env.LOCKDOCS_GA4_MEASUREMENT_ID]
+value = "G-7FKD0Q6R5H"
+
 [environments.production.env.SYLPHX_MONEY_URL]
 value = "https://api.sylphx.com"
 

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { test as authTest } from "./auth-fixture";
+import { test as authTest, email, code } from "./auth-fixture";
 
 const settings = (page: Page) => page.getByRole("region", { name: "Cookie settings" });
 const google = /https:\/\/([^/]+\.)?(googletagmanager\.com|google-analytics\.com|doubleclick\.net|google\.com|googleadservices\.com)\//;
@@ -16,6 +16,9 @@ const wireTag = `(() => {
     const query = new URLSearchParams({en:event, sid, dl:eventParams.page_location ?? location.href,
       dr:eventParams.page_referrer ?? document.referrer, dt:eventParams.page_title ?? document.title});
     if (eventParams.engagement_time_msec !== undefined) query.set("_et", eventParams.engagement_time_msec);
+    for (const key of ["method", "entry_surface"]) {
+      if (eventParams[key] !== undefined) query.set("ep." + key, eventParams[key]);
+    }
     fetch("https://www.google-analytics.com/g/collect?" + query, {mode:"no-cors", keepalive:true});
   }
   function run([command, name, params]) {
@@ -228,6 +231,100 @@ record.content = "";
 });
 
 authTest.use({ billing: true });
+
+const signupEvents = async (page: Page) => (await commands(page)).filter(([command, event]) => command === "event" && event === "sign_up");
+const signupCookie = "__Host-lockdocs-signup";
+
+for (const [method, providerFlag, choice, surface] of [
+  ["google", true, "Analytics only", "pricing"],
+  ["email_otp", true, "Allow analytics & ads", "dashboard"],
+  ["google", false, "Analytics only", "pricing"],
+  ["google", undefined, "Analytics only", "pricing"],
+  ["google", true, null, "pricing"],
+  ["google", true, "Reject optional", "pricing"],
+] as const) {
+  authTest(
+    `${method} signup flag ${providerFlag} with ${choice ?? "no choice"}`,
+    async ({ page, auth }) => {
+      auth.ticketSignal.is_new_user = providerFlag;
+      auth.methods.email_otp = method === "email_otp";
+      const wire: URLSearchParams[] = [];
+      const hits = await install(page, null, wire);
+      const wantsAnalytics = choice === "Analytics only" || choice === "Allow analytics & ads";
+      const shouldEmit = wantsAnalytics && providerFlag === true;
+      const cookieWrites: string[] = [];
+      page.on("response", async response => {
+        if (new URL(response.url()).origin !== auth.origin) return;
+        cookieWrites.push(...await response.headerValues("set-cookie"));
+      });
+      const storageWrites: string[] = [];
+      await page.exposeFunction("recordStorageWrite", (label: string) => { storageWrites.push(label); });
+      await page.addInitScript(() => {
+        const record = (label: string) => (window as unknown as { recordStorageWrite(label: string): void }).recordStorageWrite(label);
+        const setItem = Storage.prototype.setItem;
+        Storage.prototype.setItem = function (key, value) {
+          record(key);
+          return setItem.call(this, key, value);
+        };
+        const cookie = Object.getOwnPropertyDescriptor(Document.prototype, "cookie")!;
+        Object.defineProperty(document, "cookie", { ...cookie, set(value: string) {
+          record(value.split("=", 1)[0]);
+          cookie.set!.call(this, value);
+        } });
+      });
+      await page.goto(auth.origin + "/sign-in?next=/" + surface);
+      const banner = settings(page);
+      await expect(banner).toBeVisible();
+      if (choice) await banner.getByRole("button", { name: choice, exact: true }).click();
+      if (wantsAnalytics) await expect.poll(() => hits.length).toBe(1);
+
+      if (method === "google") {
+        await page.getByRole("link", { name: "Continue with Google" }).click();
+      } else {
+        await page.getByLabel("Email address").fill(email);
+        await page.getByRole("button", { name: "Continue", exact: true }).click();
+        await page.getByLabel("Six-digit code").fill(code);
+      }
+      await expect(page).toHaveURL(auth.origin + "/" + surface);
+      expect(auth.calls).toContain("/v1/client/tickets:redeem");
+      expect(auth.rejections).toEqual([]);
+      const signupWire = () => wire.filter(params => params.get("en") === "sign_up");
+      if (wantsAnalytics) await expect.poll(() => hits.length).toBe(2);
+      if (shouldEmit) {
+        await expect.poll(() => signupEvents(page)).toEqual([
+          ["event", "sign_up", { method, entry_surface: surface, send_to: "G-TEST123456" }],
+        ]);
+        await expect.poll(() => signupWire().map(params => [params.get("ep.method"), params.get("ep.entry_surface")])).toEqual([[method, surface]]);
+        expect(signupWire()[0].get("dl")).toBe(auth.origin + "/" + surface);
+        expect(signupWire()[0].toString()).not.toMatch(/reader|fixture.test|auth_ticket|token|usr_/);
+      } else {
+        expect(await signupEvents(page)).toEqual([]);
+      }
+      await page.reload();
+      if (wantsAnalytics) await expect.poll(() => hits.length).toBe(3);
+      expect(await signupEvents(page)).toEqual([]);
+      expect(signupWire()).toHaveLength(shouldEmit ? 1 : 0);
+      expect((await page.context().cookies()).some(cookie => cookie.name === signupCookie)).toBe(false);
+      expect(cookieWrites.filter(value => value.startsWith(signupCookie + "="))).toEqual(shouldEmit ? [
+        signupCookie + "=" + method + "." + surface + "; Max-Age=60; Path=/; Secure; SameSite=Lax",
+      ] : []);
+      if (!wantsAnalytics) {
+        await expect(page.locator('iframe[title="Analytics"]')).toHaveCount(0);
+        expect(await commands(page)).toEqual([]);
+        expect(hits).toEqual([]);
+        expect(wire).toEqual([]);
+        // Saving an explicit rejection is essential; it isn't an optional write.
+        expect(storageWrites).toEqual(choice ? ["lockdocs.cookie-settings.v1"] : []);
+        expect(cookieWrites.filter(value => !/^__Host-lockdocs-(oauth|session|last-auth-method)=/.test(value))).toEqual([]);
+        if (!choice) {
+          await settings(page).getByRole("button", { name: "Analytics only", exact: true }).click();
+          await expect.poll(() => hits.length).toBe(1);
+          expect(await signupEvents(page)).toEqual([]);
+        }
+      }
+    },
+  );
+}
 authTest("authenticated pricing submit emits one consented checkout event and no sign-up on sign-in", async ({ page, auth }) => {
   const hits = await install(page, null);
   const submits: URLSearchParams[] = [];

@@ -1,10 +1,6 @@
-import { consent, type Choice } from "./analytics-policy";
+import { consent, sendsGpc, type Choice } from "./analytics-policy";
 import { campaignCookie, checkoutCampaign } from "./checkout-campaign";
 import { canonicalOrigin } from "./indexing";
-
-export function sendsGpc(request: Request) {
-  return request.headers.get("sec-gpc")?.split(",").some(value => value.trim() === "1") ?? false;
-}
 
 export function checkoutConsent(form: FormData): Choice {
   const [choice, ...duplicates] = form.getAll("checkout_consent");

@@ -3,7 +3,8 @@ import {
   appOrigin, authConfigured, getSession, httpsOrigin, isVerifiedSession, moneyAccessToken,
   privateJson, privateRedirect, providerFetch, sameOrigin, type Session,
 } from "./auth";
-import { bindCheckoutAttribution, checkoutConsent, sendsGpc } from "./checkout-attribution";
+import { bindCheckoutAttribution, checkoutConsent } from "./checkout-attribution";
+import { sendsGpc } from "./analytics-policy";
 import { consent, type Choice } from "./analytics-policy";
 import { measurementId } from "./analytics-config";
 

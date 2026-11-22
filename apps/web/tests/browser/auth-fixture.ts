@@ -26,6 +26,7 @@ async function startFixture(billing: boolean) {
   const calls: string[] = [];
   const shipments: string[] = [];
   const rejections: string[] = [];
+  const ticketSignal: { is_new_user?: boolean } = {};
   const tickets = new Map<string, string>();
   const sessions = new Map<string, string>();
   const otpFlows = new Map<string, string>();
@@ -98,7 +99,7 @@ async function startFixture(billing: boolean) {
       tickets.delete(body.ticket);
       const token = "identity_org_session_" + random();
       sessions.set(token, address);
-      return json(res, { session: { token, expires_at: expiry } });
+      return json(res, { session: { token, expires_at: expiry }, ...ticketSignal });
     }
     if (req.headers.authorization || url.searchParams.get("publishable_key") !== pk) {
       return rejectContract("client endpoint requires a publishable key, not a secret bearer");
@@ -189,7 +190,7 @@ async function startFixture(billing: boolean) {
     }, stdio: ["ignore", "pipe", "inherit"] });
     await once(app.stdout!, "data");
     if (!(await fetch(`http://127.0.0.1:${appPort}/api/health`)).ok) throw new Error("Fixture app did not start");
-    return { origin, methods, calls, rejections, shipments, passkey, close };
+    return { origin, methods, calls, rejections, shipments, passkey, ticketSignal, close };
   } catch (error) {
     await close();
     throw error;

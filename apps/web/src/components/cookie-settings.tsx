@@ -4,7 +4,8 @@ import { clearAnalyticsCookies, gpc } from "@/lib/analytics-browser";
 import { analyticsPage } from "@/lib/analytics-page";
 import { beginCheckoutParams } from "@/lib/analytics-events";
 import { campaignCookie, campaignMaxAge, checkoutCampaign } from "@/lib/checkout-campaign";
-import { consent, preferenceKey, preferenceLifetime, savedChoice, type Choice } from "@/lib/analytics-policy";
+import { consent, preferenceKey, preferenceLifetime, savedPreference, type Choice } from "@/lib/analytics-policy";
+import { consumeSignup, syncSignupConsent } from "@/lib/signup-analytics";
 
 type Page = NonNullable<ReturnType<typeof analyticsPage>>;
 type Tag = Window & { startAnalytics?: (settings: ReturnType<typeof consent>, page: Page) => void; gtag?: (...args: unknown[]) => void };
@@ -13,7 +14,7 @@ const CookieContext = createContext<{ checkoutChoice: () => Choice; beginCheckou
 export const useCookieSettings = () => useContext(CookieContext)!;
 
 function preference() {
-  try { return savedChoice(localStorage.getItem(preferenceKey)); } catch { return null; }
+  try { return savedPreference(localStorage.getItem(preferenceKey)); } catch { return null; }
 }
 
 export function CookieSettings(props: ParentProps) {
@@ -51,6 +52,7 @@ export function CookieSettings(props: ParentProps) {
       setCampaignCookie("", 0);
     }
     setChoice(next);
+    syncSignupConsent(next === "reject" ? null : preference()?.expires ?? null);
     if (next === "reject") return;
     if (tag || !id()) return;
     const frame = document.createElement("iframe");
@@ -65,6 +67,7 @@ export function CookieSettings(props: ParentProps) {
       const { origin } = window.location;
       client.startAnalytics(consent(next), analyticsPage(origin + route.pathname, document.referrer, origin) ?? home(origin));
       setActive(Boolean(client.gtag));
+      void consumeSignup(() => checkoutChoice() !== "reject", params => emit("sign_up", params)).catch(() => {});
     }, { once: true });
     frame.src = "/api/analytics/tag";
     document.body.append(frame);
@@ -74,7 +77,7 @@ export function CookieSettings(props: ParentProps) {
     const saved = preference();
     const protectedBySignal = gpc();
     setProtectedByGpc(protectedBySignal);
-    apply(protectedBySignal ? "reject" : saved ?? "reject");
+    apply(protectedBySignal ? "reject" : saved?.choice ?? "reject");
     setOpen(!saved);
   }
 
@@ -121,7 +124,7 @@ export function CookieSettings(props: ParentProps) {
   function currentChoice(): Choice {
     if (gpc()) return "reject";
     // An absent, expired, unreadable or changed preference is never consent.
-    return preference() === choice() ? choice() : "reject";
+    return preference()?.choice === choice() ? choice() : "reject";
   }
 
   const checkoutChoice = (): Choice => active() ? currentChoice() : "reject";
@@ -209,7 +212,7 @@ export function CookieSettings(props: ParentProps) {
     if (gpc() && next !== "reject") return;
     try { localStorage.setItem(preferenceKey, JSON.stringify({ choice: next, expires: Date.now() + preferenceLifetime })); }
     catch { /* Refuse analytics if this choice cannot be saved and read back. */ }
-    apply(preference() === next ? next : "reject");
+    apply(preference()?.choice === next ? next : "reject");
     close();
   }
 

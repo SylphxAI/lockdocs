@@ -1,0 +1,125 @@
+.editorial-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  align-items: end;
+  gap: clamp(28px, 6vw, 92px);
+  padding-block: clamp(38px, 7vw, 96px) clamp(30px, 5vw, 64px);
+  border-bottom: 1px solid var(--line);
+}
+
+.editorial-hero h1 {
+  max-width: 16ch;
+  margin: 14px 0 18px;
+  font-size: clamp(36px, 5vw, 68px);
+  font-weight: 720;
+  line-height: 1.04;
+  letter-spacing: -.065em;
+  text-wrap: balance;
+}
+
+.editorial-lead {
+  max-width: 53ch;
+  color: var(--dim);
+  font-size: clamp(16px, 1.4vw, 19px);
+  line-height: 1.6;
+}
+
+.editorial-aside {
+  min-width: 0;
+  padding: clamp(16px, 2.2vw, 27px);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.editorial-aside .eyebrow { margin-bottom: 14px; }
+.editorial-aside nav { display: grid; gap: 10px; }
+.editorial-aside nav a, .editorial-body a:not(.button) {
+  color: var(--blue);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.editorial-aside nav a:hover, .editorial-body a:not(.button):hover { color: var(--ink); }
+.editorial-aside small { display: block; margin-top: 14px; color: var(--dim); }
+
+.editorial-signatures { display: grid; gap: 12px; }
+.editorial-signatures div + div { border-top: 1px solid var(--line); padding-top: 12px; }
+.editorial-signatures dt { font: 550 12px/1.5 var(--mono); color: var(--blue); }
+.editorial-signatures dd { margin: 4px 0 0; overflow-wrap: anywhere; font-size: 13px; }
+
+.editorial-body { width: min(100%, 784px); min-width: 0; margin-inline: auto; }
+.editorial-section { padding-block: clamp(28px, 4vw, 52px); border-bottom: 1px solid var(--line); }
+.editorial-section:last-child { border-bottom: 0; }
+.editorial-section h2 {
+  margin: 0 0 14px;
+  font-size: clamp(24px, 3vw, 36px);
+  font-weight: 680;
+  line-height: 1.18;
+  letter-spacing: -.045em;
+  text-wrap: balance;
+}
+.editorial-section h3 { margin-block: 14px 6px; font-size: 17px; font-weight: 650; }
+.editorial-section p { max-width: 69ch; margin-block: 0 12px; color: var(--dim); }
+.editorial-section p:last-child { margin-bottom: 0; }
+.editorial-section p code { color: var(--ink); font-size: .92em; overflow-wrap: anywhere; }
+.editorial-section .editorial-note {
+  margin-top: 18px;
+  padding-left: 14px;
+  border-left: 2px solid var(--mint);
+}
+
+.editorial-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.editorial-choices > div { border-top: 1px solid var(--line); }
+
+.editorial-code {
+  margin: 16px 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.editorial-code:last-child { margin-bottom: 0; }
+.editorial-code figcaption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 4px 12px 4px 15px;
+  border-bottom: 1px solid var(--line);
+  color: var(--dim);
+  font: 550 12px/1.5 var(--mono);
+}
+.editorial-code pre {
+  max-width: 100%;
+  margin: 0;
+  padding: 14px 15px;
+  overflow-x: auto;
+  font-size: 13px;
+  line-height: 1.65;
+}
+.editorial-code pre:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+
+.editorial-steps { list-style: none; padding: 0; margin: 0; counter-reset: guide-step; }
+.editorial-step { position: relative; counter-increment: guide-step; padding-inline-start: 59px; }
+.editorial-step:last-child { border-bottom: 1px solid var(--line); }
+.editorial-step::before {
+  position: absolute;
+  inset-inline-start: 0;
+  content: counter(guide-step, decimal-leading-zero);
+  padding-top: 4px;
+  color: var(--mint);
+  font: 550 16px/1.5 var(--mono);
+}
+
+.editorial-faqs details { padding: 12px 0; border-top: 1px solid var(--line); }
+.editorial-faqs details:last-child { padding-bottom: 0; }
+.editorial-faqs summary { cursor: pointer; font-weight: 600; }
+.editorial-faqs summary::marker { color: var(--mint); }
+.editorial-faqs details p { margin: 8px 0 0; }
+
+@media (max-width: 740px) {
+  .editorial-hero { grid-template-columns: minmax(0, 1fr); }
+  .editorial-hero h1 { max-width: 19ch; text-wrap: wrap; }
+  .editorial-choices { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .editorial-step { padding-inline-start: 0; }
+  .editorial-step::before { position: static; display: block; margin-bottom: 6px; }
+}

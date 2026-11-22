@@ -42,3 +42,32 @@ the company App key stays in the Broker.
 npm publishing uses trusted publishing (OIDC): every package
 (`@sylphx/lockdocs` and the five `@sylphx/lockdocs-*` natives) trusts
 `SylphxAI/lockdocs` `.github/workflows/release.yml`; there is no npm token.
+
+### Official MCP Registry
+
+The [Registry listing](https://registry.modelcontextprotocol.io/v0.1/servers/io.github.SylphxAI%2Flockdocs/versions/latest)
+uses `io.github.SylphxAI/lockdocs`, with the same capitalization as the published
+npm package's `mcpName`. Keep that name in `server.json` and in the release
+workflow so existing installations stay on the same listing.
+
+The release workflow normally publishes the Registry metadata after npm. To
+check the manifest without publishing, install the official
+[mcp-publisher](https://github.com/modelcontextprotocol/registry/releases) and
+run these from the repository root:
+
+```bash
+bun scripts/check-mcp-registry.ts
+mcp-publisher validate server.json
+```
+
+For manual recovery only, wait for the npm release and make sure no release run
+is publishing the same version. Sign in with `mcp-publisher login github` as
+an authorized maintainer (the release workflow uses `github-oidc`). Guard
+the publish with the preflight so it stops if npm metadata doesn't match, the
+version already exists, or the Registry can't be checked:
+
+```bash
+mcp-publisher validate server.json &&
+  bun scripts/check-mcp-registry.ts --preflight &&
+  mcp-publisher publish server.json
+```

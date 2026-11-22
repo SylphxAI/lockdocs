@@ -171,7 +171,7 @@ export function SignIn(props: { next: string }) {
 
   const lastUsed = (method: SignInMethod) => <Show when={options()?.lastUsed === method}><span class="last-used">Last used</span></Show>;
   const PasskeyButton = () => <Show when={passkeys()}>
-    <button class="button secondary auth-button" type="button" onClick={explicitPasskey} disabled={Boolean(pending())}>
+    <button class="button quiet auth-button auth-passkey" type="button" onClick={explicitPasskey} disabled={Boolean(pending())}>
       <Fingerprint size={18}/>{pending() === "passkey" ? "Waiting for passkey…" : "Continue with a passkey"}{lastUsed("passkey")}
     </button>
   </Show>;
@@ -194,7 +194,7 @@ export function SignIn(props: { next: string }) {
                 <input id="signin-code" ref={codeField} name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" value={code()} required
                   readOnly={Boolean(pending())} onInput={event => enterCode(event.currentTarget, event.currentTarget.value)}
                   onPaste={event => { if (pending()) return; event.preventDefault(); enterCode(event.currentTarget, event.clipboardData?.getData("text") ?? ""); }}/>
-                <button class="button auth-button" type="submit" disabled={code().length !== 6 || Boolean(pending())}>{pending() === "verify" ? "Verifying…" : "Verify code"}</button>
+                <button class="button primary auth-button" type="submit" disabled={code().length !== 6 || Boolean(pending())}>{pending() === "verify" ? "Verifying…" : "Verify code"}</button>
               </form>
               <button class="auth-text-button" type="button" disabled={Boolean(pending()) || cooldown() > 0} onClick={() => void submitProof("send")}>{cooldown() ? "Resend in " + cooldown() + "s" : "Resend code"}</button>
             </Show>
@@ -204,8 +204,8 @@ export function SignIn(props: { next: string }) {
         </>}>
           <Show when={caps()?.google || caps()?.github}>
             <div class="auth-providers">
-              <Show when={caps()?.google}><a rel="external" class="button secondary auth-button" href={providerHref("google")}><GoogleMark/> Continue with Google {lastUsed("google")}</a></Show>
-              <Show when={caps()?.github}><a rel="external" class="button secondary auth-button" href={providerHref("github")}><GitHubMark/> Continue with GitHub {lastUsed("github")}</a></Show>
+              <Show when={caps()?.google}><a rel="external" class="button outline auth-button" href={providerHref("google")}><GoogleMark/> Continue with Google {lastUsed("google")}</a></Show>
+              <Show when={caps()?.github}><a rel="external" class="button outline auth-button" href={providerHref("github")}><GitHubMark/> Continue with GitHub {lastUsed("github")}</a></Show>
             </div>
           </Show>
           <Show when={caps()?.email_otp || passkeys()}>
@@ -213,7 +213,7 @@ export function SignIn(props: { next: string }) {
             <form method="post" onSubmit={continueWithEmail}>
               <label for="signin-email">Email address</label>
               <input id="signin-email" ref={emailField} type="email" name="email" autocomplete="username webauthn" inputmode="email" maxlength="254" value={email()} required/>
-              <button type="submit" class="button auth-button" disabled={Boolean(pending())}>Continue</button>
+              <button type="submit" class="button primary auth-button" disabled={Boolean(pending())}>Continue</button>
             </form>
             <PasskeyButton/>
           </Show>

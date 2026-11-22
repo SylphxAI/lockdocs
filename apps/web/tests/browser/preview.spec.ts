@@ -1,12 +1,12 @@
 import { expect, test } from "@playwright/test";
 
-const pages = ["/", "/playground", "/pricing", "/dashboard", "/docs", "/guide", "/reference", "/benchmarks", "/compare"];
+const pages = ["/", "/playground", "/pricing", "/dashboard", "/docs", "/guide", "/reference", "/benchmarks", "/compare", "/context7-alternative", "/guides/up-to-date-docs-for-cursor-and-claude-code"];
 // These smoke tests exercise the unconfigured preview; analytics.spec.ts covers consent separately.
 test.beforeEach(async ({ page }) => {
   await page.route("**/api/analytics/config", route => route.fulfill({ json: { measurementId: null } }));
 });
 
-const allDocs = ["/docs", "/guide", "/guide/setup", "/guide/how-it-works", "/guide/ecosystems", "/guide/fetch", "/reference", "/reference/tools", "/benchmarks", "/compare", "/capabilities", "/vision", "/pro"];
+const allDocs = ["/docs", "/guide", "/guide/setup", "/guide/how-it-works", "/guide/ecosystems", "/guide/fetch", "/reference", "/reference/tools", "/benchmarks", "/compare", "/capabilities", "/vision", "/pro", "/context7-alternative", "/guides/up-to-date-docs-for-cursor-and-claude-code"];
 
 test("public HTML protects package versions without changing selectable commands", async ({ page, request }) => {
   const sitemap = await request.get("/sitemap.xml");
@@ -36,6 +36,29 @@ test("public HTML protects package versions without changing selectable commands
       return range.toString().trim();
     })).toBe(command);
   }
+});
+
+test("home and pricing show matching offers and FAQs; sign-in is not indexed", async ({ page }) => {
+  for (const [path, currency, annual] of [["/", "USD", 0], ["/pricing", "USD", 120], ["/pricing?currency=GBP", "GBP", 99]] as const) {
+    const response = await page.goto(path);
+    const html = await response!.text();
+    const scripts = [...html.matchAll(/<script\b[^>]*\btype="application\/ld\+json"[^>]*>(.*?)<\/script>/gs)].map(([, data]) => JSON.parse(data));
+    expect(scripts.map(entry => entry["@type"])).toEqual(["SoftwareApplication", "FAQPage"]);
+    expect(scripts[0].offers[0]).toMatchObject({ "@type": "Offer", price: 0, priceCurrency: currency });
+    await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute("content", "summary_large_image");
+    if (annual) {
+      expect(scripts[0].offers[1]).toMatchObject({ "@type": "Offer", price: annual, priceCurrency: currency, priceSpecification: { billingDuration: "P1Y" } });
+      const pro = page.getByRole("link", { name: "Get Lockdocs Pro — " + (currency === "USD" ? "$" : "£") + annual + "/yr", exact: true });
+      await expect(pro).toHaveCSS("background-color", "rgb(124, 156, 255)");
+      await expect(pro).toHaveAttribute("href", "/sign-in?next=" + encodeURIComponent(path));
+    }
+    for (const question of scripts[1].mainEntity) {
+      await page.getByText(question.name, { exact: true }).and(page.locator("summary")).click();
+      await expect(page.getByText(question.acceptedAnswer.text, { exact: true })).toBeVisible();
+    }
+  }
+  await page.goto("/sign-in?next=%2Fpricing");
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", "noindex");
 });
 
 test("routes render without errors, overflow, broken images or repeated metadata", async ({ page, baseURL }, info) => {

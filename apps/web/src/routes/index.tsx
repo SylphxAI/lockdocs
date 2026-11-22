@@ -1,3 +1,7 @@
+import { EditorialFaq } from "@/components/editorial";
+import { JsonLd } from "@/components/json-ld";
+import { canonicalOrigin } from "@/lib/indexing";
+import { lockdocsApplication, freeOffer } from "@/lib/storefront-schema";
 import { PageMeta } from "@/components/page-meta";
 import { A as Link } from "@solidjs/router";
 import { ArrowRight, ArrowUpRight, Box, Command, FileCode2, GitCompareArrows, ShieldCheck, Terminal } from 'lucide-solid';
@@ -5,9 +9,15 @@ import { PackageText } from '@/components/package-text';
 import { CopyButton } from '@/components/copy-button';
 
 const install = 'npx -y @sylphx/lockdocs setup';
+const questions = [
+  { question: "Is Lockdocs free?", answer: "Yes. Exact-version docs and the local MCP server are free and don’t require an account. Lockdocs Pro adds Upgrade Reports and Private Package Docs." },
+  { question: "Can I use Lockdocs offline?", answer: "Yes. Lockdocs can query packages and docs that are already installed or cached. If you want to fetch additional upstream docs, that step needs a network connection." },
+];
+
 export default function Home() {
   return <>
     <PageMeta title="Lockdocs — Docs for the version you installed" description="Exact-version library docs from your lockfile. Local, offline and open source. For your terminal and your coding agent."/>
+    <JsonLd data={lockdocsApplication(canonicalOrigin + "/", [freeOffer("USD")])}/>
     <section class="hero wrap">
       <div class="hero-copy">
         <div class="eyebrow"><span class="signal"/> LOCAL-FIRST DOCUMENTATION</div>
@@ -45,5 +55,6 @@ export default function Home() {
       </div>
     </section>
     <section class="wrap section"><div class="pro-band"><GitCompareArrows size={25}/><div><div class="eyebrow">LOCKDOCS PRO</div><h2>See what breaks before you upgrade.</h2><p>Get the full upgrade report for your call sites and exact-version docs for private packages.</p></div><Link class="button outline" href="/pricing">Explore Pro <ArrowRight size={16}/></Link></div></section>
+    <div class="wrap"><EditorialFaq url={canonicalOrigin + "/"} items={questions}/></div>
   </>;
 }

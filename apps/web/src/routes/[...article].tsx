@@ -8,6 +8,7 @@ import rehypeSlug from "rehype-slug";
 import { visit } from "unist-util-visit";
 import { PackageText } from "@/components/package-text";
 import { PageMeta } from "@/components/page-meta";
+import { context7AlternativePath, editorGuidePath } from "@/lib/editorial-routes";
 import { docGroups, docHref, docPages } from "@/lib/docs";
 
 const files = import.meta.glob(["../../../../docs/**/*.md", "!../../../../docs/storefront/**"], { eager: true, query: "?raw", import: "default" }) as Record<string, string>;
@@ -32,8 +33,9 @@ export default function Article() {
         <PageMeta title={page.title + " · Lockdocs"} description={page.description}/>
         <aside class="docs-sidebar"><nav aria-label="Documentation"><A class="docs-brand" href="/docs"><BookOpen size={16}/> Lockdocs docs</A><For each={docGroups}>{group => <div class="docs-group"><div>{group.label}</div><For each={group.pages}>{item => <A href={item.route} end>{item.title}</A>}</For></div>}</For></nav></aside>
         <article class="doc-body"><div class="kicker"><span/> LOCKDOCS MANUAL</div>
-        <Show when={page.route === "/docs"}><h1>Documentation</h1><p>Look up APIs for the version you installed. Start in the terminal, then give the same answers to your coding agent.</p><div class="doc-start"><A href="/guide"><Terminal size={18}/> Quickstart <ArrowRight size={15}/></A><A href="/reference"><BookOpen size={18}/> CLI reference <ArrowRight size={15}/></A></div></Show>
+        <Show when={page.route === "/docs"}><h1>Documentation</h1><p>Look up APIs for the version you installed. Start in the terminal, then give the same answers to your coding agent.</p><div class="doc-start"><A href="/guide"><Terminal size={18}/> Quickstart <ArrowRight size={15}/></A><A href="/reference"><BookOpen size={18}/> CLI reference <ArrowRight size={15}/></A><A href={editorGuidePath}>Cursor &amp; Claude Code setup <ArrowRight size={15}/></A></div></Show>
         <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[customAnchors,rehypeSlug]} transformLinkUri={(url) => docHref(url,page)} components={{ text: (props) => <PackageText text={props.node.value}/>, img: (props) => <span><PackageText text={props.alt ?? ""}/></span>, table: (props) => <div class="table-scroll" tabindex="0"><table>{props.children}</table></div> }}>{files["../../../../docs/" + page.source]?.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, "")}</Markdown>
+        <Show when={page.route === "/compare"}><p><A href={context7AlternativePath}>Looking for a Context7 alternative? See a version-sensitive Next.js example.</A></p></Show>
         </article>
       </div>}
     </Show>

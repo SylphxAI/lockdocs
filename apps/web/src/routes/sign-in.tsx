@@ -8,7 +8,7 @@ export default function SignInPage() {
   const [params] = useSearchParams();
   const details = createAsync(() => signInDetails(typeof params.next === "string" ? params.next : null), { deferStream: true });
   return <div class="wrap content-section">
-    <PageMeta title="Sign in · Lockdocs" description="Sign in to manage your Lockdocs account." unlisted/>
+    <PageMeta title="Sign in · Lockdocs" description="Sign in to manage your Lockdocs account." unlisted="noindex"/>
     <div class="surface plan consent-card sign-in-card">
       <div class="plan-label">YOUR WORKSPACE</div>
       <h1>Sign in to Lockdocs</h1>

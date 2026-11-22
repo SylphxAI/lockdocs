@@ -46,7 +46,9 @@ test("Google and last-used work when it is the only enabled passwordless method"
   await page.goto(auth.origin + "/pricing?currency=GBP");
   await expect(page.locator(".plan-pro")).toContainText("£99/yr upfront · Tax included");
   expect(auth.calls).toEqual([]);
-  await page.getByRole("link", { name: "Sign in", exact: true }).click();
+  const pro = page.getByRole("link", { name: "Get Lockdocs Pro — £99/yr", exact: true });
+  await expect(pro).toHaveClass(/\bprimary\b/);
+  await pro.click();
   await expect(page).toHaveURL(auth.origin + "/sign-in?next=%2Fpricing%3Fcurrency%3DGBP");
   await expect(page.getByRole("heading", { name: "Sign in to Lockdocs" })).toBeVisible();
   const google = page.getByRole("link", { name: /Continue with Google/ });
@@ -83,6 +85,10 @@ test("a runtime flag flip enables OTP, inline six-digit paste and auto-submit, a
   await page.reload();
   await expect(emailField(page)).toHaveAttribute("autocomplete", "username webauthn");
   await expect(page.getByRole("button", { name: "Continue with a passkey" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Continue", exact: true })).toHaveCSS("background-color", "rgb(124, 156, 255)");
+  await expect(page.getByRole("button", { name: "Continue with a passkey" })).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(emailField(page)).toHaveCSS("background-color", "rgb(9, 12, 18)");
+  if (process.env.LOCKDOCS_LOCAL_CAPTURES) await page.screenshot({ path: info.outputPath("sign-in-methods.png") });
   const firstResponse = page.waitForResponse(response => response.url().endsWith("/api/auth/sign-in"));
   await enterEmail(page, "new-reader@example.test");
   const first = await firstResponse;

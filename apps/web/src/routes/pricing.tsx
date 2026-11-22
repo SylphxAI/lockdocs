@@ -8,12 +8,11 @@ import { account } from "@/lib/account-query";
 import { PageMeta } from "@/components/page-meta";
 import { A as Link } from "@solidjs/router";
 import { ArrowRight, Check, LockKeyhole } from "lucide-solid";
-import catalogue from "../../../../config/money-catalogue.json";
+import { proPrice as price } from "@/lib/analytics-events";
 import { signInHref } from "@/lib/auth-entry";
 import { useCookieSettings } from "@/components/cookie-settings";
 
 const pricingUrl = canonicalOrigin + "/pricing";
-const price = catalogue.spec.products[0].prices[0];
 const currencies = ["USD", "GBP", "EUR", "HKD"] as const;
 const prefixes = { USD: "$", GBP: "£", EUR: "€", HKD: "HK$" };
 
@@ -58,7 +57,7 @@ export default function Pricing() {
       {entitlement()?.entitled ? <Link class="button primary" href="/dashboard">Manage Pro <ArrowRight size={16}/></Link> : !session() ? <Link class="button primary" href={signInHref(returnPath())}>Get Lockdocs Pro — {annual()}/yr <ArrowRight size={16}/></Link> : details()?.billing && entitlement()?.status === "not_entitled" ? <form method="post" action="/api/billing/checkout" onSubmit={event => {
         const input = event.currentTarget.elements.namedItem("checkout_consent");
         if (input instanceof HTMLInputElement) input.value = analytics.checkoutChoice();
-        analytics.beginCheckout();
+        analytics.beginCheckout(currency());
       }}><input type="hidden" name="checkout_consent" value="reject"/><input type="hidden" name="currency" value={currency()}/><button class="button primary" type="submit">Continue to secure checkout <ArrowRight size={16}/></button></form> : <p class="notice">Checkout isn’t available in this environment yet.</p>}
       </article>
     </div>

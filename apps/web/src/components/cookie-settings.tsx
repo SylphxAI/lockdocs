@@ -1,15 +1,15 @@
 import { createContext, createEffect, createSignal, onCleanup, onMount, Show, useContext, type ParentProps } from "solid-js";
 import { useLocation } from "@solidjs/router";
-import { allowsDefault, clearAnalyticsCookies, gpc } from "@/lib/analytics-browser";
+import { clearAnalyticsCookies, gpc } from "@/lib/analytics-browser";
 import { analyticsPage } from "@/lib/analytics-page";
-import { items, pathByEvent, type FunnelEvent } from "@/lib/analytics-events";
+import { beginCheckoutParams } from "@/lib/analytics-events";
 import { campaignCookie, campaignMaxAge, checkoutCampaign } from "@/lib/checkout-campaign";
 import { consent, preferenceKey, preferenceLifetime, savedChoice, type Choice } from "@/lib/analytics-policy";
 
 type Page = NonNullable<ReturnType<typeof analyticsPage>>;
 type Tag = Window & { startAnalytics?: (settings: ReturnType<typeof consent>, page: Page) => void; gtag?: (...args: unknown[]) => void };
 const home = (origin: string) => ({ page_location: origin + "/", page_referrer: "", page_title: "Lockdocs" });
-const CookieContext = createContext<{ checkoutChoice: () => Choice; beginCheckout: () => void; open: (button: HTMLButtonElement) => void; configured: () => boolean }>();
+const CookieContext = createContext<{ checkoutChoice: () => Choice; beginCheckout: (currency: string) => void; open: (button: HTMLButtonElement) => void; configured: () => boolean }>();
 export const useCookieSettings = () => useContext(CookieContext)!;
 
 function preference() {
@@ -26,8 +26,6 @@ export function CookieSettings(props: ParentProps) {
   let tag: HTMLIFrameElement | undefined;
   let trigger: HTMLButtonElement | undefined;
   let panel: HTMLElement | undefined;
-  let remembered: Choice | null = null;
-  let generation = 0;
   let priced = false;
   let measuredPage: Page | null = null;
   let previousLocation = "";
@@ -49,7 +47,9 @@ export function CookieSettings(props: ParentProps) {
   function apply(next: Choice) {
     if (gpc()) next = "reject";
     if (next === "reject" || (next !== choice() && tag)) stop();
-    if (next !== "all") setCampaignCookie("", 0);
+    if (next !== "all" && document.cookie.split(";").some(entry => entry.trimStart().startsWith(campaignCookie + "="))) {
+      setCampaignCookie("", 0);
+    }
     setChoice(next);
     if (next === "reject") return;
     if (tag || !id()) return;
@@ -70,21 +70,12 @@ export function CookieSettings(props: ParentProps) {
     document.body.append(frame);
   }
 
-  async function resolve() {
-    const run = ++generation;
-    remembered = preference();
-    const signal = gpc();
-    setProtectedByGpc(signal);
-    if (signal || remembered) {
-      apply(signal ? "reject" : remembered!);
-      setOpen(!remembered);
-      return;
-    }
-    const allow = await allowsDefault();
-    if (run !== generation) return;
-    apply(allow ? "all" : "reject");
-    setProtectedByGpc(gpc());
-    setOpen(!allow || gpc());
+  function resolve() {
+    const saved = preference();
+    const protectedBySignal = gpc();
+    setProtectedByGpc(protectedBySignal);
+    apply(protectedBySignal ? "reject" : saved ?? "reject");
+    setOpen(!saved);
   }
 
   createEffect(() => {
@@ -106,13 +97,11 @@ export function CookieSettings(props: ParentProps) {
     const options = { signal: controller.signal };
     window.addEventListener("storage", event => {
       if (id() && (event.key === preferenceKey || event.key === null)) {
-        // Stop at once when a choice is cleared, even before another region lookup.
-        if (!preference()) apply("reject");
-        void resolve();
+        resolve();
       }
     }, options);
     window.addEventListener("pageshow", event => {
-      if (event.persisted && id()) void resolve();
+      if (event.persisted && id()) resolve();
       syncEngagement();
     }, options);
     window.addEventListener("focus", syncEngagement, options);
@@ -126,15 +115,13 @@ export function CookieSettings(props: ParentProps) {
         setId(config.measurementId);
         return resolve();
       }).catch(() => {});
-    onCleanup(() => { controller.abort(); generation++; stop(); });
+    onCleanup(() => { controller.abort(); stop(); });
   });
 
   function currentChoice(): Choice {
     if (gpc()) return "reject";
-    const saved = preference();
-    // Refuse stale grants (expiry, revocation or a change in another tab).
-    if ((saved && saved !== choice()) || (remembered && !saved)) return "reject";
-    return choice();
+    // An absent, expired, unreadable or changed preference is never consent.
+    return preference() === choice() ? choice() : "reject";
   }
 
   const checkoutChoice = (): Choice => active() ? currentChoice() : "reject";
@@ -200,26 +187,29 @@ export function CookieSettings(props: ParentProps) {
     }
   });
 
-  function send(event: FunnelEvent) {
+  function sendPricing(event: "pricing_view" | "begin_checkout", params: Record<string, unknown> = {}) {
     emit(event, {
-      ...(event !== "pricing_view" ? { items } : {}),
-      page_location: window.location.origin + pathByEvent[event], page_referrer: "", page_title: "Lockdocs",
+      ...params,
+      page_location: window.location.origin + "/pricing", page_referrer: "", page_title: "Lockdocs",
     });
+  }
+
+  function beginCheckout(currency: string) {
+    const params = beginCheckoutParams(currency);
+    if (params) sendPricing("begin_checkout", params);
   }
 
   createEffect(() => {
     const pricing = route.pathname === "/pricing";
     if (!pricing) priced = false;
-    if (pricing && active() && !priced) { priced = true; send("pricing_view"); }
+    if (pricing && active() && !priced) { priced = true; sendPricing("pricing_view"); }
   });
 
   function choose(next: Choice) {
     if (gpc() && next !== "reject") return;
-    ++generation;
-    remembered = next;
     try { localStorage.setItem(preferenceKey, JSON.stringify({ choice: next, expires: Date.now() + preferenceLifetime })); }
-    catch { /* Keep this document's choice if storage is unavailable. */ }
-    apply(next);
+    catch { /* Refuse analytics if this choice cannot be saved and read back. */ }
+    apply(preference() === next ? next : "reject");
     close();
   }
 
@@ -231,7 +221,7 @@ export function CookieSettings(props: ParentProps) {
     queueMicrotask(() => panel?.focus());
   }
 
-  return <CookieContext.Provider value={{ checkoutChoice, beginCheckout: () => send("begin_checkout"), open: showFrom, configured: () => Boolean(id()) }}>
+  return <CookieContext.Provider value={{ checkoutChoice, beginCheckout, open: showFrom, configured: () => Boolean(id()) }}>
     {props.children}
     <Show when={id() && open()}><section id="cookie-settings" class="cookie-panel" aria-labelledby="cookie-heading" tabIndex={-1}
       ref={panel} onKeyDown={event => { if (event.key === "Escape" && trigger) close(); }}>

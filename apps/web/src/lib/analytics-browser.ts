@@ -1,18 +1,5 @@
-import { traceAllowsDefault } from "./analytics-policy";
-
 export function gpc() {
   return (navigator as Navigator & { globalPrivacyControl?: boolean }).globalPrivacyControl === true;
-}
-
-export async function allowsDefault() {
-  try {
-    const response = await fetch("/cdn-cgi/trace", {
-      credentials: "omit", cache: "no-store", mode: "same-origin", redirect: "error",
-      referrerPolicy: "no-referrer", signal: AbortSignal.timeout(2000),
-    });
-    return response.ok && response.headers.get("content-type")?.split(";")[0].trim() === "text/plain" &&
-      traceAllowsDefault(await response.text());
-  } catch { return false; }
 }
 
 export function clearAnalyticsCookies() {

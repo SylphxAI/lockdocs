@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { test as authTest } from "./auth-fixture";
 
 const settings = (page: Page) => page.getByRole("region", { name: "Cookie settings" });
 const google = /https:\/\/([^/]+\.)?(googletagmanager\.com|google-analytics\.com|doubleclick\.net|google\.com|googleadservices\.com)\//;
@@ -139,8 +140,9 @@ test("Sec-GPC blocks frame startup even when the navigator signal is unavailable
   const wire: URLSearchParams[] = [];
   const hits = await install(page, "loc=US\n", wire);
   await page.setExtraHTTPHeaders({ "Sec-GPC": "1" });
-  const refused = page.waitForResponse(response => new URL(response.url()).pathname === "/api/analytics/tag");
   await page.goto("/pricing");
+  const refused = page.waitForResponse(response => new URL(response.url()).pathname === "/api/analytics/tag");
+  await settings(page).getByRole("button", { name: "Analytics only" }).click();
   expect((await refused).status()).toBe(404);
   expect(hits).toEqual([]);
   expect(wire).toEqual([]);
@@ -189,16 +191,75 @@ for (const [region, trace] of [["UK", "loc=GB"], ["Switzerland", "loc=CH"], ["un
   });
 }
 
-test("recognized outside region grants measurement without allowing personalized ads", async ({ page }) => {
+test("a fresh visitor has no tag, geo lookup, or storage write before an explicit grant", async ({ page }) => {
   const wire: URLSearchParams[] = [];
   const hits = await install(page, "loc=US\n", wire);
-  await page.goto("/pricing");
+  const lookups: string[] = [];
+  page.on("request", request => {
+    if (new URL(request.url()).pathname === "/cdn-cgi/trace") lookups.push(request.url());
+  });
+  await page.addInitScript(() => {
+    const record = document.createElement("meta");
+    record.name = "storage-writes";
+record.content = "";
+    const original = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      record.content += key + ",";
+      return original.call(this, key, value);
+    };
+    document.addEventListener("DOMContentLoaded", () => document.head.append(record));
+  });
+  await page.goto("/pricing?gclid=fixture-click");
+  const banner = settings(page);
+  await expect(banner).toBeVisible();
+  await expect(page.locator("iframe")).toHaveCount(0);
+  expect(await page.evaluate(() => !!(window as Window & { gtag?: unknown }).gtag)).toBe(false);
+  await expect(page.locator('meta[name="storage-writes"]')).toHaveAttribute("content", "");
+  expect(await page.evaluate(() => [document.cookie, localStorage.length, sessionStorage.length])).toEqual(["", 0, 0]);
+  expect(lookups).toEqual([]);
+  expect(hits).toEqual([]);
+  expect(wire).toEqual([]);
+  await banner.getByRole("button", { name: "Allow analytics & ads" }).click();
   await expect.poll(() => hits.length).toBe(1);
-  await expect(settings(page)).toHaveCount(0);
-  await expect.poll(() => wire.filter(params => params.get("en") === "page_view").map(params => params.get("dl"))).toEqual([page.url()]);
+  await expect.poll(() => wire.filter(params => params.get("en") === "page_view").map(params => params.get("dl"))).toEqual([new URL("/pricing", page.url()).href]);
   expect(await commands(page)).toContainEqual(["consent", "default", {
     analytics_storage: "granted", ad_storage: "granted", ad_user_data: "granted", ad_personalization: "denied",
   }]);
+});
+
+authTest.use({ billing: true });
+authTest("authenticated pricing submit emits one consented checkout event and no sign-up on sign-in", async ({ page, auth }) => {
+  const hits = await install(page, null);
+  const submits: URLSearchParams[] = [];
+  await page.route(auth.origin + "/api/billing/checkout", async route => {
+    submits.push(new URLSearchParams(route.request().postData() ?? ""));
+    await route.fulfill({ status: 204 });
+  });
+  await page.goto(auth.origin + "/sign-in?next=%2Fpricing%3Fcurrency%3DGBP");
+  await page.getByRole("link", { name: /Continue with Google/ }).click();
+  await expect(page).toHaveURL(auth.origin + "/pricing?currency=GBP");
+  const checkout = page.locator('form[action="/api/billing/checkout"]').getByRole("button");
+  await expect(settings(page)).toBeVisible();
+  await checkout.click();
+  await expect.poll(() => submits.length).toBe(1);
+  expect(hits).toEqual([]);
+  expect(submits[0].get("checkout_consent")).toBe("reject");
+
+  await settings(page).getByRole("button", { name: "Analytics only" }).click();
+  await expect.poll(() => hits.length).toBe(1);
+  const event = (name: string) => commands(page).then(entries => entries.filter(([command, key]) => command === "event" && key === name));
+  expect(await event("begin_checkout")).toEqual([]);
+  await checkout.click();
+  await expect.poll(() => submits.length).toBe(2);
+  expect(submits[1].get("checkout_consent")).toBe("analytics");
+  await expect.poll(() => event("begin_checkout")).toEqual([["event", "begin_checkout", {
+    send_to: "G-TEST123456", page_location: auth.origin + "/pricing", page_referrer: "", page_title: "Lockdocs",
+    currency: "GBP", value: 99, plan_sku: "lockdocs_pro_seat_year", entry_surface: "pricing",
+    items: [{ item_id: "lockdocs_pro_seat_year", item_name: "Lockdocs Pro", quantity: 1, price: 99 }],
+  }]]);
+  expect(await event("sign_up")).toEqual([]);
+  expect(await event("purchase")).toEqual([]);
+  expect(auth.rejections).toEqual([]);
 });
 
 test("dashboard return works with analytics active but never reports a browser purchase", async ({ page }) => {

@@ -13,7 +13,7 @@
     "en": "Developer tools",
     "zh-Hant": "開發者工具"
   },
-  "url": "https://sylphxai.github.io/lockdocs/",
+  "url": "https://lockdocs.sylphx.com",
   "status": "available",
   "image": {
     "src": "card.webp",
@@ -24,5 +24,5 @@
   },
   "repo": "SylphxAI/lockdocs",
   "licence": "MIT",
-  "docs": "https://sylphxai.github.io/lockdocs/guide/quickstart"
+  "docs": "https://lockdocs.sylphx.com/guide"
 }

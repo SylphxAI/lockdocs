@@ -15,7 +15,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "homepage": "https://sylphxai.github.io/lockdocs/",
+  "homepage": "https://lockdocs.sylphx.com",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/SylphxAI/lockdocs.git",

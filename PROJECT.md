@@ -6,7 +6,7 @@ MIT licensed.
 
 - Published as `@sylphx/lockdocs` (npm) and
   `io.github.SylphxAI/lockdocs` (MCP Registry)
-- Docs: https://sylphxai.github.io/lockdocs/
+- Docs: https://lockdocs.sylphx.com/docs
 
 ## Layout
 

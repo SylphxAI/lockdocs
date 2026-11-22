@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "description": "lockdocs monorepo: Rust engine (crates/), npm packages (packages/), docs (docs/), benchmark (bench/).",
-  "homepage": "https://sylphxai.github.io/lockdocs/",
+  "homepage": "https://lockdocs.sylphx.com",
   "license": "MIT",
   "packageManager": "bun@1.4.4",
   "scripts": {

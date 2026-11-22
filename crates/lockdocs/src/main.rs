@@ -57,7 +57,7 @@ Examples:
   lockdocs pydantic \"serialize model to dict\"
   lockdocs resolve
 
-Docs: https://sylphxai.github.io/lockdocs/";
+Docs: https://lockdocs.sylphx.com/docs";
 
 struct Args {
     positional: Vec<String>,

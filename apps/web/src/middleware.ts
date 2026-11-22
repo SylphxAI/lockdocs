@@ -1,5 +1,6 @@
 import { createMiddleware } from "@solidjs/start/middleware";
 import { legacySignIn } from "@/lib/auth-entry";
+import { legacyGuide } from "@/lib/guide-redirects";
 import { allowIndexing } from "@/lib/indexing";
 export default createMiddleware({ onRequest: (event) => {
   if (!allowIndexing(event.request.headers)) event.response.headers.set("X-Robots-Tag", "noindex, nofollow");
@@ -10,5 +11,5 @@ export default createMiddleware({ onRequest: (event) => {
   if ((event.request.method === "GET" || event.request.method === "HEAD") && (path === "/privacy" || path === "/privacy/")) {
     return new Response(null, { status: 308, headers: { Location: "/legal/privacy" } });
   }
-  return legacySignIn(event.request);
+  return legacyGuide(event.request) ?? legacySignIn(event.request);
 } });

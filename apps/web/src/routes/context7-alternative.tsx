@@ -54,7 +54,7 @@ export default function Context7Alternative() {
       <section class="editorial-section" aria-labelledby="lookup-title">
         <h2 id="lookup-title">Check your project before adding <code>await</code></h2>
         <p>Run this from an npm project with Next.js already installed. The first command shows the version and lockfile. The second looks up <code>cookies</code> through the public import <code>next/headers</code>. Check the package version and the cited <code>.d.ts</code> line before using the result.</p>
-        <CodeExample label="Next.js lookup" code={"npx -y @sylphx/lockdocs@0.7.5 resolve --offline\nnpx -y @sylphx/lockdocs@0.7.5 api cookies --pkg next/headers --offline"}/>
+        <CodeExample label="Next.js lookup" code={"npx -y @sylphx/lockdocs resolve --offline\nnpx -y @sylphx/lockdocs api cookies --pkg next/headers --offline"}/>
         <p>In MCP, call <code>resolve</code> with your project’s absolute path as <code>root</code>. For the same declaration, call <code>api</code> with that <code>root</code>, <code>package: "next/headers"</code> and <code>symbol: "cookies"</code>. Use <code>docs</code> for questions where you don’t know the symbol yet.</p>
         <p class="editorial-note">If the installed version and lockfile disagree, Lockdocs can report the mismatch and show the installed declaration. Install from the lockfile and check again before treating the declaration as pinned.</p>
       </section>

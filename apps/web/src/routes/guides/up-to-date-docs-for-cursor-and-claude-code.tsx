@@ -40,7 +40,7 @@ const faq = [
   },
 ];
 const cursorConfig = JSON.stringify({
-  mcpServers: { lockdocs: { command: "npx", args: ["-y", "@sylphx/lockdocs@0.7.5", "mcp"] } },
+  mcpServers: { lockdocs: { command: "npx", args: ["-y", "@sylphx/lockdocs", "mcp"] } },
 }, null, 2);
 
 export default function EditorDocsGuide() {
@@ -69,7 +69,7 @@ export default function EditorDocsGuide() {
           <h2>{steps[0].name}</h2>
           <p>{steps[0].text}</p>
           <CodeExample label="Optional scratch project" code={"mkdir lockdocs-editor-demo\ncd lockdocs-editor-demo\nnpm init -y\nnpm install --save-exact zod@4.6.7"}/>
-          <CodeExample label="CLI version and lockfile check" code={"npx -y @sylphx/lockdocs@0.7.5 version\nnpx -y @sylphx/lockdocs@0.7.5 resolve --offline"}/>
+          <CodeExample label="CLI version and lockfile check" code={"npx -y @sylphx/lockdocs version\nnpx -y @sylphx/lockdocs resolve --offline"}/>
           <p>In the scratch project, look for <code><PackageText text="zod@4.6.7"/></code> and <code>package-lock.json</code>. The first <code>npx</code> run may download Lockdocs; <code>--offline</code> applies to Lockdocs’s lookups, not to npm.</p>
         </li>
         <li id={steps[1].id} class="editorial-section editorial-step">
@@ -80,14 +80,14 @@ export default function EditorDocsGuide() {
           <CodeExample label="Cursor project configuration" code={cursorConfig}/>
           <h3>Claude Code</h3>
           <p>Run this from your project folder. <code>--scope local</code> keeps the registration private to you in this project. If a <code>lockdocs</code> entry already exists, inspect it with <code>claude mcp get lockdocs</code> before replacing it.</p>
-          <CodeExample label="Claude Code project setup" code={"claude mcp add --scope local --transport stdio lockdocs -- npx -y @sylphx/lockdocs@0.7.5 mcp\nclaude mcp list"}/>
+          <CodeExample label="Claude Code project setup" code={"claude mcp add --scope local --transport stdio lockdocs -- npx -y @sylphx/lockdocs mcp\nclaude mcp list"}/>
           <p>Look for <code>lockdocs</code> in the list. If Claude Code is already open, start a new session and type <code>/mcp</code> to check its connection.</p>
         </li>
         <li id={steps[2].id} class="editorial-section editorial-step">
           <h2>{steps[2].name}</h2>
           <p>{steps[2].text}</p>
           <CodeExample label="Editor verification prompt" code={"Use Lockdocs resolve with root <absolute path to my project>.\nThen call Lockdocs api with the same root, package zod, and symbol z.strictObject.\nShow the package version, file and line from the result."}/>
-          <CodeExample label="Terminal cross-check" code="npx -y @sylphx/lockdocs@0.7.5 api z.strictObject --pkg zod --offline"/>
+          <CodeExample label="Terminal cross-check" code="npx -y @sylphx/lockdocs api z.strictObject --pkg zod --offline"/>
           <p>Replace the placeholder in the prompt. In your own project, substitute an installed library and a known symbol if you don’t use Zod. If the versions differ, check the tool’s <code>root</code> and reinstall from the lockfile. If the server doesn’t start, check that the editor can run <code>npx</code> and has the same Node.js setup as your terminal.</p>
         </li>
       </ol>

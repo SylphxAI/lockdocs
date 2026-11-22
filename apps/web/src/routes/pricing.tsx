@@ -8,7 +8,7 @@ import { account } from "@/lib/account-query";
 import { PageMeta } from "@/components/page-meta";
 import { A as Link } from "@solidjs/router";
 import { ArrowRight, Check, LockKeyhole } from "lucide-solid";
-import { proPrice as price } from "@/lib/analytics-events";
+import { pricingCheckoutSurface, proPrice as price } from "@/lib/analytics-events";
 import { signInHref } from "@/lib/auth-entry";
 import { useCookieSettings } from "@/components/cookie-settings";
 
@@ -58,7 +58,12 @@ export default function Pricing() {
         const input = event.currentTarget.elements.namedItem("checkout_consent");
         if (input instanceof HTMLInputElement) input.value = analytics.checkoutChoice();
         analytics.beginCheckout(currency());
-      }}><input type="hidden" name="checkout_consent" value="reject"/><input type="hidden" name="currency" value={currency()}/><button class="button primary" type="submit">Continue to secure checkout <ArrowRight size={16}/></button></form> : <p class="notice">Checkout isn’t available in this environment yet.</p>}
+      }}>
+        <input type="hidden" name="checkout_consent" value="reject"/>
+        <input type="hidden" name="currency" value={currency()}/>
+        <input type="hidden" name="entry_surface" value={pricingCheckoutSurface}/>
+        <button class="button primary" type="submit">Continue to secure checkout <ArrowRight size={16}/></button>
+      </form> : <p class="notice">Checkout isn’t available in this environment yet.</p>}
       </article>
     </div>
     <section class="terms"><LockKeyhole size={19}/><div><h2>Annual billing and cancellation</h2><p>The full annual amount is billed upfront. UK and EU consumers generally have 14 days from purchase to cancel a new subscription. See the <Link href="/legal/terms">subscription terms</Link> for how to cancel and when exceptions apply. Manage renewal and invoices in your <Link href="/dashboard">account</Link>.</p><p class="mono quiet">US$120/yr · £99/yr · €109/yr · HK$938/yr · Tax included</p></div></section>

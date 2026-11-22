@@ -341,6 +341,7 @@ authTest("authenticated pricing submit emits one consented checkout event and no
   await expect.poll(() => submits.length).toBe(1);
   expect(hits).toEqual([]);
   expect(submits[0].get("checkout_consent")).toBe("reject");
+  expect(submits[0].getAll("entry_surface")).toEqual(["pricing"]);
 
   await settings(page).getByRole("button", { name: "Analytics only" }).click();
   await expect.poll(() => hits.length).toBe(1);
@@ -349,6 +350,7 @@ authTest("authenticated pricing submit emits one consented checkout event and no
   await checkout.click();
   await expect.poll(() => submits.length).toBe(2);
   expect(submits[1].get("checkout_consent")).toBe("analytics");
+  expect(submits[1].getAll("entry_surface")).toEqual(["pricing"]);
   await expect.poll(() => event("begin_checkout")).toEqual([["event", "begin_checkout", {
     send_to: "G-TEST123456", page_location: auth.origin + "/pricing", page_referrer: "", page_title: "Lockdocs",
     currency: "GBP", value: 99, plan_sku: "lockdocs_pro_seat_year", entry_surface: "pricing",

@@ -1,6 +1,7 @@
 import catalogue from "../../../../config/money-catalogue.json";
 
 export const proPrice = catalogue.spec.products[0].prices[0];
+export const pricingCheckoutSurface = "pricing";
 
 export function beginCheckoutParams(currency: unknown) {
   const amounts = proPrice.unit_amounts;
@@ -9,7 +10,7 @@ export function beginCheckoutParams(currency: unknown) {
   if (!Number.isSafeInteger(minor) || minor <= 0) return null;
   const value = minor / 100;
   return {
-    value, currency, plan_sku: proPrice.key, entry_surface: "pricing",
+    value, currency, plan_sku: proPrice.key, entry_surface: pricingCheckoutSurface,
     items: [{ item_id: proPrice.key, item_name: "Lockdocs Pro", quantity: 1, price: value }],
   };
 }

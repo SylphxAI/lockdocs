@@ -32,6 +32,7 @@ function fixture(t: TestContext) {
     if (value === undefined) delete process.env[name]; else process.env[name] = value;
   } });
   const calls: { url: string; init: RequestInit }[] = [];
+  const checkoutMetadata: unknown[] = [];
   const billing: { name?: string; checkout_session_id?: string; url: string } = { name: parent + "/checkout_sessions/" + id, url: location };
   let events = (_: RequestInit): Promise<Response> => Promise.resolve(new Response(null, { status: 204 }));
   t.mock.method(globalThis, "fetch", async (url: URL, init: RequestInit) => {
@@ -40,26 +41,48 @@ function fixture(t: TestContext) {
       user: { id: "usr_checkout_fixture" },
     });
     if (url.href === api + "/v1/" + parent + "/checkout_sessions") {
-      assert.equal(JSON.parse(String(init.body)).success_url, app + "/dashboard?billing=return");
+      const body = JSON.parse(String(init.body));
+      assert.equal(body.success_url, app + "/dashboard?billing=return");
+      checkoutMetadata.push(body.metadata);
       return Response.json(billing);
     }
     calls.push({ url: url.href, init });
     return events(init);
   });
-  async function start(choices: string[] = [], cookies: string[] = [], gpc?: string) {
+  async function start(choices: string[] = [], cookies: string[] = [], gpc?: string,
+    body: URLSearchParams | FormData = new URLSearchParams({ currency: "GBP", entry_surface: "pricing" })) {
     const headers = new Headers({ origin: app, referer: app + "/private?gclid=not-from-referer",
       cookie: ["__Host-lockdocs-session=identity_org_session_fixture", ...cookies].join("; ") });
     if (gpc !== undefined) headers.set("Sec-GPC", gpc);
-    const body = new URLSearchParams({ currency: "GBP" });
     choices.forEach(choice => body.append("checkout_consent", choice));
     const response = await checkout(new Request(app + "/api/billing/checkout?gclid=not-from-url", { method: "POST", headers, body }));
-    assert.equal(response.status, 303);
     // Checkout must not set the retired browser purchase proof cookie.
     assert.equal(response.headers.get("set-cookie"), null);
     return response;
   }
-  return { calls, start, billing, setEvents: (handler: typeof events) => { events = handler; } };
+  return { calls, checkoutMetadata, start, billing, setEvents: (handler: typeof events) => { events = handler; } };
 }
+
+test("Money receives only the allowlisted pricing surface, even with untrusted form values", async t => {
+  const { calls, checkoutMetadata, start } = fixture(t);
+  for (const form of [undefined, new URLSearchParams({ currency: "GBP" })]) {
+    const response = await start(["all"], [ga, gs1], "1", form);
+    assert.equal(response.status, 303);
+    assert.equal(response.headers.get("location"), location);
+    assert.deepEqual(checkoutMetadata.splice(0), [{ entry_surface: "pricing" }]);
+  }
+  for (const surfaces of [["dashboard"], [""], [" Pricing "], ["pricing\n"], ["定價"],
+    ["/pricing?gclid=private"], ["x".repeat(101)], ["pricing", "pricing"], [new File([], "pricing")]]) {
+    const form = new FormData();
+    form.set("currency", "GBP");
+    for (const surface of surfaces) form.append("entry_surface", surface);
+    const response = await start(["all"], [ga, gs1], undefined, form);
+    assert.equal(response.status, 400);
+    assert.deepEqual(await response.json(), { error: "invalid_entry_surface" });
+    assert.deepEqual(checkoutMetadata, []);
+  }
+  assert.deepEqual(calls, []);
+});
 
 test("missing, rejected, malformed and ambiguous consent, GPC and disabled GA never bind", async t => {
   const { calls, start } = fixture(t);

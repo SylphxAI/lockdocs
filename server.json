@@ -8,7 +8,7 @@
     "source": "github"
   },
   "version": "0.7.5",
-  "websiteUrl": "https://sylphxai.github.io/lockdocs/",
+  "websiteUrl": "https://lockdocs.sylphx.com",
   "packages": [
     {
       "registryType": "npm",

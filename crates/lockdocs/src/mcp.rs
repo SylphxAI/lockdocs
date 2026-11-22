@@ -83,7 +83,7 @@ impl App for Lockdocs {
             name: "lockdocs".into(),
             title: "lockdocs".into(),
             version: crate::VERSION.into(),
-            website: "https://sylphxai.github.io/lockdocs/".into(),
+            website: env!("CARGO_PKG_HOMEPAGE").into(),
             instructions: INSTRUCTIONS.into(),
         }
     }

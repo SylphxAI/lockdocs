@@ -2,7 +2,7 @@
   "name": "lockdocs",
   "description": "Exact-version library docs from your lockfile: answers from the docs and type declarations of the npm, PyPI, crates.io and Go packages you installed. Local, offline, no API key.",
   "author": { "name": "Sylphx", "url": "https://github.com/SylphxAI" },
-  "homepage": "https://sylphxai.github.io/lockdocs/",
+  "homepage": "https://lockdocs.sylphx.com",
   "repository": "https://github.com/SylphxAI/lockdocs",
   "license": "MIT",
   "keywords": ["mcp", "documentation", "lockfile", "offline", "npm", "pypi", "crates", "go"],

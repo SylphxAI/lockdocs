@@ -111,35 +111,40 @@ test("recognized outside region grants measurement without allowing personalized
   }]);
 });
 
-test("dashboard return sends only the verified purchase fields and never treats a return URL as proof", async ({ page }) => {
-  const hits = await install(page, "loc=DE");
-  let status = 404;
-  let checks = 0;
-  const transaction_id = "95a19ce7e909322bfb8d68b26c5836a25dccac1f";
-  await page.route("**/api/analytics/purchase", async route => {
-    expect(route.request().method()).toBe("POST");
-    checks++;
-    await route.fulfill({ status, json: status === 200 ? {
-      currency: "GBP", value: 82.5, transaction_id,
-      receipt_id: "receipt-fixture", email: "buyer@example.test",
-    } : {} });
+test("dashboard return works with analytics active but never reports a browser purchase", async ({ page }) => {
+  const hits = await install(page, "loc=DE\n");
+  await page.clock.install();
+  const checks: string[] = [];
+  await page.route("**/api/analytics/purchase", route => route.fulfill({
+    json: { currency: "GBP", value: 82.5, transaction_id: "a".repeat(40) },
+  }));
+  page.on("request", request => {
+    if (new URL(request.url()).pathname === "/api/analytics/purchase") checks.push(request.method());
   });
-  await page.goto("/dashboard?billing=return&checkout=checkout-fixture");
+
+  const returnPath = "/dashboard?billing=return";
+  const notice = page.getByRole("status").filter({ hasText: "Back from checkout. Pro access updates once payment is confirmed." });
+  async function expectNoBrowserPurchase() {
+    await expect(page).toHaveURL(returnPath);
+    await expect(notice).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Billing & recovery" })).toBeVisible();
+    await expect.poll(() => commands(page)).toContainEqual(["consent", "default", {
+      analytics_storage: "granted", ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied",
+    }]);
+    // Let the tag load and advance past the retired poll's full retry window.
+    await expect.poll(() => hits.length).toBeGreaterThan(0);
+    await page.clock.runFor(7500);
+    expect((await commands(page)).filter(([command, event]) => command === "event" && event === "purchase")).toEqual([]);
+    expect(checks).toEqual([]);
+  }
+
+  await page.goto(returnPath);
   await expect(settings(page)).toBeVisible();
   expect(hits).toEqual([]);
-  expect(checks).toBe(0);
-  const noPurchase = page.waitForResponse(response => response.url().endsWith("/api/analytics/purchase") && response.status() === 404);
   await settings(page).getByRole("button", { name: "Analytics only" }).click();
-  await noPurchase;
-  expect((await commands(page)).filter(entry => entry[0] === "event")).toEqual([]);
-  status = 200;
+  await expectNoBrowserPurchase();
   await page.reload();
-  await expect.poll(() => commands(page)).toContainEqual(["event", "purchase", {
-    currency: "GBP", value: 82.5, transaction_id,
-    items: [{ item_id: "lockdocs_pro_seat_year", item_name: "Lockdocs Pro", quantity: 1 }],
-    send_to: "G-TEST123456", page_location: new URL("/dashboard", page.url()).href, page_referrer: "", page_title: "Lockdocs",
-  }]);
-  expect(JSON.stringify(await commands(page))).not.toMatch(/checkout-fixture|receipt-fixture|buyer@example.test/);
+  await expectNoBrowserPurchase();
 });
 
 test("GPC overrides an existing grant outside the restricted regions", async ({ page }) => {

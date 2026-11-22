@@ -9,11 +9,11 @@ license = "MIT"
 authors = ["SylphxAI"]
 rust-version = "1.90"
 readme = "README.md"
-documentation = "https://sylphxai.github.io/lockdocs/"
+documentation = "https://lockdocs.sylphx.com/docs"
 keywords = ["mcp", "documentation", "lockfile", "offline", "ai-agents"]
 categories = ["development-tools", "command-line-utilities"]
 repository = "https://github.com/SylphxAI/lockdocs"
-homepage = "https://sylphxai.github.io/lockdocs/"
+homepage = "https://lockdocs.sylphx.com"
 
 [profile.release]
 lto = "thin"

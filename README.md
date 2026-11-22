@@ -192,7 +192,7 @@ Registry package downloads remain opt-in; default upstream enrichment uses insta
 
 Method, questions, per-question results and scripts: [benchmark page](https://lockdocs.sylphx.com/benchmarks) and [`bench/`](https://github.com/SylphxAI/lockdocs/tree/main/bench).
 
-The same 105 questions are also asked through [Sylphx Search](https://github.com/SylphxAI/cloud) — our platform's web search, whose technical-documentation vertical is the hosted index for docs that never ship inside a package — with `bench/cloud.py`. Local and cloud answer one corpus with one grader, so lockdocs and Sylphx Search are one index format and one ranking rather than two products.
+The same 105 questions are also asked through [Sylphx Search](https://sylphx.com) — our platform's web search, whose technical-documentation vertical is the hosted index for docs that never ship inside a package — with `bench/cloud.py`. Local and cloud answer one corpus with one grader, so lockdocs and Sylphx Search are one index format and one ranking rather than two products.
 
 ## How it compares
 
@@ -231,7 +231,7 @@ lockdocs fetch [package...]     Once: upstream docs at each version's tag, missi
 lockdocs index [package]        Build indexes ahead of time
 lockdocs cache [clean]          Show or delete the cache
 lockdocs upgrade <pkg> <ver>    Pro: API changes from the pinned version to <ver>, with your call sites
-lockdocs licence status|activate <token>   Show or activate a Pro licence (free to run)
+lockdocs login [--no-browser]   Connect the CLI to your Pro account (requires LOCKDOCS_WEB_URL)
 lockdocs setup                  Configure MCP clients (--client a,b --dry-run --remove --fetch)
 lockdocs mcp                    MCP server on stdio
 
@@ -242,7 +242,15 @@ Prebuilt binaries for macOS (arm64, x64), Linux glibc (x64, arm64) and Windows x
 
 ## Pro
 
-Everything above is free, under MIT. Pro adds two things for teams. Private sources: lockdocs reads your internal packages and docs from the private npm, PyPI, Cargo and Go registries and the GitHub Enterprise, GitLab and Bitbucket hosts you already use, with the credentials your `.npmrc`, uv, pip, Cargo, Go and git already hold, each sent only to its own host, inside the same `resolve`, `docs` and `api` tools and `lockdocs fetch`. And the upgrade report (`lockdocs upgrade next 15.0.0`, or `upgrade_to` in the `docs` tool): which APIs you call were removed, renamed or deprecated between your pinned version and the target, with your call sites. See [current lockdocs Pro seat pricing](https://lockdocs.sylphx.com/pricing). The licence is checked offline: run `lockdocs licence activate <token>` (check it with `lockdocs licence status`, which warns during the last 30 days), or set `LOCKDOCS_LICENCE_TOKEN` in CI. Details: [lockdocs Pro](https://lockdocs.sylphx.com/pro).
+Everything above is free, under MIT. Pro adds two things for teams. Private sources: lockdocs reads your internal packages and docs from the private npm, PyPI, Cargo and Go registries and the GitHub Enterprise, GitLab and Bitbucket hosts you already use, with the credentials your `.npmrc`, uv, pip, Cargo, Go and git already hold, each sent only to its own host, inside the same `resolve`, `docs` and `api` tools and `lockdocs fetch`. And the upgrade report (`lockdocs upgrade next 15.0.0`, or `upgrade_to` in the `docs` tool): which APIs you call were removed, renamed or deprecated between your pinned version and the target, with your call sites.
+
+[Get Lockdocs Pro for US$120/year](https://lockdocs.sylphx.com/pricing). Once Pro is active, connect your terminal by signing in with the same account and approving the CLI in your browser:
+
+```sh
+LOCKDOCS_WEB_URL=https://lockdocs.sylphx.com lockdocs login
+```
+
+Use `--no-browser` to print the approval URL instead of opening it automatically. The CLI saves your licence locally and checks it offline. In CI, you can provide a valid Pro licence token through the `LOCKDOCS_LICENCE_TOKEN` secret environment variable.
 
 ## Privacy
 

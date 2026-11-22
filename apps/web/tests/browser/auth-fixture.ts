@@ -17,7 +17,7 @@ export const code = "012345";
 const random = () => randomBytes(32).toString("base64url");
 const hash = (value: string) => createHash("sha256").update(value).digest();
 
-async function startFixture() {
+async function startFixture(billing: boolean) {
   const tmp = mkdtempSync(join(tmpdir(), "lockdocs-browser-auth-"));
   const cert = join(tmp, "cert.pem");
   const key = join(tmp, "key.pem");
@@ -77,6 +77,14 @@ async function startFixture() {
       return json(res, { session: { id: "session-fixture", instance_id: instance, expires_at: expiry }, user: {
         id: address === email ? "usr_reader" : "usr_new_reader", name: "Fixture reader", email: address,
       } });
+    }
+    if (path === "/v1/client/token" && req.method === "POST" && sessions.get(sessionToken) === email) {
+      return json(res, { access_token: "money-fixture-token", expires_in: 60 });
+    }
+    if (path === "/v1/money/orgs/fixture/projects/lockdocs/envs/test/entitlement_grants:getMine" && req.method === "GET" &&
+        sessionToken === "money-fixture-token" && req.headers["x-sylphx-key"] === pk &&
+        url.searchParams.get("feature") === "lockdocs_pro_seat_year") {
+      return json(res, { subject_id: "usr_reader", entitled: false });
     }
     let raw = "";
     for await (const part of req) raw += part;
@@ -174,6 +182,10 @@ async function startFixture() {
     app = spawn(process.execPath, [".output/server/index.mjs"], { env: {
       PATH: process.env.PATH, NODE_EXTRA_CA_CERTS: cert, HOST: "127.0.0.1", PORT: String(appPort), LOCKDOCS_APP_ORIGIN: origin,
       SYLPHX_AUTH_URL: origin, SYLPHX_AUTH_ORGANIZATION_ID: instance, SYLPHX_PUBLISHABLE_KEY: pk, SYLPHX_AUTH_SECRET_KEY: sk,
+      ...(billing ? {
+        SYLPHX_MONEY_URL: origin, SYLPHX_MONEY_PARENT: "orgs/fixture/projects/lockdocs/envs/test", SYLPHX_MONEY_API_KEY: "fixture-only",
+        LOCKDOCS_CCR_TERMS_TEXT: "Fixture terms", LOCKDOCS_CCR_TERMS_VERSION: "fixture", LOCKDOCS_GA4_MEASUREMENT_ID: "G-TEST123456",
+      } : {}),
     }, stdio: ["ignore", "pipe", "inherit"] });
     await once(app.stdout!, "data");
     if (!(await fetch(`http://127.0.0.1:${appPort}/api/health`)).ok) throw new Error("Fixture app did not start");
@@ -184,10 +196,11 @@ async function startFixture() {
   }
 }
 
-export const test = base.extend<{ auth: Awaited<ReturnType<typeof startFixture>> }>({
+export const test = base.extend<{ billing: boolean; auth: Awaited<ReturnType<typeof startFixture>> }>({
+  billing: [false, { option: true }],
   ignoreHTTPSErrors: true, // A per-test certificate; the production child validates it via NODE_EXTRA_CA_CERTS.
-  auth: async ({}, use) => {
-    const fixture = await startFixture();
+  auth: async ({ billing }, use) => {
+    const fixture = await startFixture(billing);
     try { await use(fixture); }
     finally { await fixture.close(); }
   },

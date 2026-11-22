@@ -899,7 +899,7 @@ dependencies = [
 
 [[package]]
 name = "lockdocs"
-version = "0.7.6"
+version = "0.7.7"
 dependencies = [
  "anyhow",
  "base64 0.23.1",
@@ -921,7 +921,7 @@ dependencies = [
 
 [[package]]
 name = "lockdocs-core"
-version = "0.7.6"
+version = "0.7.7"
 dependencies = [
  "anyhow",
  "dirs 7.0.0",

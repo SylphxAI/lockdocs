@@ -57,21 +57,38 @@ test("billing and CLI consent use verified account scope and separate provider c
   });
   assert.equal((await checkout(post("/api/billing/checkout", { currency: "GBP" }, { origin: "https://unrelated.example.test", cookie }))).status, 403);
   assert.equal(seen.length, 0);
-  expected.push(inspect, {
+  const checkoutSession: Expected = {
     url: money + "/v1/" + parent + "/checkout_sessions", method: "POST", bearer: "fixture-checkout",
     body: { subject: { end_user: subject }, line_items: [{ price: product, quantity: 1 }], currency_code: "GBP",
       metadata: { entry_surface: "pricing" },
-      success_url: origin + "/dashboard?billing=return", cancel_url: origin + "/pricing",
+      success_url: origin + "/dashboard?billing=return", cancel_url: origin + "/pricing?currency=GBP",
       consent_collection: { terms_required: true, terms_text: config.LOCKDOCS_CCR_TERMS_TEXT, terms_version: config.LOCKDOCS_CCR_TERMS_VERSION } },
     result: { url: "https://checkout.stripe.com/example" },
-  });
+  };
+  expected.push(inspect, checkoutSession);
   assert.equal((await checkout(post("/api/billing/checkout", { currency: "GBP" }))).headers.get("location"), "https://checkout.stripe.com/example");
-  expected.push(inspect, token, {
+  expected.push(inspect, { ...checkoutSession, status: 403, result: { code: "PERMISSION_DENIED" } });
+  assert.equal((await checkout(post("/api/billing/checkout", { currency: "GBP" }))).headers.get("location"),
+    origin + "/pricing?currency=GBP&billing=unavailable");
+
+  const portalSession: Expected = {
     url: scoped("portal_sessions:userCreate"), method: "POST", bearer: "fixture.access", publicKey: true,
     body: { subject: { end_user: subject }, return_url: origin + "/dashboard" },
-    status: 412, result: { code: "INVALID_STATE", details: [{ reason: "no_customer" }] },
-  });
-  assert.equal((await portal(post("/api/billing/portal", {}))).headers.get("location"), origin + "/dashboard?billing=no_customer");
+    result: { url: "https://billing.stripe.com/example" },
+  };
+  expected.push(inspect, token, portalSession);
+  assert.equal((await portal(post("/api/billing/portal", {}))).headers.get("location"), "https://billing.stripe.com/example");
+  const noCustomer = { code: "INVALID_STATE", details: [{ reason: "no_customer" }] };
+  for (const [status, result, notice] of [
+    [412, noCustomer, "no_customer"],
+    [412, { ...noCustomer, details: [...noCustomer.details, { reason: "processor_not_configured" }] }, "unavailable"],
+    [412, { ...noCustomer, details: [null] }, "unavailable"],
+    [412, { ...noCustomer, code: "PERMISSION_DENIED" }, "unavailable"],
+    [404, noCustomer, "unavailable"],
+  ] as const) {
+    expected.push(inspect, token, { ...portalSession, status, result });
+    assert.equal((await portal(post("/api/billing/portal", {}))).headers.get("location"), origin + "/dashboard?billing=" + notice);
+  }
 
   const verifier = randomBytes(32);
   const state = randomBytes(32).toString("base64url");

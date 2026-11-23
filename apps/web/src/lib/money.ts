@@ -8,6 +8,7 @@ import { sendsGpc } from "./analytics-policy";
 import { consent, type Choice } from "./analytics-policy";
 import { measurementId } from "./analytics-config";
 import { pricingCheckoutSurface } from "./analytics-events";
+import { pricingPath } from "./auth-entry";
 
 const feature = "lockdocs_pro_seat_year";
 const product = catalogue.spec.products.find((item) => item.key === feature);
@@ -89,6 +90,7 @@ export async function checkout(request: Request) {
     return privateJson({ error: "invalid_currency" }, 400);
   }
   if (!isVerifiedSession(session)) return privateJson({ error: "authentication_required" }, 401);
+  const backToPricing = new URL(pricingPath(currency), cfg.origin);
   try {
     const response = await providerFetch(resource(cfg, "checkout_sessions", false), {
       method: "POST",
@@ -99,7 +101,7 @@ export async function checkout(request: Request) {
         currency_code: currency,
         metadata: { entry_surface: pricingCheckoutSurface },
         success_url: new URL("/dashboard?billing=return", cfg.origin).href,
-        cancel_url: new URL("/pricing", cfg.origin).href,
+        cancel_url: backToPricing.href,
         consent_collection: { terms_required: true, terms_text: cfg.termsText, terms_version: cfg.termsVersion },
       }),
     });
@@ -118,7 +120,8 @@ export async function checkout(request: Request) {
       }
     }
   } catch { /* Fail closed on upstream errors and unexpected data. */ }
-  return privateRedirect(new URL("/pricing?billing=unavailable", cfg.origin));
+  backToPricing.searchParams.set("billing", "unavailable");
+  return privateRedirect(backToPricing);
 }
 
 export async function portal(request: Request) {
@@ -141,7 +144,7 @@ export async function portal(request: Request) {
       } else if (response.status === 412) {
         const problem = await response.json();
         if (problem?.code === "INVALID_STATE" && Array.isArray(problem.details) &&
-          problem.details.some((detail: unknown) => (detail as { reason?: string } | null)?.reason === "no_customer")) {
+          problem.details.length === 1 && problem.details[0]?.reason === "no_customer") {
           return privateRedirect(new URL("/dashboard?billing=no_customer", cfg.origin));
         }
       }

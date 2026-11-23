@@ -4,6 +4,10 @@ export function signInHref(next: string) {
   return "/sign-in?" + new URLSearchParams({ next });
 }
 
+export function pricingPath(currency: string) {
+  return currency === "USD" ? "/pricing" : "/pricing?" + new URLSearchParams({ currency });
+}
+
 export function isCliCode(value: string | null): value is string {
   return value !== null && /^[A-Za-z0-9_-]{42}[AEIMQUYcgkosw048]$/.test(value);
 }

@@ -1,8 +1,16 @@
+import { createSignal, onMount } from "solid-js";
 import { LegalPage } from "@/components/legal-page";
 
+const updatedOn = "2026-11-22";
+
 export default function Privacy() {
+  const [updatedLabel, setUpdatedLabel] = createSignal("22 November 2026");
+  // A calendar date should not change when viewed from a different time zone.
+  onMount(() => setUpdatedLabel(new Intl.DateTimeFormat(navigator.languages, {
+    dateStyle: "long", timeZone: "UTC",
+  }).format(new Date(updatedOn))));
   return <LegalPage title="Privacy" description="What Lockdocs keeps on your device, and what we process when you use this site.">
-    <p>Updated <time datetime="2026-11-22">22 November 2026</time>.</p>
+    <p>Updated <time datetime={updatedOn}>{updatedLabel()}</time>.</p>
     <h2>What stays local</h2>
     <p>The browser playground processes pasted lockfiles on your device. It does not upload them. You can read the docs and use the playground without an account.</p>
     <h2>What we process</h2>
@@ -15,6 +23,6 @@ export default function Privacy() {
     <p>Open <strong>Cookie settings</strong> in the footer to reject optional cookies, allow analytics only, or allow both analytics and ad measurement. Your explicit choice is stored in this browser for up to 180 days. Rejecting stops new Google Analytics requests from Lockdocs and removes its analytics cookies on this site. It does not erase data previously sent.</p>
     <p>Read <a href="https://policies.google.com/technologies/partner-sites">how Google uses data from sites that use its services</a>.</p>
     <h2>Your rights and choices</h2>
-    <p>See the <a href="https://sylphx.com/privacy">Sylphx Privacy Policy</a> for lawful bases, retention, service providers, international transfers and how to exercise your privacy rights.</p>
+    <p>See the <a href="https://sylphx.com/legal/privacy">Sylphx Privacy Policy</a> for lawful bases, retention, service providers, international transfers and how to exercise your privacy rights. To stop Pro from renewing or learn about other cancellation rights, see the <a href="/legal/terms">Lockdocs subscription terms</a>.</p>
   </LegalPage>;
 }

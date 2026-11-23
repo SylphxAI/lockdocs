@@ -77,7 +77,7 @@ test("home and pricing show matching offers and FAQs; sign-in is not indexed", a
     await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute("content", "summary_large_image");
     if (annual) {
       expect(scripts[0].offers[1]).toMatchObject({ "@type": "Offer", price: annual, priceCurrency: currency, priceSpecification: { billingDuration: "P1Y" } });
-      const pro = page.getByRole("link", { name: "Get Lockdocs Pro — " + (currency === "USD" ? "$" : "£") + annual + "/yr", exact: true });
+      const pro = page.getByRole("link", { name: "Get Lockdocs Pro — " + (currency === "USD" ? "US$" : "£") + annual + "/yr", exact: true });
       await expect(pro).toHaveCSS("background-color", "rgb(124, 156, 255)");
       await expect(pro).toHaveAttribute("href", "/sign-in?next=" + encodeURIComponent(path));
     }
@@ -143,7 +143,7 @@ test("workbench resolves pasted text and switches cited migrations", async ({ pa
   await expect(page.getByRole("link", { name: "Pydantic v2 migration", exact: false })).toHaveAttribute("href", /https:\/\/docs\.pydantic\.dev/);
   await page.getByRole("link", { name: "See Pro plans" }).click();
   await expect(page).toHaveURL(/\/pricing$/);
-  await expect(page.locator(".plan-pro")).toContainText("$10/mo billed yearly");
+  await expect(page.locator(".plan-pro")).toContainText("US$10/mo billed yearly");
   await expect(page.locator(".plan-pro")).toContainText("US$120/yr upfront · Tax included");
   await page.getByRole("link", { name: "GBP" }).click();
   await expect(page.locator(".plan-pro")).toContainText("£8.25/mo billed yearly");

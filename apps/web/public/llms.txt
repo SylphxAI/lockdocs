@@ -2,6 +2,11 @@
 
 > Lockdocs gives developers and coding agents documentation for the exact library versions in their project's lockfile. It searches local material and cites source files and lines. Once indexed, lookups work offline.
 
+## Install
+
+- npm: `npx -y @sylphx/lockdocs setup`
+- [PyPI](https://pypi.org/project/lockdocs/): Run with `uvx lockdocs` (or `uvx lockdocs setup` for editor setup), or install with `pip install lockdocs`. Automatic editor setup uses `npx`; see [MCP setup without Node.js](https://lockdocs.sylphx.com/guide/setup#without-nodejs) for a Python-only configuration.
+
 ## Documentation
 
 - [Quickstart](https://lockdocs.sylphx.com/guide): Install Lockdocs and look up an API for a pinned dependency.

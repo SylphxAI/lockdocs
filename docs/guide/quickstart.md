@@ -2,7 +2,20 @@
 
 Get a version and a file citation from an installed dependency. No account or API key is needed.
 
-Requires **Node.js 18+ and npm**. The first `npx` run downloads lockdocs; the sample below also downloads zod. Once installed, its queries run offline.
+## Install Lockdocs
+
+Choose one way to run the same CLI.
+
+| Tool | Command |
+| --- | --- |
+| npm (Node.js 18+) | `npx -y @sylphx/lockdocs version` |
+| uvx ([PyPI](https://pypi.org/project/lockdocs/)) | `uvx lockdocs version` |
+| pip (PyPI, Python 3.8+) | `pip install lockdocs`, then `lockdocs version` |
+
+The PyPI wheels support macOS (Arm64 and x64), Linux with glibc (Arm64 and x64), and Windows x64.
+Use `uvx lockdocs` in place of `npx -y @sylphx/lockdocs` in the terminal examples below, or just `lockdocs` after installing with pip. For an editor that doesn’t use npm, see [MCP setup without Node.js](./setup#without-nodejs).
+
+The sample project uses Node.js 18+ and npm to install Zod. Once installed, its queries run offline.
 
 ## Try it in a sample project
 

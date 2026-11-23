@@ -7,6 +7,7 @@ import { PageMeta } from "@/components/page-meta";
 import { PackageText } from "@/components/package-text";
 import { context7AlternativePath, editorGuidePath } from "@/lib/editorial-routes";
 import { canonicalOrigin } from "@/lib/indexing";
+import { pypiUrl } from "@/lib/install";
 
 const title = "Up-to-date docs for Cursor and Claude Code";
 const description = "Connect Lockdocs to Cursor or Claude Code over local MCP, then check that the package version and API citation match your project’s lockfile.";
@@ -60,7 +61,7 @@ export default function EditorDocsGuide() {
         <nav aria-label="Guide sections">
           <For each={steps}>{step => <a href={"#" + step.id}>{step.name}</a>}</For>
         </nav>
-        <small>Requires Node.js 18+ and macOS (Arm64 or x64), Linux with glibc (Arm64 or x64), or Windows x64. No Lockdocs account or API key needed.</small>
+        <small>The npm examples use Node.js 18+. Lockdocs runs on macOS (Arm64 or x64), Linux with glibc (Arm64 or x64), and Windows x64. No Lockdocs account or API key needed.</small>
       </aside>
     </EditorialHero>
     <div class="wrap"><div class="editorial-body">
@@ -68,6 +69,7 @@ export default function EditorDocsGuide() {
         <li id={steps[0].id} class="editorial-section editorial-step">
           <h2>{steps[0].name}</h2>
           <p>{steps[0].text}</p>
+          <p>Using Python? Run the <a href={pypiUrl}>PyPI</a> release with <code>uvx lockdocs</code>, or run <code>pip install lockdocs</code> and use <code>lockdocs</code> directly. To connect your editor without npm, see <A href="/guide/setup#without-nodejs">MCP setup without Node.js</A>.</p>
           <CodeExample label="Optional scratch project" code={"mkdir lockdocs-editor-demo\ncd lockdocs-editor-demo\nnpm init -y\nnpm install --save-exact zod@4.6.7"}/>
           <CodeExample label="CLI version and lockfile check" code={"npx -y @sylphx/lockdocs version\nnpx -y @sylphx/lockdocs resolve --offline"}/>
           <p>In the scratch project, look for <code><PackageText text="zod@4.6.7"/></code> and <code>package-lock.json</code>. The first <code>npx</code> run may download Lockdocs; <code>--offline</code> applies to Lockdocs’s lookups, not to npm.</p>

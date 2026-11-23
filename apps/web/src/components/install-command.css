@@ -1,0 +1,50 @@
+.install-card {
+  width: min(100%, 21rem);
+  margin-top: 24px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.install-tools, .install-options, .install-tools a, .install-command {
+  display: flex;
+  align-items: center;
+}
+
+.install-tools {
+  justify-content: space-between;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 3px 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.install-options { gap: 2px; }
+
+.install-options label span, .install-tools a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding-inline: 9px;
+  border-radius: 5px;
+  color: var(--dim);
+  font: 550 12px/1.5 var(--mono);
+}
+
+.install-options label { cursor: pointer; }
+.install-options label:hover span, .install-tools a:hover { color: var(--ink); }
+.install-options input:checked + span { color: var(--ink); background: var(--raised); box-shadow: inset 0 0 0 1px var(--strong); }
+.install-options input:focus-visible + span { outline: 2px solid var(--brand); outline-offset: 1px; }
+.install-tools a { gap: 4px; color: var(--blue); }
+
+.install-command { gap: 10px; padding: 5px 8px 5px 12px; }
+.install-command > svg { flex: none; color: var(--mint); }
+.install-code { flex: 1; min-width: 0; display: grid; }
+
+/* Stack the commands so the longest one reserves space, even when it wraps. */
+.install-code code { grid-area: 1 / 1; visibility: hidden; align-self: center; overflow-wrap: anywhere; font-size: 12px; }
+.install-code code.active { visibility: visible; }
+
+@media (max-width: 660px) {
+  .install-card { margin-top: 14px; }
+}

@@ -50,6 +50,14 @@ npx -y @sylphx/lockdocs setup     # add lockdocs to Claude Code, Codex, Cursor, 
 
 That's it. Using Claude Code only? `claude mcp add lockdocs -- npx -y @sylphx/lockdocs mcp`. `setup` detects the clients you have, writes their MCP config, and prints every change. Run it again and nothing changes. Then ask your agent something like *"Use lockdocs: how do I reject unknown keys with the zod we use?"*
 
+You can also install or run the CLI from [PyPI](https://pypi.org/project/lockdocs/):
+
+```bash
+pip install lockdocs
+lockdocs --version
+uvx lockdocs --version  # run without installing the CLI globally
+```
+
 From a terminal, inside any project:
 
 ```bash

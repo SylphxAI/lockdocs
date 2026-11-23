@@ -7,7 +7,8 @@ name: release
 # publishing trusts this file (SylphxAI/lockdocs, release.yml). The crates job
 # publishes lockdocs-core, then lockdocs, to crates.io through trusted
 # publishing (OIDC, no token); crates.io trusts this file and the crates-io
-# environment.
+# environment. PyPI packages the tagged GitHub release binaries and trusts
+# this file and the pypi environment.
 
 on:
   push:
@@ -127,3 +128,73 @@ jobs:
           ci-name: lockdocs-package-managers
           homebrew-tap: SylphxAI/homebrew-tap
           scoop-bucket: SylphxAI/scoop-bucket
+
+  wheels:
+    needs: release
+    if: ${{ !cancelled() && github.repository_visibility == 'public' && github.ref == 'refs/heads/main' && needs.release.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      built: ${{ steps.build.outputs.built }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          sparse-checkout: packages/lockdocs/package.json
+          sparse-checkout-cone-mode: false
+      - name: Build wheels from the tagged release
+        id: build
+        uses: SylphxAI/mcp-kit/.github/actions/pypi-wheels@3e239d52d9bc93d74ab9ab699422f4356bb3989e
+        with:
+          mode: build
+          name: lockdocs
+          package-json: packages/lockdocs/package.json
+          summary: Exact-version library docs from your lockfile.
+          homepage: https://lockdocs.sylphx.com
+          source-url: https://github.com/SylphxAI/lockdocs
+          license-expression: MIT
+          smoke-command: lockdocs --version
+      - name: Store the wheels for publishing
+        if: steps.build.outputs.built == 'true'
+        uses: SylphxAI/.github/.github/actions/run-store@724d4c9c87e736ced2068bc22eb57385adabd14d
+        with:
+          mode: put
+          name: wheels
+          path: dist
+          retention-days: 3
+
+  pypi:
+    needs: wheels
+    if: ${{ !cancelled() && github.repository_visibility == 'public' && github.ref == 'refs/heads/main' && needs.wheels.result == 'success' && needs.wheels.outputs.built == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: pypi
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          sparse-checkout: packages/lockdocs/package.json
+          sparse-checkout-cone-mode: false
+      - name: Retrieve the wheels
+        uses: SylphxAI/.github/.github/actions/run-store@724d4c9c87e736ced2068bc22eb57385adabd14d
+        with:
+          mode: get
+          name: wheels
+          path: dist
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
+        with:
+          packages-dir: dist
+          skip-existing: true
+      - name: Verify the published wheels on PyPI
+        uses: SylphxAI/mcp-kit/.github/actions/pypi-wheels@3e239d52d9bc93d74ab9ab699422f4356bb3989e
+        with:
+          mode: verify
+          name: lockdocs
+          package-json: packages/lockdocs/package.json

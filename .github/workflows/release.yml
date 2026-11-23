@@ -55,7 +55,7 @@ jobs:
         run: cargo publish --locked --workspace
 
   release:
-    uses: SylphxAI/mcp-kit/.github/workflows/release.yml@0db554b5882d1f0e77d070089af544c6789f6c4c # mcp-kit #55
+    uses: SylphxAI/mcp-kit/.github/workflows/release.yml@0db554b5882d1f0e77d070089af544c6789f6c4c # main
     permissions:
       actions: write
       contents: write
@@ -119,7 +119,7 @@ jobs:
           echo "value=$(node -p 'require("./packages/lockdocs/package.json").version')" >> "$GITHUB_OUTPUT"
       # The source job's OIDC identity is declared as lockdocs-package-managers.
       # Missing Access/Broker authority fails this delivery instead of skipping it.
-      - uses: SylphxAI/mcp-kit/.github/actions/package-managers@0db554b5882d1f0e77d070089af544c6789f6c4c # mcp-kit #55
+      - uses: SylphxAI/mcp-kit/.github/actions/package-managers@0db554b5882d1f0e77d070089af544c6789f6c4c # main
         with:
           name: lockdocs
           version: ${{ steps.version.outputs.value }}
@@ -147,7 +147,7 @@ jobs:
           sparse-checkout-cone-mode: false
       - name: Build wheels from the tagged release
         id: build
-        uses: SylphxAI/mcp-kit/.github/actions/pypi-wheels@3e239d52d9bc93d74ab9ab699422f4356bb3989e
+        uses: SylphxAI/mcp-kit/.github/actions/pypi-wheels@be5dbc46f8d1ca200f0b9e04398191653f64bc67 # main
         with:
           mode: build
           name: lockdocs
@@ -159,7 +159,7 @@ jobs:
           smoke-command: lockdocs --version
       - name: Store the wheels for publishing
         if: steps.build.outputs.built == 'true'
-        uses: SylphxAI/.github/.github/actions/run-store@724d4c9c87e736ced2068bc22eb57385adabd14d
+        uses: SylphxAI/.github/.github/actions/run-store@724d4c9c87e736ced2068bc22eb57385adabd14d # main
         with:
           mode: put
           name: wheels
@@ -182,7 +182,7 @@ jobs:
           sparse-checkout: packages/lockdocs/package.json
           sparse-checkout-cone-mode: false
       - name: Retrieve the wheels
-        uses: SylphxAI/.github/.github/actions/run-store@724d4c9c87e736ced2068bc22eb57385adabd14d
+        uses: SylphxAI/.github/.github/actions/run-store@724d4c9c87e736ced2068bc22eb57385adabd14d # main
         with:
           mode: get
           name: wheels
@@ -193,7 +193,7 @@ jobs:
           packages-dir: dist
           skip-existing: true
       - name: Verify the published wheels on PyPI
-        uses: SylphxAI/mcp-kit/.github/actions/pypi-wheels@3e239d52d9bc93d74ab9ab699422f4356bb3989e
+        uses: SylphxAI/mcp-kit/.github/actions/pypi-wheels@be5dbc46f8d1ca200f0b9e04398191653f64bc67 # main
         with:
           mode: verify
           name: lockdocs

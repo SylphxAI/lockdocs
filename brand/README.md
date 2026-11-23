@@ -190,7 +190,7 @@ workflow runs on changes under `docs/`.
 
 ## Trademark
 
-Not registered. Owner decision owner#781: no trademark filings before the
-product earns money. Use ™ at most, never ®.
+The Lockdocs trademark is not registered. No filings are planned before the
+product generates revenue. Use ™ if needed; do not use ®.
 
 Checked 2026-09-28. **Same name, different category:** LockDocs (lockdocs.com) is a client-document and smart-forms platform for wealth and fund managers, listed on Microsoft AppSource. Not a developer tool. Noted once, not blocking. Mark (a padlock over document lines): padlock marks are common; no close match found among AI docs tools (Context7).

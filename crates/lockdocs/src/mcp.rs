@@ -298,7 +298,7 @@ mod tests {
         // Tokens that must not unlock: wrong product, wrong plan, expired, signed by another key, junk.
         let other = SigningKey::from_bytes(&[8; 32]);
         for t in [
-            token(&key, r#"{"plan":"pro","issuedAt":1,"product":"repomap"}"#),
+            token(&key, r#"{"plan":"pro","issuedAt":1,"product":"other-product"}"#),
             token(&key, r#"{"plan":"pro","issuedAt":1}"#),
             token(&key, r#"{"plan":"team","issuedAt":1,"product":"lockdocs"}"#),
             token(&key, r#"{"plan":"pro","issuedAt":1,"product":"lockdocs","expiresAt":1000}"#),

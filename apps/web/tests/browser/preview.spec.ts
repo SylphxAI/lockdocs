@@ -179,7 +179,7 @@ test("preview host is noindexed and missing bindings fail closed", async ({ requ
   expect(await preview.json()).toEqual({ status: "ok" });
   const lookalike = await request.get("/api/health", { headers: { Host: "lockdocs.sylphx.app.example.org" } });
   expect(lookalike.headers()["x-robots-tag"]).toBe("noindex, nofollow");
-  const liveHeaders = { Host: "web.mad-coal-42in6b.svc.cluster.local", "X-Forwarded-Host": "lockdocs.sylphx.com" };
+  const liveHeaders = { Host: "web.fixture.svc.cluster.local", "X-Forwarded-Host": "lockdocs.sylphx.com" };
   expect((await request.get("/api/health", { headers: liveHeaders })).headers()["x-robots-tag"]).toBeUndefined();
   const home = await request.get("/", { headers: liveHeaders, maxRedirects: 0 });
   expect(home.status()).toBe(200);

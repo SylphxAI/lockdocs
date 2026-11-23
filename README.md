@@ -239,7 +239,7 @@ lockdocs fetch [package...]     Once: upstream docs at each version's tag, missi
 lockdocs index [package]        Build indexes ahead of time
 lockdocs cache [clean]          Show or delete the cache
 lockdocs upgrade <pkg> <ver>    Pro: API changes from the pinned version to <ver>, with your call sites
-lockdocs login [--no-browser]   Connect the CLI to your Pro account (requires LOCKDOCS_WEB_URL)
+lockdocs login [--no-browser]   Connect the CLI to your Pro account
 lockdocs setup                  Configure MCP clients (--client a,b --dry-run --remove --fetch)
 lockdocs mcp                    MCP server on stdio
 
@@ -255,7 +255,7 @@ Everything above is free, under MIT. Pro adds two things for teams. Private sour
 [Get Lockdocs Pro for US$120/year](https://lockdocs.sylphx.com/pricing). Once Pro is active, connect your terminal by signing in with the same account and approving the CLI in your browser:
 
 ```sh
-LOCKDOCS_WEB_URL=https://lockdocs.sylphx.com lockdocs login
+lockdocs login
 ```
 
 Use `--no-browser` to print the approval URL instead of opening it automatically. The CLI saves your licence locally and checks it offline. In CI, you can provide a valid Pro licence token through the `LOCKDOCS_LICENCE_TOKEN` secret environment variable.

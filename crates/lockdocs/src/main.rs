@@ -32,7 +32,7 @@ Commands:
   upgrade <pkg> <ver>   Pro: API changes from the pinned version to <ver>, limited to what this
                         project calls, with call sites (also: docs --pkg <pkg> --upgrade-to <ver>)
   login [--test] [--no-browser]
-                        Sign in and activate a licence (requires LOCKDOCS_WEB_URL)
+                        Sign in and activate a licence (--test requires LOCKDOCS_WEB_URL)
   licence status|activate <token>|buy --pack <id>
                         Show or activate a lockdocs Pro licence, or buy with the device flow
   mcp                   Run the MCP server on stdio (default with no command and non-terminal stdin)
@@ -179,8 +179,7 @@ fn run() -> Result<()> {
         if args.on("offline") || std::env::var("LOCKDOCS_OFFLINE").is_ok_and(|v| v != "0") {
             bail!("login needs network access; use `lockdocs licence activate <token>` to activate offline");
         }
-        let policy = if args.on("test") { &pro::TEST_POLICY } else { &pro::POLICY };
-        return login::run(policy, args.on("no-browser"));
+        return login::run(args.on("test"), args.on("no-browser"));
     }
     // The Pro gate runs before any download or index work. Exit code 3: Pro required.
     let upgrade_target = match cmd.as_str() {

@@ -1,11 +1,13 @@
 //! Native client for the browser consent / verifier-bound code exchange.
 //! The web service owns consent, code encryption, and account licence lookup.
 
+use crate::pro::{POLICY, TEST_POLICY};
 use anyhow::{anyhow, bail, Context, Result};
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
 use mcp_kit::licence::{self, LicencePolicy};
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
+use std::env::{self, VarError};
 use std::io::{self, Read, Write};
 use std::net::{Ipv4Addr, TcpListener, TcpStream};
 use std::path::Path;
@@ -14,14 +16,17 @@ use std::time::{Duration, Instant};
 use subtle::ConstantTimeEq;
 use url::Url;
 
+// The production LOCKDOCS_APP_ORIGIN declared in sylphx.toml.
+const PRODUCTION_WEB_ORIGIN: &str = "https://lockdocs.sylphx.com";
 const CALLBACK_WAIT: Duration = Duration::from_secs(300);
 const REQUEST_WAIT: Duration = Duration::from_secs(2);
 const EXCHANGE_WAIT: Duration = Duration::from_secs(20);
 const MAX_HTTP_REQUEST: usize = 16 * 1024;
 const MAX_EXCHANGE_BODY: u64 = 16 * 1024;
 
-pub fn run(policy: &LicencePolicy<'_>, no_browser: bool) -> Result<()> {
-    let origin = web_origin(&std::env::var("LOCKDOCS_WEB_URL").context("set LOCKDOCS_WEB_URL to the HTTPS staging origin")?)?;
+pub fn run(test: bool, no_browser: bool) -> Result<()> {
+    let origin = login_origin(test)?;
+    let policy = if test { &TEST_POLICY } else { &POLICY };
     let path = policy.token_path().context("no config directory on this machine")?;
     let listener = TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).context("cannot listen for the sign-in callback")?;
     listener.set_nonblocking(true)?;
@@ -54,6 +59,15 @@ pub fn run(policy: &LicencePolicy<'_>, no_browser: bool) -> Result<()> {
     save_grant(policy, &path, &grant)?;
     println!("{} {} activated ({})", policy.product, policy.tier, path.display());
     Ok(())
+}
+
+fn login_origin(test: bool) -> Result<Url> {
+    match env::var("LOCKDOCS_WEB_URL") {
+        Ok(origin) => web_origin(&origin),
+        Err(VarError::NotPresent) if test => bail!("set LOCKDOCS_WEB_URL to a test service origin when using --test"),
+        Err(VarError::NotPresent) => web_origin(PRODUCTION_WEB_ORIGIN),
+        Err(VarError::NotUnicode(_)) => bail!("LOCKDOCS_WEB_URL must be valid Unicode"),
+    }
 }
 
 fn web_origin(input: &str) -> Result<Url> {

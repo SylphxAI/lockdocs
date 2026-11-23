@@ -14,7 +14,7 @@ const config = plugin.mcpServers[name];
 assert.equal(pkg.name, `@sylphx/${name}`);
 assert.ok(pkg.bin[name]);
 assert.deepEqual(config, { command: "npx", args: ["-y", pkg.name, "mcp"] });
-const description = name === "repomap" ? JSON.parse(read("brand.json")).oneliner : pkg.description;
+const description = pkg.description;
 const { mcpServers, ...metadata } = plugin;
 const cursor = `https://cursor.com/en/install-mcp?name=${encodeURIComponent(name)}&config=${encodeURIComponent(Buffer.from(JSON.stringify(config)).toString("base64"))}`;
 const vscodeConfig = { name, ...config };

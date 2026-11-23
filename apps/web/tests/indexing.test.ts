@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { allowIndexing } from "../src/lib/indexing";
 
 const production = "lockdocs.sylphx.com";
-const knative = "web.mad-coal-42in6b.svc.cluster.local";
+const knative = "web.fixture.svc.cluster.local";
 const preview = "preview.lockdocs.sylphx.app";
 
 function isIndexable(host: string, forwarded?: string) {

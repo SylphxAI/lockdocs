@@ -90,6 +90,68 @@ fn successful_json(o: &Output) -> Value {
 }
 
 #[test]
+fn login_uses_production_by_default_and_accepts_https_override() {
+    let home = tempfile::tempdir().unwrap();
+    for (override_url, expected_origin) in [
+        (None, "https://lockdocs.sylphx.com"),
+        (Some("https://preview.example.test:8443/"), "https://preview.example.test:8443"),
+    ] {
+        let mut c = command(home.path());
+        c.args(["login", "--no-browser"]).env_remove("LOCKDOCS_WEB_URL");
+        if let Some(override_url) = override_url {
+            c.env("LOCKDOCS_WEB_URL", override_url);
+        }
+        let mut p = Process(c.spawn().unwrap());
+        let stdout = p.0.stdout.take().unwrap();
+        let (send, receive) = mpsc::channel();
+        std::thread::spawn(move || {
+            let mut lines = BufReader::new(stdout).lines();
+            let _ = send.send(lines.nth(1).transpose());
+        });
+        let line = receive
+            .recv_timeout(Duration::from_secs(15))
+            .unwrap()
+            .unwrap()
+            .expect("expected a browser approval URL");
+        let url = url::Url::parse(&line).unwrap();
+        assert_eq!(url.origin().ascii_serialization(), expected_origin);
+        assert_eq!(url.path(), "/cli/authorize");
+    }
+}
+
+#[test]
+fn login_refuses_invalid_or_insecure_overrides_before_printing_approval_url() {
+    let home = tempfile::tempdir().unwrap();
+    for override_url in [
+        "",
+        "not a URL",
+        "http://preview.example.test",
+        "https://preview.example.test/extra",
+        "https://preview.example.test:0",
+    ] {
+        let mut c = command(home.path());
+        c.args(["login", "--no-browser"]).env("LOCKDOCS_WEB_URL", override_url);
+        let o = output(c, false);
+        assert_eq!(o.status.code(), Some(1), "{override_url:?}");
+        assert!(o.stdout.is_empty(), "{override_url:?}");
+        let err = String::from_utf8_lossy(&o.stderr);
+        assert!(err.contains("LOCKDOCS_WEB_URL must be an HTTPS origin"), "{err}");
+    }
+}
+
+#[test]
+fn login_test_mode_still_requires_an_explicit_origin() {
+    let home = tempfile::tempdir().unwrap();
+    let mut c = command(home.path());
+    c.args(["login", "--test", "--no-browser"]).env_remove("LOCKDOCS_WEB_URL");
+    let o = output(c, false);
+    assert_eq!(o.status.code(), Some(1));
+    assert!(o.stdout.is_empty());
+    let err = String::from_utf8_lossy(&o.stderr);
+    assert!(err.contains("set LOCKDOCS_WEB_URL to a test service origin when using --test"), "{err}");
+}
+
+#[test]
 fn global_options_before_queries_match_command_first_with_closed_or_open_stdin() {
     let root = fixture();
     for args in [

@@ -55,6 +55,14 @@ features:
     details: resolve (which versions), docs (a question, optionally scoped to a package), api (the exact signature of z.object or tokio::spawn).
 ---
 
+## Install Lockdocs
+
+Run `npx -y @sylphx/lockdocs setup` to connect your editor via npm. For the
+[PyPI](https://pypi.org/project/lockdocs/) release, run `uvx lockdocs` without
+installing it into your project, or use `pip install lockdocs` to install the CLI
+in a Python environment. See the [Quickstart](./guide/quickstart#install-lockdocs)
+for complete commands.
+
 ## Comparing documentation servers?
 
 [Lockdocs vs Context7](./compare) explains installed-version selection, offline

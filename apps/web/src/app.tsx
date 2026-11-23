@@ -9,6 +9,7 @@ import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
 import './globals.css';
 import { context7AlternativePath, editorGuidePath } from "@/lib/editorial-routes";
+import { pypiUrl } from "@/lib/install";
 import { CookieSettings, CookieSettingsButton } from "@/components/cookie-settings";
 
 
@@ -25,7 +26,7 @@ function Layout(props: ParentProps) {
       <div class="header-tools"><a class="repo-link" href={github} aria-label="Lockdocs on GitHub"><GitFork size={17}/></a><Link href="/dashboard" class="account-link">Account <ArrowUpRight size={13}/></Link></div>
     </div></header>
     <main id="main"><Suspense>{props.children}</Suspense></main>
-    <footer class="site-footer"><div class="wrap footer-inner"><Wordmark/><p>Exact-version docs, by Sylphx.</p><nav aria-label="Footer navigation"><Link href="/benchmarks">Benchmarks</Link><Link href="/compare">Compare</Link><Link href={context7AlternativePath}>Context7 alternative</Link><Link href={editorGuidePath}>Editor setup</Link><a href={github}><Braces size={14}/> Source</a><Link href="/legal/privacy">Privacy</Link><Link href="/legal/terms">Terms</Link><CookieSettingsButton /></nav></div></footer>
+    <footer class="site-footer"><div class="wrap footer-inner"><Wordmark/><p>Exact-version docs, by Sylphx.</p><nav aria-label="Footer navigation"><Link href="/benchmarks">Benchmarks</Link><Link href="/compare">Compare</Link><Link href={context7AlternativePath}>Context7 alternative</Link><Link href={editorGuidePath}>Editor setup</Link><a href={github}><Braces size={14}/> Source</a><a href={pypiUrl}>PyPI</a><Link href="/legal/privacy">Privacy</Link><Link href="/legal/terms">Terms</Link><CookieSettingsButton /></nav></div></footer>
   </>;
 }
 

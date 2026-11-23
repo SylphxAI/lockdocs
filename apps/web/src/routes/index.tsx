@@ -4,11 +4,10 @@ import { canonicalOrigin } from "@/lib/indexing";
 import { lockdocsApplication, freeOffer } from "@/lib/storefront-schema";
 import { PageMeta } from "@/components/page-meta";
 import { A as Link } from "@solidjs/router";
-import { ArrowRight, ArrowUpRight, Box, Command, FileCode2, GitCompareArrows, ShieldCheck, Terminal } from 'lucide-solid';
+import { ArrowRight, ArrowUpRight, Box, Command, FileCode2, GitCompareArrows, ShieldCheck } from 'lucide-solid';
 import { PackageText } from '@/components/package-text';
-import { CopyButton } from '@/components/copy-button';
+import { InstallCommand } from "@/components/install-command";
 
-const install = 'npx -y @sylphx/lockdocs setup';
 const questions = [
   { question: "Is Lockdocs free?", answer: "Yes. Exact-version docs and the local MCP server are free and don’t require an account. Lockdocs Pro adds Upgrade Reports and Private Package Docs." },
   { question: "Can I use Lockdocs offline?", answer: "Yes. Lockdocs can query packages and docs that are already installed or cached. If you want to fetch additional upstream docs, that step needs a network connection." },
@@ -16,7 +15,7 @@ const questions = [
 
 export default function Home() {
   return <>
-    <PageMeta title="Lockdocs — Docs for the version you installed" description="Exact-version library docs from your lockfile. Local, offline and open source. For your terminal and your coding agent."/>
+    <PageMeta title="Lockdocs — Docs for the version you installed" description="Exact-version library docs from your lockfile. Local, offline and open source. For your terminal and coding agent. Install from npm or PyPI."/>
     <JsonLd data={lockdocsApplication(canonicalOrigin + "/", [freeOffer("USD")])}/>
     <section class="hero wrap">
       <div class="hero-copy">
@@ -24,7 +23,7 @@ export default function Home() {
         <h1>Docs for the version <span>you installed.</span></h1>
         <p>Your agent shouldn’t guess which API exists. Lockdocs reads your lockfile and answers from the exact version installed in your project.</p>
         <div class="hero-actions"><Link class="button primary" href="/playground">Try the playground <ArrowRight size={17}/></Link><Link class="button quiet" href="/guide">Read the docs <ArrowUpRight size={15}/></Link></div>
-        <div class="install"><Terminal size={16}/><code>{install}</code><CopyButton value={install} label="Copy install command"/></div>
+        <InstallCommand />
       </div>
       <div class="hero-preview">
         <div class="preview-chrome"><span><FileCode2 size={15}/> VERSION INSPECTOR</span><span class="preview-live"><span class="signal"/> SAMPLE PROJECT</span></div>

@@ -174,6 +174,37 @@ impl Pack {
     fn used(&self) -> usize {
         est_tokens(&self.text)
     }
+    pub(super) fn remaining(&self) -> usize {
+        self.budget.saturating_sub(self.used())
+    }
+    /// Fit a cited excerpt without consuming space reserved for another hit.
+    pub(super) fn push_excerpt(&mut self, block: &str, budget: usize) -> bool {
+        let budget = budget.min(self.remaining());
+        if est_tokens(block) < budget {
+            return self.push_block(block);
+        }
+        const END: &str = "[…truncated to fit the token budget]\n";
+        let max_chars = (budget * 3).saturating_sub(1 + END.chars().count() + 4);
+        let mut excerpt = String::new();
+        let mut len = 0;
+        for line in block.lines() {
+            len += line.chars().count() + 1;
+            if len > max_chars {
+                break;
+            }
+            excerpt.push_str(line);
+            excerpt.push('\n');
+        }
+        if excerpt.matches("```").count() % 2 == 1 {
+            excerpt.push_str("```\n");
+        }
+        // A bare citation is not evidence.
+        if excerpt.lines().filter(|line| !line.is_empty() && !line.starts_with("```")).count() < 2 {
+            return false;
+        }
+        excerpt.push_str(END);
+        self.push_block(&excerpt)
+    }
     pub(super) fn push_raw(&mut self, s: &str) {
         self.text.push_str(s);
     }
@@ -186,7 +217,7 @@ impl Pack {
             return false;
         }
         let need = est_tokens(b) + 1;
-        let left = self.budget.saturating_sub(self.used());
+        let left = self.remaining();
         if need <= left {
             self.text.push('\n');
             self.text.push_str(b);

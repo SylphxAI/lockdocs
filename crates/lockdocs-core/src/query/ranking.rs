@@ -76,19 +76,27 @@ pub(super) fn api_words(ready: &[ReadyPkg], refs: &[(usize, usize)], q: &str) ->
     out
 }
 
+pub(super) type Scored = (f32, usize, usize);
+
+pub(super) struct LexicalAnchor {
+    pub entry: (usize, usize),
+    pub literal: bool,
+}
+
 /// Keyword ranking (BM25 over text and headings, then docs-specific boosts)
 /// first; when no entry clearly leads, the embedding ranking is fused in by
 /// weighted reciprocal rank. Then deprecation redirects ("use X instead")
-/// lift the API they point to. Returns (score, package, entry), best first.
+/// lift the API they point to. The second list carries the leading lexical
+/// evidence through score fusion for budgeted packing.
 pub(super) fn hybrid_rank(
     ready: &[ReadyPkg],
     refs: &[(usize, usize)],
     (bm, hb): (&Bm25, &Bm25),
     qterms: &[String],
-    q: &str,
     idents: &[String],
     changes: bool,
-) -> Vec<(f32, usize, usize)> {
+    embed_query: impl FnOnce() -> Option<Vec<f32>>,
+) -> (Vec<Scored>, Option<LexicalAnchor>) {
     // (full-text BM25, heading BM25), each normalized to its best hit.
     let mut fused: HashMap<usize, (f32, f32)> = HashMap::new();
     let expanded = bm25::expand(qterms);
@@ -125,7 +133,7 @@ pub(super) fn hybrid_rank(
     };
     let debug = std::env::var("LOCKDOCS_DEBUG").is_ok();
     let qv = if !decisive && dense_w > 0.0 && ready.iter().all(|r| !r.0.vecs.is_empty()) {
-        embed::query_model().and_then(|m| m.embed(q))
+        embed_query()
     } else {
         None
     };
@@ -166,7 +174,15 @@ pub(super) fn hybrid_rank(
     // normalized score is mixed, as before. Scores are scaled so the best is 1.
     let with_docs = ready.iter().any(|r| r.0.upstream.is_some());
     let rrf = |r: usize| 1.0 / (RRF_K + r as f32);
-    let mut scored: Vec<(f32, usize, usize)> = if qv.is_some() && with_docs {
+    // RRF already keeps the strongest package-file lexical hits near the top.
+    // Score fusion can bury them: a short leading keyword window is carried
+    // independently of the dense score, with literal API references first.
+    let lexical = if qv.is_some() && with_docs {
+        lexical_anchor(ready, refs, &lex, idents, changes)
+    } else {
+        None
+    };
+    let mut scored: Vec<Scored> = if qv.is_some() && with_docs {
         let mut ids: HashSet<usize> = lex.iter().map(|l| l.0).collect();
         ids.extend(dense_cos.keys().copied());
         let lexm: HashMap<usize, f32> = fused.iter().map(|(&i, &(b, h))| (i, (1.0 - head_w) * b + head_w * h)).collect();
@@ -197,13 +213,23 @@ pub(super) fn hybrid_rank(
         let top = scored.iter().map(|s| s.0).fold(0.0f32, f32::max).max(1e-9);
         scored.iter_mut().for_each(|s| s.0 /= top);
     }
+    let sort = |scored: &mut Vec<Scored>| {
+        scored.sort_by(|a, b| {
+            b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal).then_with(|| {
+                if qv.is_some() {
+                    (a.1, a.2).cmp(&(b.1, b.2))
+                } else {
+                    std::cmp::Ordering::Equal
+                }
+            })
+        });
+    };
+    sort(&mut scored);
     if debug {
-        scored.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
         for (s, pi, ei) in scored.iter().take(10) {
             eprintln!("{s:.3} {}", ready[*pi].0.entries[*ei].path);
         }
     }
-    scored.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
     // Deprecation redirects among the top results.
     let mut lifted: Vec<(f32, usize, String)> = Vec::new();
     for (s, pi, ei) in scored.iter().take(30) {
@@ -231,9 +257,51 @@ pub(super) fn hybrid_rank(
                 }
             }
         }
-        scored.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
+        sort(&mut scored);
     }
-    scored
+    (scored, lexical)
+}
+
+fn lexical_anchor(ready: &[ReadyPkg], refs: &[(usize, usize)], lex: &[(usize, f32)], idents: &[String], changes: bool) -> Option<LexicalAnchor> {
+    let &(_, best) = lex.first()?;
+    let mut candidates = lex
+        .iter()
+        .take_while(|(_, score)| *score * DECISIVE_RATIO >= best)
+        .map(|&(i, _)| refs[i])
+        .filter(|&(pi, ei)| {
+            let idx = &ready[pi].0;
+            let e = &idx.entries[ei];
+            !e.legacy
+                && e.kind != Kind::Alias
+                && !private_path(e)
+                && !tooling_path(e)
+                && !deprecated_page(e)
+                && !old_upgrade_guide(e, major_of(&idx.version))
+                && (changes || !is_changelog(e) && !e.file.split('/').any(|part| matches!(part, "releases" | "changelogs")))
+        });
+    let literal = |&(pi, ei): &(usize, usize)| {
+        let e = &ready[pi].0.entries[ei];
+        let name = e
+            .name
+            .rsplit(" › ")
+            .next()
+            .unwrap_or(&e.name)
+            .trim()
+            .trim_end_matches("()")
+            .trim_end_matches('!');
+        let named = matches!(e.kind, Kind::Prose | Kind::Class | Kind::Function | Kind::Macro)
+            || name.contains('_')
+            || name.chars().skip(1).any(|c| c.is_ascii_uppercase());
+        idents
+            .iter()
+            .any(|i| named && name.eq_ignore_ascii_case(i) || (i.contains(['.', ':']) && e.path.eq_ignore_ascii_case(i)))
+    };
+    let first = candidates.next()?;
+    if let Some(entry) = std::iter::once(first).chain(candidates).find(literal) {
+        Some(LexicalAnchor { entry, literal: true })
+    } else {
+        Some(LexicalAnchor { entry: first, literal: false })
+    }
 }
 
 /// API names a doc points readers to: "use `model_validate` instead",

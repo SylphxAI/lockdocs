@@ -15,6 +15,7 @@ npx -y @sylphx/lockdocs setup
 [![npm downloads](https://mark.sylphx.com/npm/dm/@sylphx/lockdocs?color=7c9cff&label=downloads)](https://www.npmjs.com/package/@sylphx/lockdocs)
 [![CI](https://github.com/SylphxAI/lockdocs/actions/workflows/ci.yml/badge.svg)](https://github.com/SylphxAI/lockdocs/actions/workflows/ci.yml)
 [![MCP Registry](https://mark.sylphx.com/badge/MCP%20Registry-io.github.SylphxAI%2Flockdocs-42d6a4)](https://registry.modelcontextprotocol.io/)
+[![Glama MCP Server Quality Score](https://glama.ai/mcp/servers/SylphxAI/lockdocs/badges/score.svg)](https://glama.ai/mcp/servers/SylphxAI/lockdocs)
 [![License: MIT](https://mark.sylphx.com/badge/license-MIT-ffb454)](https://github.com/SylphxAI/lockdocs/blob/main/LICENSE) <!-- repomap:agent-ready -->[![agent-ready 94/100](https://mark.sylphx.com/badge/agent--ready-94%2F100-brightgreen)](https://github.com/SylphxAI/repomap#agent-readiness-score)<!-- /repomap:agent-ready -->
 
 [Docs](https://lockdocs.sylphx.com/) · [Quickstart](https://github.com/SylphxAI/lockdocs#quickstart) · [Tools](https://github.com/SylphxAI/lockdocs#what-your-agent-gets) · [Benchmarks](https://github.com/SylphxAI/lockdocs#benchmarks) · [Compare](https://github.com/SylphxAI/lockdocs#how-it-compares) · [How it works](https://github.com/SylphxAI/lockdocs#how-it-works)
@@ -288,9 +289,11 @@ needed. See Mark's [card options and self-hosting instructions](https://github.c
 
 ## Also from Sylphx
 
+Built by [Sylphx](https://sylphx.com).
+
 <!-- generated:also-from -->
-- [**anymd**](https://github.com/SylphxAI/anymd): Any file (PDF, Word, PowerPoint, Excel, EPUB, HTML, images) to clean Markdown for AI agents.
-- [**repomap**](https://github.com/SylphxAI/repomap): A map of your codebase for AI agents: code graph, search, call paths and change impact.
+- [**Anymd**](https://github.com/SylphxAI/anymd): Local-first MCP server that converts PDFs, Office documents and other files to Markdown.
+- [**Repomap**](https://github.com/SylphxAI/repomap): Local-first MCP server for navigating a codebase: symbol search, call paths and change impact.
 - [**skills**](https://github.com/SylphxAI/skills): Battle-tested agent skills for Claude Code and Codex, installed in one command.
 - [**readme-mark**](https://github.com/SylphxAI/readme-mark): Beautiful README images from one URL: banners, badges, icons and stats cards.
 

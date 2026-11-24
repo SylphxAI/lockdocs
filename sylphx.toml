@@ -6,7 +6,7 @@ default_env = "production"
 
 [build]
 strategy = "dockerfile"
-dockerfile = "Dockerfile"
+dockerfile = "Dockerfile.web"
 context = "."
 
 [environments.production.env.LOCKDOCS_APP_ORIGIN]
@@ -31,7 +31,7 @@ value = "I request immediate access to Lockdocs Pro (provided by Sylphx Limited,
 name = "web"
 type = "web"
 port = 3000
-watch_paths = ["apps/web/**", "docs/**", "config/money-catalogue.json", "Dockerfile", ".dockerignore", "sylphx.toml"]
+watch_paths = ["apps/web/**", "docs/**", "config/money-catalogue.json", "Dockerfile.web", ".dockerignore", "sylphx.toml"]
 
 [services.health]
 mode = "http"

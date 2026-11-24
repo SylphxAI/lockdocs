@@ -22,6 +22,7 @@ assert.equal(cursor.command, "npx");
 assert.deepEqual(cursor.args, ["-y", pkg.name, "mcp"], "Expected the local stdio launcher");
 assert.deepEqual(server.packages, [{
   registryType: "npm",
+  runtimeHint: cursor.command,
   identifier: pkg.name,
   version: pkg.version,
   transport: { type: "stdio" },

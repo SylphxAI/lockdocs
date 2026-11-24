@@ -1,10 +1,10 @@
+import { providerDestination } from "@sylphx/auth/client";
+import { randomBytes, timingSafeEqual } from "node:crypto";
 import { cookie, setPrivateCookie } from "./http";
 import { boundedJson } from "./bounded-json";
 import { clearSignupMarker, markSignup } from "./signup-analytics";
 import { hasPublicOrigin } from "./public-origin";
 import { isCliCode, validateNext } from "./auth-entry";
-export { validateNext } from "./auth-entry";
-import { randomBytes, timingSafeEqual } from "node:crypto";
 
 export type Session = Readonly<{ id: string; name?: string; email?: string; token: string }>;
 export type OAuthProvider = "github" | "google";
@@ -52,8 +52,8 @@ export function authConfigured(): boolean {
   return config() !== null;
 }
 
-export function providerFetch(url: URL, init: RequestInit = {}): Promise<Response> {
-  return fetch(url, { ...init, cache: "no-store", redirect: "error", signal: AbortSignal.timeout(8_000) });
+export function providerFetch(url: URL, init: Omit<RequestInit, "redirect"> = {}, redirect: "error" | "manual" = "error"): Promise<Response> {
+  return fetch(url, { ...init, cache: "no-store", redirect, signal: AbortSignal.timeout(8_000) });
 }
 
 export function privateJson(body: object, status = 200) {
@@ -220,9 +220,17 @@ export async function startOAuth(request: Request, provider: OAuthProvider) {
   callback.searchParams.set("state", state);
   const url = new URL("/v1/client/oauth/" + provider + "/start", auth.base);
   url.search = new URLSearchParams({ publishable_key: auth.key, redirect_url: callback.href, session_mode: "server" }).toString();
-  const response = privateRedirect(url);
-  setPrivateCookie(response, OAUTH, state + "." + Buffer.from(next).toString("base64url") + "." + provider, { maxAge: 600 });
-  return response;
+  try {
+    const upstream = await providerFetch(url, { headers: authHeaders(request.headers.get("user-agent")) }, "manual");
+    const destination = upstream.status === 303 ? providerDestination(provider, upstream.headers.get("location")) : undefined;
+    void upstream.body?.cancel().catch(() => undefined);
+    if (destination) {
+      const response = privateRedirect(new URL(destination));
+      setPrivateCookie(response, OAUTH, state + "." + Buffer.from(next).toString("base64url") + "." + provider, { maxAge: 600 });
+      return response;
+    }
+  } catch { /* Retry through the same-origin sign-in page. */ }
+  return signInRetry(origin, next);
 }
 
 function aliased(params: URLSearchParams, canonical: string, legacy: string) {

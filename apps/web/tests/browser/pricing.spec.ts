@@ -54,8 +54,8 @@ test.describe("pricing in a browser using German number conventions", () => {
     await expect(page.locator('head link[rel="canonical"]')).toHaveCount(1);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
     await page.getByRole("link", { name: "Privacy", exact: true }).click();
-    await expect(page.locator("time")).toHaveText("22. November 2026");
-    await expect(page.locator("time")).toHaveAttribute("datetime", "2026-11-22");
+    await expect(page.locator("time")).toHaveText("23. November 2026");
+    await expect(page.locator("time")).toHaveAttribute("datetime", "2026-11-23");
     expect(errors).toEqual([]);
   });
 });

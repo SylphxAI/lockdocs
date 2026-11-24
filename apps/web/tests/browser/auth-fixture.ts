@@ -25,6 +25,7 @@ async function startFixture(billing: boolean) {
   const social = ["google", "github"].map(provider => ({ provider, enabled: true, credentials: "shared" }));
   const calls: string[] = [];
   const shipments: string[] = [];
+  const bindings: unknown[] = [];
   const rejections: string[] = [];
   const ticketSignal: { is_new_user?: boolean } = {};
   const tickets = new Map<string, string>();
@@ -91,6 +92,23 @@ async function startFixture(billing: boolean) {
     let raw = "";
     for await (const part of req) raw += part;
     const body = raw ? JSON.parse(raw) : {};
+    if (billing && path === "/v1/orgs/fixture/projects/lockdocs/envs/test/checkout_sessions" && req.method === "POST") {
+      if (req.headers.authorization !== "Bearer fixture-only" || body.subject?.end_user !== "usr_reader") {
+        return rejectContract("checkout requires a verified subject and Money credential");
+      }
+      return json(res, {
+        name: "orgs/fixture/projects/lockdocs/envs/test/checkout_sessions/checkout_fixture",
+        url: "https://checkout.stripe.com/fixture",
+      });
+    }
+    if (billing && path === "/v1/events/attribution_bindings" && req.method === "POST") {
+      if (req.headers["x-sylphx-key"] !== pk || req.headers.authorization || body.checkout_session_id !== "checkout_fixture") {
+        return rejectContract("the binding requires the publishable key and the Money checkout ID");
+      }
+      bindings.push(body);
+      return json(res, { binding_id: "binding_fixture", checkout_session_id: "checkout_fixture", processor_session_id: null,
+        expires_at: "2026-11-24T00:00:00Z" }, 201);
+    }
     if (path === "/v1/client/tickets:redeem") {
       if (req.headers.authorization !== "Bearer " + sk || url.searchParams.has("publishable_key") || req.method !== "POST") {
         return rejectContract("ticket exchange requires the secret credential");
@@ -201,7 +219,7 @@ async function startFixture(billing: boolean) {
       oauthReturns.delete(state);
       return callback;
     }
-    return { origin, methods, calls, rejections, shipments, passkey, ticketSignal, completeOAuth, close };
+    return { origin, methods, calls, rejections, shipments, bindings, passkey, ticketSignal, completeOAuth, close };
   } catch (error) {
     await close();
     throw error;

@@ -1,10 +1,10 @@
 import { createSignal, onMount } from "solid-js";
 import { LegalPage } from "@/components/legal-page";
 
-const updatedOn = "2026-11-22";
+const updatedOn = "2026-11-23";
 
 export default function Privacy() {
-  const [updatedLabel, setUpdatedLabel] = createSignal("22 November 2026");
+  const [updatedLabel, setUpdatedLabel] = createSignal("23 November 2026");
   // A calendar date should not change when viewed from a different time zone.
   onMount(() => setUpdatedLabel(new Intl.DateTimeFormat(navigator.languages, {
     dateStyle: "long", timeZone: "UTC",
@@ -18,9 +18,9 @@ export default function Privacy() {
     <p>We may process request metadata such as IP addresses to operate and secure the site. If you contact support, we use the information you send to respond.</p>
     <h2>Optional analytics and advertising measurement</h2>
     <p>Lockdocs uses Google Analytics 4 to measure visits to known Lockdocs pages, new account sign-ups, and starts of checkout in the browser. For sign-ups we report only the sign-in method and where sign-in started. We don’t send your name, email, account ID, checkout or receipt ID, or query strings or fragments. Page addresses and referrers are limited to known Lockdocs pages; we do not send external referrers. If enabled, Google receives connection and browser information and may set analytics or ad measurement cookies.</p>
-    <p>When you start checkout and analytics is allowed, our server sends the Money checkout ID, your consent settings, and available Google Analytics client and session IDs to Sylphx Events. Confirmed payments are reported to Google Analytics through Sylphx Events on the server, not by your browser when you return from checkout. This lets us match a completed payment to the Pricing visit even if you don’t return to Lockdocs. We send the fixed Pricing page address, without any query string or referrer. Only when ad measurement is also allowed, we may send Google ad click IDs and available Meta ad measurement cookie IDs. We may keep Google ad click IDs in a first-party cookie for up to 24 hours so they survive sign-in. We do not send a binding if you reject analytics or Global Privacy Control is on.</p>
-    <p>Analytics and ad measurement stay off until you allow them in Cookie settings. Your browser’s Global Privacy Control overrides these settings and blocks both. We never enable ad personalization.</p>
-    <p>Open <strong>Cookie settings</strong> in the footer to reject optional cookies, allow analytics only, or allow both analytics and ad measurement. Your explicit choice is stored in this browser for up to 180 days. Rejecting stops new Google Analytics requests from Lockdocs and removes its analytics cookies on this site. It does not erase data previously sent.</p>
+    <p>When you start checkout, our server sends the Money checkout ID and your effective consent settings to Sylphx Events. If analytics is allowed, we may also send Google Analytics client and session IDs and the Pricing page address with supported campaign parameters (UTMs), but no referrer or other query parameters. If ad measurement is allowed, we may also send Google and Meta click or measurement IDs. To keep a campaign touch through sign-in, we may store it in this browser for up to 30 days. Confirmed payments are reported to Google Analytics through Sylphx Events on the server when analytics is allowed, not by your browser when you return from checkout.</p>
+    <p>We use an approximate country or region from our website network to apply cookie settings. In the European Economic Area, United Kingdom and Switzerland, or if we cannot determine your region, optional tracking stays off until you allow it. In other recognized regions, we allow analytics, ad measurement and ad personalization unless you change your settings or use Global Privacy Control. Global Privacy Control overrides your settings and turns off all optional tracking.</p>
+    <p>Open <strong>Cookie settings</strong> in the footer to reject optional cookies, allow analytics only, or allow analytics, ad measurement and ad personalization. Your explicit choice is stored in this browser for up to 180 days. Rejecting stops new Google Analytics requests from Lockdocs and removes its optional tracking cookies on this site. It does not erase data previously sent.</p>
     <p>Read <a href="https://policies.google.com/technologies/partner-sites">how Google uses data from sites that use its services</a>.</p>
     <h2>Your rights and choices</h2>
     <p>See the <a href="https://sylphx.com/legal/privacy">Sylphx Privacy Policy</a> for lawful bases, retention, service providers, international transfers and how to exercise your privacy rights. To stop Pro from renewing or learn about other cancellation rights, see the <a href="/legal/terms">Lockdocs subscription terms</a>.</p>

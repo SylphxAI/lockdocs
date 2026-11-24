@@ -130,7 +130,7 @@ test("headless proofs use the public credential; only a ticket redeemed for the 
   assert.ok(seen.filter(entry => !["session", "tickets:redeem"].includes(entry.path)).every(entry => entry.key === key && !entry.bearer));
   assert.ok(!seen.some(entry => entry.path === "sign-up"));
 
-  const grant = "__Host-lockdocs-signup-consent=" + (Date.now() + 60_000);
+  const grant = "__Host-lockdocs-signal-choice=granted";
   const marker = "__Host-lockdocs-signup=";
   for (const [flag, cookie, gpc, expected] of [
     [true, grant, false, "email_otp.pricing"],
@@ -138,7 +138,7 @@ test("headless proofs use the public credential; only a ticket redeemed for the 
     [undefined, grant, false, null],
     ["true", grant, false, null],
     [true, "", false, null],
-    [true, "__Host-lockdocs-signup-consent=" + Date.now(), false, null],
+    [true, "__Host-lockdocs-signal-choice=denied", false, null],
     [true, grant, true, null],
   ] as const) {
     signupFlag = flag;

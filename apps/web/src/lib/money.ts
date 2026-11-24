@@ -3,9 +3,9 @@ import {
   appOrigin, authConfigured, getSession, httpsOrigin, isVerifiedSession, moneyAccessToken,
   privateJson, privateRedirect, providerFetch, sameOrigin, type Session,
 } from "./auth";
-import { bindCheckoutAttribution, checkoutConsent } from "./checkout-attribution";
-import { sendsGpc } from "./analytics-policy";
-import { consent, type Choice } from "./analytics-policy";
+import { bindCheckoutAttribution, resolveEffectiveConsent, type SignalAttribution } from "@sylphx/sdk/signal";
+import { signalRequestPrivacy } from "./signal-privacy";
+import { canonicalOrigin } from "./indexing";
 import { measurementId } from "./analytics-config";
 import { pricingCheckoutSurface } from "./analytics-events";
 import { pricingPath, signInHref } from "./auth-entry";
@@ -73,7 +73,8 @@ export async function checkout(request: Request) {
   }
   let currency: FormDataEntryValue | null;
   const ga = measurementId();
-  let choice: Choice = "reject";
+  const privacy = signalRequestPrivacy(request);
+  let attribution: SignalAttribution | undefined;
   try {
     const form = await request.formData();
     currency = form.getAll("currency").length === 1 ? form.get("currency") : null;
@@ -82,7 +83,14 @@ export async function checkout(request: Request) {
     if (surfaces.length > 0 && (surfaces.length !== 1 || surfaces[0] !== pricingCheckoutSurface)) {
       return privateJson({ error: "invalid_entry_surface" }, 400);
     }
-    if (ga && !sendsGpc(request)) choice = checkoutConsent(form);
+    // An unready browser or a navigator-only GPC signal can lower permission;
+    // the form can never grant it. The SDK applies policy again at binding.
+    if (form.has("signal_blocked")) privacy.gpc = true;
+    const [touch, ...duplicates] = form.getAll("signal_touch");
+    if (ga && resolveEffectiveConsent(privacy, request.headers).analytics_storage === "granted" &&
+        !duplicates.length && typeof touch === "string" && touch.length <= 4096) {
+      try { attribution = JSON.parse(touch); } catch { /* Omit malformed optional attribution. */ }
+    }
   } catch {
     return privateJson({ error: "invalid_currency" }, 400);
   }
@@ -109,12 +117,18 @@ export async function checkout(request: Request) {
       const body = await response.json();
       const location = stripeUrl(body?.url, "checkout.stripe.com");
       if (location) {
-        if (ga && consent(choice).analytics_storage === "granted") {
+        if (ga) {
           const prefix = cfg.parent + "/checkout_sessions/";
           const id = typeof body.name === "string" && body.name.startsWith(prefix) ? body.name.slice(prefix.length) : "";
           // Money normally returns a resource name; also accept an explicit ID if no name is supplied.
           const bindingId = body.name == null && typeof body.checkout_session_id === "string" ? body.checkout_session_id : id;
-          void bindCheckoutAttribution(request, cfg, bindingId, choice, ga);
+          if (/^[A-Za-z0-9_-]{1,128}$/.test(bindingId)) {
+            void bindCheckoutAttribution({ checkoutSessionId: bindingId }, {
+              apiKey: cfg.key, baseUrl: cfg.base, headers: request.headers, privacy, attribution,
+              gaMeasurementId: ga, pageLocation: new URL("/pricing", canonicalOrigin),
+              signal: AbortSignal.timeout(750),
+            }).catch(() => console.warn("Checkout attribution binding unavailable"));
+          }
         }
         return privateRedirect(location);
       }

@@ -387,6 +387,7 @@ mod tests {
             alias_of: None,
             legacy: false,
             prose_imports: Vec::new(),
+            guide_modes: Vec::new(),
             prose_parents: Vec::new(),
         }
     }

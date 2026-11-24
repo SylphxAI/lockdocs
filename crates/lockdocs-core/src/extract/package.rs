@@ -68,7 +68,7 @@ pub fn extract(eco: Eco, pkg_name: &str, src: &Source, extra_types: Option<&Path
     }
     // Drop exact duplicates (the same declaration shipped twice).
     let mut seen = HashSet::new();
-    all.retain(|e| seen.insert((e.path.clone(), e.sig.clone(), e.doc.len())));
+    all.retain(|e| e.kind == super::Kind::Prose || seen.insert((e.path.clone(), e.sig.clone(), e.doc.len())));
     all
 }
 

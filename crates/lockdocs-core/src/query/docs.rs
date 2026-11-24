@@ -161,7 +161,14 @@ impl Engine {
             if !used_pkgs.contains(&idx.id()) {
                 used_pkgs.push(idx.id());
             }
-            hits_json.push(json!({"package": idx.id(), "kind": e.kind.as_str(), "path": e.path, "file": e.file, "line": e.line, "score": score}));
+            let mut hit = json!({"package": idx.id(), "kind": e.kind.as_str(), "path": e.path, "file": e.file, "line": e.line, "score": score});
+            if !e.guide_modes.is_empty() {
+                hit["guide_modes"] = json!(e.guide_modes);
+            }
+            if !e.prose_imports.is_empty() {
+                hit["example_imports"] = json!(e.prose_imports);
+            }
+            hits_json.push(hit);
         }
         if out.blocks == 0 {
             out.push_raw(&format!(

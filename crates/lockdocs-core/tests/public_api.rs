@@ -523,3 +523,61 @@ fn root_docs_include_additive_public_helpers_without_mixing_alternate_editions()
     let a = engine(dir.path()).docs(Some("@sample/forms/next"), "configuration recipe", 4000).unwrap();
     assert!(!a.text.contains("Additive-only configuration"), "{}", a.text);
 }
+
+#[test]
+fn fetched_pages_keep_edition_setup_and_equivalent_wrappers_share_prose() {
+    use lockdocs_core::{index, locate, upstream, Dep, Eco};
+
+    let dir = fixture();
+    let pkg = dir.path().join("node_modules/@sample/forms");
+    write(
+        &pkg,
+        "package.json",
+        r#"{"name":"@sample/forms","version":"1.2.3","exports":{".":"./index.d.cts","./v1":"./v1/index.d.cts","./v2":"./v2/index.d.cts","./renamed":"./renamed.d.cts"}}"#,
+    );
+    write(
+        &pkg,
+        "index.d.cts",
+        "import * as forms from './v1/exports.cjs';\nexport * from './v1/exports.cjs';\nexport { forms, forms as default };\n",
+    );
+    write(
+        &pkg,
+        "v1/index.d.cts",
+        "import * as forms from './exports.cjs';\nexport * from './exports.cjs';\nexport { forms, forms as default };\n",
+    );
+    write(
+        &pkg,
+        "renamed.d.cts",
+        "import * as forms from './v1/exports.cjs';\nexport * from './v1/exports.cjs';\nexport { forms as other, forms as default };\n",
+    );
+    write(&pkg, "v1/exports.d.cts", "export declare function build(): Stable;\n");
+    write(&pkg, "v2/index.d.cts", "export declare function build(): Modern;\n");
+    let site = dir.path().join("fetched");
+    write(&site, "docs/reference.mdx", "---\ntitle: Reference\n---\nimport Panel from 'plumbing/components';\n\n## Setup\n\n\x60\x60\x60ts\nimport * as forms from '@sample/forms/v2';\n\x60\x60\x60\n\n## Recipe\n\nModern-only neighboring recipe.\n\n## Stable override\n\n\x60\x60\x60ts\nimport * as forms from '@sample/forms/v1';\n\x60\x60\x60\nStable override recipe.\n");
+    write(&site, "docs/v1.mdx", "# Stable\n\nStable versioned recipe.\n");
+    write(&site, "docs/v2/guide.mdx", "# Modern\n\nModern versioned recipe.\n");
+    write(&site, "docs/shared.mdx", "# Shared\n\nShared neutral recipe.\n");
+    let dep = Dep {
+        eco: Eco::Npm,
+        name: "@sample/forms".into(),
+        version: "1.2.3".into(),
+        direct: true,
+        from: "fixture".into(),
+    };
+    let src = locate::locate(&dep, dir.path()).unwrap();
+    let manifest: upstream::Manifest =
+        serde_json::from_value(json!({"format":upstream::FORMAT,"repo":"fixture","tag":"v1.2.3","files":4,"bytes":300})).unwrap();
+    let idx = index::build(&dep, &src, dir.path(), Some(&(site, manifest)));
+    let wanted = |import: &str, phrase: &str| idx.docs_indices(Some(import)).into_iter().any(|i| idx.entries[i].doc.contains(phrase));
+    for import in ["@sample/forms", "@sample/forms/v1"] {
+        assert!(wanted(import, "Stable override recipe"));
+        assert!(wanted(import, "Stable versioned recipe"));
+        assert!(!wanted(import, "Modern-only neighboring recipe"));
+        assert!(!wanted(import, "Modern versioned recipe"));
+    }
+    assert!(!wanted("@sample/forms/renamed", "Stable versioned recipe"));
+    assert!(wanted("@sample/forms/v2", "Modern-only neighboring recipe"));
+    assert!(wanted("@sample/forms/v2", "Modern versioned recipe"));
+    assert!(!wanted("@sample/forms/v2", "Stable override recipe"));
+    assert!(wanted("@sample/forms/v2", "Shared neutral recipe"));
+}

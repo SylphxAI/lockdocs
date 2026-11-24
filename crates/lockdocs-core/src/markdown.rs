@@ -51,7 +51,7 @@ pub(crate) fn import_base(import: &str) -> &str {
 }
 
 /// Read module specifiers from actual JS/TS examples, not prose or MDX imports.
-fn example_imports(body: &str) -> Vec<String> {
+fn collect_example_imports(body: &str, first_example: bool) -> Vec<String> {
     fn walk(n: tree_sitter::Node, src: &[u8], out: &mut Vec<String>) {
         let source = if matches!(n.kind(), "import_statement" | "export_statement") {
             n.child_by_field_name("source")
@@ -89,6 +89,9 @@ fn example_imports(body: &str) -> Vec<String> {
                     if let Some(tree) = parser.parse(&code, None) {
                         walk(tree.root_node(), code.as_bytes(), &mut out);
                     }
+                    if first_example {
+                        return out;
+                    }
                 }
                 fence = None;
                 code.clear();
@@ -110,13 +113,29 @@ fn example_imports(body: &str) -> Vec<String> {
     out
 }
 
+fn example_imports(body: &str) -> Vec<String> {
+    collect_example_imports(body, false)
+}
+
 pub fn split(text: &str, title: &str) -> Vec<Section> {
+    split_scoped(text, title, None)
+}
+
+/// Fetched reference pages can show the import setup once and omit it in
+/// following sections. An explicit section import overrides the page default.
+pub(crate) fn split_scoped(text: &str, title: &str, package: Option<&str>) -> Vec<Section> {
+    let imports = package.map_or_else(Vec::new, |package| {
+        collect_example_imports(text, true)
+            .into_iter()
+            .filter(|import| import_base(import) == package)
+            .collect()
+    });
     let lines: Vec<&str> = text.lines().collect();
     let mut out: Vec<Section> = Vec::new();
     let mut stack = vec![Scope {
         level: 0,
         title: title.to_string(),
-        imports: Vec::new(),
+        imports,
         line: None,
     }];
     let mut rst_levels: Vec<char> = Vec::new();

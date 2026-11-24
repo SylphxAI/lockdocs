@@ -21,6 +21,7 @@
     "@solidjs/router": "0.16.3",
     "@solidjs/start": "1.5.1",
     "@sylphx/auth": "0.1.0",
+    "@sylphx/sdk": "0.32.36",
     "@tailwindcss/vite": "4.3.5",
     "gray-matter": "4.0.3",
     "jsonc-parser": "3.3.1",

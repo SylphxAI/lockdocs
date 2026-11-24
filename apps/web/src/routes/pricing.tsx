@@ -66,12 +66,9 @@ export default function Pricing() {
       <article class="surface plan"><div class="plan-label">{text("01 / OPEN SOURCE", "01 / 開放原始碼")}</div><h2>{text("Free", "免費版")}</h2><div class="plan-price">{money(0)}</div><p class="quiet">{text("No account required. Runs on your machine.", "不必註冊，直接在本機執行。")}</p><ul class="check-list"><For each={[text("Exact-version dependency resolution", "確認相依套件的確切版本"), text("Local docs and symbol lookup", "在本機查閱文件與符號"), text("Three-tool MCP server for coding agents", "為程式開發代理工具提供三個 MCP 工具")]}>{(item) => <li><Check size={17}/>{item}</li>}</For></ul><Link class="button secondary" href={locale() === "en" ? "/guide" : href("/docs")}>{text("Install Lockdocs", "安裝 Lockdocs")} <ArrowRight size={16}/></Link></article>
       <article class="surface plan plan-pro"><div class="plan-label">02 / PRO</div><h2>Lockdocs Pro</h2><div class="plan-price">{monthly()}<span>{text("/mo billed yearly", "／月（按年收費）")}</span></div><p class="plan-total">{annual()}{text("/yr upfront · Tax included", "／年，一次付清，已含稅")}{amount() % 12 !== 0 ? text(" · Monthly equivalent rounded", "；月均金額已四捨五入") : ""}</p><ul class="check-list"><For each={[text("Everything in Free", "包含免費版的所有功能"), text("Upgrade Reports with call-site citations", "升級報告，附上受影響的呼叫位置"), text("Private Package Docs", "私有套件文件")]}>{(item) => <li><Check size={17}/>{item}</li>}</For></ul>
       {query.billing === "unavailable" && <p role="status" class="notice">{text("Checkout isn’t available right now. No payment was confirmed here.", "目前無法結帳，尚未確認任何付款。")}</p>}
-      {entitlement()?.entitled ? <Link class="button primary" href="/dashboard">Manage Pro <ArrowRight size={16}/></Link> : !session() ? <Link class="button primary" href={signInHref(returnPath())}>Get Lockdocs Pro — {annual()}/yr <ArrowRight size={16}/></Link> : details()?.billing && entitlement()?.status === "not_entitled" ? <form method="post" action="/api/billing/checkout" onSubmit={event => {
-        const input = event.currentTarget.elements.namedItem("checkout_consent");
-        if (input instanceof HTMLInputElement) input.value = analytics.checkoutChoice();
-        analytics.beginCheckout(currency());
-      }}>
-        <input type="hidden" name="checkout_consent" value="reject"/>
+      {entitlement()?.entitled ? <Link class="button primary" href="/dashboard">Manage Pro <ArrowRight size={16}/></Link> : !session() ? <Link class="button primary" href={signInHref(returnPath())}>Get Lockdocs Pro — {annual()}/yr <ArrowRight size={16}/></Link> : details()?.billing && entitlement()?.status === "not_entitled" ? <form method="post" action="/api/billing/checkout" onSubmit={event => analytics.beginCheckout(event.currentTarget, currency())}>
+        <input type="hidden" name="signal_blocked" value="1"/>
+        <input type="hidden" name="signal_touch" disabled/>
         <input type="hidden" name="currency" value={currency()}/>
         <input type="hidden" name="entry_surface" value={pricingCheckoutSurface}/>
         <button class="button primary" type="submit">Continue to secure checkout <ArrowRight size={16}/></button>

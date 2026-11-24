@@ -60,7 +60,7 @@ async function startFixture(billing: boolean) {
     const path = url.pathname;
     if (!path.startsWith("/v1/")) {
       const upstream = request({ hostname: "127.0.0.1", port: appPort, path: req.url, method: req.method, headers: {
-        ...req.headers, "x-forwarded-host": url.host, "x-forwarded-proto": "https",
+        ...req.headers, "sylphx-edge": "public", "x-forwarded-host": url.host, "x-forwarded-proto": "https",
       } }, upstream => {
         const location = upstream.headers.location;
         if (/^\/api\/auth\/(?:google|github)$/.test(path) && location && !req.headers["x-fixture-stop-before-provider"]) {

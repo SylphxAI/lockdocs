@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 /// Bump when extraction or the on-disk format changes.
-pub const FORMAT: u32 = 17;
+pub const FORMAT: u32 = 18;
 
 #[derive(Serialize, Deserialize)]
 pub struct PackageIndex {
@@ -88,7 +88,7 @@ impl PackageIndex {
             })
             // Deduplicate only after import selection: an identical declaration
             // in another edition must not erase the requested file identity.
-            .filter(|(_, e)| seen.insert((e.path.as_str(), e.sig.as_str(), e.doc.as_str())))
+            .filter(|(_, e)| seen.insert((e.path.as_str(), e.sig.as_str(), e.doc.as_str(), &e.guide_modes, &e.prose_imports)))
             .map(|(i, _)| i)
             .collect()
     }

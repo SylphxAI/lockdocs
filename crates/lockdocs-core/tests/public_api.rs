@@ -581,3 +581,39 @@ fn fetched_pages_keep_edition_setup_and_equivalent_wrappers_share_prose() {
     assert!(!wanted("@sample/forms/v2", "Stable override recipe"));
     assert!(wanted("@sample/forms/v2", "Shared neutral recipe"));
 }
+
+#[test]
+fn docs_report_section_guide_modes_without_guessing_user_intent() {
+    let dir = fixture();
+    let pkg = dir.path().join("node_modules/@sample/forms");
+    write(&pkg, "docs/modes.md", "# Recipes\n\n[MODES: alpha, beta]\n\n## Shared\nShared frobnication recipe.\n\n## Override\n[MODES: gamma]\n\nGamma frobnication recipe.\n\n### Details\nDetailed frobnication recipe.\n\n## Extra\nExtra frobnication recipe.\n\n> [MODES: fake]\n\n\x60\x60\x60text\n[MODES: fake]\n\x60\x60\x60\n");
+    let a = engine(dir.path()).docs(Some("@sample/forms"), "frobnication recipe alpha mode", 4000).unwrap();
+    let hits = a.json["hits"].as_array().unwrap();
+    for (heading, modes) in [
+        (" › Shared", json!(["alpha", "beta"])),
+        (" › Details", json!(["gamma"])),
+        (" › Extra", json!(["alpha", "beta"])),
+    ] {
+        let hit = hits
+            .iter()
+            .find(|h| h["path"].as_str().is_some_and(|p| p.ends_with(heading)))
+            .unwrap_or_else(|| panic!("{heading}: {}", a.text));
+        assert_eq!(hit["guide_modes"], modes);
+    }
+    assert!(a.text.contains("Guide modes: alpha, beta"));
+    assert!(a.text.contains("Guide modes: gamma"));
+}
+
+#[test]
+fn guide_context_does_not_quote_an_incompatible_parent() {
+    let dir = fixture();
+    let pkg = dir.path().join("node_modules/@sample/forms");
+    write(&pkg, "docs/recipes.md", "# Handbook\n\nGeneral guidance for all recipes.\n\n## Setup\n\n[MODES: alpha]\n\nUse the alpha-only connection setup for this recipe.\n\n### Recipe\n\n[MODES: beta]\n\nExecute the unique transmogrification operation.\n");
+    let answer = engine(dir.path())
+        .docs(Some("@sample/forms"), "unique transmogrification operation", 4000)
+        .unwrap();
+    let first = answer.text.split("\n### ").nth(1).unwrap();
+    assert!(first.contains("Guide modes: beta"), "{first}");
+    assert!(first.contains("General guidance for all recipes"), "{first}");
+    assert!(!first.contains("alpha-only connection setup"), "{first}");
+}

@@ -53,6 +53,7 @@ pub(super) fn prose_section(s: crate::markdown::Section, rel: &str, line_off: u3
         alias_of: None,
         legacy: false,
         prose_imports: s.imports,
+        guide_modes: s.guide_modes,
         prose_parents: s.parents.into_iter().map(|line| line + line_off).collect(),
     }
 }
@@ -150,6 +151,7 @@ pub(super) fn example(text: &str, rel: &str, out: &mut Vec<Entry>) {
         alias_of: None,
         legacy: false,
         prose_imports: Vec::new(),
+        guide_modes: Vec::new(),
         prose_parents: Vec::new(),
     });
 }

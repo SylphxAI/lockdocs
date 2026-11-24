@@ -85,6 +85,8 @@ pub struct Entry {
     /// Effective module imports in this prose section and its setup examples.
     #[serde(default)]
     pub prose_imports: Vec<String>,
+    /// Guide modes explicitly declared by the source section or its ancestors.
+    pub guide_modes: Vec<String>,
     /// Citation lines of the logical ancestor sections, before chunking.
     #[serde(default)]
     pub prose_parents: Vec<u32>,
@@ -102,6 +104,7 @@ fn entry(kind: Kind, name: &str, path: String, file: &str, line: u32, sig: Strin
         alias_of: None,
         legacy: false,
         prose_imports: Vec::new(),
+        guide_modes: Vec::new(),
         prose_parents: Vec::new(),
     }
 }

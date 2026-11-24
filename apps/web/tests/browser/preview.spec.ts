@@ -143,17 +143,13 @@ test("workbench resolves pasted text and switches cited migrations", async ({ pa
   await expect(page.getByRole("link", { name: "Pydantic v2 migration", exact: false })).toHaveAttribute("href", /https:\/\/docs\.pydantic\.dev/);
   await page.getByRole("link", { name: "See Pro plans" }).click();
   await expect(page).toHaveURL(/\/pricing$/);
-  await expect(page.locator(".plan-pro")).toContainText("US$10/mo billed yearly");
-  await expect(page.locator(".plan-pro")).toContainText("US$120/yr upfront · Tax included");
+  await expect(page.locator(".plan-pro .plan-price")).toHaveText("US$120/yr");
   await page.getByRole("link", { name: "GBP" }).click();
-  await expect(page.locator(".plan-pro")).toContainText("£8.25/mo billed yearly");
-  await expect(page.locator(".plan-pro")).toContainText("£99/yr upfront · Tax included");
+  await expect(page.locator(".plan-pro .plan-price")).toHaveText("£99/yr");
   await page.getByRole("link", { name: "EUR" }).click();
-  await expect(page.locator(".plan-pro")).toContainText("€9.08/mo billed yearly");
-  await expect(page.locator(".plan-pro")).toContainText("€109/yr upfront · Tax included");
+  await expect(page.locator(".plan-pro .plan-price")).toHaveText("€109/yr");
   await page.getByRole("link", { name: "HKD" }).click();
-  await expect(page.locator(".plan-pro")).toContainText("HK$78.17/mo billed yearly");
-  await expect(page.locator(".plan-pro")).toContainText("HK$938/yr upfront · Tax included");
+  await expect(page.locator(".plan-pro .plan-price")).toHaveText("HK$938/yr");
   await expect(page.getByText("generally have 14 days", { exact: false })).toBeVisible();
 });
 

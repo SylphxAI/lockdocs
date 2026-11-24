@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
 
 const plans = [
-  { currency: "USD", free: "US$0", monthly: "US$10", annual: "US$120" },
-  { currency: "GBP", free: "£0", monthly: "£8.25", annual: "£99" },
-  { currency: "EUR", free: "€0", monthly: "€9.08", annual: "€109" },
-  { currency: "HKD", free: "HK$0", monthly: "HK$78.17", annual: "HK$938" },
+  { currency: "USD", free: "US$0", annual: "US$120" },
+  { currency: "GBP", free: "£0", annual: "£99" },
+  { currency: "EUR", free: "€0", annual: "€109" },
+  { currency: "HKD", free: "HK$0", annual: "HK$938" },
 ];
 
 // Verify prices and metadata without relying on a client render.
@@ -20,12 +20,12 @@ for (const plan of plans) {
     }
     expect(head).toContain('rel="canonical" href="https://lockdocs.sylphx.com/pricing"');
     expect(html.match(/class="plan-price">([^<]*)/g)).toEqual([
-      'class="plan-price">' + plan.free, 'class="plan-price">' + plan.monthly,
+      'class="plan-price">' + plan.annual + "/yr", 'class="plan-price">' + plan.free,
     ]);
     const picker = html.match(/<nav[^>]*aria-label="Billing currency"[^>]*>[\s\S]*?<\/nav>/)?.[0] ?? "";
     expect(picker.match(/aria-current="page"/g)).toHaveLength(1);
     expect(picker.match(/<a[^>]*aria-current="page"[^>]*>([^<]+)<\/a>/)?.[1]).toBe(plan.currency);
-    expect(html).toContain(plan.annual + "/yr upfront");
+    expect(html).toContain("Billed annually upfront · Tax included");
     expect(html).toContain('"price":0,"priceCurrency":"' + plan.currency + '"');
   });
 }
@@ -41,13 +41,13 @@ test.describe("pricing in a browser using German number conventions", () => {
     const picker = page.getByRole("navigation", { name: "Billing currency" });
     const free = page.locator(".plan:not(.plan-pro) .plan-price");
     const pro = page.locator(".plan-pro");
-    await expect(pro.locator(".plan-price")).toHaveText("€9,08/mo billed yearly");
+    await expect(pro.locator(".plan-price")).toHaveText("€109/yr");
     for (const plan of plans) {
       await picker.getByRole("link", { name: plan.currency, exact: true }).click();
       await expect(picker.locator('[aria-current="page"]')).toHaveText(plan.currency);
       await expect(free).toHaveText(plan.free);
-      await expect(pro.locator(".plan-price")).toHaveText(plan.monthly.replace(".", ",") + "/mo billed yearly");
-      await expect(pro.locator(".plan-total")).toContainText(plan.annual + "/yr upfront · Tax included");
+      await expect(pro.locator(".plan-price")).toHaveText(plan.annual + "/yr");
+      await expect(pro.locator(".plan-total")).toContainText("Billed annually upfront · Tax included");
     }
     await expect(pro.getByRole("link", { name: "Get Lockdocs Pro — HK$938/yr" }))
       .toHaveAttribute("href", "/sign-in?next=%2Fpricing%3Fcurrency%3DHKD");

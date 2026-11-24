@@ -51,15 +51,15 @@
 .footer-cookie{font:inherit;color:inherit;background:transparent;border:0;padding:0;text-align:left}.footer-cookie:hover{text-decoration:underline}.footer-cookie:disabled{cursor:default}
 html{scroll-padding-bottom:var(--cookie-bar-height,0px)}
 body{padding-bottom:var(--cookie-bar-height,0px)}
-.cookie-panel{position:fixed;z-index:20;inset:auto 0 0;display:flex;align-items:center;justify-content:space-between;gap:12px 24px;padding:9px max(24px,env(safe-area-inset-right)) calc(9px + env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left));border-top:1px solid var(--strong);background:var(--raised);box-shadow:0 -6px 24px #0004}
-.cookie-copy h2{margin:0;font-size:.875rem;font-weight:650;line-height:1.35}
-.cookie-copy p{margin:0;color:var(--dim);font-size:.8125rem;line-height:1.4}
+.cookie-panel{position:fixed;z-index:20;inset:auto 0 0;display:flex;align-items:center;justify-content:space-between;gap:5px 20px;padding:5px max(24px,env(safe-area-inset-right)) calc(5px + env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left));border-top:1px solid var(--strong);background:var(--raised);box-shadow:0 -6px 24px #0004}
+.cookie-copy h2{display:inline;margin:0 .5em 0 0;font-size:.875rem;font-weight:650;line-height:1.35}
+.cookie-copy p{display:inline;margin:0;color:var(--dim);font-size:.8125rem;line-height:1.4}
 .cookie-copy a{color:var(--blue);text-decoration:underline;text-underline-offset:2px}
 .cookie-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;flex:none}
 .cookie-choice{min-height:44px;padding:4px 12px;border:1px solid #586a84;border-radius:999px;color:var(--ink);background:var(--surface);font-size:.8125rem;font-weight:600;line-height:1.25;text-align:center}
 .cookie-choice:not(:disabled):hover{border-color:var(--brand);background:var(--canvas)}
 @media(max-width:850px){
-  .cookie-panel{flex-direction:column;align-items:stretch;gap:7px;padding:8px max(12px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
+  .cookie-panel{flex-direction:column;align-items:stretch;gap:4px;padding:5px max(12px,env(safe-area-inset-right)) calc(5px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
   .cookie-copy{font-size:.75rem;line-height:1.35}
   .cookie-copy h2,.cookie-copy p{display:inline;font:inherit}
   .cookie-copy h2{font-weight:650;margin-inline-end:.45em}
@@ -75,3 +75,31 @@ body{padding-bottom:var(--cookie-bar-height,0px)}
 @media(max-width:740px){.docs-sidebar{grid-row:1;padding:0 0 14px;border:0;border-bottom:1px solid var(--line)}.docs-nav-toggle{display:inline-flex;gap:7px;align-items:center;min-height:40px;color:var(--ink);font-size:13px}.docs-sidebar nav:not(.docs-nav-open){display:none}.docs-sidebar nav{margin-top:8px}.docs-results,.docs-result-count{grid-column:1/-1}}
 
 .sample-source{white-space:pre;overflow:auto;max-width:100%;margin:8px 0}.inspect .doc-source{overflow-wrap:anywhere;margin-bottom:8px}
+
+/* Commercial surfaces: one highlighted result and one primary purchase path. */
+.bench-rail h3{font-size:.8125rem;font-weight:650;line-height:1.3}
+.bench-rail .bench-lockdocs{background:#101f24;border-radius:0;color:var(--mint)}
+.bench-lockdocs strong span{color:inherit}
+.bench-baseline strong span,.bench-latency strong span{color:var(--dim)}
+.bench-score{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.bench-delta{border:1px solid #457f70;border-radius:5px;padding:1px 5px;background:#17342e;font:650 .75rem/1.4 var(--mono)}
+.pricing-section{padding-top:40px}
+.pricing-intro h1{font-size:clamp(36px,4.4vw,58px)}
+.pricing-section .plan-price{overflow-wrap:anywhere}
+.pricing-section .currency-picker a{display:grid;place-items:center;min-height:44px;min-width:44px}
+.pricing-section .plan-pro .button{min-height:44px}
+@media(max-width:740px){
+  .pricing-section{padding-top:24px}
+  .pricing-intro h1{font-size:clamp(32px,9vw,52px);margin-block:10px 12px}
+  .pricing-intro{margin-bottom:16px}
+  .pricing-section .plan h2{margin:9px 0 10px}
+}
+@media(max-width:660px){
+  .hero{gap:16px;padding-top:22px}
+  .preview-body,.preview-result{padding-block:8px}
+  .cookie-copy h2{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+  .bench-rail{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .bench-rail>div{padding:12px}
+  .bench-rail small,.bench-label a{font-size:.75rem}
+  .bench-rail .bench-latency{grid-column:1/-1;border-left:0;border-top:1px solid var(--line);flex-direction:row;align-items:center;justify-content:flex-start;flex-wrap:wrap;gap:6px 12px}
+}

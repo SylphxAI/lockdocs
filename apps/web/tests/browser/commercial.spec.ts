@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 const touch = {
   gclid: "sample-gclid", gbraid: "sample-gbraid", wbraid: "sample-wbraid",
-  utm_source: "google", utm_medium: "cpc", utm_campaign: "Docs & MCP", utm_term: "lockfile", utm_content: "upgrade report",
+  utm_id: "1234567890", utm_source: "google", utm_medium: "cpc", utm_campaign: "Docs & MCP", utm_term: "lockfile", utm_content: "upgrade report",
 };
 const campaign = new URLSearchParams({ ...touch, token: "private-sentinel" });
 const dock = (page: Page) => page.getByRole("region", { name: "Cookie settings" });
@@ -10,16 +10,32 @@ const dock = (page: Page) => page.getByRole("region", { name: "Cookie settings" 
 for (const consentAt of ["pricing", "sign-in"]) {
   test("preserves all campaign fields without pre-choice storage, then captures them at " + consentAt, async ({ page }) => {
     await page.setExtraHTTPHeaders({ "CF-IPCountry": "DE" });
+    const writes: string[] = [];
+    await page.exposeFunction("recordStorageWrite", (kind: string) => writes.push(kind));
+    await page.addInitScript(() => {
+      const record = (window as unknown as { recordStorageWrite: (kind: string) => Promise<void> }).recordStorageWrite;
+      const setItem = Storage.prototype.setItem;
+      Storage.prototype.setItem = function (key, value) {
+        void record("Storage.setItem");
+        return setItem.call(this, key, value);
+      };
+      const cookie = Object.getOwnPropertyDescriptor(Document.prototype, "cookie")!;
+      Object.defineProperty(Document.prototype, "cookie", { ...cookie, set(value: string) {
+        void record("document.cookie");
+        cookie.set!.call(this, value);
+      } });
+    });
     const tagRequests: string[] = [];
     await page.route("https://www.googletagmanager.com/**", route => {
       tagRequests.push(route.request().url());
       return route.fulfill({ contentType: "text/javascript", body: "" });
     });
     const beforeChoice = async () => {
-      await expect(dock(page)).toBeVisible();
+      await expect(page.locator("#cookie-settings")).toBeVisible();
       expect(await page.context().cookies()).toEqual([]);
       expect(await page.evaluate(() => [localStorage.length, sessionStorage.length])).toEqual([0, 0]);
       expect(tagRequests).toEqual([]);
+      expect(writes).toEqual([]);
     };
     const loaded = async (path: string, ownQuery: Record<string, string> = {}) => {
       await expect(page).toHaveURL(url => url.pathname === path);
@@ -31,6 +47,10 @@ for (const consentAt of ["pricing", "sign-in"]) {
     await page.getByRole("navigation", { name: "Main navigation" }).getByRole("link", { name: "Pricing" }).click();
     await loaded("/pricing");
     await page.getByRole("link", { name: "EUR", exact: true }).click();
+    await loaded("/pricing", { currency: "EUR" });
+    await page.getByRole("link", { name: "繁體中文", exact: true }).click();
+    await loaded("/zh-TW/pricing", { currency: "EUR" });
+    await page.getByRole("link", { name: "English", exact: true }).click();
     await loaded("/pricing", { currency: "EUR" });
     if (consentAt === "sign-in") {
       await page.getByRole("link", { name: "Get Lockdocs Pro — €109/yr" }).click();

@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { test as authTest, email, code } from "./auth-fixture";
+import { ga4CollectEvents } from "./ga4-collect";
 
 const settings = (page: Page) => page.getByRole("region", { name: "Cookie settings" });
 const analyticsFrame = 'iframe[title="Analytics"]';
@@ -8,11 +9,15 @@ const google = /https:\/\/([^/]+\.)?(googletagmanager\.com|google-analytics\.com
 
 // Exercise the browser-to-collector boundary without sending data to a real
 // property. Model the stream's bootstrap page view before its config command,
-// then forward event parameters using the Google tag's collection fields.
-const wireTag = `(() => {
+// then model the observed gtag.js wire format: the first view in the URL,
+// later events batched in a POST body. History-based measurement is off.
+const wireTag = String.raw`(() => {
   const globals = {};
   const config = {};
   const sid = Math.floor(Date.now() / 1000);
+  const endpoint = "https://www.google-analytics.com/g/collect?";
+  const pending = [];
+  let first = true;
   function send(event, params) {
     const eventParams = {...globals, ...config, ...params};
     const query = new URLSearchParams({en:event, sid, dl:eventParams.page_location ?? location.href,
@@ -21,7 +26,22 @@ const wireTag = `(() => {
     for (const key of ["method", "entry_surface"]) {
       if (eventParams[key] !== undefined) query.set("ep." + key, eventParams[key]);
     }
-    fetch("https://www.google-analytics.com/g/collect?" + query, {mode:"no-cors", keepalive:true});
+    const options = {method:"POST", mode:"no-cors", keepalive:true};
+    if (first) {
+      first = false;
+      void fetch(endpoint + query, options);
+      return;
+    }
+    pending.push(query);
+    if (pending.length === 1) queueMicrotask(() => {
+      const events = pending.splice(0);
+      const shared = new URLSearchParams({sid, dl:events.at(-1).get("dl")});
+      const body = events.map(event => {
+        for (const [key, value] of shared) if (event.get(key) === value) event.delete(key);
+        return event.toString();
+      }).join("\r\n");
+      void fetch(endpoint + shared, {...options, body});
+    });
   }
   function run([command, name, params]) {
     if (command === "set") Object.assign(globals, name);
@@ -40,7 +60,7 @@ async function install(page: Page, region: string | null, collect?: URLSearchPar
   await page.route(google, async route => {
     const url = new URL(route.request().url());
     if (url.pathname === "/g/collect") {
-      collect?.push(url.searchParams);
+      collect?.push(...ga4CollectEvents(url, route.request().postData()));
       await route.fulfill({ status: 204 });
       return;
     }
@@ -159,6 +179,36 @@ test("EEA waits for a choice, records only the permitted pricing event, and stop
   expect(hits).toHaveLength(1);
 });
 
+test("collector sees exactly one page view on Home → Pricing → Home with history tracking off", async ({ page }) => {
+  const wire: URLSearchParams[] = [];
+  const hits = await install(page, "DE", wire);
+  const firstLoad = await page.goto("/");
+  const origin = new URL(firstLoad!.url()).origin;
+  const documents = [firstLoad!.url()];
+  page.on("request", request => {
+    if (request.isNavigationRequest() && request.frame() === page.mainFrame()) documents.push(request.url());
+  });
+  await expect(settings(page)).toBeVisible();
+  expect(wire).toEqual([]);
+  expect(hits).toEqual([]);
+  await settings(page).getByRole("button", { name: "Analytics only" }).click();
+
+  const views = () => wire.filter(event => event.get("en") === "page_view")
+    .map(event => [event.get("dl"), event.get("dr")]);
+  const expected = [[origin + "/", ""]];
+  await expect.poll(views).toEqual(expected);
+  await page.getByRole("navigation", { name: "Main navigation" }).getByRole("link", { name: "Pricing", exact: true }).click();
+  await expect(page).toHaveURL(origin + "/pricing");
+  expected.push([origin + "/pricing", origin + "/"]);
+  await expect.poll(views).toEqual(expected);
+  await page.locator("header .wordmark").click();
+  await expect(page).toHaveURL(origin + "/");
+  expected.push([origin + "/", origin + "/pricing"]);
+  await expect.poll(views).toEqual(expected);
+  expect(documents).toEqual([origin + "/"]);
+  expect(hits).toHaveLength(1);
+});
+
 test("collector sees one sanitized page view per route and foreground time on the same GA4 session", async ({ page }) => {
   const wire: URLSearchParams[] = [];
   const hits = await install(page, "DE", wire);
@@ -225,7 +275,7 @@ test("the analytics tag URL cannot emit a page view, even with consent", async (
   await page.route(google, async route => {
     const url = new URL(route.request().url());
     if (url.pathname === "/g/collect") {
-      wire.push(url.searchParams);
+      wire.push(...ga4CollectEvents(url, route.request().postData()));
       await route.fulfill({ status: 204 });
     } else {
       await route.fulfill({ contentType: "text/javascript", body: wireTag +

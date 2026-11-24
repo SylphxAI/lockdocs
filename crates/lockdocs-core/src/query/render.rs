@@ -180,7 +180,7 @@ impl Pack {
     /// Fit a cited excerpt without consuming space reserved for another hit.
     pub(super) fn push_excerpt(&mut self, block: &str, budget: usize) -> bool {
         let budget = budget.min(self.remaining());
-        if est_tokens(block) + 1 <= budget {
+        if est_tokens(block) < budget {
             return self.push_block(block);
         }
         const END: &str = "[…truncated to fit the token budget]\n";

@@ -7,6 +7,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Component, Path};
 use tree_sitter::{Node, Parser};
 
+type ProseSurface<'a> = (&'a str, BTreeSet<&'a str>);
+
 #[derive(Default, Serialize, Deserialize)]
 pub struct PublicApi {
     pub roots: Vec<Root>,
@@ -399,10 +401,10 @@ impl PublicApi {
     /// Shared dependencies and legacy search widening never establish edition
     /// compatibility.
     pub(crate) fn compatible_imports(&self, selected: &str, package: &str) -> BTreeSet<&str> {
-        let mut targets: BTreeMap<&str, Option<BTreeSet<&str>>> = BTreeMap::new();
+        let mut targets: BTreeMap<&str, Option<BTreeSet<ProseSurface<'_>>>> = BTreeMap::new();
         for root in &self.roots {
             let files = targets.entry(&root.import).or_insert_with(|| Some(BTreeSet::new()));
-            match (files.as_mut(), self.canonical_barrel(&root.file)) {
+            match (files.as_mut(), self.prose_surface(&root.file)) {
                 (Some(files), Some(file)) => {
                     files.insert(file);
                 }
@@ -452,6 +454,34 @@ impl PublicApi {
         }
         seen.remove(file);
         Some(names)
+    }
+
+    // A barrel can also expose the same module as named/default namespaces.
+    // Preserve the alias names in the identity: merely sharing a star target
+    // does not make wrappers with different public bindings interchangeable.
+    fn prose_surface<'a>(&'a self, file: &'a str) -> Option<ProseSurface<'a>> {
+        let canonical = self.canonical_barrel(file)?;
+        let module = self.modules.get(canonical)?;
+        if !module.incomplete && module.assignment.is_none() && module.stars.len() == 1 {
+            let target = module.stars[0].as_str();
+            let mut aliases = BTreeSet::new();
+            for (name, binding) in &module.exports {
+                let binding = match binding {
+                    Binding::Local(local) => module.imports.get(local).unwrap_or(binding),
+                    other => other,
+                };
+                match binding {
+                    Binding::Namespace(source) if source == target => {
+                        aliases.insert(name.as_str());
+                    }
+                    _ => return Some((canonical, BTreeSet::new())),
+                }
+            }
+            if !aliases.is_empty() {
+                return Some((self.canonical_barrel(target)?, aliases));
+            }
+        }
+        Some((canonical, BTreeSet::new()))
     }
 
     fn canonical_barrel<'a>(&'a self, mut file: &'a str) -> Option<&'a str> {

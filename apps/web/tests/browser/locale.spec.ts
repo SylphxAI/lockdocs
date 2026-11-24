@@ -28,6 +28,89 @@ test("SSR head contains reciprocal alternatives, a self-canonical and the defaul
   }
 });
 
+test("Traditional Chinese aliases redirect permanently to the canonical pages with the original query", async ({ request }) => {
+  const routes = ["/zh-Hant", "/zh-Hant/docs", "/zh-Hant/playground", "/zh-Hant/pricing"];
+  const destinations = ["/zh-TW", "/zh-TW/docs", "/zh-TW/playground", "/zh-TW/pricing"];
+  const query = "?currency=HKD&ref=a%20b&ref=other";
+  for (const [index, route] of routes.entries()) {
+    const destination = destinations[index];
+    const bare = await request.get(route, { maxRedirects: 0 });
+    expect(bare.status(), route).toBe(308);
+    expect(bare.headers().location).toBe(destination);
+    const withQuery = await request.get(route + query, { maxRedirects: 0 });
+    expect(withQuery.status(), route).toBe(308);
+    expect(withQuery.headers().location).toBe(destination + query);
+  }
+  const head = await request.head("/zh-Hant/pricing/" + query, { maxRedirects: 0 });
+  expect(head.status()).toBe(308);
+  expect(head.headers().location).toBe("/zh-TW/pricing" + query);
+  for (const unknown of ["/zh-Hant/nonexistent", "/zh-Hant-extra/pricing"]) {
+    expect((await request.get(unknown, { maxRedirects: 0 })).status()).toBe(404);
+  }
+});
+
+test("Traditional Chinese pricing shows all four purchase amounts and wraps without an orphan", async ({ page }, testInfo) => {
+  await page.goto("/zh-TW/pricing");
+  const headingText = "進階功能，留給棘手的升級";
+  const heading = page.getByRole("heading", { name: headingText, exact: true, level: 1 });
+  await expect(heading).toBeVisible();
+  for (const width of testInfo.project.name === "desktop" ? [1440, 1280, 1024] : [390]) {
+    await page.setViewportSize({ width, height: page.viewportSize()!.height });
+    const lineLengths = await heading.evaluate(async (el) => {
+      await document.fonts.ready;
+      const text = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      const range = document.createRange();
+      const lines = new Map<number, number>();
+      while (text.nextNode()) {
+        const node = text.currentNode as Text;
+        for (let i = 0; i < node.length; i++) {
+          range.setStart(node, i);
+          range.setEnd(node, i + 1);
+          for (const rect of range.getClientRects()) {
+            if (rect.width > 0) lines.set(rect.top, (lines.get(rect.top) ?? 0) + 1);
+          }
+        }
+      }
+      return [...lines.values()];
+    });
+    expect(lineLengths.reduce((total, length) => total + length, 0), `viewport ${width}px`).toBe(headingText.length);
+    expect(lineLengths, `viewport ${width}px`).not.toContain(1);
+  }
+  const currencies = page.getByRole("navigation", { name: "付款幣別" });
+  for (const [code, label] of [["USD", "US$120"], ["GBP", "£99"], ["EUR", "€109"], ["HKD", "HK$938"]]) {
+    const option = currencies.getByRole("link", { name: code, exact: true });
+    if (code !== "USD") await option.click();
+    await expect(option).toHaveAttribute("aria-current", "page");
+    await expect(page.getByRole("link", { name: `購買 Lockdocs Pro — ${label}／年`, exact: true })).toBeVisible();
+  }
+});
+
+test("Traditional Chinese cookie settings and source link are localized on every translated page", async ({ page }, testInfo) => {
+  await page.setExtraHTTPHeaders({ "CF-IPCountry": "DE" });
+  // Keep this copy-only check off the real collector, even on a consent regression.
+  await page.route(/^https:\/\/(www\.googletagmanager\.com|[^/]+\.google-analytics\.com)\//, route => route.abort());
+  await page.goto("/zh-TW/pricing");
+  const banner = page.getByRole("region", { name: "Cookie 設定" });
+  for (const [navLabel, path] of [[null, "/zh-TW/pricing"], ["lockdocs.", "/zh-TW"], ["文件", "/zh-TW/docs"], ["試用工具", "/zh-TW/playground"]] as const) {
+    if (navLabel) await page.getByRole("banner").getByRole("link", { name: navLabel, exact: true }).click();
+    await expect(page).toHaveURL(url => url.pathname === path);
+    const footer = page.getByRole("contentinfo");
+    const settings = footer.getByRole("button", { name: "Cookie 設定", exact: true });
+    await expect(settings).toBeEnabled();
+    if (navLabel) await settings.click();
+    await expect(banner.getByText("選用 Cookie 用於分析使用狀況與廣告成效，並可提供個人化廣告。", { exact: false })).toBeVisible();
+    await expect(banner.getByRole("link", { name: "隱私權政策" })).toHaveAttribute("href", "/legal/privacy");
+    const reject = banner.getByRole("button", { name: "拒絕選用項目" });
+    await expect(reject).toBeEnabled();
+    await expect(banner.getByRole("button", { name: "僅限分析" })).toBeEnabled();
+    await expect(banner.getByRole("button", { name: "允許分析與廣告" })).toBeEnabled();
+    await expect(footer.getByRole("link", { name: "原始碼", exact: true })).toHaveAttribute("href", "https://github.com/SylphxAI/lockdocs");
+    if (!navLabel && process.env.LOCKDOCS_LOCAL_CAPTURES) await page.screenshot({ path: testInfo.outputPath("zh-tw-pricing.png") });
+    await reject.click();
+    await expect(banner).toHaveCount(0);
+  }
+});
+
 test("localized home, docs search, and pricing stay usable on each viewport", async ({ page }, testInfo) => {
   await page.goto("/");
   await expect(page.locator(".bench-rail")).toContainText("Version-specific questions answered correctly");

@@ -4,9 +4,10 @@ import type { APIEvent } from "@solidjs/start/server";
 import { getCapabilities } from "../src/lib/auth";
 import { hasPublicOrigin } from "../src/lib/public-origin";
 import { GET as callback } from "../src/routes/api/auth/callback";
-import { GET as github } from "../src/routes/api/auth/github";
+import { GET as oauth } from "../src/routes/api/auth/[provider]";
 import { POST as email } from "../src/routes/api/auth/sign-in";
 import { POST as checkout } from "../src/routes/api/billing/checkout";
+import { POST as portal } from "../src/routes/api/billing/portal";
 
 const origin = "https://lockdocs.sylphx.com";
 const service = "web.fixture.svc.cluster.local";
@@ -72,17 +73,31 @@ test("proxied auth handlers use the configured public origin and preserve OAuth 
       if (value === undefined) delete process.env[key]; else process.env[key] = value;
     }
   });
-  const provider = t.mock.method(globalThis, "fetch", async (url: URL) => {
-    assert.equal(url.href, auth + "/v1/client/config?publishable_key=fixture-public");
-    return Response.json({ instance: { id: instance }, social: [{ provider: "github", credentials: true }] });
+  let redirect!: URL;
+  let authorize = "https://github.com/login/oauth/authorize?state=provider-state";
+  let status = 303;
+  const provider = t.mock.method(globalThis, "fetch", async (url: URL, init: RequestInit) => {
+    assert.equal(url.origin, auth);
+    assert.equal(url.searchParams.get("publishable_key"), config.SYLPHX_PUBLISHABLE_KEY);
+    assert.equal(new Headers(init.headers).has("authorization"), false);
+    if (url.pathname === "/v1/client/config") {
+      assert.equal(init.redirect, "error");
+      return Response.json({ instance: { id: instance }, social: [{ provider: "github", credentials: "custom" }] });
+    }
+    assert.equal(url.pathname, "/v1/client/oauth/github/start");
+    assert.equal(url.searchParams.get("session_mode"), "server");
+    assert.equal(init.redirect, "manual");
+    redirect = new URL(url.searchParams.get("redirect_url")!);
+    return new Response(null, { status, headers: { location: authorize } });
+  });
+  const startOAuth = (input: HeadersInit = headers, selected = "github") => oauth({
+    ...event(ingress, "/api/auth/" + selected + "?next=%2Fpricing", { headers: input }), params: { provider: selected },
   });
 
   assert.equal((await getCapabilities(new Request(ingress + "/pricing", { headers })))?.github, true);
-  const start = await github(event(ingress, "/api/auth/github?next=%2Fpricing", { headers }));
+  const start = await startOAuth();
   assert.equal(start.status, 303);
-  const location = new URL(start.headers.get("location")!);
-  assert.equal(location.origin + location.pathname, auth + "/v1/client/oauth/github/start");
-  const redirect = new URL(location.searchParams.get("redirect_url")!);
+  assert.equal(start.headers.get("location"), authorize);
   assert.equal(redirect.origin + redirect.pathname, origin + "/api/auth/callback");
   const cookie = start.headers.get("set-cookie")!.split(";")[0];
   const failed = await callback(event(ingress, redirect.pathname + redirect.search + "&auth_error=denied", { headers: { ...headers, cookie } }));
@@ -92,7 +107,8 @@ test("proxied auth handlers use the configured public origin and preserve OAuth 
 
   const conflict = { ...headers, "x-forwarded-host": unexpected };
   assert.equal(await getCapabilities(new Request(ingress + "/sign-in", { headers: conflict })), null);
-  assert.equal((await github(event(ingress, "/api/auth/github", { headers: conflict }))).status, 403);
+  assert.equal((await startOAuth(conflict)).status, 403);
+  assert.equal((await startOAuth(headers, "microsoft")).status, 404);
   assert.equal((await callback(event(ingress, redirect.pathname + redirect.search, { headers: { ...conflict, cookie } }))).status, 403);
 
   const submit = (input: HeadersInit) => event(ingress, "/api/auth/sign-in", { method: "POST", headers: input, body: "{}" });
@@ -106,8 +122,22 @@ test("proxied auth handlers use the configured public origin and preserve OAuth 
   const buy = (input: HeadersInit) => event(ingress, "/api/billing/checkout", { method: "POST", headers: input });
   const signedOut = await checkout(buy({ ...headers, origin }));
   assert.equal(signedOut.status, 303);
-  assert.equal(signedOut.headers.get("location"), origin + "/api/auth/sign-in?next=%2Fpricing");
+  assert.equal(signedOut.headers.get("location"), origin + "/sign-in?next=%2Fpricing");
+  const signedOutPortal = await portal(event(ingress, "/api/billing/portal", { method: "POST", headers: { ...headers, origin } }));
+  assert.equal(signedOutPortal.status, 303);
+  assert.equal(signedOutPortal.headers.get("location"), origin + "/sign-in?next=%2Fdashboard");
   assert.equal((await checkout(buy({ ...headers, origin: "https://" + unexpected }))).status, 403);
   assert.equal((await checkout(buy(headers))).status, 403);
-  assert.equal(provider.mock.callCount(), 2);
+  assert.equal(provider.mock.callCount(), 3);
+
+  for ([status, authorize] of [
+    [303, auth + "/v1/client/oauth/github/start"],
+    [303, "https://accounts.google.com/o/oauth2/v2/auth"],
+    [302, "https://github.com/login/oauth/authorize"],
+  ] as const) {
+    const retry = await startOAuth();
+    assert.equal(retry.status, 303);
+    assert.equal(retry.headers.get("location"), origin + "/sign-in?auth=failed&next=%2Fpricing");
+    assert.equal(retry.headers.get("set-cookie"), null);
+  }
 });

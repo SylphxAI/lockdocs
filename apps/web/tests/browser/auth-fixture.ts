@@ -28,6 +28,7 @@ async function startFixture(billing: boolean) {
   const rejections: string[] = [];
   const ticketSignal: { is_new_user?: boolean } = {};
   const tickets = new Map<string, string>();
+  const oauthReturns = new Map<string, string>();
   const sessions = new Map<string, string>();
   const otpFlows = new Map<string, string>();
   const challenges = new Map<string, string>();
@@ -108,12 +109,16 @@ async function startFixture(billing: boolean) {
       case "/v1/client/config":
         if (req.method !== "GET") return rejectContract("config method");
         return json(res, { instance: { id: instance }, methods, social });
-      case "/v1/client/oauth/google/start": {
+      case "/v1/client/oauth/google/start":
+      case "/v1/client/oauth/github/start": {
         const target = new URL(url.searchParams.get("redirect_url") ?? "");
         if (req.method !== "GET" || target.origin !== origin || target.pathname !== "/api/auth/callback" ||
             url.searchParams.get("session_mode") !== "server") return rejectContract("expected server OAuth callback");
         target.searchParams.set("auth_ticket", ticket(email));
-        res.writeHead(303, { location: target.href }).end();
+        const state = random();
+        oauthReturns.set(state, target.href);
+        const authorize = path.includes("/github/") ? "https://github.com/login/oauth/authorize" : "https://accounts.google.com/o/oauth2/v2/auth";
+        res.writeHead(303, { location: authorize + "?" + new URLSearchParams({ state }) }).end();
         return;
       }
       case "/v1/client/continue": {
@@ -190,7 +195,13 @@ async function startFixture(billing: boolean) {
     }, stdio: ["ignore", "pipe", "inherit"] });
     await once(app.stdout!, "data");
     if (!(await fetch(`http://127.0.0.1:${appPort}/api/health`)).ok) throw new Error("Fixture app did not start");
-    return { origin, methods, calls, rejections, shipments, passkey, ticketSignal, close };
+    function completeOAuth(authorize: string) {
+      const state = new URL(authorize).searchParams.get("state") ?? "";
+      const callback = oauthReturns.get(state);
+      oauthReturns.delete(state);
+      return callback;
+    }
+    return { origin, methods, calls, rejections, shipments, passkey, ticketSignal, completeOAuth, close };
   } catch (error) {
     await close();
     throw error;
@@ -199,6 +210,19 @@ async function startFixture(billing: boolean) {
 
 export const test = base.extend<{ billing: boolean; auth: Awaited<ReturnType<typeof startFixture>> }>({
   billing: [false, { option: true }],
+  page: async ({ page, auth }, use) => {
+    // Playwright routes the first request, not subsequent hops in the same redirect chain.
+    await page.route(/\/api\/auth\/(?:google|github)\?/, async route => {
+      const response = await route.fetch({ maxRedirects: 0 });
+      const headers = response.headers();
+      const authorize = headers.location;
+      if (!authorize || new URL(authorize).origin === auth.origin) return route.fulfill({ response });
+      const location = auth.completeOAuth(authorize);
+      if (location) await route.fulfill({ response, headers: { ...headers, location } });
+      else await route.abort();
+    });
+    await use(page);
+  },
   ignoreHTTPSErrors: true, // A per-test certificate; the production child validates it via NODE_EXTRA_CA_CERTS.
   auth: async ({ billing }, use) => {
     const fixture = await startFixture(billing);

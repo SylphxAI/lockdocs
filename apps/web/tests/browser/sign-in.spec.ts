@@ -134,6 +134,22 @@ test("Google and last-used work when it is the only enabled passwordless method"
   expect(errors).toEqual([]);
 });
 
+test("GitHub signs into the same account and preserves a native CLI authorization return", async ({ page, auth }) => {
+  const proof = "F".repeat(42) + "A";
+  const cli = "/cli/authorize?" + new URLSearchParams({ port: "44191", state: proof, challenge: proof });
+  await page.goto(auth.origin + cli);
+  await page.getByRole("link", { name: "Sign in", exact: true }).last().click();
+  const start = await page.request.get(auth.origin + "/api/auth/github?" + new URLSearchParams({ next: cli }), { maxRedirects: 0 });
+  expect(start.status()).toBe(303);
+  expect(start.headers().location).toMatch(/^https:\/\/github\.com\/login\/oauth\/authorize\?/);
+  await page.getByRole("link", { name: "Continue with GitHub" }).click();
+  await expect(page).toHaveURL(auth.origin + cli);
+  await expect(page.getByRole("link", { name: "Back to account" })).toBeVisible();
+  expect((await (await page.request.get(auth.origin + "/api/auth/session")).json()).user.id).toBe("usr_reader");
+  expect(auth.calls).toContain("/v1/client/oauth/github/start");
+  expect(auth.rejections).toEqual([]);
+});
+
 test("a runtime flag flip enables OTP, inline six-digit paste and auto-submit, and a 30-second resend cooldown", async ({ page, auth }, info) => {
   const errors = consoleErrors(page);
   await page.clock.install();

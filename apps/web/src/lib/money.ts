@@ -8,7 +8,7 @@ import { sendsGpc } from "./analytics-policy";
 import { consent, type Choice } from "./analytics-policy";
 import { measurementId } from "./analytics-config";
 import { pricingCheckoutSurface } from "./analytics-events";
-import { pricingPath } from "./auth-entry";
+import { pricingPath, signInHref } from "./auth-entry";
 
 const feature = "lockdocs_pro_seat_year";
 const product = catalogue.spec.products.find((item) => item.key === feature);
@@ -65,7 +65,7 @@ export async function checkout(request: Request) {
   if (!cfg) return privateJson({ error: "billing_unavailable" }, 503);
   if (!sameOrigin(request, cfg.origin)) return privateJson({ error: "invalid_origin" }, 403);
   const session = await getSession(request);
-  if (!session) return privateRedirect(new URL("/api/auth/sign-in?next=%2Fpricing", cfg.origin));
+  if (!session) return privateRedirect(new URL(signInHref("/pricing"), cfg.origin));
 
   const contentType = request.headers.get("content-type")?.split(";", 1)[0].trim().toLowerCase();
   if (contentType !== "application/x-www-form-urlencoded" && contentType !== "multipart/form-data") {
@@ -129,7 +129,7 @@ export async function portal(request: Request) {
   if (!cfg || !authConfigured()) return privateJson({ error: "billing_unavailable" }, 503);
   if (!sameOrigin(request, cfg.origin)) return privateJson({ error: "invalid_origin" }, 403);
   const session = await getSession(request);
-  if (!session) return privateRedirect(new URL("/api/auth/sign-in?next=%2Fdashboard", cfg.origin));
+  if (!session) return privateRedirect(new URL(signInHref("/dashboard"), cfg.origin));
   try {
     const headers = await endUserHeaders(cfg, session);
     if (headers) {

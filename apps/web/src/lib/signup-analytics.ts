@@ -2,6 +2,7 @@ import { cookie } from "./http";
 import { resolveEffectiveConsent } from "@sylphx/sdk/signal";
 import { signalRequestPrivacy } from "./signal-privacy";
 import { measurementId } from "./analytics-config";
+import { localizedPath, defaultLocale } from "./locales";
 
 const markerCookie = "__Host-lockdocs-signup";
 const methods = ["google", "github", "email_otp", "passkey"] as const;
@@ -24,7 +25,7 @@ export function markSignup(request: Request, response: Response, isNewUser: bool
     clearSignupMarker(request, response);
     return;
   }
-  const path = next.split("?", 1)[0];
+  const path = localizedPath(next.split("?", 1)[0], defaultLocale);
   const surface = path === "/pricing" ? "pricing" : path === "/cli/authorize" ? "cli" : "dashboard";
   response.headers.append("Set-Cookie", optionalCookie(markerCookie, method + "." + surface, 60));
 }

@@ -95,6 +95,28 @@ test("sign-in keeps a visible recovery action when the session request fails", a
   await expect(card.getByRole("alert")).toHaveCount(0);
 });
 
+for (const currency of ["USD", "GBP", "EUR", "HKD"]) {
+  test("Traditional Chinese Pro sign-in returns to pricing in " + currency, async ({ page, auth }) => {
+    const next = "/zh-TW/pricing?currency=" + currency;
+    const query = new URLSearchParams({ next });
+    await page.goto(auth.origin + "/zh-TW/pricing");
+    const picker = page.getByRole("navigation", { name: "付款幣別" });
+    const option = picker.getByRole("link", { name: currency, exact: true });
+    if (currency !== "USD") await option.click();
+    await expect(option).toHaveAttribute("aria-current", "page");
+    const pro = page.getByRole("link", { name: /^購買 Lockdocs Pro/ });
+    await expect(pro).toHaveAttribute("href", "/sign-in?" + query);
+    await pro.click();
+    await expect(page).toHaveURL(auth.origin + "/sign-in?" + query);
+    const google = page.getByRole("link", { name: "Continue with Google" });
+    await expect(google).toHaveAttribute("href", "/api/auth/google?" + query);
+    await google.click();
+    await expect(page).toHaveURL(auth.origin + next);
+    await expect(option).toHaveAttribute("aria-current", "page");
+    expect(auth.rejections).toEqual([]);
+  });
+}
+
 test("Google and last-used work when it is the only enabled passwordless method", async ({ page, auth }, info) => {
   const errors = consoleErrors(page);
   await page.goto(auth.origin + "/pricing?currency=GBP");

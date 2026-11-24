@@ -38,6 +38,19 @@ test("legacy aliases keep safe product destinations without carrying untrusted s
   assert.equal(redirect("/pricing"), undefined);
 });
 
+test("only known Traditional Chinese pricing return URLs pass validation", () => {
+  assert.equal(validateNext("/zh-TW/pricing"), "/zh-TW/pricing");
+  for (const currency of ["USD", "GBP", "EUR", "HKD"]) {
+    const next = "/zh-TW/pricing?currency=" + currency;
+    assert.equal(validateNext(next), next);
+  }
+  for (const next of ["/zh-TW/pricing?currency=TWD", "/zh-TW/pricing?currency=EUR&currency=HKD",
+    "/zh-TW/pricing?currency=USD&next=//example.test", "/zh-TW/pricing/private", "/zh-TW/docs",
+    "//example.test/zh-TW/pricing"]) {
+    assert.equal(validateNext(next), "/dashboard", next);
+  }
+});
+
 test("headless proofs use the public credential; only a ticket redeemed for the bound instance opens a session", async t => {
   Object.assign(process.env, { LOCKDOCS_APP_ORIGIN: origin, SYLPHX_AUTH_URL: auth, SYLPHX_AUTH_ORGANIZATION_ID: instance,
     SYLPHX_PUBLISHABLE_KEY: key, SYLPHX_AUTH_SECRET_KEY: secret });
@@ -152,6 +165,14 @@ test("headless proofs use the public credential; only a ticket redeemed for the 
     ] : []);
   }
   signupFlag = true;
+  const localizedPricing = "/zh-TW/pricing?currency=HKD";
+  const localizedSignup = await emailSignIn(post("/api/auth/sign-in", {
+    action: "verify", code: "012345", next: localizedPricing,
+  }, flowCookie + "; " + grant));
+  assert.deepEqual(await localizedSignup.json(), { next: localizedPricing });
+  assert.deepEqual(localizedSignup.headers.getSetCookie().filter(value => value.startsWith(marker)), [
+    marker + "email_otp.pricing; Max-Age=60; Path=/; Secure; SameSite=Lax",
+  ]);
   const cliSignup = await verifyPasskey(post("/api/auth/passkey/verify", { ...assertion, next: cli }, passkeyCookie + "; " + grant));
   assert.deepEqual(await cliSignup.json(), { next: cli });
   assert.deepEqual(cliSignup.headers.getSetCookie().filter(value => value.startsWith(marker)), [

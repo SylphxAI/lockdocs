@@ -34,7 +34,9 @@ export default function Pricing() {
   const money = (value: number, code = currency(), fractional = false) =>
     prefixes[code] + (fractional ? rounded() : whole()).format(value);
   const annual = () => money(amount());
-  const returnPath = () => pricingPath(currency());
+  const returnPath = () => locale() === "en"
+    ? pricingPath(currency())
+    : href("/pricing") + "?" + new URLSearchParams({ currency: currency() });
   const questions = () => [
     { question: text("How much does Lockdocs Pro cost?", "Lockdocs Pro 要多少錢？"), answer: text("Lockdocs Pro costs " + annual() + " per year, including tax. You pay the full annual amount upfront.", "Lockdocs Pro 年費為 " + annual() + "，已含稅，訂閱時一次付清。") },
     { question: text("Do I need an account to use Lockdocs Free?", "使用免費版需要帳戶嗎？"), answer: text("No. Exact-version docs, symbol lookup and the local MCP server are free to use without an account. You sign in to buy or manage Pro.", "不用。查閱指定版本的文件、查詢符號和使用本機 MCP 伺服器都免費，也不用登入。購買或管理 Pro 時才需要登入。") },

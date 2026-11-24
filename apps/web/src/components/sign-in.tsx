@@ -1,10 +1,12 @@
 import { createEffect, createSignal, onCleanup, onMount, Show } from "solid-js";
+import { signInMessages } from "@sylphx/auth-solid";
 import { Fingerprint } from "lucide-solid";
 import type { AuthCapabilities, SignInMethod } from "@/lib/auth";
 import { requestPasskey, supportsPasskeys } from "@/lib/passkey-client";
 
 type Options = { capabilities: AuthCapabilities; lastUsed: SignInMethod | null };
 type EmailAction = "send" | "verify";
+const messages = signInMessages.en;
 const mask = (address: string) => address[0] + "•••" + address.slice(address.lastIndexOf("@"));
 
 function GoogleMark() {
@@ -169,7 +171,7 @@ export function SignIn(props: { next: string }) {
     if (value.length === 6) void submitProof("verify");
   }
 
-  const lastUsed = (method: SignInMethod) => <Show when={options()?.lastUsed === method}><span class="last-used">Last used</span></Show>;
+  const lastUsed = (method: SignInMethod) => <Show when={options()?.lastUsed === method}><span class="last-used">{messages.lastUsed}</span></Show>;
   const PasskeyButton = () => <Show when={passkeys()}>
     <button class="button quiet auth-button auth-passkey" type="button" onClick={explicitPasskey} disabled={Boolean(pending())}>
       <Fingerprint size={18}/>{pending() === "passkey" ? "Waiting for passkey…" : "Continue with a passkey"}{lastUsed("passkey")}
@@ -178,8 +180,8 @@ export function SignIn(props: { next: string }) {
   const providerHref = (provider: "google" | "github") => "/api/auth/" + provider + "?" + new URLSearchParams({ next: props.next });
 
   return <div class="unified-auth">
-    <Show when={!loading()} fallback={<p class="quiet" role="status">Loading sign-in options…</p>}>
-      <Show when={options()} fallback={<button class="button secondary auth-button" type="button" onClick={loadOptions}>Try again</button>}>
+    <Show when={!loading()} fallback={<p class="quiet" role="status">{messages.loading}</p>}>
+      <Show when={options()} fallback={<button class="button secondary auth-button" type="button" onClick={loadOptions}>{messages.retry}</button>}>
         <Show when={step() === "email"} fallback={<>
           <h2 class="proof-heading" tabIndex={-1} ref={proofHeading}>{caps()?.email_otp ? "Check your email" : "Choose a sign-in method"}</h2>
           <Show when={caps()?.email_otp}>
@@ -194,9 +196,9 @@ export function SignIn(props: { next: string }) {
                 <input id="signin-code" ref={codeField} name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" value={code()} required
                   readOnly={Boolean(pending())} onInput={event => enterCode(event.currentTarget, event.currentTarget.value)}
                   onPaste={event => { if (pending()) return; event.preventDefault(); enterCode(event.currentTarget, event.clipboardData?.getData("text") ?? ""); }}/>
-                <button class="button primary auth-button" type="submit" disabled={code().length !== 6 || Boolean(pending())}>{pending() === "verify" ? "Verifying…" : "Verify code"}</button>
+                <button class="button primary auth-button" type="submit" disabled={code().length !== 6 || Boolean(pending())}>{pending() === "verify" ? "Verifying…" : messages.verifyCode}</button>
               </form>
-              <button class="auth-text-button" type="button" disabled={Boolean(pending()) || cooldown() > 0} onClick={() => void submitProof("send")}>{cooldown() ? "Resend in " + cooldown() + "s" : "Resend code"}</button>
+              <button class="auth-text-button" type="button" disabled={Boolean(pending()) || cooldown() > 0} onClick={() => void submitProof("send")}>{cooldown() ? "Resend in " + cooldown() + "s" : messages.resendCode}</button>
             </Show>
           </Show>
           <PasskeyButton/>
@@ -211,7 +213,7 @@ export function SignIn(props: { next: string }) {
           <Show when={caps()?.email_otp || passkeys()}>
             <Show when={caps()?.google || caps()?.github}><div class="auth-divider" aria-hidden="true">or</div></Show>
             <form method="post" onSubmit={continueWithEmail}>
-              <label for="signin-email">Email address</label>
+              <label for="signin-email">{messages.email}</label>
               <input id="signin-email" ref={emailField} type="email" name="email" autocomplete="username webauthn" inputmode="email" maxlength="254" value={email()} required/>
               <button type="submit" class="button primary auth-button" disabled={Boolean(pending())}>Continue</button>
             </form>

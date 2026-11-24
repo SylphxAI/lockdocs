@@ -1,5 +1,6 @@
-import { providerDestination } from "@sylphx/auth/client";
-import { randomBytes, timingSafeEqual } from "node:crypto";
+import { createSylphxAuthHandler, readAuthSessionCookie, type SessionAdapter, type VerifiedIdentitySession } from "@sylphx/auth";
+import type { EntryConfig } from "@sylphx/auth/client";
+import { timingSafeEqual } from "node:crypto";
 import { cookie, setPrivateCookie } from "./http";
 import { boundedJson } from "./bounded-json";
 import { clearSignupMarker, markSignup } from "./signup-analytics";
@@ -13,6 +14,8 @@ export type AuthCapabilities = Record<OAuthProvider | typeof methods[number], bo
 
 type AuthConfig = { origin: string; base: string; key: string; secret: string; instance: string };
 const SESSION = "__Host-lockdocs-session";
+const routePrefix = "/api/auth";
+const providers = ["google", "github"] as const;
 const OAUTH = "__Host-lockdocs-oauth";
 const EMAIL_FLOW = "__Host-lockdocs-email-flow";
 const PASSKEY = "__Host-lockdocs-passkey";
@@ -52,8 +55,8 @@ export function authConfigured(): boolean {
   return config() !== null;
 }
 
-export function providerFetch(url: URL, init: Omit<RequestInit, "redirect"> = {}, redirect: "error" | "manual" = "error"): Promise<Response> {
-  return fetch(url, { ...init, cache: "no-store", redirect, signal: AbortSignal.timeout(8_000) });
+export function providerFetch(url: URL, init: Omit<RequestInit, "redirect"> = {}): Promise<Response> {
+  return fetch(url, { ...init, cache: "no-store", redirect: "error", signal: AbortSignal.timeout(8_000) });
 }
 
 export function privateJson(body: object, status = 200) {
@@ -112,7 +115,7 @@ async function inspect(auth: AuthConfig, token: string, agent: string | null) {
 export async function getSession(request: Request): Promise<Session | null> {
   const auth = config();
   if (!auth) return null;
-  const token = cookie(request, SESSION);
+  const token = readAuthSessionCookie(request, { sessionCookie: SESSION })?.value;
   if (!opaqueSession(token)) return null;
   const incoming = request.headers;
   return inspect(auth, token, incoming.get("user-agent"));
@@ -168,31 +171,49 @@ function equal(left: string, right: string) {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
-// The headless API takes an instance reference, not the ticket exchange secret.
+// Keep Identity discovery pinned to the instance that backs Lockdocs and Money.
+function sdk(auth: AuthConfig, session?: SessionAdapter) {
+  return createSylphxAuthHandler({
+    origin: auth.origin, authApiOrigin: auth.base, tenantAuthOrigin: process.env.LOCKDOCS_TENANT_AUTH_ORIGIN,
+    publishableKey: auth.key, sessionMode: "server", sessionSecret: auth.secret,
+    routePrefix, loginPath: "/sign-in", defaultReturnTo: "/dashboard",
+    allowReturnTo: path => path === validateNext(path),
+    isPublicRequest: request => hasPublicOrigin(request, auth.origin),
+    allowedMethods: ["oauth", "otp", "passkey"], providers, directOAuth: true,
+    flowCookie: OAUTH, sessionCookie: SESSION, session,
+    async fetch(url, init) {
+      const response = await fetch(url, init);
+      if (url.origin === auth.base && url.pathname === "/v1/client/config" && response.ok) {
+        try {
+          if ((await response.clone().json()).instance?.id === auth.instance) return response;
+        } catch { /* Unreadable discovery must also fail closed. */ }
+        void response.body?.cancel().catch(() => undefined);
+        return new Response(null, { status: 502 });
+      }
+      return response;
+    },
+  });
+}
+
+// Keep the existing options shape for the Lockdocs sign-in view.
+export async function getCapabilities(request: Request, auth = config()): Promise<AuthCapabilities | null> {
+  if (!auth) return null;
+  try {
+    const url = new URL(request.url);
+    url.pathname = routePrefix + "/config";
+    const response = await sdk(auth)(new Request(url, { headers: request.headers, signal: request.signal }));
+    if (!response.ok) return null;
+    const entry: EntryConfig = await response.json();
+    return { google: entry.providers.includes("google"), github: entry.providers.includes("github"),
+      email_otp: entry.otp, passkey: entry.passkey };
+  } catch { return null; }
+}
+
+// Keep OTP and passkey flow cookies until the Solid SDK can preserve the OTP-step passkey option.
 function clientEndpoint(auth: AuthConfig, path: string) {
   const url = new URL("/v1/client/" + path, auth.base);
   url.searchParams.set("publishable_key", auth.key);
   return url;
-}
-
-export async function getCapabilities(request: Request, auth = config()): Promise<AuthCapabilities | null> {
-  if (!auth || !hasPublicOrigin(request, auth.origin)) return null;
-  try {
-    const response = await providerFetch(clientEndpoint(auth, "config"), {
-      headers: authHeaders(request.headers.get("user-agent")),
-    });
-    if (!response.ok) return null;
-    const body = await response.json();
-    if (body?.instance?.id !== auth.instance) return null;
-    // Auth returns `social`; also accept deployments that name this list `providers`.
-    const providers = body.social ?? body.providers;
-    const hasProvider = (name: OAuthProvider) => Array.isArray(providers) && providers.some(
-      item => item?.provider === name && item.enabled !== false && Boolean(item.credentials));
-    return {
-      github: hasProvider("github"), google: hasProvider("google"),
-      email_otp: body.methods?.email_otp === true, passkey: body.methods?.passkey === true,
-    };
-  } catch { return null; }
 }
 
 export async function signInOptions(request: Request) {
@@ -210,62 +231,41 @@ function signInRetry(origin: string, next: string) {
 export async function startOAuth(request: Request, provider: OAuthProvider) {
   const auth = config();
   if (!auth) return privateJson({ error: "auth_unavailable" }, 503);
-  const { origin } = auth;
-  if (!hasPublicOrigin(request, origin)) return privateJson({ error: "invalid_origin" }, 403);
-  const params = new URL(request.url).searchParams;
-  const next = validateNext(params.getAll("next").length === 1 ? params.get("next") : null);
-  if (!(await getCapabilities(request, auth))?.[provider]) return signInRetry(origin, next);
-  const state = randomBytes(32).toString("base64url");
-  const callback = new URL("/api/auth/callback", origin);
-  callback.searchParams.set("state", state);
-  const url = new URL("/v1/client/oauth/" + provider + "/start", auth.base);
-  url.search = new URLSearchParams({ publishable_key: auth.key, redirect_url: callback.href, session_mode: "server" }).toString();
+  const url = new URL(request.url);
+  const next = validateNext(url.searchParams.getAll("next").length === 1 ? url.searchParams.get("next") : null);
+  url.pathname = routePrefix + "/" + provider;
+  url.search = new URLSearchParams({ returnTo: next }).toString();
   try {
-    const upstream = await providerFetch(url, { headers: authHeaders(request.headers.get("user-agent")) }, "manual");
-    const destination = upstream.status === 303 ? providerDestination(provider, upstream.headers.get("location")) : undefined;
-    void upstream.body?.cancel().catch(() => undefined);
-    if (destination) {
-      const response = privateRedirect(new URL(destination));
-      setPrivateCookie(response, OAUTH, state + "." + Buffer.from(next).toString("base64url") + "." + provider, { maxAge: 600 });
-      return response;
-    }
+    const response = await sdk(auth)(new Request(url, { headers: request.headers, signal: request.signal }));
+    if (response.status === 303 || (response.status === 403 && (await response.clone().json()).error === "not_allowed")) return response;
   } catch { /* Retry through the same-origin sign-in page. */ }
-  return signInRetry(origin, next);
-}
-
-function aliased(params: URLSearchParams, canonical: string, legacy: string) {
-  const current = params.getAll(canonical);
-  const old = params.getAll(legacy);
-  if (current.length > 1 || old.length > 1 || (current.length && old.length && current[0] !== old[0])) return null;
-  return current[0] ?? old[0] ?? "";
+  return signInRetry(auth.origin, next);
 }
 
 export async function finishOAuth(request: Request) {
   const auth = config();
   if (!auth) return privateJson({ error: "auth_unavailable" }, 503);
-  const [state, encodedNext, provider] = (cookie(request, OAUTH) ?? "").split(".");
-  const { origin } = auth;
-  if (!hasPublicOrigin(request, origin)) return privateJson({ error: "invalid_origin" }, 403);
-  const params = new URL(request.url).searchParams;
-  const states = params.getAll("state");
-  if (!isCliCode(state) || states.length !== 1 || !equal(state, states[0])) {
-    return privateJson({ error: "invalid_oauth_state" }, 400);
-  }
-  const next = validateNext(encodedNext ? Buffer.from(encodedNext, "base64url").toString("utf8") : null);
-  const ticket = aliased(params, "auth_ticket", "sylphx_ticket");
-  const error = aliased(params, "auth_error", "sylphx_error");
-  const login = error === "" && ticket && ticket.length <= 2048
-    ? await redeem(auth, ticket, request.headers.get("user-agent")) : null;
-  const response = login ? privateRedirect(new URL(next, origin)) : signInRetry(origin, next);
-  setPrivateCookie(response, OAUTH, "", { maxAge: 0 });
-  if (login) {
-    setPrivateCookie(response, SESSION, login.token, { maxAge: login.maxAge });
-    if (provider === "google" || provider === "github") {
-      setPrivateCookie(response, LAST_USED, provider, { maxAge: lastUsedAge });
-      markSignup(request, response, login.isNewUser, provider, next);
+  let signedIn: VerifiedIdentitySession | undefined;
+  try {
+    const response = await sdk(auth, {
+      async issue(session, request) {
+        if (!opaqueSession(session.token) || typeof session.expiresAt !== "number" || !Number.isSafeInteger(session.expiresAt)) return;
+        const identity = await inspect(auth, session.token, request.headers.get("user-agent"));
+        if (!identity || identity.id !== session.user.id) return;
+        const age = Math.floor(Math.min(session.expiresAt, verified.get(identity)!.expires) - Date.now() / 1000);
+        if (age < 1 || (session.provider !== "google" && session.provider !== "github")) return;
+        signedIn = session;
+        return [[SESSION, session.token, age], [LAST_USED, session.provider, lastUsedAge]];
+      },
+      logout: signOut,
+    })(request);
+    if (signedIn?.provider && response.status === 303 && response.headers.getSetCookie().some(value => value.startsWith(SESSION + "="))) {
+      markSignup(request, response, signedIn.isNewUser, signedIn.provider, signedIn.returnTo);
     }
+    return response;
+  } catch {
+    return privateJson({ error: "auth_unavailable" }, 503);
   }
-  return response;
 }
 
 export async function signOut(request: Request) {
@@ -273,19 +273,23 @@ export async function signOut(request: Request) {
   if (!origin) return privateJson({ error: "auth_unavailable" }, 503);
   if (!sameOrigin(request, origin)) return privateJson({ error: "invalid_origin" }, 403);
   const auth = config();
-  const token = cookie(request, SESSION);
-  let revoked = !opaqueSession(token);
-  if (auth && opaqueSession(token)) {
-    try {
-      const result = await providerFetch(new URL("/v1/client/sign-out", auth.base), {
-        method: "POST",
-        headers: authHeaders(request.headers.get("user-agent"), token),
-      });
-      revoked = result.ok || result.status === 401;
-    } catch { /* Still clear the local session. */ }
+  let upstream: Response | undefined;
+  if (auth) {
+    const url = new URL(request.url);
+    url.pathname = routePrefix + "/logout";
+    try { upstream = await sdk(auth)(new Request(url, { method: "POST", headers: request.headers, signal: request.signal })); }
+    catch { /* Still clear the local session. */ }
+    if (upstream?.status === 403) return upstream;
   }
-  const response = privateRedirect(new URL(revoked ? "/dashboard" : "/dashboard?auth=sign_out_partial", origin));
-  for (const name of [SESSION, OAUTH, PASSKEY, EMAIL_FLOW]) setPrivateCookie(response, name, "", { maxAge: 0 });
+  const sdkCleared = upstream?.status === 204;
+  const noSession = !readAuthSessionCookie(request, { sessionCookie: SESSION });
+  const response = privateRedirect(new URL(sdkCleared || noSession ? "/dashboard" : "/dashboard?auth=sign_out_partial", origin));
+  if (upstream?.status === 204) {
+    for (const value of upstream.headers.getSetCookie()) response.headers.append("Set-Cookie", value);
+  } else {
+    for (const name of [SESSION, OAUTH]) setPrivateCookie(response, name, "", { maxAge: 0 });
+  }
+  for (const name of [PASSKEY, EMAIL_FLOW]) setPrivateCookie(response, name, "", { maxAge: 0 });
   clearSignupMarker(request, response);
   return response;
 }

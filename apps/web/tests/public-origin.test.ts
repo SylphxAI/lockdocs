@@ -60,9 +60,12 @@ test("public target origin refuses missing, conflicting, foreign and ambiguous a
 test("proxied auth handlers use the configured public origin and preserve OAuth state and POST CSRF checks", async (t) => {
   const auth = "https://identity.example.test";
   const instance = "fixture-instance";
+  const tenant = "https://auth.lockdocs.sylphx.com";
+  const mount = tenant + "/account";
   const config = {
     LOCKDOCS_APP_ORIGIN: origin, SYLPHX_AUTH_URL: auth, SYLPHX_AUTH_ORGANIZATION_ID: instance,
-    SYLPHX_AUTH_SECRET_KEY: "fixture-auth", SYLPHX_PUBLISHABLE_KEY: "fixture-public",
+    LOCKDOCS_TENANT_AUTH_ORIGIN: tenant,
+    SYLPHX_AUTH_SECRET_KEY: "sylphx_sk_fixture", SYLPHX_PUBLISHABLE_KEY: "sylphx_pk_fixture",
     SYLPHX_MONEY_URL: "https://billing.example.test", SYLPHX_MONEY_PARENT: "orgs/fixture/projects/fixture/envs/test",
     SYLPHX_MONEY_API_KEY: "fixture-billing", LOCKDOCS_CCR_TERMS_TEXT: "Fixture terms.", LOCKDOCS_CCR_TERMS_VERSION: "fixture",
   };
@@ -74,36 +77,51 @@ test("proxied auth handlers use the configured public origin and preserve OAuth 
     }
   });
   let redirect!: URL;
-  let authorize = "https://github.com/login/oauth/authorize?state=provider-state";
+  const providerCallback = mount + "/oauth/callback";
+  const target = new URL("https://github.com/login/oauth/authorize");
+  target.searchParams.set("redirect_uri", providerCallback);
+  let authorize = target.href;
   let status = 303;
+  let advertisedOrigin = tenant;
   const provider = t.mock.method(globalThis, "fetch", async (url: URL, init: RequestInit) => {
-    assert.equal(url.origin, auth);
-    assert.equal(url.searchParams.get("publishable_key"), config.SYLPHX_PUBLISHABLE_KEY);
-    assert.equal(new Headers(init.headers).has("authorization"), false);
+    const outgoing = new Headers(init.headers);
+    assert.equal(url.searchParams.has("publishable_key"), false);
     if (url.pathname === "/v1/client/config") {
+      assert.equal(url.origin, auth);
       assert.equal(init.redirect, "error");
-      return Response.json({ instance: { id: instance }, social: [{ provider: "github", credentials: "custom" }] });
+      assert.equal(outgoing.get("authorization"), "Bearer " + config.SYLPHX_PUBLISHABLE_KEY);
+      return Response.json({ instance: { id: instance, slug: "lockdocs", environment: "test" },
+        portal_origin: advertisedOrigin, portal_url: mount,
+        social: [{ provider: "github", credentials: "custom", start_url: mount + "/oauth/github/start?instance=lockdocs" }] });
     }
-    assert.equal(url.pathname, "/v1/client/oauth/github/start");
+    assert.equal(url.origin, tenant);
+    assert.equal(url.pathname, "/account/oauth/github/start");
+    assert.equal(url.searchParams.get("instance"), "lockdocs");
+    assert.equal(outgoing.has("authorization"), false);
     assert.equal(url.searchParams.get("session_mode"), "server");
     assert.equal(init.redirect, "manual");
     redirect = new URL(url.searchParams.get("redirect_url")!);
     return new Response(null, { status, headers: { location: authorize } });
   });
-  const startOAuth = (input: HeadersInit = headers, selected = "github") => oauth({
-    ...event(ingress, "/api/auth/" + selected + "?next=%2Fpricing", { headers: input }), params: { provider: selected },
+  const startOAuth = (input: HeadersInit = headers, selected = "github", navigate = true) => oauth({
+    ...event(ingress, "/api/auth/" + selected + "?next=%2Fpricing", { headers: {
+      ...input, ...(navigate ? { "sec-fetch-site": "same-origin", "sec-fetch-mode": "navigate", "sec-fetch-dest": "document" } : {}),
+    } }), params: { provider: selected },
   });
 
   assert.equal((await getCapabilities(new Request(ingress + "/pricing", { headers })))?.github, true);
+  assert.equal((await startOAuth(headers, "github", false)).status, 403);
   const start = await startOAuth();
   assert.equal(start.status, 303);
   assert.equal(start.headers.get("location"), authorize);
   assert.equal(redirect.origin + redirect.pathname, origin + "/api/auth/callback");
   const cookie = start.headers.get("set-cookie")!.split(";")[0];
-  const failed = await callback(event(ingress, redirect.pathname + redirect.search + "&auth_error=denied", { headers: { ...headers, cookie } }));
+  const failed = await callback(event(ingress, redirect.pathname + redirect.search + "&auth_error=access_denied", { headers: { ...headers, cookie } }));
   assert.equal(failed.status, 303);
-  assert.equal(failed.headers.get("location"), origin + "/sign-in?auth=failed&next=%2Fpricing");
-  assert.deepEqual(await (await callback(event(ingress, redirect.pathname + redirect.search, { headers }))).json(), { error: "invalid_oauth_state" });
+  assert.equal(failed.headers.get("location"), "/sign-in?error=cancelled&next=%2Fpricing");
+  const missing = await callback(event(ingress, redirect.pathname + redirect.search, { headers }));
+  assert.equal(missing.headers.get("location"), "/sign-in?error=signin&next=%2Fdashboard");
+  assert.ok(!missing.headers.getSetCookie().some(value => value.startsWith("__Host-lockdocs-session=")));
 
   const conflict = { ...headers, "x-forwarded-host": unexpected };
   assert.equal(await getCapabilities(new Request(ingress + "/sign-in", { headers: conflict })), null);
@@ -133,11 +151,16 @@ test("proxied auth handlers use the configured public origin and preserve OAuth 
   for ([status, authorize] of [
     [303, auth + "/v1/client/oauth/github/start"],
     [303, "https://accounts.google.com/o/oauth2/v2/auth"],
-    [302, "https://github.com/login/oauth/authorize"],
+    [302, target.href],
+    [303, "https://github.com/login/oauth/authorize"],
   ] as const) {
     const retry = await startOAuth();
     assert.equal(retry.status, 303);
     assert.equal(retry.headers.get("location"), origin + "/sign-in?auth=failed&next=%2Fpricing");
     assert.equal(retry.headers.get("set-cookie"), null);
   }
+  advertisedOrigin = "https://another-tenant.example.test";
+  const before = provider.mock.callCount();
+  assert.equal((await startOAuth()).headers.get("location"), origin + "/sign-in?auth=failed&next=%2Fpricing");
+  assert.equal(provider.mock.callCount(), before + 1);
 });

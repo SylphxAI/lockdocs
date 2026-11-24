@@ -40,11 +40,44 @@ def grade(text, q):
     return (not missing and not hit_reject), missing, hit_reject
 
 
-def installed_version(proj, pkg):
-    p = os.path.join(proj, "node_modules", pkg, "package.json")
-    if os.path.exists(p):
-        return json.load(open(p))["version"]
-    return None
+# Keep this independent of the install manifests so dependency updates cannot
+# silently move two question families onto the same API line.
+COHORTS = {
+    "axum07": {"axum": "0.7"}, "axum08": {"axum": "0.8", "tokio": "1"},
+    "django42": {"django": "4.2"}, "django51": {"django": "5.1"},
+    "eslint8": {"eslint": "8"}, "eslint9": {"eslint": "9"},
+    "express4": {"express": "4", "@types/express": "4"}, "express5": {"express": "5"},
+    "fastapi088": {"fastapi": "0.88"}, "fastapi0115": {"fastapi": "0.115"},
+    "next14": {"next": "14"}, "next15": {"next": "15"}, "next16": {"next": "16"},
+    "prisma5": {"prisma": "5", "@prisma/client": "5"}, "prisma6": {"prisma": "6", "@prisma/client": "6"},
+    "pydantic1": {"pydantic": "1"}, "pydantic2": {"pydantic": "2"},
+    "react18": {"react": "18"}, "react19": {"react": "19"},
+    "rr6": {"react-router": "6"}, "rr7": {"react-router": "7"},
+    "sqlalchemy14": {"sqlalchemy": "1.4"}, "sqlalchemy20": {"sqlalchemy": "2.0"},
+    "tailwind3": {"tailwindcss": "3"}, "tailwind4": {"tailwindcss": "4"},
+    "vite5": {"vite": "5"}, "vite6": {"vite": "6"},
+    "zod3": {"zod": "3"}, "zod4": {"zod": "4"},
+}
+
+
+def indexed_versions(project, report, questions):
+    expected = COHORTS.get(project, {})
+    undeclared = {q["package"] for q in questions} - expected.keys()
+    if undeclared:
+        raise RuntimeError(f"{project}: undeclared benchmark packages: {', '.join(sorted(undeclared))}")
+    if not isinstance(report, dict):
+        raise RuntimeError(f"{project}: cannot index benchmark project: {report}")
+    indexed = {}
+    for package in report.get("packages", []):
+        name, _, version = package["package"].rpartition("@")
+        indexed.setdefault(name, set()).add(version)
+    versions = {}
+    for package, series in expected.items():
+        found = sorted(indexed.get(package, []))
+        if len(found) != 1 or not found[0].startswith(series + "."):
+            raise RuntimeError(f"{project}: expected one indexed {package} in {series}.x; found {found}")
+        versions[package] = found[0]
+    return versions
 
 
 def run_lockdocs(binary, proj, q):
@@ -196,11 +229,14 @@ def main():
     projs = sorted({q["project"] for q in qs})
     # Index every project first and time it (cold cache, package files only).
     index = {}
+    versions = {}
     for p in projs:
         proj = os.path.join(projects, p)
         t = time.perf_counter()
         r = subprocess.run([binary, "index", "-C", proj, "--json"], capture_output=True, text=True, env={**os.environ, "LOCKDOCS_NO_UPSTREAM": "1", "LOCKDOCS_FETCH": "0"})
-        index[p] = {"ms": round((time.perf_counter() - t) * 1000), "report": json.loads(r.stdout) if r.returncode == 0 else r.stderr}
+        report = json.loads(r.stdout) if r.returncode == 0 else r.stderr
+        index[p] = {"ms": round((time.perf_counter() - t) * 1000), "report": report}
+        versions[p] = indexed_versions(p, report, (q for q in qs if q["project"] == p))
     variants = [v for v in VARIANTS if do_fetch or v[0] in ("keyword", "hybrid", "first-use-default")]
     results = {}
     fetch = {}
@@ -221,6 +257,9 @@ def main():
             ok, missing, rej = grade(text, q)
             first = text.splitlines()[0] if text else ""
             version = first.split(" · ")[0].rsplit("@", 1)[-1] if "@" in first else ""
+            expected = f"{q['package']}@{versions[q['project']][q['package']]}"
+            if code == 0 and first.split(" · ", 1)[0] != expected:
+                raise RuntimeError(f"{name}/{q['id']}: expected answer for {expected}; got {first!r}")
             results[(name, q["id"])] = ({"pass": ok and code == 0, "missing": missing, "rejected": rej, "tokens": count(text), "ms": round(ms, 1)}, version)
     first_use_cache.cleanup()
     main_variant = "fetched" if do_fetch else variants[-1][0]

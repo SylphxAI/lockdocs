@@ -50,6 +50,17 @@ class BenchmarkTests(unittest.TestCase):
             self.assertNotIn("no upstream docs", formatted)
         self.assertEqual(runner.fetch_file_count({"files": 0, "upstream": {"files": 20}}), 0)
 
+    def test_mismatched_missing_and_ambiguous_cohorts_refuse(self):
+        questions = [{"package": "pydantic"}]
+        report = {"packages": [{"package": "pydantic@1.10.18"}]}
+        self.assertEqual(runner.indexed_versions("pydantic1", report, questions), {"pydantic": "1.10.18"})
+        for versions in [["2.14.1"], [], ["1.10.18", "1.10.19"]]:
+            report = {"packages": [{"package": "pydantic@" + v} for v in versions]}
+            with self.subTest(versions=versions), self.assertRaisesRegex(RuntimeError, "pydantic1: expected one indexed pydantic"):
+                runner.indexed_versions("pydantic1", report, questions)
+        with self.assertRaisesRegex(RuntimeError, "undeclared benchmark packages: other"):
+            runner.indexed_versions("pydantic1", {}, [{"package": "other"}])
+
     def test_first_use_has_own_empty_cache_and_no_opt_in(self):
         with tempfile.TemporaryDirectory(prefix="lockdocs-bench-test-") as tmp:
             root = Path(tmp)
@@ -72,14 +83,14 @@ with open(os.environ["TEST_LOG"], "a") as log:
         "fetch": os.environ.get("LOCKDOCS_FETCH"), "token": os.environ.get("GITHUB_TOKEN"),
         "no_upstream": os.environ.get("LOCKDOCS_NO_UPSTREAM")}) + "\\n")
 if cmd in ("index", "fetch"):
-    print("{}")
+    print(json.dumps({"packages": [{"package": "fixture@1.0.0"}]}))
 else:
     (cache / "queried").write_text("cached")
     print("fixture@1.0.0 · npm · source\\nright_api")
 ''')
             binary.chmod(0o755)
             out = root / "results.json"
-            with patch.object(runner, "HERE", str(root)), patch.object(sys, "argv", [
+            with patch.object(runner, "HERE", str(root)), patch.dict(runner.COHORTS, {"project": {"fixture": "1"}}), patch.object(sys, "argv", [
                 "run.py", str(binary), str(root / "projects"), str(out), "--fetch",
             ]), patch.dict(os.environ, {
                 "LOCKDOCS_CACHE": str(default_cache), "TEST_LOG": str(log),

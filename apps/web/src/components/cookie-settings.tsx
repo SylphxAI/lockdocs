@@ -7,6 +7,7 @@ import { analyticsPage } from "@/lib/analytics-page";
 import { beginCheckoutParams } from "@/lib/analytics-events";
 import { consumeSignup } from "@/lib/signup-analytics";
 import { useSiteLanguage } from "@/lib/site-language";
+import { localizedPath, defaultLocale } from "@/lib/locales";
 
 type Page = NonNullable<ReturnType<typeof analyticsPage>>;
 type Tag = Window & { gtag?: (...args: unknown[]) => void; dataLayer?: IArguments[] };
@@ -44,7 +45,7 @@ export const useCookieSettings = () => useContext(CookieContext)!;
 
 export function CookieSettings(props: ParentProps) {
   const route = useLocation();
-  const { text } = useSiteLanguage();
+  const { href, text } = useSiteLanguage();
   const [id, setId] = createSignal<string>();
   const [settings, setSettings] = createSignal<SignalConsent>();
   const [open, setOpen] = createSignal(false);
@@ -242,7 +243,7 @@ export function CookieSettings(props: ParentProps) {
     (tag?.contentWindow as Tag | null)?.gtag?.("set", page ?? home(origin));
     if (page) {
       emit("page_view", page);
-      if (page.page_location === origin + "/pricing") sendPricing("pricing_view");
+      if (localizedPath(pathname, defaultLocale) === "/pricing") sendPricing("pricing_view");
       syncEngagement();
     }
   });
@@ -250,7 +251,7 @@ export function CookieSettings(props: ParentProps) {
   function sendPricing(event: "pricing_view" | "begin_checkout", params: Record<string, unknown> = {}) {
     emit(event, {
       ...params,
-      page_location: window.location.origin + "/pricing", page_referrer: "", page_title: "Lockdocs",
+      page_location: window.location.origin + href("/pricing"), page_referrer: "", page_title: "Lockdocs",
     });
   }
 

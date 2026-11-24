@@ -14,7 +14,7 @@ export function isCliCode(value: string | null): value is string {
 
 /** Accept only known return pages and the CLI's exact loopback-consent input. */
 export function validateNext(value: string | null): string {
-  if (value === "/dashboard" || value === "/pricing" || (value && /^\/pricing\?currency=(USD|GBP|EUR|HKD)$/.test(value))) {
+  if (value && (value === "/dashboard" || /^(?:\/zh-TW)?\/pricing(?:\?currency=(?:USD|GBP|EUR|HKD))?$/.test(value))) {
     return value;
   }
   const prefix = "/cli/authorize?";

@@ -57,6 +57,69 @@ async function commands(page: Page) {
   );
 }
 
+async function observeLocalizedAnalytics(page: Page) {
+  const wire: URLSearchParams[] = [];
+  const hits = await install(page, "DE", wire);
+  const frames: string[] = [];
+  page.on("request", request => {
+    if (new URL(request.url()).pathname === tagPath) frames.push(request.url());
+  });
+  return { wire, hits, frames };
+}
+
+const noAnalytics = { wire: [], hits: [], frames: [] };
+
+test("Traditional Chinese pricing sends nothing before or after rejecting optional cookies", async ({ page }) => {
+  const observed = await observeLocalizedAnalytics(page);
+  await page.goto("/zh-TW/pricing");
+  const banner = page.getByRole("region", { name: "Cookie 設定" });
+  await expect(banner).toBeVisible();
+  expect(observed).toEqual(noAnalytics);
+  await banner.getByRole("button", { name: "拒絕選用項目", exact: true }).click();
+  await expect(banner).toHaveCount(0);
+  expect(await page.context().cookies()).toContainEqual(expect.objectContaining({
+    name: "__Host-lockdocs-signal-choice", value: "denied",
+  }));
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Cookie 設定", exact: true })).toBeEnabled();
+  await expect(banner).toHaveCount(0);
+  await expect(page.locator(analyticsFrame)).toHaveCount(0);
+  expect(observed).toEqual(noAnalytics);
+});
+
+for (const [path, events] of [
+  ["/zh-TW", ["page_view"]],
+  ["/zh-TW/docs", ["page_view"]],
+  ["/zh-TW/playground", ["page_view"]],
+  ["/zh-TW/pricing", ["page_view", "pricing_view"]],
+] as const) {
+  test(path + " reports the sanitized parent URL only after opting in", async ({ page }) => {
+    const observed = await observeLocalizedAnalytics(page);
+    await page.goto(path + "?private=fixture-only#fixture-hash");
+    const landing = new URL(path, page.url()).href;
+    const banner = page.getByRole("region", { name: "Cookie 設定" });
+    await expect(banner).toBeVisible();
+    await expect(page.locator(analyticsFrame)).toHaveCount(0);
+    expect(observed).toEqual(noAnalytics);
+
+    const [response] = await Promise.all([
+      page.waitForResponse(response => new URL(response.url()).pathname === tagPath, { timeout: 5000 }),
+      banner.getByRole("button", { name: "允許分析與廣告", exact: true }).click(),
+    ]);
+    expect(response.status()).toBe(200);
+    await expect(page.locator(analyticsFrame)).toHaveAttribute("src", tagPath);
+    await expect.poll(() => observed.hits.length).toBe(1);
+    expect(observed.frames).toEqual([new URL(tagPath, landing).href]);
+    await expect.poll(() => observed.wire
+      .filter(params => ["page_view", "pricing_view"].includes(params.get("en") ?? ""))
+      .map(params => [params.get("en"), params.get("dl")]))
+      .toEqual(events.map(event => [event, landing]));
+    // The tag's own location must also be safe for events that ignore page_location.
+    await expect.poll(() => page.frameLocator(analyticsFrame).locator("html").evaluate(() => location.href)).toBe(landing);
+    expect(observed.wire.map(params => params.toString()).join(" ")).not.toMatch(/analytics%2Ftag|fixture/);
+  });
+}
+
 test("EEA waits for a choice, records only the permitted pricing event, and stops after rejection", async ({ page }, info) => {
   const hits = await install(page, "DE");
   await page.goto("/pricing?unexpected=synthetic-query@fixture.test");

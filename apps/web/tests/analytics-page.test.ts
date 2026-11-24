@@ -16,7 +16,8 @@ test("refuses other origins, credentials, the tag endpoint and unknown or user-d
   for (const url of [
     "https://example.test/pricing", "https://lockdocs.sylphx.com.example.test/pricing",
     "https://user:secret@lockdocs.sylphx.com/pricing", "blob:" + origin + "/pricing",
-    origin + "/api/analytics/tag", origin + "/docs/fixture%40example.test", "not-a-url",
+    origin + "/api/analytics/tag", origin + "/docs/fixture%40example.test",
+    origin + "/zh-TW/docs/fixture%40example.test", origin + "/zh-TW/sign-in", "not-a-url",
   ]) assert.equal(analyticsPage(url, "", origin), null, url);
   for (const referrer of ["https://example.test/?email=fixture", origin + "/unknown/secret"]) {
     assert.equal(analyticsPage(origin + "/pricing", referrer, origin)?.page_referrer, "");

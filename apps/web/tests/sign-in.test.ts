@@ -5,8 +5,8 @@ import { beginPasskey, emailSignIn, signInOptions, verifyPasskey } from "../src/
 
 const origin = "https://lockdocs.example.test";
 const auth = "https://auth.example.test";
-const key = "pk_web_test";
-const secret = "sk_web_test";
+const key = "sylphx_pk_web_test";
+const secret = "sylphx_sk_web_test";
 const instance = "lockdocs-auth-test";
 const flow = "F".repeat(42) + "A";
 const cli = `/cli/authorize?port=44191&state=${flow}&challenge=${flow}`;
@@ -79,8 +79,10 @@ test("headless proofs use the public credential; only a ticket redeemed for the 
       ? Response.json({ session: { token: "identity_org_session_test", expires_at: expiry }, is_new_user: signupFlag }) : Response.json({}, { status: 403 });
     if (path === "session") return bearer === "Bearer identity_org_session_test" && !publishable
       ? Response.json({ session: { id: "session", expires_at: expiry, instance_id: sessionInstance }, user: { id: "usr_test" } }) : Response.json({}, { status: 401 });
+    if (path === "config") return bearer === "Bearer " + key && !publishable
+      ? Response.json({ instance: { id: configuredInstance, slug: "lockdocs", environment: "test" }, methods, social: [{ provider: "google", credentials: "shared" }] })
+      : Response.json({}, { status: 403 });
     if (bearer || publishable !== key) return Response.json({}, { status: 403 });
-    if (path === "config") return Response.json({ instance: { id: configuredInstance }, methods, social: [{ provider: "google", credentials: "shared" }] });
     if (providerError) return Response.json({ private_provider_diagnostic: "not safe to reflect" }, { status: providerError });
     if (path === "continue") return Response.json({ step: "email_otp", flow, expires_in: 601 });
     if (path === "sign-in/passkey/begin") return Response.json({ challenge_id: assertion.challenge_id, challenge: flow, rp_id: "lockdocs.example.test", allowed_credential_ids: [], expires_at: expiry });
@@ -140,7 +142,7 @@ test("headless proofs use the public credential; only a ticket redeemed for the 
   const passkey = await verifyPasskey(post("/api/auth/passkey/verify", { ...assertion, next: cli }, passkeyCookie));
   assert.deepEqual(await passkey.json(), { next: cli });
   assert.deepEqual(seen.at(-3)?.body, { ...assertion, session_mode: "server" });
-  assert.ok(seen.filter(entry => !["session", "tickets:redeem"].includes(entry.path)).every(entry => entry.key === key && !entry.bearer));
+  assert.ok(seen.filter(entry => !["config", "session", "tickets:redeem"].includes(entry.path)).every(entry => entry.key === key && !entry.bearer));
   assert.ok(!seen.some(entry => entry.path === "sign-up"));
 
   const grant = "__Host-lockdocs-signal-choice=granted";

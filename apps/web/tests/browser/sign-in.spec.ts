@@ -161,7 +161,9 @@ test("GitHub signs into the same account and preserves a native CLI authorizatio
   const cli = "/cli/authorize?" + new URLSearchParams({ port: "44191", state: proof, challenge: proof });
   await page.goto(auth.origin + cli);
   await page.getByRole("link", { name: "Sign in", exact: true }).last().click();
-  const start = await page.request.get(auth.origin + "/api/auth/github?" + new URLSearchParams({ next: cli }), { maxRedirects: 0 });
+  const start = await page.request.get(auth.origin + "/api/auth/github?" + new URLSearchParams({ next: cli }), { maxRedirects: 0, headers: {
+    "sec-fetch-site": "same-origin", "sec-fetch-mode": "navigate", "sec-fetch-dest": "document", "x-fixture-stop-before-provider": "1",
+  } });
   expect(start.status()).toBe(303);
   expect(start.headers().location).toMatch(/^https:\/\/github\.com\/login\/oauth\/authorize\?/);
   await page.getByRole("link", { name: "Continue with GitHub" }).click();

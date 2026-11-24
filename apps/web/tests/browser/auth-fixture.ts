@@ -9,8 +9,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test as base } from "@playwright/test";
 
-const pk = "pk_lockdocs_fixture";
-const sk = "sk_lockdocs_fixture";
+const pk = "sylphx_pk_lockdocs_fixture";
+const sk = "sylphx_sk_lockdocs_fixture";
 const instance = "lockdocs-fixture";
 export const email = "reader@example.test";
 export const code = "012345";
@@ -62,6 +62,15 @@ async function startFixture(billing: boolean) {
       const upstream = request({ hostname: "127.0.0.1", port: appPort, path: req.url, method: req.method, headers: {
         ...req.headers, "x-forwarded-host": url.host, "x-forwarded-proto": "https",
       } }, upstream => {
+        const location = upstream.headers.location;
+        if (/^\/api\/auth\/(?:google|github)$/.test(path) && location && !req.headers["x-fixture-stop-before-provider"]) {
+          const state = new URL(location).searchParams.get("state") ?? "";
+          const callback = oauthReturns.get(state);
+          if (callback) {
+            oauthReturns.delete(state);
+            upstream.headers.location = callback;
+          }
+        }
         res.writeHead(upstream.statusCode ?? 502, upstream.headers);
         upstream.pipe(res);
       });
@@ -76,7 +85,7 @@ async function startFixture(billing: boolean) {
     if (path === "/v1/client/session" || path === "/v1/client/sign-out") {
       const address = sessions.get(sessionToken);
       if (!address) return json(res, {}, 401);
-      if (path.endsWith("/sign-out")) { sessions.delete(sessionToken); return json(res, {}); }
+      if (path.endsWith("/sign-out")) { sessions.delete(sessionToken); return res.writeHead(204).end(); }
       return json(res, { session: { id: "session-fixture", instance_id: instance, expires_at: expiry }, user: {
         id: address === email ? "usr_reader" : "usr_new_reader", name: "Fixture reader", email: address,
       } });
@@ -118,15 +127,19 @@ async function startFixture(billing: boolean) {
       tickets.delete(body.ticket);
       const token = "identity_org_session_" + random();
       sessions.set(token, address);
-      return json(res, { session: { token, expires_at: expiry }, ...ticketSignal });
+      return json(res, { session: { token, expires_at: expiry }, user: {
+        id: address === email ? "usr_reader" : "usr_new_reader", email: address, email_verified: true,
+      }, ...ticketSignal });
     }
-    if (req.headers.authorization || url.searchParams.get("publishable_key") !== pk) {
+    if (path === "/v1/client/config" || path.startsWith("/v1/client/oauth/")) {
+      if (sessionToken !== pk || url.searchParams.has("publishable_key")) return rejectContract("expected publishable bearer");
+    } else if (req.headers.authorization || url.searchParams.get("publishable_key") !== pk) {
       return rejectContract("client endpoint requires a publishable key, not a secret bearer");
     }
     switch (path) {
       case "/v1/client/config":
         if (req.method !== "GET") return rejectContract("config method");
-        return json(res, { instance: { id: instance }, methods, social });
+        return json(res, { instance: { id: instance, slug: "lockdocs", environment: "test" }, methods, social });
       case "/v1/client/oauth/google/start":
       case "/v1/client/oauth/github/start": {
         const target = new URL(url.searchParams.get("redirect_url") ?? "");
@@ -213,13 +226,7 @@ async function startFixture(billing: boolean) {
     }, stdio: ["ignore", "pipe", "inherit"] });
     await once(app.stdout!, "data");
     if (!(await fetch(`http://127.0.0.1:${appPort}/api/health`)).ok) throw new Error("Fixture app did not start");
-    function completeOAuth(authorize: string) {
-      const state = new URL(authorize).searchParams.get("state") ?? "";
-      const callback = oauthReturns.get(state);
-      oauthReturns.delete(state);
-      return callback;
-    }
-    return { origin, methods, calls, rejections, shipments, bindings, passkey, ticketSignal, completeOAuth, close };
+    return { origin, methods, calls, rejections, shipments, bindings, passkey, ticketSignal, close };
   } catch (error) {
     await close();
     throw error;
@@ -228,19 +235,6 @@ async function startFixture(billing: boolean) {
 
 export const test = base.extend<{ billing: boolean; auth: Awaited<ReturnType<typeof startFixture>> }>({
   billing: [false, { option: true }],
-  page: async ({ page, auth }, use) => {
-    // Playwright routes the first request, not subsequent hops in the same redirect chain.
-    await page.route(/\/api\/auth\/(?:google|github)\?/, async route => {
-      const response = await route.fetch({ maxRedirects: 0 });
-      const headers = response.headers();
-      const authorize = headers.location;
-      if (!authorize || new URL(authorize).origin === auth.origin) return route.fulfill({ response });
-      const location = auth.completeOAuth(authorize);
-      if (location) await route.fulfill({ response, headers: { ...headers, location } });
-      else await route.abort();
-    });
-    await use(page);
-  },
   ignoreHTTPSErrors: true, // A per-test certificate; the production child validates it via NODE_EXTRA_CA_CERTS.
   auth: async ({ billing }, use) => {
     const fixture = await startFixture(billing);

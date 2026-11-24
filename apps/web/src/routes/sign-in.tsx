@@ -31,7 +31,7 @@ export default function SignInPage() {
       <div class="plan-label">YOUR WORKSPACE</div>
       <h1>Sign in to Lockdocs</h1>
       <p class="quiet">Manage your subscription and connect the Lockdocs CLI.</p>
-      <Show when={params.auth === "failed"}><p role="status" class="notice">Sign-in didn’t finish. Try again or choose another method.</p></Show>
+      <Show when={params.auth === "failed" || params.error === "signin" || params.error === "cancelled" || params.error === "use_existing"}><p role="status" class="notice">Sign-in didn’t finish. Try again or choose another method.</p></Show>
       <ErrorBoundary fallback={<>
         <p class="notice" role="alert">Couldn’t load sign-in. Try again.</p>
         <button type="button" class="button secondary auth-button" onClick={() => window.location.reload()}>Try again</button>

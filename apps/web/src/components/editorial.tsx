@@ -24,9 +24,9 @@ export function CodeExample(props: { label: string; code: string }) {
   </figure>;
 }
 
-export function EditorialFaq(props: { items: readonly Faq[]; url: string }) {
+export function EditorialFaq(props: { items: readonly Faq[]; url: string; heading?: string }) {
   return <section id="faq" class="editorial-section" aria-labelledby="faq-title">
-    <h2 id="faq-title">Frequently asked questions</h2>
+    <h2 id="faq-title">{props.heading ?? "Frequently asked questions"}</h2>
     <div class="editorial-faqs">
       <For each={props.items}>{item => <details>
         <summary>{item.question}</summary>

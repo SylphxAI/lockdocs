@@ -6,6 +6,7 @@ import { readSignalChoice, signalChoiceKey, signalStorageKey, type StoredChoice 
 import { analyticsPage } from "@/lib/analytics-page";
 import { beginCheckoutParams } from "@/lib/analytics-events";
 import { consumeSignup } from "@/lib/signup-analytics";
+import { useSiteLanguage } from "@/lib/site-language";
 
 type Page = NonNullable<ReturnType<typeof analyticsPage>>;
 type Tag = Window & { gtag?: (...args: unknown[]) => void; dataLayer?: IArguments[] };
@@ -43,6 +44,7 @@ export const useCookieSettings = () => useContext(CookieContext)!;
 
 export function CookieSettings(props: ParentProps) {
   const route = useLocation();
+  const { text } = useSiteLanguage();
   const [id, setId] = createSignal<string>();
   const [settings, setSettings] = createSignal<SignalConsent>();
   const [open, setOpen] = createSignal(false);
@@ -287,15 +289,15 @@ export function CookieSettings(props: ParentProps) {
     <Show when={id() && open()}><section id="cookie-settings" class="cookie-panel" aria-labelledby="cookie-heading" tabIndex={-1}
       ref={panel} onKeyDown={event => { if (event.key === "Escape" && trigger) close(); }}>
       <div class="cookie-copy">
-        <h2 id="cookie-heading">Cookie settings</h2>
-        <p><Show when={protectedByGpc()} fallback="Optional cookies measure usage and can personalize ads.">
-          <span role="status">Global Privacy Control blocks optional cookies.</span>
-        </Show>{" "}<a href="/legal/privacy">Privacy policy</a></p>
+        <h2 id="cookie-heading">{text("Cookie settings", "Cookie 設定")}</h2>
+        <p><Show when={protectedByGpc()} fallback={text("Optional cookies measure usage and can personalize ads.", "選用 Cookie 用於分析使用狀況與廣告成效，並可提供個人化廣告。")}>
+          <span role="status">{text("Global Privacy Control blocks optional cookies.", "全域隱私控制（GPC）已封鎖選用 Cookie。")}</span>
+        </Show>{" "}<a href="/legal/privacy">{text("Privacy policy", "隱私權政策")}</a></p>
       </div>
       <div class="cookie-actions">
-        <button type="button" class="cookie-choice" onClick={() => choose("denied")}>Reject optional</button>
-        <button type="button" class="cookie-choice" disabled={protectedByGpc()} onClick={() => choose("analytics_only")}>Analytics only</button>
-        <button type="button" class="cookie-choice" disabled={protectedByGpc()} onClick={() => choose("granted")}>Allow analytics &amp; ads</button>
+        <button type="button" class="cookie-choice" onClick={() => choose("denied")}>{text("Reject optional", "拒絕選用項目")}</button>
+        <button type="button" class="cookie-choice" disabled={protectedByGpc()} onClick={() => choose("analytics_only")}>{text("Analytics only", "僅限分析")}</button>
+        <button type="button" class="cookie-choice" disabled={protectedByGpc()} onClick={() => choose("granted")}>{text("Allow analytics & ads", "允許分析與廣告")}</button>
       </div>
     </section></Show>
   </CookieContext.Provider>;
@@ -303,5 +305,6 @@ export function CookieSettings(props: ParentProps) {
 
 export function CookieSettingsButton() {
   const settings = useCookieSettings();
-  return <button class="footer-cookie" type="button" disabled={!settings.configured()} aria-controls="cookie-settings" onClick={event => settings.open(event.currentTarget)}>Cookie settings</button>;
+  const { text } = useSiteLanguage();
+  return <button class="footer-cookie" type="button" disabled={!settings.configured()} aria-controls="cookie-settings" onClick={event => settings.open(event.currentTarget)}>{text("Cookie settings", "Cookie 設定")}</button>;
 }

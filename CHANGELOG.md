@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.8
+
+- `lockdocs login` opens the Lockdocs website by default. No environment variable is needed to connect the CLI to your Pro account.
+
 ## 0.7.6
 
 - The checkout return page no longer polls for purchase status in the browser.

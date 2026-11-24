@@ -107,7 +107,7 @@ export default function Page() { return <div className="prose"><h3 className="sr
     assert!(md.contains("### Overview"), "{md}");
     assert!(!md.contains("dedent") && !md.contains("prose"), "{md}");
     let mut out = Vec::new();
-    prose_titled(&md, "upstream:site/docs/installation/page.tsx", 0, title, &mut out);
+    prose_titled(&md, "upstream:site/docs/installation/page.tsx", 0, title, None, &mut out);
     let s = out.iter().find(|e| e.name == "Installing with Vite › Import Tailwind CSS").unwrap();
     assert_eq!(s.line, 5);
     assert_eq!(

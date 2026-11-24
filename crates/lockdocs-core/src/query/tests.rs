@@ -73,6 +73,7 @@ fn old_upgrade_guides_and_deprecated_pages() {
         alias_of: None,
         legacy: false,
         prose_imports: Vec::new(),
+        guide_modes: Vec::new(),
         prose_parents: Vec::new(),
     };
     assert!(old_upgrade_guide(

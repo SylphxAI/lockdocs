@@ -523,3 +523,97 @@ fn root_docs_include_additive_public_helpers_without_mixing_alternate_editions()
     let a = engine(dir.path()).docs(Some("@sample/forms/next"), "configuration recipe", 4000).unwrap();
     assert!(!a.text.contains("Additive-only configuration"), "{}", a.text);
 }
+
+#[test]
+fn fetched_pages_keep_edition_setup_and_equivalent_wrappers_share_prose() {
+    use lockdocs_core::{index, locate, upstream, Dep, Eco};
+
+    let dir = fixture();
+    let pkg = dir.path().join("node_modules/@sample/forms");
+    write(
+        &pkg,
+        "package.json",
+        r#"{"name":"@sample/forms","version":"1.2.3","exports":{".":"./index.d.cts","./v1":"./v1/index.d.cts","./v2":"./v2/index.d.cts","./renamed":"./renamed.d.cts"}}"#,
+    );
+    write(
+        &pkg,
+        "index.d.cts",
+        "import * as forms from './v1/exports.cjs';\nexport * from './v1/exports.cjs';\nexport { forms, forms as default };\n",
+    );
+    write(
+        &pkg,
+        "v1/index.d.cts",
+        "import * as forms from './exports.cjs';\nexport * from './exports.cjs';\nexport { forms, forms as default };\n",
+    );
+    write(
+        &pkg,
+        "renamed.d.cts",
+        "import * as forms from './v1/exports.cjs';\nexport * from './v1/exports.cjs';\nexport { forms as other, forms as default };\n",
+    );
+    write(&pkg, "v1/exports.d.cts", "export declare function build(): Stable;\n");
+    write(&pkg, "v2/index.d.cts", "export declare function build(): Modern;\n");
+    let site = dir.path().join("fetched");
+    write(&site, "docs/reference.mdx", "---\ntitle: Reference\n---\nimport Panel from 'plumbing/components';\n\n## Setup\n\n\x60\x60\x60ts\nimport * as forms from '@sample/forms/v2';\n\x60\x60\x60\n\n## Recipe\n\nModern-only neighboring recipe.\n\n## Stable override\n\n\x60\x60\x60ts\nimport * as forms from '@sample/forms/v1';\n\x60\x60\x60\nStable override recipe.\n");
+    write(&site, "docs/v1.mdx", "# Stable\n\nStable versioned recipe.\n");
+    write(&site, "docs/v2/guide.mdx", "# Modern\n\nModern versioned recipe.\n");
+    write(&site, "docs/shared.mdx", "# Shared\n\nShared neutral recipe.\n");
+    let dep = Dep {
+        eco: Eco::Npm,
+        name: "@sample/forms".into(),
+        version: "1.2.3".into(),
+        direct: true,
+        from: "fixture".into(),
+    };
+    let src = locate::locate(&dep, dir.path()).unwrap();
+    let manifest: upstream::Manifest =
+        serde_json::from_value(json!({"format":upstream::FORMAT,"repo":"fixture","tag":"v1.2.3","files":4,"bytes":300})).unwrap();
+    let idx = index::build(&dep, &src, dir.path(), Some(&(site, manifest)));
+    let wanted = |import: &str, phrase: &str| idx.docs_indices(Some(import)).into_iter().any(|i| idx.entries[i].doc.contains(phrase));
+    for import in ["@sample/forms", "@sample/forms/v1"] {
+        assert!(wanted(import, "Stable override recipe"));
+        assert!(wanted(import, "Stable versioned recipe"));
+        assert!(!wanted(import, "Modern-only neighboring recipe"));
+        assert!(!wanted(import, "Modern versioned recipe"));
+    }
+    assert!(!wanted("@sample/forms/renamed", "Stable versioned recipe"));
+    assert!(wanted("@sample/forms/v2", "Modern-only neighboring recipe"));
+    assert!(wanted("@sample/forms/v2", "Modern versioned recipe"));
+    assert!(!wanted("@sample/forms/v2", "Stable override recipe"));
+    assert!(wanted("@sample/forms/v2", "Shared neutral recipe"));
+}
+
+#[test]
+fn docs_report_section_guide_modes_without_guessing_user_intent() {
+    let dir = fixture();
+    let pkg = dir.path().join("node_modules/@sample/forms");
+    write(&pkg, "docs/modes.md", "# Recipes\n\n[MODES: alpha, beta]\n\n## Shared\nShared frobnication recipe.\n\n## Override\n[MODES: gamma]\n\nGamma frobnication recipe.\n\n### Details\nDetailed frobnication recipe.\n\n## Extra\nExtra frobnication recipe.\n\n> [MODES: fake]\n\n\x60\x60\x60text\n[MODES: fake]\n\x60\x60\x60\n");
+    let a = engine(dir.path()).docs(Some("@sample/forms"), "frobnication recipe alpha mode", 4000).unwrap();
+    let hits = a.json["hits"].as_array().unwrap();
+    for (heading, modes) in [
+        (" › Shared", json!(["alpha", "beta"])),
+        (" › Details", json!(["gamma"])),
+        (" › Extra", json!(["alpha", "beta"])),
+    ] {
+        let hit = hits
+            .iter()
+            .find(|h| h["path"].as_str().is_some_and(|p| p.ends_with(heading)))
+            .unwrap_or_else(|| panic!("{heading}: {}", a.text));
+        assert_eq!(hit["guide_modes"], modes);
+    }
+    assert!(a.text.contains("Guide modes: alpha, beta"));
+    assert!(a.text.contains("Guide modes: gamma"));
+}
+
+#[test]
+fn guide_context_does_not_quote_an_incompatible_parent() {
+    let dir = fixture();
+    let pkg = dir.path().join("node_modules/@sample/forms");
+    write(&pkg, "docs/recipes.md", "# Handbook\n\nGeneral guidance for all recipes.\n\n## Setup\n\n[MODES: alpha]\n\nUse the alpha-only connection setup for this recipe.\n\n### Recipe\n\n[MODES: beta]\n\nExecute the unique transmogrification operation.\n");
+    let answer = engine(dir.path())
+        .docs(Some("@sample/forms"), "unique transmogrification operation", 4000)
+        .unwrap();
+    let first = answer.text.split("\n### ").nth(1).unwrap();
+    assert!(first.contains("Guide modes: beta"), "{first}");
+    assert!(first.contains("General guidance for all recipes"), "{first}");
+    assert!(!first.contains("alpha-only connection setup"), "{first}");
+}

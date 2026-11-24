@@ -34,9 +34,10 @@ pub fn extract(eco: Eco, pkg_name: &str, src: &Source, extra_types: Option<&Path
             let Ok(bytes) = std::fs::read(&job.abs) else { return Vec::new() };
             let text = String::from_utf8_lossy(&bytes);
             let mut out = Vec::new();
+            let package = (eco == Eco::Npm && job.rel.starts_with("upstream:")).then_some(pkg_name);
             match job.how {
                 How::Prose => {
-                    prose(&text, &job.rel, 0, &mut out);
+                    prose_titled(&text, &job.rel, 0, None, package, &mut out);
                     if job.rel.starts_with("upstream:") && !includes.files.is_empty() {
                         for e in &mut out {
                             e.doc = includes.expand(&e.doc);
@@ -46,7 +47,7 @@ pub fn extract(eco: Eco, pkg_name: &str, src: &Source, extra_types: Option<&Path
                 How::Page => {
                     if let Some((md, title)) = page_markdown(&text) {
                         let title = title.unwrap_or_else(|| page_title(&job.rel));
-                        prose_titled(&md, &job.rel, 0, Some(title), &mut out);
+                        prose_titled(&md, &job.rel, 0, Some(title), package, &mut out);
                     }
                 }
                 How::Example => example(&text, &job.rel, &mut out),
@@ -67,7 +68,7 @@ pub fn extract(eco: Eco, pkg_name: &str, src: &Source, extra_types: Option<&Path
     }
     // Drop exact duplicates (the same declaration shipped twice).
     let mut seen = HashSet::new();
-    all.retain(|e| seen.insert((e.path.clone(), e.sig.clone(), e.doc.len())));
+    all.retain(|e| e.kind == super::Kind::Prose || seen.insert((e.path.clone(), e.sig.clone(), e.doc.len())));
     all
 }
 

@@ -10,6 +10,7 @@ pub struct Section {
     pub text: String,
     /// Effective example imports, inherited by package before section chunking.
     pub imports: Vec<String>,
+    pub guide_modes: Vec<String>,
     /// Lines of nonempty ancestor sections in this page, outermost first.
     pub parents: Vec<u32>,
 }
@@ -42,6 +43,7 @@ struct Scope {
     level: usize,
     title: String,
     imports: Vec<String>,
+    guide_modes: Vec<String>,
     line: Option<u32>,
 }
 
@@ -51,7 +53,7 @@ pub(crate) fn import_base(import: &str) -> &str {
 }
 
 /// Read module specifiers from actual JS/TS examples, not prose or MDX imports.
-fn example_imports(body: &str) -> Vec<String> {
+fn collect_example_imports(body: &str, first_example: bool) -> Vec<String> {
     fn walk(n: tree_sitter::Node, src: &[u8], out: &mut Vec<String>) {
         let source = if matches!(n.kind(), "import_statement" | "export_statement") {
             n.child_by_field_name("source")
@@ -89,6 +91,9 @@ fn example_imports(body: &str) -> Vec<String> {
                     if let Some(tree) = parser.parse(&code, None) {
                         walk(tree.root_node(), code.as_bytes(), &mut out);
                     }
+                    if first_example {
+                        return out;
+                    }
                 }
                 fence = None;
                 code.clear();
@@ -110,13 +115,57 @@ fn example_imports(body: &str) -> Vec<String> {
     out
 }
 
+fn example_imports(body: &str) -> Vec<String> {
+    collect_example_imports(body, false)
+}
+
+/// A standalone declaration in the opening of a logical section. An
+/// invalid or conflicting declaration clears inherited applicability.
+fn section_modes(text: &str) -> Option<Vec<String>> {
+    let mut modes = None;
+    for line in text.lines().map(str::trim).filter(|line| !line.is_empty()) {
+        let Some(rest) = line.strip_prefix("[MODES:") else { break };
+        let Some(names) = rest.strip_suffix(']') else { return Some(Vec::new()) };
+        let mut names: Vec<_> = names.split(',').map(str::trim).map(str::to_ascii_lowercase).collect();
+        if names
+            .iter()
+            .any(|name| name.is_empty() || name.len() > 32 || !name.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-'))
+        {
+            return Some(Vec::new());
+        }
+        if names.len() > 8 {
+            return Some(Vec::new());
+        }
+        names.sort_unstable();
+        names.dedup();
+        if modes.as_ref().is_some_and(|existing| existing != &names) {
+            return Some(Vec::new());
+        }
+        modes = Some(names);
+    }
+    modes
+}
+
 pub fn split(text: &str, title: &str) -> Vec<Section> {
+    split_scoped(text, title, None)
+}
+
+/// Fetched reference pages can show the import setup once and omit it in
+/// following sections. An explicit section import overrides the page default.
+pub(crate) fn split_scoped(text: &str, title: &str, package: Option<&str>) -> Vec<Section> {
+    let imports = package.map_or_else(Vec::new, |package| {
+        collect_example_imports(text, true)
+            .into_iter()
+            .filter(|import| import_base(import) == package)
+            .collect()
+    });
     let lines: Vec<&str> = text.lines().collect();
     let mut out: Vec<Section> = Vec::new();
     let mut stack = vec![Scope {
         level: 0,
         title: title.to_string(),
-        imports: Vec::new(),
+        imports,
+        guide_modes: Vec::new(),
         line: None,
     }];
     let mut rst_levels: Vec<char> = Vec::new();
@@ -134,11 +183,15 @@ pub fn split(text: &str, title: &str) -> Vec<Section> {
             scope.imports.extend(own);
             scope.imports.sort();
             scope.imports.dedup();
+            if let Some(modes) = section_modes(body) {
+                scope.guide_modes = modes;
+            }
             let section = Section {
                 heading: stack.iter().map(|s| s.title.as_str()).collect::<Vec<_>>().join(" › "),
                 line,
                 text: body.to_string(),
                 imports: stack.last().unwrap().imports.clone(),
+                guide_modes: stack.last().unwrap().guide_modes.clone(),
                 parents: stack[..stack.len() - 1].iter().filter_map(|s| s.line).collect(),
             };
             push_sized(out, &section);
@@ -179,6 +232,7 @@ pub fn split(text: &str, title: &str) -> Vec<Section> {
                     level,
                     title: clean_heading(&h),
                     imports: stack.last().unwrap().imports.clone(),
+                    guide_modes: stack.last().unwrap().guide_modes.clone(),
                     line: None,
                 });
                 cur_line = i as u32 + 1;
@@ -211,6 +265,7 @@ pub fn split(text: &str, title: &str) -> Vec<Section> {
                     level,
                     title: clean_heading(line.trim()),
                     imports: stack.last().unwrap().imports.clone(),
+                    guide_modes: stack.last().unwrap().guide_modes.clone(),
                     line: None,
                 });
                 cur_line = i as u32 + 1;
@@ -320,6 +375,7 @@ fn push_sized(out: &mut Vec<Section>, section: &Section) {
             line,
             text: body.to_string(),
             imports: section.imports.clone(),
+            guide_modes: section.guide_modes.clone(),
             parents: section.parents.clone(),
         });
         return;
@@ -339,6 +395,7 @@ fn push_sized(out: &mut Vec<Section>, section: &Section) {
                 line: start,
                 text: buf.trim().to_string(),
                 imports: section.imports.clone(),
+                guide_modes: section.guide_modes.clone(),
                 parents: section.parents.clone(),
             });
             buf.clear();
@@ -350,6 +407,7 @@ fn push_sized(out: &mut Vec<Section>, section: &Section) {
                 line: start,
                 text: buf.trim().to_string(),
                 imports: section.imports.clone(),
+                guide_modes: section.guide_modes.clone(),
                 parents: section.parents.clone(),
             });
             buf.clear();
@@ -365,6 +423,7 @@ fn push_sized(out: &mut Vec<Section>, section: &Section) {
             line: start,
             text: buf.trim().to_string(),
             imports: section.imports.clone(),
+            guide_modes: section.guide_modes.clone(),
             parents: section.parents.clone(),
         });
     }

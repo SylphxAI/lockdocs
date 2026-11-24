@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 /// Bump when extraction or the on-disk format changes.
-pub const FORMAT: u32 = 16;
+pub const FORMAT: u32 = 18;
 
 #[derive(Serialize, Deserialize)]
 pub struct PackageIndex {
@@ -51,6 +51,16 @@ impl PackageIndex {
         let import = import.unwrap_or(&self.name);
         let files = self.npm_api.as_ref().map(|api| api.search_files(import));
         let compatible = self.npm_api.as_ref().map(|api| api.compatible_imports(import, &self.name));
+        let edition_routes: std::collections::BTreeMap<_, _> = self
+            .npm_api
+            .iter()
+            .flat_map(|api| &api.roots)
+            .filter_map(|root| {
+                let segment = root.import.strip_prefix(&self.name)?.strip_prefix('/')?;
+                let digits = segment.strip_prefix('v')?;
+                (!digits.is_empty() && digits.bytes().all(|b| b.is_ascii_digit())).then_some((segment, root.import.as_str()))
+            })
+            .collect();
         let mut seen = std::collections::HashSet::new();
         self.entries
             .iter()
@@ -58,10 +68,19 @@ impl PackageIndex {
             .filter(|(_, e)| {
                 if e.kind == Kind::Prose {
                     compatible.as_ref().is_none_or(|imports| {
-                        e.prose_imports
-                            .iter()
-                            .filter(|s| crate::markdown::import_base(s) == self.name)
-                            .all(|s| imports.contains(s.as_str()))
+                        // A versioned website route makes an edition claim only
+                        // when it names an actual public import of this package.
+                        let route = e.file.strip_prefix("upstream:").and_then(|path| {
+                            path.split('/').rev().find_map(|part| {
+                                let stem = part.strip_suffix(".mdx").or_else(|| part.strip_suffix(".md")).unwrap_or(part);
+                                edition_routes.get(stem)
+                            })
+                        });
+                        route.is_none_or(|route| imports.contains(route))
+                            && e.prose_imports
+                                .iter()
+                                .filter(|s| crate::markdown::import_base(s) == self.name)
+                                .all(|s| imports.contains(s.as_str()))
                     })
                 } else {
                     files.as_ref().is_none_or(|files| files.contains(&e.file))
@@ -69,7 +88,7 @@ impl PackageIndex {
             })
             // Deduplicate only after import selection: an identical declaration
             // in another edition must not erase the requested file identity.
-            .filter(|(_, e)| seen.insert((e.path.as_str(), e.sig.as_str(), e.doc.as_str())))
+            .filter(|(_, e)| seen.insert((e.path.as_str(), e.sig.as_str(), e.doc.as_str(), &e.guide_modes, &e.prose_imports)))
             .map(|(i, _)| i)
             .collect()
     }

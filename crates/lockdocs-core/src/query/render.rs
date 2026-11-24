@@ -39,7 +39,12 @@ pub(super) fn truncate(s: &str, n: usize) -> String {
 pub fn render_entry(idx: &PackageIndex, e: &Entry, max_doc: usize) -> String {
     let cite = format!("{} {}:{}", idx.id(), e.file, e.line);
     if e.kind == Kind::Prose {
-        return format!("### {} — {}\n{}\n", e.name, cite, truncate(&e.doc, max_doc));
+        let label = if e.guide_modes.is_empty() {
+            String::new()
+        } else {
+            format!("Guide modes: {}\n", e.guide_modes.join(", "))
+        };
+        return format!("### {} — {}\n{label}{}\n", e.name, cite, truncate(&e.doc, max_doc));
     }
     let mut s = format!("### {} ({}) — {}\n```{}\n{}\n```\n", e.path, e.kind.as_str(), cite, lang(idx.eco), e.sig);
     if !e.doc.is_empty() {
@@ -126,11 +131,12 @@ pub(super) fn section_context(idx: &PackageIndex, e: &Entry, scope: &std::collec
     }
     let mut out = String::new();
     for line in wanted {
-        let Some(p) = scope
-            .iter()
-            .map(|&i| &idx.entries[i])
-            .find(|p| p.kind == Kind::Prose && p.file == e.file && p.line == line)
-        else {
+        let Some(p) = scope.iter().map(|&i| &idx.entries[i]).find(|p| {
+            p.kind == Kind::Prose
+                && p.file == e.file
+                && p.line == line
+                && (p.guide_modes.is_empty() || (!e.guide_modes.is_empty() && e.guide_modes.iter().all(|mode| p.guide_modes.contains(mode))))
+        }) else {
             continue;
         };
         let l = lead(&p.doc);

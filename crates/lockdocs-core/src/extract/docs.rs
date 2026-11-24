@@ -8,10 +8,10 @@ use std::path::{Path, PathBuf};
 use tree_sitter::Node;
 
 pub(super) fn prose(text: &str, rel: &str, line_off: u32, out: &mut Vec<Entry>) {
-    prose_titled(text, rel, line_off, None, out)
+    prose_titled(text, rel, line_off, None, None, out)
 }
 
-pub(super) fn prose_titled(text: &str, rel: &str, line_off: u32, given: Option<String>, out: &mut Vec<Entry>) {
+pub(super) fn prose_titled(text: &str, rel: &str, line_off: u32, given: Option<String>, package: Option<&str>, out: &mut Vec<Entry>) {
     let (text, fm_title) = markdown::clean_mdx(text, rel.ends_with(".mdx"));
     // A page without a title is named after its file: `model_config.md` -> `model config`.
     let file_name = rel.rsplit('/').next().unwrap_or(rel);
@@ -34,7 +34,7 @@ pub(super) fn prose_titled(text: &str, rel: &str, line_off: u32, given: Option<S
     } else {
         file_title.to_string()
     };
-    for s in markdown::split(&text, &title) {
+    for s in markdown::split_scoped(&text, &title, package) {
         out.push(prose_section(s, rel, line_off));
     }
 }
@@ -53,6 +53,7 @@ pub(super) fn prose_section(s: crate::markdown::Section, rel: &str, line_off: u3
         alias_of: None,
         legacy: false,
         prose_imports: s.imports,
+        guide_modes: s.guide_modes,
         prose_parents: s.parents.into_iter().map(|line| line + line_off).collect(),
     }
 }
@@ -150,6 +151,7 @@ pub(super) fn example(text: &str, rel: &str, out: &mut Vec<Entry>) {
         alias_of: None,
         legacy: false,
         prose_imports: Vec::new(),
+        guide_modes: Vec::new(),
         prose_parents: Vec::new(),
     });
 }

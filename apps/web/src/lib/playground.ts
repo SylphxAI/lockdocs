@@ -89,3 +89,19 @@ export function sampleCitation(row: Dependency) {
   if (row.name === "pydantic" && row.ecosystem === "PyPI") return row.version === "2.9.2" ? upgrades.pydantic.newSource : row.version === "1.10.18" ? upgrades.pydantic.oldSource : null;
   return null;
 }
+
+// Source excerpts are pinned to the release represented by each sample.
+export function sampleExcerpt(row: Dependency) {
+  if (row.source !== "release" || row.ecosystem !== "npm") return null;
+  if (row.name === "react" && row.version === "18.3.1") return {
+    cite: "react@18.3.1 packages/react/src/ReactHooks.js:80–85",
+    url: "https://github.com/facebook/react/blob/v18.3.1/packages/react/src/ReactHooks.js#L80-L85",
+    code: "export function useState<S>(\n  initialState: (() => S) | S,\n): [S, Dispatch<BasicStateAction<S>>] {\n  const dispatcher = resolveDispatcher();\n  return dispatcher.useState(initialState);\n}",
+  };
+  if (row.name === "zod" && row.version === "4.6.7") return {
+    cite: "zod@4.6.7 packages/zod/src/v4/classic/schemas.ts:710–712",
+    url: "https://github.com/colinhacks/zod/blob/v4.6.7/packages/zod/src/v4/classic/schemas.ts#L710-L712",
+    code: "export function email(params?: string | core.$ZodEmailParams): ZodEmail {\n  return core._email(ZodEmail, params);\n}",
+  };
+  return null;
+}

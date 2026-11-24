@@ -15,7 +15,7 @@ test("public HTML protects package versions without changing selectable commands
   const urls = [...(await sitemap.text()).matchAll(/<loc>(.*?)<\/loc>/g)].map(([, url]) => new URL(url));
   for (const url of urls) expect(url.origin).toBe("https://lockdocs.sylphx.com");
   const routes = urls.map((url) => url.pathname);
-  expect(routes).toEqual(["/", "/pricing", "/playground", "/legal/privacy", "/legal/terms", ...allDocs]);
+  expect(routes).toEqual(["/", "/pricing", "/playground", "/legal/privacy", "/legal/terms", ...allDocs, "/zh-TW", "/zh-TW/docs", "/zh-TW/playground", "/zh-TW/pricing"]);
   await Promise.all(routes.map(async (route) => {
     const response = await request.get(route + "?ref=canonical-test");
     expect(response.status(), route).toBe(200);

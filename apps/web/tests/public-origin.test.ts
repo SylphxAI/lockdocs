@@ -13,6 +13,7 @@ const origin = "https://lockdocs.sylphx.com";
 const service = "web.fixture.svc.cluster.local";
 const ingress = "http://" + service;
 const headers = { host: service, "x-forwarded-host": "lockdocs.sylphx.com", "x-forwarded-proto": "https" };
+const edge = { ...headers, "sylphx-edge": "public" };
 const unexpected = "preview.example.test";
 
 function event(base: string, path: string, init: RequestInit = {}) {
@@ -103,29 +104,33 @@ test("proxied auth handlers use the configured public origin and preserve OAuth 
     redirect = new URL(url.searchParams.get("redirect_url")!);
     return new Response(null, { status, headers: { location: authorize } });
   });
-  const startOAuth = (input: HeadersInit = headers, selected = "github", navigate = true) => oauth({
+  const startOAuth = (input: HeadersInit = edge, selected = "github", navigate = true) => oauth({
     ...event(ingress, "/api/auth/" + selected + "?next=%2Fpricing", { headers: {
       ...input, ...(navigate ? { "sec-fetch-site": "same-origin", "sec-fetch-mode": "navigate", "sec-fetch-dest": "document" } : {}),
     } }), params: { provider: selected },
   });
 
-  assert.equal((await getCapabilities(new Request(ingress + "/pricing", { headers })))?.github, true);
-  assert.equal((await startOAuth(headers, "github", false)).status, 403);
+  assert.equal((await getCapabilities(new Request(ingress + "/pricing", { headers: edge })))?.github, true);
+  assert.equal((await startOAuth(edge, "github", false)).status, 403);
   const start = await startOAuth();
   assert.equal(start.status, 303);
   assert.equal(start.headers.get("location"), authorize);
   assert.equal(redirect.origin + redirect.pathname, origin + "/api/auth/callback");
   const cookie = start.headers.get("set-cookie")!.split(";")[0];
-  const failed = await callback(event(ingress, redirect.pathname + redirect.search + "&auth_error=access_denied", { headers: { ...headers, cookie } }));
+  const failed = await callback(event(ingress, redirect.pathname + redirect.search + "&auth_error=access_denied", { headers: { ...edge, cookie } }));
   assert.equal(failed.status, 303);
   assert.equal(failed.headers.get("location"), "/sign-in?error=cancelled&next=%2Fpricing");
-  const missing = await callback(event(ingress, redirect.pathname + redirect.search, { headers }));
+  const missing = await callback(event(ingress, redirect.pathname + redirect.search, { headers: edge }));
   assert.equal(missing.headers.get("location"), "/sign-in?error=signin&next=%2Fdashboard");
   assert.ok(!missing.headers.getSetCookie().some(value => value.startsWith("__Host-lockdocs-session=")));
 
-  const conflict = { ...headers, "x-forwarded-host": unexpected };
-  assert.equal(await getCapabilities(new Request(ingress + "/sign-in", { headers: conflict })), null);
-  assert.equal((await startOAuth(conflict)).status, 403);
+  const conflict = { ...edge, "x-forwarded-host": unexpected };
+  const beforeRefusals = provider.mock.callCount();
+  for (const input of [headers, conflict, { ...edge, "sylphx-edge": "public, public" }]) {
+    assert.equal(await getCapabilities(new Request(ingress + "/sign-in", { headers: input })), null);
+    assert.equal((await startOAuth(input)).status, 403);
+  }
+  assert.equal(provider.mock.callCount(), beforeRefusals);
   assert.equal((await startOAuth(headers, "microsoft")).status, 404);
   assert.equal((await callback(event(ingress, redirect.pathname + redirect.search, { headers: { ...conflict, cookie } }))).status, 403);
 

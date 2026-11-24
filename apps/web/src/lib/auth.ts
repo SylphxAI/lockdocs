@@ -178,7 +178,7 @@ function sdk(auth: AuthConfig, session?: SessionAdapter) {
     publishableKey: auth.key, sessionMode: "server", sessionSecret: auth.secret,
     routePrefix, loginPath: "/sign-in", defaultReturnTo: "/dashboard",
     allowReturnTo: path => path === validateNext(path),
-    isPublicRequest: request => hasPublicOrigin(request, auth.origin),
+    trustSylphxEdge: true,
     allowedMethods: ["oauth", "otp", "passkey"], providers, directOAuth: true,
     flowCookie: OAUTH, sessionCookie: SESSION, session,
     async fetch(url, init) {

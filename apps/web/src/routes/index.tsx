@@ -10,7 +10,7 @@ import { PackageText } from '@/components/package-text';
 import { InstallCommand } from "@/components/install-command";
 
 export default function Home() {
-  const { href, text, locale } = useSiteLanguage();
+  const { href, campaignHref, text, locale } = useSiteLanguage();
   const url = () => canonicalOrigin + href("/");
   const questions = () => [
     { question: text("Is Lockdocs free?", "Lockdocs 可以免費使用嗎？"), answer: text("Yes. Exact-version docs and the local MCP server are free and don’t require an account. Lockdocs Pro adds Upgrade Reports and Private Package Docs.", "可以。查閱指定版本的文件和使用本機 MCP 伺服器都免費，也不需要帳戶。Lockdocs Pro 另外提供升級報告和私有套件文件。") },
@@ -25,7 +25,7 @@ export default function Home() {
         <div class="eyebrow"><span class="signal"/> {text("LOCAL-FIRST DOCUMENTATION", "在本機查閱文件")}</div>
         <h1>{text("Docs for the version", "查閱你實際安裝")} <span>{text("you installed.", "版本的文件")}</span></h1>
         <p>{text("Your agent shouldn’t guess which API exists. Lockdocs reads your lockfile and answers from the exact version installed in your project.", "不必讓程式開發代理工具猜測有哪些 API。Lockdocs 讀取專案的 lockfile，根據你安裝的確切版本回答問題。")}</p>
-        <div class="hero-actions"><Link class="button primary" href={href("/playground")}>{text("Try the playground", "試用 lockfile 工具")} <ArrowRight size={17}/></Link><Link class="button quiet" href={locale() === "en" ? "/guide" : href("/docs")}>{text("Read the docs", "閱讀文件")} <ArrowUpRight size={15}/></Link></div>
+        <div class="hero-actions"><Link class="button primary" href={campaignHref("/playground")}>{text("Try the playground", "試用 lockfile 工具")} <ArrowRight size={17}/></Link><Link class="button quiet" href={locale() === "en" ? "/guide" : href("/docs")}>{text("Read the docs", "閱讀文件")} <ArrowUpRight size={15}/></Link></div>
         <InstallCommand />
       </div>
       <div class="hero-preview">
@@ -36,16 +36,24 @@ export default function Home() {
           <div class="preview-label"><Command size={14}/> {text("API LOOKUP", "查閱 API")} <span>next/headers</span></div>
           <div class="diff-line before"><i>−</i><code>cookies(): ReadonlyRequestCookies</code></div>
           <div class="diff-line after"><i>+</i><code>cookies(): Promise&lt;ReadonlyRequestCookies&gt;</code></div>
-          <Link href={href("/playground") + "#upgrade"} class="preview-link">{text("Inspect the Next.js 15 upgrade", "查看升級至 Next.js 15 的變更")} <ArrowUpRight size={14}/></Link>
+          <Link href={campaignHref("/playground") + "#upgrade"} class="preview-link">{text("Inspect the Next.js 15 upgrade", "查看升級至 Next.js 15 的變更")} <ArrowUpRight size={14}/></Link>
         </div>
       </div>
     </section>
     <section class="wrap" aria-label={text("Benchmark highlights", "評測摘要")}>
       <div class="bench-rail">
         <div class="bench-label"><span class="eyebrow">{text("01 / BENCHMARK", "01 / 評測結果")}</span><Link href="/benchmarks">{text("Read the methodology", "查看評測方法")} <ArrowUpRight size={14}/></Link></div>
-        <div><strong>96<span>/105</span></strong><small>{text("Version-specific questions answered correctly", "答對的版本相關問題數")}</small><small>{text("Lockdocs · after prefetch", "Lockdocs · 預先下載文件後")}</small></div>
-        <div><strong>77<span>/105</span></strong><small>{text("Version-specific questions answered correctly", "答對的版本相關問題")}</small><small>{text("Context7 · anonymous API", "Context7 · 匿名 API")}</small></div>
-        <div><strong>58<span>ms</span></strong><small>{text("Lockdocs · median query", "Lockdocs · 查詢耗時中位數")}</small></div>
+        <div class="bench-lockdocs">
+          <h3>{text("With Lockdocs", "使用 Lockdocs")}</h3>
+          <div class="bench-score"><strong>96<span>/105</span></strong><span class="bench-delta" aria-label={text("19 more correct answers", "多答對 19 題")}>+19</span></div>
+          <small>{text("Correct answers · after prefetch", "答對題數 · 預先下載文件後")}</small>
+        </div>
+        <div class="bench-baseline">
+          <h3>{text("Baseline (without Lockdocs)", "基準（未使用 Lockdocs）")}</h3>
+          <strong>77<span>/105</span></strong>
+          <small>{text("Correct answers · Context7 anonymous API", "答對題數 · Context7 匿名 API")}</small>
+        </div>
+        <div class="bench-latency"><h3>{text("Lockdocs query time", "Lockdocs 查詢時間")}</h3><strong>58<span>ms</span></strong><small>{text("Median after prefetch", "預先下載文件後的中位數")}</small></div>
       </div>
     </section>
     <section class="wrap section how">
@@ -56,7 +64,7 @@ export default function Home() {
         <article><ShieldCheck size={20}/><h3>{text("Keep it local", "在本機查詢")}</h3><p>{text("Query your local index from your CLI or coding agent. Fetch upstream docs when you want them.", "用命令列或程式開發代理工具查詢本機索引，需要時再下載上游文件。")}</p></article>
       </div>
     </section>
-    <section class="wrap section"><div class="pro-band"><GitCompareArrows size={25}/><div><div class="eyebrow">LOCKDOCS PRO</div><h2>{text("See what breaks before you upgrade.", "升級前先找出會受影響的程式碼")}</h2><p>{text("Get the full upgrade report for your call sites and exact-version docs for private packages.", "取得包含呼叫位置的完整升級報告，也能查閱指定版本的私有套件文件。")}</p></div><Link class="button outline" href={href("/pricing")}>{text("Explore Pro", "了解 Pro")} <ArrowRight size={16}/></Link></div></section>
+    <section class="wrap section"><div class="pro-band"><GitCompareArrows size={25}/><div><div class="eyebrow">LOCKDOCS PRO</div><h2>{text("See what breaks before you upgrade.", "升級前先找出會受影響的程式碼")}</h2><p>{text("Get the full upgrade report for your call sites and exact-version docs for private packages.", "取得包含呼叫位置的完整升級報告，也能查閱指定版本的私有套件文件。")}</p></div><Link class="button outline" href={campaignHref("/pricing")}>{text("Explore Pro", "了解 Pro")} <ArrowRight size={16}/></Link></div></section>
     <div class="wrap"><EditorialFaq url={url()} items={questions()} heading={text("Frequently asked questions", "常見問題")}/></div>
   </>;
 }

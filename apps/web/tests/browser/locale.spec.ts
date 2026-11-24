@@ -51,7 +51,7 @@ test("Traditional Chinese aliases redirect permanently to the canonical pages wi
 
 test("Traditional Chinese pricing shows all four purchase amounts and wraps without an orphan", async ({ page }, testInfo) => {
   await page.goto("/zh-TW/pricing");
-  const headingText = "進階功能，留給棘手的升級";
+  const headingText = "升級前，先找出受影響的程式碼";
   const heading = page.getByRole("heading", { name: headingText, exact: true, level: 1 });
   await expect(heading).toBeVisible();
   for (const width of testInfo.project.name === "desktop" ? [1440, 1280, 1024] : [390]) {
@@ -98,7 +98,7 @@ test("Traditional Chinese cookie settings and source link are localized on every
     const settings = footer.getByRole("button", { name: "Cookie 設定", exact: true });
     await expect(settings).toBeEnabled();
     if (navLabel) await settings.click();
-    await expect(banner.getByText("選用 Cookie 用於分析使用狀況與廣告成效，並可提供個人化廣告。", { exact: false })).toBeVisible();
+    await expect(banner.getByText("選用 Cookie 用於分析與個人化廣告。", { exact: false })).toBeVisible();
     await expect(banner.getByRole("link", { name: "隱私權政策" })).toHaveAttribute("href", "/legal/privacy");
     const reject = banner.getByRole("button", { name: "拒絕選用項目" });
     await expect(reject).toBeEnabled();
@@ -113,13 +113,13 @@ test("Traditional Chinese cookie settings and source link are localized on every
 
 test("localized home, docs search, and pricing stay usable on each viewport", async ({ page }, testInfo) => {
   await page.goto("/");
-  await expect(page.locator(".bench-rail")).toContainText("Version-specific questions answered correctly");
+  await expect(page.locator(".bench-rail")).toContainText("With Lockdocs");
   await page.getByRole("link", { name: "繁體中文" }).click();
   await expect(page).toHaveURL(/\/zh-TW$/);
   await expect(page.locator("html")).toHaveAttribute("lang", "zh-TW");
   await expect(page.locator("head link[rel=canonical]")).toHaveAttribute("href", origin + "/zh-TW");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("版本的文件");
-  await expect(page.locator(".bench-rail")).toContainText("答對的版本相關問題數");
+  await expect(page.locator(".bench-rail")).toContainText("答對題數 · 預先下載文件後");
   const checkWidth = async () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(testInfo.project.name === "mobile" ? 390 : 1440);
   };
@@ -135,11 +135,12 @@ test("localized home, docs search, and pricing stay usable on each viewport", as
   await page.getByRole("link", { name: "價格", exact: true }).click();
   await page.getByRole("link", { name: "HKD", exact: true }).click();
   await expect(page).toHaveURL(/\/zh-TW\/pricing\?currency=HKD$/);
-  await expect(page.locator(".plan-total")).toHaveText("HK$938／年，一次付清，已含稅；月均金額已四捨五入");
+  await expect(page.locator(".plan-pro .plan-price")).toHaveText("HK$938／年");
+  await expect(page.locator(".plan-total")).toHaveText("年費一次付清，已含稅");
   await checkWidth();
   await page.getByRole("link", { name: "English" }).click();
   await expect(page).toHaveURL(/\/pricing\?currency=HKD$/);
-  await expect(page.locator(".plan-total")).toContainText("HK$938/yr upfront · Tax included");
+  await expect(page.locator(".plan-pro .plan-price")).toHaveText("HK$938/yr");
   await checkWidth();
 });
 

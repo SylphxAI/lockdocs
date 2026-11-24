@@ -1,4 +1,5 @@
 import type { APIEvent } from "@solidjs/start/server";
+import { analyticsFramePolicy } from "@/lib/content-security-policy";
 import { measurementId } from "@/lib/analytics-config";
 import { signalRequestGpc } from "@/lib/signal-privacy";
 
@@ -9,6 +10,6 @@ export const GET = ({ request }: APIEvent) => {
   if (!measurementId() || signalRequestGpc(request.headers)) return new Response(null, { status: 404, headers });
   return new Response('<!doctype html><html data-analytics-frame lang="en"><meta charset="utf-8"><title>Lockdocs analytics</title></html>', {
     headers: { ...headers, "Content-Type": "text/html; charset=utf-8", "X-Frame-Options": "SAMEORIGIN",
-      "Content-Security-Policy": "frame-ancestors 'self'; base-uri 'none'; object-src 'none'; form-action 'none'; script-src https://www.googletagmanager.com" },
+      "Content-Security-Policy": analyticsFramePolicy },
   });
 };

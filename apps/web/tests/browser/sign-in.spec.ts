@@ -120,7 +120,7 @@ for (const currency of ["USD", "GBP", "EUR", "HKD"]) {
 test("Google and last-used work when it is the only enabled passwordless method", async ({ page, auth }, info) => {
   const errors = consoleErrors(page);
   await page.goto(auth.origin + "/pricing?currency=GBP");
-  await expect(page.locator(".plan-pro")).toContainText("£99/yr upfront · Tax included");
+  await expect(page.locator(".plan-pro .plan-price")).toHaveText("£99/yr");
   expect(auth.calls).toEqual([]);
   const pro = page.getByRole("link", { name: "Get Lockdocs Pro — £99/yr", exact: true });
   await expect(pro).toHaveClass(/\bprimary\b/);

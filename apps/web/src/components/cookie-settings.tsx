@@ -291,7 +291,7 @@ export function CookieSettings(props: ParentProps) {
       ref={panel} onKeyDown={event => { if (event.key === "Escape" && trigger) close(); }}>
       <div class="cookie-copy">
         <h2 id="cookie-heading">{text("Cookie settings", "Cookie 設定")}</h2>
-        <p><Show when={protectedByGpc()} fallback={text("Optional cookies measure usage and can personalize ads.", "選用 Cookie 用於分析使用狀況與廣告成效，並可提供個人化廣告。")}>
+        <p><Show when={protectedByGpc()} fallback={text("Optional cookies: analytics and personalized ads.", "選用 Cookie 用於分析與個人化廣告。")}>
           <span role="status">{text("Global Privacy Control blocks optional cookies.", "全域隱私控制（GPC）已封鎖選用 Cookie。")}</span>
         </Show>{" "}<a href="/legal/privacy">{text("Privacy policy", "隱私權政策")}</a></p>
       </div>

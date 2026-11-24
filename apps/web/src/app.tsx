@@ -18,25 +18,27 @@ import { localizedPath, pagePath } from "@/lib/locales";
 
 const github = 'https://github.com/SylphxAI/lockdocs';
 function Wordmark() {
-  const { href } = useSiteLanguage();
-  return <Link href={href("/")} class="wordmark"><img src="/brand/lockdocs.svg" alt="" width="31" height="31"/><span>lockdocs<span class="wordmark-dot">.</span></span></Link>;
+  const { campaignHref } = useSiteLanguage();
+  return <Link href={campaignHref("/")} class="wordmark"><img src="/brand/lockdocs.svg" alt="" width="31" height="31"/><span>lockdocs<span class="wordmark-dot">.</span></span></Link>;
 }
 function Layout(props: ParentProps) {
-  const { locale, href, text } = useSiteLanguage();
+  const { locale, campaignHref, carryCampaign, text } = useSiteLanguage();
   const location = useLocation();
   createEffect(() => { document.documentElement.lang = locale(); });
   const targetLocale = () => locale() === "en" ? "zh-TW" : "en";
   const switchHref = () => {
     const current = pagePath(location.pathname);
     const path = localizedPath(current, targetLocale());
-    if (path === current) return localizedPath("/", targetLocale());
-    return localizedPath(path, "en") === "/pricing" ? path + location.search : path;
+    if (path === current) return carryCampaign(localizedPath("/", targetLocale()));
+    const currency = new URLSearchParams(location.search).get("currency");
+    return carryCampaign(localizedPath(path, "en") === "/pricing" && currency
+      ? path + "?" + new URLSearchParams({ currency }) : path);
   };
   return <>
     <a class="skip" href="#main">{text("Skip to content", "跳至主要內容")}</a>
     <header class="site-header"><div class="wrap header-inner">
       <Wordmark />
-      <nav aria-label={text("Main navigation", "主選單")} class="main-nav"><Link href={href("/docs")}>{text("Docs", "文件")}</Link><Link href={href("/playground")}>{text("Playground", "試用工具")}</Link><Link href={href("/pricing")}>{text("Pricing", "價格")}</Link></nav>
+      <nav aria-label={text("Main navigation", "主選單")} class="main-nav"><Link href={campaignHref("/docs")}>{text("Docs", "文件")}</Link><Link href={campaignHref("/playground")}>{text("Playground", "試用工具")}</Link><Link href={campaignHref("/pricing")}>{text("Pricing", "價格")}</Link></nav>
       <div class="header-tools"><Link class="language-link" href={switchHref()} lang={targetLocale()} hreflang={targetLocale()}>{text("繁體中文", "English")}</Link><a class="repo-link" href={github} aria-label="Lockdocs on GitHub"><GitFork size={17}/></a><Link href="/dashboard" class="account-link">{text("Account", "帳戶")} <ArrowUpRight size={13}/></Link></div>
     </div></header>
     <main id="main"><Suspense>{props.children}</Suspense></main>

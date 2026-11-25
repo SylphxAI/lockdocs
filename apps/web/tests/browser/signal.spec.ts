@@ -90,15 +90,24 @@ base("Signal-only grant keeps nine UTMs, strips click IDs and emits 1/1/1 SPA vi
 for (const [path, entry_surface] of [
   ["/compare", "article_compare"], ["/benchmarks", "article_benchmarks"],
   ["/guide", "article_guide"], ["/pro", "article_pro"],
+  ["/guide/setup", "article_guide_setup"], ["/guide/ecosystems", "article_guide_ecosystems"],
+  ["/guide/fetch", "article_guide_fetch"], ["/guide/how-it-works", "article_guide_how_it_works"],
+  ["/reference", "article_reference"], ["/reference/tools", "article_reference_tools"],
+  ["/capabilities", "article_capabilities"], ["/docs", "article_docs"], ["/zh-TW/docs", "article_docs_zh_tw"],
 ] as const) {
   base("article Pro click emits once with analytics consent: " + path, async ({ page }) => {
     const { rows } = await signalOnly(page);
     await page.goto(path + "?" + query);
-    const panel = settings(page);
-    await panel.getByRole("button", { name: "Analytics only", exact: true }).click();
+    const zh = path === "/zh-TW/docs";
+    const panel = zh ? page.getByRole("region", { name: "Cookie 設定" }) : settings(page);
+    await panel.getByRole("button", { name: zh ? "僅限分析" : "Analytics only", exact: true }).click();
     await expect.poll(() => rows("page_view")).toHaveLength(1);
-    await page.getByRole("region", { name: "Try it with a lockfile" }).getByRole("link", { name: /See Lockdocs Pro/ }).click();
-    await expect(page).toHaveURL(url => url.pathname === "/pricing");
+    const card = page.getByRole("region", { name: zh ? "用 lockfile 試試看" : "Try it with a lockfile" });
+    await card.getByRole("link", { name: zh ? /查看 Lockdocs Pro/ : /See Lockdocs Pro/ }).click();
+    await expect(page).toHaveURL(url => url.pathname === (zh ? "/zh-TW/pricing" : "/pricing"));
+    expect(Object.fromEntries(new URL(page.url()).searchParams)).toEqual({ ...campaign,
+      gclid: clicks.gclid, gbraid: clicks.gbraid, wbraid: clicks.wbraid,
+    });
     await expect.poll(() => rows("pro_cta_clicked").map(row => row.properties)).toEqual([{ ...campaign, entry_surface }]);
   });
 }

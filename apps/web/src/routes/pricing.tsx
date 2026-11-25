@@ -2,7 +2,7 @@ import { EditorialFaq } from "@/components/editorial";
 import { JsonLd } from "@/components/json-ld";
 import { canonicalOrigin } from "@/lib/indexing";
 import { useSiteLanguage } from "@/lib/site-language";
-import { lockdocsApplication, freeOffer } from "@/lib/storefront-schema";
+import { lockdocsApplication, freeOffer, proOffer } from "@/lib/storefront-schema";
 import { createMemo, createSignal, For, onMount, Suspense } from "solid-js";
 import { createAsync, useSearchParams } from "@solidjs/router";
 import { account } from "@/lib/account-query";
@@ -24,14 +24,13 @@ export default function Pricing() {
   const [query] = useSearchParams();
   const analytics = useCookieSettings();
   const currency = () => currencies.find((code) => code === query.currency) ?? "USD";
-  const amount = () => annualAmount(currency());
   // SSR and the first client render agree. After hydration, follow the browser's locale.
   const [locales, setLocales] = createSignal<readonly string[]>(["en"]);
   onMount(() => setLocales(navigator.languages));
   const numberLocale = () => locale() === "en" ? locales() : locale();
   const whole = createMemo(() => new Intl.NumberFormat(numberLocale()));
   const money = (value: number, code = currency()) => prefixes[code] + whole().format(value);
-  const annual = () => money(amount());
+  const annual = () => money(annualAmount(currency()));
   const returnPath = () => locale() === "en"
     ? pricingPath(currency())
     : href("/pricing") + "?" + new URLSearchParams({ currency: currency() });
@@ -44,20 +43,7 @@ export default function Pricing() {
   const entitlement = () => details()?.entitlement;
   return <>
     <PageMeta title={text("Pricing · Lockdocs", "價格 · Lockdocs")} description={text("Compare Free and Lockdocs Pro, with tax-inclusive annual pricing in four currencies.", "比較免費版與 Lockdocs Pro。年費已含稅，支援四種付款幣別。")}/>
-    <JsonLd data={lockdocsApplication(pricingUrl(), [freeOffer(currency()), {
-      "@type": "Offer",
-      name: "Lockdocs Pro",
-      url: canonicalOrigin + currencyHref(currency()),
-      price: amount(),
-      priceCurrency: currency(),
-      priceSpecification: {
-        "@type": "UnitPriceSpecification",
-        price: amount(),
-        priceCurrency: currency(),
-        billingDuration: "P1Y",
-        valueAddedTaxIncluded: true,
-      },
-    }])}/>
+    <JsonLd data={lockdocsApplication(pricingUrl(), [freeOffer(currency()), proOffer(currency(), canonicalOrigin + currencyHref(currency()))])}/>
     <Suspense><div class="wrap content-section pricing-section">
     <div class="page-intro pricing-intro"><div class="kicker"><span/> {text("LOCKDOCS PLANS", "LOCKDOCS 方案")}</div><h1>{text("Know what breaks before you upgrade.", "升級前，先找出受影響的程式碼")}</h1><p>{text("Exact-version docs are free. Pro adds call-site upgrade reports and private package docs.", "免費查閱指定版本的文件。Pro 提供附有呼叫位置的升級報告，以及私有套件文件。")}</p></div>
     <nav class="segmented currency-picker" aria-label={text("Billing currency", "付款幣別")}><For each={currencies}>{(code) => <a aria-current={code === currency() ? "page" : undefined} href={carryCampaign(currencyHref(code))}>{code}</a>}</For></nav>

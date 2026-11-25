@@ -3,6 +3,17 @@ import { formats } from "./lockfile-formats";
 
 const proSurfaces = ["playground_upgrade_cta", "playground_report_preview", "home_pro_band"] as const;
 export type ProSurface = (typeof proSurfaces)[number];
+const articleSurfaces = {
+  "/compare": "article_compare",
+  "/benchmarks": "article_benchmarks",
+  "/guide": "article_guide",
+  "/pro": "article_pro",
+} as const;
+export type ArticleSurface = (typeof articleSurfaces)[keyof typeof articleSurfaces];
+export function articleSurface(path: string): ArticleSurface | undefined {
+  return Object.hasOwn(articleSurfaces, path) ? articleSurfaces[path as keyof typeof articleSurfaces] : undefined;
+}
+
 const entrySurface = { entry_surface: proSurfaces };
 const eventFields = {
   lockfile_resolved: {
@@ -15,7 +26,7 @@ const eventFields = {
     command_kind: ["npx", "uvx", "pip", "mcp_config", "code", "cli"],
   },
   paywall_view: entrySurface,
-  pro_cta_clicked: { entry_surface: [...proSurfaces, "context7_alternative"] },
+  pro_cta_clicked: { entry_surface: [...proSurfaces, "context7_alternative", ...Object.values(articleSurfaces)] },
   upgrade_preview_switched: { example_id: ["next", "pydantic"] },
   cli_authorized: { entry_surface: ["cli_authorize"] },
 } as const;

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { behavioralParams } from "../src/lib/analytics-events";
+import { articleSurface, behavioralParams } from "../src/lib/analytics-events";
 
 test("behavioral events project only their allowlisted scalar fields", () => {
   assert.deepEqual(behavioralParams("lockfile_resolved", {
@@ -26,6 +26,21 @@ test("the editorial Pro CTA reports only its named surface", () => {
     entry_surface: "context7_alternative", gclid: "TEST999", email: "fixture@example.test",
   }), { entry_surface: "context7_alternative" });
   assert.equal(behavioralParams("paywall_view", { entry_surface: "context7_alternative" }), null);
+});
+
+test("only four article surfaces can report Pro clicks, not paywall impressions", () => {
+  for (const [route, entry_surface] of [
+    ["/compare", "article_compare"], ["/benchmarks", "article_benchmarks"],
+    ["/guide", "article_guide"], ["/pro", "article_pro"],
+  ]) {
+    assert.equal(articleSurface(route), entry_surface);
+    assert.deepEqual(behavioralParams("pro_cta_clicked", { entry_surface, token: "private-sentinel" }), { entry_surface });
+    assert.equal(behavioralParams("paywall_view", { entry_surface }), null);
+  }
+  for (const route of ["/docs", "/guide/fetch", "/pro?token=private", "constructor"]) {
+    assert.equal(articleSurface(route), undefined);
+    assert.equal(behavioralParams("pro_cta_clicked", { entry_surface: route }), null);
+  }
 });
 
 test("behavioral events refuse unknown names and missing or invalid values", () => {

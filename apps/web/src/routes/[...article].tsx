@@ -9,6 +9,7 @@ import { visit } from "unist-util-visit";
 import { ArticleBridge } from "@/components/article-bridge";
 import { articleSurface } from "@/lib/analytics-events";
 import { docMetadata } from "@/lib/doc-schema";
+import { canonicalOrigin } from "@/lib/indexing";
 import { JsonLd } from "@/components/json-ld";
 import { PackageText } from "@/components/package-text";
 import { PageMeta } from "@/components/page-meta";
@@ -37,6 +38,7 @@ function customAnchors() {
 export default function Article() {
   const location = useLocation();
   const { locale, text, href, carryCampaign } = useSiteLanguage();
+  const surface = () => articleSurface(pagePath(location.pathname));
   const chinese = () => locale() === "zh-TW";
   const article = createMemo(() => {
     const path = localizedPath(location.pathname, "en");
@@ -54,7 +56,11 @@ export default function Article() {
         <Show when={chinese()} fallback={
         <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[customAnchors,rehypeSlug]} transformLinkUri={(url) => {
           const target = docHref(url, page);
-          return isPricingLink(target) ? carryCampaign(target) : target;
+          if (!isPricingLink(target)) return target;
+          const pricing = new URL(target, canonicalOrigin);
+          const entry = surface();
+          if (entry) pricing.searchParams.set("entry_surface", entry);
+          return carryCampaign(pricing.pathname + pricing.search + pricing.hash);
         }} components={{ pre: (props) => {
           const code = props.node.children.find(child => child.type === "element" && child.tagName === "code");
           const value = code?.type === "element" ? code.children.map(child => child.type === "text" ? child.value : "").join("").replace(/\n$/, "") : "";
@@ -70,7 +76,7 @@ export default function Article() {
           <p>Lockdocs 會讀取專案的 lockfile，根據指定版本查找文件、函式簽名和範例。你可以先在<A href={href("/playground")}>試用工具</A>貼上 lockfile，確認套件版本；若要搜尋完整文件，請在自己的專案使用 CLI 或 MCP。</p>
         </Show>
         <Show when={page.route === "/compare"}><p><A href={context7AlternativePath}>Looking for a Context7 alternative? See a version-sensitive Next.js example.</A></p></Show>
-        <Show when={articleSurface(pagePath(location.pathname))}>{surface => <ArticleBridge surface={surface()}/>}</Show>
+        <Show when={surface()}>{surface => <ArticleBridge surface={surface()}/>}</Show>
         </article>
       </div>}
     </Show>

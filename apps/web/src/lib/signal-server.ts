@@ -1,11 +1,11 @@
 import { createHash } from "node:crypto";
 import { resolveEffectiveConsent, type SignalPrivacy } from "@sylphx/sdk/signal";
 import { signalConfig } from "./analytics-config";
-import { beginCheckoutParams, pricingCheckoutSurface, proPrice } from "./analytics-events";
+import { beginCheckoutParams, proPrice, type CheckoutSurface } from "./analytics-events";
 
 async function reportCheckoutEvent(
   eventName: "checkout_started" | "purchase_completed", id: string,
-  { value, currency, plan_sku, entry_surface }: { value: number; currency: string; plan_sku: string; entry_surface: string },
+  { value, currency, plan_sku, entry_surface }: { value: number; currency: string; plan_sku: string; entry_surface: CheckoutSurface },
   privacy: SignalPrivacy, headers: Headers,
 ) {
   const config = signalConfig();
@@ -23,15 +23,15 @@ async function reportCheckoutEvent(
 }
 
 // Record confirmed checkout creation using the same catalogue as the pricing form.
-export async function signalCheckoutStarted(checkoutId: string, currency: string, privacy: SignalPrivacy, headers: Headers) {
-  const params = beginCheckoutParams(currency);
+export async function signalCheckoutStarted(checkoutId: string, currency: string, privacy: SignalPrivacy, headers: Headers, surface?: CheckoutSurface) {
+  const params = beginCheckoutParams(currency, surface);
   if (params) await reportCheckoutEvent("checkout_started", checkoutId, params, privacy, headers);
 }
 
 // Only called with a settled, owner-verified Money checkout. Report the paid
 // amount (not today's catalogue amount); Lockdocs offers one purchasable SKU.
-export function signalPurchaseCompleted(checkout: { name: string; value: number; currency: string }, privacy: SignalPrivacy, headers: Headers) {
+export function signalPurchaseCompleted(checkout: { name: string; value: number; currency: string; entry_surface: CheckoutSurface }, privacy: SignalPrivacy, headers: Headers) {
   return reportCheckoutEvent("purchase_completed", checkout.name, {
-    value: checkout.value, currency: checkout.currency, plan_sku: proPrice.key, entry_surface: pricingCheckoutSurface,
+    value: checkout.value, currency: checkout.currency, plan_sku: proPrice.key, entry_surface: checkout.entry_surface,
   }, privacy, headers);
 }

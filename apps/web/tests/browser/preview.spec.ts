@@ -61,7 +61,7 @@ test("Pro reference replaces the placeholder and links directly to pricing", asy
   await expect(page.locator("main")).not.toContainText("<this page>");
   await expect(page.getByText("12 call sites", { exact: false })).toBeVisible();
   const cta = page.getByRole("link", { name: "See Lockdocs Pro pricing" });
-  await expect(cta).toHaveAttribute("href", "/pricing");
+  await expect(cta).toHaveAttribute("href", "/pricing?entry_surface=article_pro");
   await expect(cta).toHaveCSS("background-color", "rgb(124, 156, 255)");
   await cta.click();
   await expect(page.getByRole("heading", { name: "Lockdocs Pro", exact: true })).toBeVisible();
@@ -135,14 +135,14 @@ test("workbench resolves pasted text and switches cited migrations", async ({ pa
   const preview = page.getByRole("region", { name: "Pro Upgrade Preview" });
   await expect(preview).toContainText("Free resolves the exact versions in your lockfile.");
   await expect(preview).toContainText("which call sites an upgrade affects, with citations");
-  await expect(preview.getByRole("link", { name: "See Pro plans" })).toHaveAttribute("href", "/pricing");
+  await expect(preview.getByRole("link", { name: "See Pro plans" })).toHaveAttribute("href", "/pricing?entry_surface=playground_upgrade_cta");
   await page.getByRole("button", { name: "MCP agent setup" }).click();
   await expect(page.locator(".snippet-box pre")).toContainText("@sylphx/lockdocs");
   await page.getByRole("button", { name: "Pydantic 1.10 → 2.9" }).click();
   await expect(page.getByText("pydantic@2.9.2 pydantic/main.py:352")).toBeVisible();
   await expect(page.getByRole("link", { name: "Pydantic v2 migration", exact: false })).toHaveAttribute("href", /https:\/\/docs\.pydantic\.dev/);
   await page.getByRole("link", { name: "See Pro plans" }).click();
-  await expect(page).toHaveURL(/\/pricing$/);
+  await expect(page).toHaveURL(/\/pricing\?entry_surface=playground_upgrade_cta$/);
   await expect(page.locator(".plan-pro .plan-price")).toHaveText("US$120/yr");
   await page.getByRole("link", { name: "GBP" }).click();
   await expect(page.locator(".plan-pro .plan-price")).toHaveText("£99/yr");

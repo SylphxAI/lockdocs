@@ -31,6 +31,7 @@ async function startFixture(billing: boolean, googleAds: boolean) {
   const calls: string[] = [];
   const shipments: string[] = [];
   const bindings: unknown[] = [];
+  const checkouts: unknown[] = [];
   const signalBatches: { consent: string; events: { event_name: string; event_id: string; distinct_id: string; numeric_value?: number; properties: Record<string, unknown> }[] }[] = [];
   const rejections: string[] = [];
   const ticketSignal: { is_new_user?: boolean } = {};
@@ -122,6 +123,7 @@ async function startFixture(billing: boolean, googleAds: boolean) {
       if (sessionToken !== moneyCredential || body.subject?.end_user !== "usr_reader") {
         return rejectContract("checkout requires a verified subject and Money credential");
       }
+      checkouts.push(body);
       return json(res, {
         name: "orgs/fixture/projects/lockdocs/envs/test/checkout_sessions/checkout_fixture",
         url: "https://checkout.stripe.com/fixture",
@@ -263,7 +265,7 @@ async function startFixture(billing: boolean, googleAds: boolean) {
     if (health.status !== 200 || (await health.json()).money !== (billing ? "ok" : "unconfigured")) {
       throw new Error("Fixture app health did not report the expected Money state");
     }
-    return { origin, methods, calls, rejections, shipments, bindings, signalBatches, passkey, pro, ticketSignal, close };
+    return { origin, methods, calls, rejections, shipments, bindings, checkouts, signalBatches, passkey, pro, ticketSignal, close };
   } catch (error) {
     await close();
     throw error;

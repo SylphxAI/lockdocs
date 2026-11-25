@@ -1,5 +1,5 @@
 import { createContext, createEffect, createSignal, on, onCleanup, onMount, Show, useContext, type ParentProps } from "solid-js";
-import { useLocation } from "@solidjs/router";
+import { useLocation, useSearchParams } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 import { mint } from "@sylphx/sdk/ids";
 import { createSignalBrowser, resolveEffectiveConsent, type SignalConsent } from "@sylphx/sdk/signal";
@@ -7,7 +7,7 @@ import { clearAnalyticsCookies, migrateSignalChoice, saveSignalChoice } from "@/
 import { readSignalChoice, signalChoiceKey, signalRequestGpc, signalStorageKey, type StoredChoice } from "@/lib/signal-privacy";
 import { CampaignBlocked } from "@/lib/campaign-navigation";
 import { analyticsPage } from "@/lib/analytics-page";
-import { behavioralParams, beginCheckoutParams, pricingCheckoutSurface, type ProSurface, type TrackEvent } from "@/lib/analytics-events";
+import { behavioralParams, beginCheckoutParams, knownCheckoutSurface, pricingCheckoutSurface, type CheckoutSurface, type ProSurface, type TrackEvent } from "@/lib/analytics-events";
 import { consumeSignup } from "@/lib/signup-analytics";
 import { useSiteLanguage } from "@/lib/site-language";
 import { localizedPath, defaultLocale } from "@/lib/locales";
@@ -56,7 +56,7 @@ type PurchaseDestinations = { signal: boolean; ads: boolean };
 const CookieContext = createContext<{
   ready: () => boolean;
   trackEvent: TrackEvent;
-  beginCheckout: (form: HTMLFormElement, currency: string) => void;
+  beginCheckout: (form: HTMLFormElement, currency: string, surface: CheckoutSurface) => void;
   open: (button: HTMLButtonElement) => void;
   configured: () => boolean;
   adsReady: () => boolean;
@@ -89,6 +89,7 @@ export function useProImpression(surface: ProSurface) {
 
 export function CookieSettings(props: ParentProps) {
   const route = useLocation();
+  const [query] = useSearchParams();
   const { href, text } = useSiteLanguage();
   const [id, setId] = createSignal<string>();
   const [ads, setAds] = createSignal<Ads>();
@@ -100,7 +101,7 @@ export function CookieSettings(props: ParentProps) {
   const [active, setActive] = createSignal(false);
   let signal: ReturnType<typeof createSignalBrowser> | undefined;
   let signalPath: string | undefined;
-  const checkoutCurrencies = new Set<string>();
+  const checkoutAttempts = new Set<string>();
   let eventScope: string | undefined;
   let routeVisit = 0;
   let unpersistedDenial = false;
@@ -294,20 +295,21 @@ export function CookieSettings(props: ParentProps) {
     const path = page ? new URL(page.page_location).pathname : undefined;
     if (!signalAllowed()) {
       signalPath = undefined;
-      checkoutCurrencies.clear();
+      checkoutAttempts.clear();
       eventScope = undefined;
       return;
     }
     if (signalPath === path) return;
     signalPath = path;
-    checkoutCurrencies.clear();
+    checkoutAttempts.clear();
     routeVisit++;
     if (!path) return;
     // Never queue a pending SDK page view: on grant the SDK re-reads the raw
     // browser URL, which can have private query data. Emit the safe path on grant.
     void signal.pageView(path);
     if (localizedPath(path, defaultLocale) === "/pricing") {
-      forwardSignal("pricing_view", { path, entry_surface: pricingCheckoutSurface }, signalEventId("pricing_view:" + routeVisit));
+      const entry_surface = knownCheckoutSurface(query.entry_surface) ?? pricingCheckoutSurface;
+      forwardSignal("pricing_view", { path, entry_surface }, signalEventId("pricing_view:" + routeVisit));
     }
     if (!id()) void consumeSignup(signalAllowed, forwardSignup).catch(() => {});
   }
@@ -452,7 +454,7 @@ export function CookieSettings(props: ParentProps) {
     });
   }
 
-  function beginCheckout(form: HTMLFormElement, currency: string) {
+  function beginCheckout(form: HTMLFormElement, currency: string, surface: CheckoutSurface) {
     resolve();
     const blocked = form.elements.namedItem("signal_blocked");
     const touch = form.elements.namedItem("signal_touch");
@@ -462,14 +464,15 @@ export function CookieSettings(props: ParentProps) {
       touch.disabled = !allowed;
       touch.value = allowed ? JSON.stringify(signal?.capture() ?? {}) : "";
     }
-    const params = beginCheckoutParams(currency);
+    const params = beginCheckoutParams(currency, surface);
     if (params) {
       sendPricing("begin_checkout", params);
-      if (signalAllowed() && !checkoutCurrencies.has(currency)) {
-        checkoutCurrencies.add(currency);
-        const { value, plan_sku, entry_surface } = params;
+      const { value, plan_sku, entry_surface } = params;
+      const attempt = currency + ":" + entry_surface;
+      if (signalAllowed() && !checkoutAttempts.has(attempt)) {
+        checkoutAttempts.add(attempt);
         forwardSignal("begin_checkout", { value, currency, plan_sku, entry_surface },
-          signalEventId("begin_checkout:" + routeVisit + ":" + currency));
+          signalEventId("begin_checkout:" + routeVisit + ":" + attempt));
       }
     }
   }

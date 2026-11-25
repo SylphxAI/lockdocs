@@ -45,7 +45,8 @@ for (const [path, secondary, destinations] of [
     const hrefs = await page.locator("main a").evaluateAll(links => links.map(link => link.getAttribute("href")!));
     const bodyLinks = hrefs.filter(href => href.startsWith("/")).map(href => new URL(href, page.url()));
     expect(bodyLinks.map(url => url.pathname + url.hash)).toEqual(destinations);
-    for (const url of bodyLinks) expect(Object.fromEntries(url.searchParams)).toEqual(campaign);
+    for (const url of bodyLinks) expect(Object.fromEntries(url.searchParams)).toEqual(url.pathname === "/pricing"
+      ? { ...campaign, entry_surface: path === comparison ? "context7_alternative" : "guide_cursor_claude_code" } : campaign);
     for (const href of hrefs.filter(href => !href.startsWith("/"))) expect(href).not.toMatch(/gclid|utm_|private-sentinel/);
     if (process.env.LOCKDOCS_LOCAL_CAPTURES) {
       await page.screenshot({ path: info.outputPath("hero.png"), animations: "disabled" });
@@ -53,7 +54,8 @@ for (const [path, secondary, destinations] of [
     const next = path === comparison ? "/pricing" : "/playground";
     await (path === comparison ? pricing(page) : playground(page)).click();
     await expect(page).toHaveURL(url => url.pathname === next && url.searchParams.get("gclid") === campaign.gclid);
-    expect(Object.fromEntries(new URL(page.url()).searchParams)).toEqual(campaign);
+    expect(Object.fromEntries(new URL(page.url()).searchParams)).toEqual(path === comparison
+      ? { ...campaign, entry_surface: "context7_alternative" } : campaign);
     await expect(settings(page)).toBeVisible();
     await expect(page.locator(analyticsFrame)).toHaveCount(0);
     expect(await page.context().cookies()).toEqual([]);
@@ -82,9 +84,9 @@ for (const choice of ["Sec-GPC", "Reject optional"] as const) {
     await hero(page).getByRole("link", { name: "Compare with Context7" }).click();
     await expect(page).toHaveURL(url => url.pathname === comparison && !url.search);
     await page.goto(comparison + "?" + query);
-    await expect(pricing(page)).toHaveAttribute("href", "/pricing");
+    await expect(pricing(page)).toHaveAttribute("href", "/pricing?entry_surface=context7_alternative");
     await pricing(page).click();
-    await expect(page).toHaveURL(url => url.pathname === "/pricing" && !url.search);
+    await expect(page).toHaveURL(url => url.pathname === "/pricing" && url.search === "?entry_surface=context7_alternative");
     await expect(page.locator(analyticsFrame)).toHaveCount(0);
     expect(google).toEqual([]);
     expect(await page.evaluate(() => localStorage.getItem("lockdocs.signal.v1.touch"))).toBeNull();

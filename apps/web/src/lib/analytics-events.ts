@@ -47,7 +47,7 @@ const eventFields = {
   paywall_view: entrySurface,
   pro_cta_clicked: { entry_surface: [...checkoutEntrySurfaces.filter(surface => surface !== pricingCheckoutSurface),
     "pricing_proof_upgrade_report", "pricing_proof_private_sources"] },
-  upgrade_preview_switched: { example_id: ["next", "pydantic"] },
+  upgrade_preview_switched: { example_id: ["next", "pydantic", "zod", "react"] },
   cli_authorized: { entry_surface: ["cli_authorize"] },
 } as const;
 

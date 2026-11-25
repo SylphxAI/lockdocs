@@ -21,6 +21,17 @@ test("Playground copy events never forward command text or package names", () =>
   assert.equal(behavioralParams("command_copied", { surface: "playground_unknown", command_kind: "cli" }), null);
 });
 
+test("upgrade switches allow only the four bundled example IDs and no lockfile fields", () => {
+  for (const example_id of ["next", "pydantic", "zod", "react"]) {
+    assert.deepEqual(behavioralParams("upgrade_preview_switched", {
+      example_id, package_name: "private-package", version: "1.2.3", filename: "private.lock",
+    }), { example_id });
+  }
+  for (const example_id of ["Zod", "react-dom", "zod@4.6.7", ["react"], undefined]) {
+    assert.equal(behavioralParams("upgrade_preview_switched", { example_id }), null);
+  }
+});
+
 test("editorial Pro clicks allow only named surfaces, not paywall impressions", () => {
   for (const entry_surface of ["context7_alternative", "guide_cursor_claude_code"]) {
     assert.deepEqual(behavioralParams("pro_cta_clicked", {

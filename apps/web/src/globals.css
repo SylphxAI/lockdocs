@@ -73,6 +73,10 @@ body{padding-bottom:var(--cookie-bar-height,0px)}
 :lang(zh-TW) .pricing-intro{max-width:54rem}
 :lang(zh-TW) .pricing-intro h1{text-wrap:balance}
 :lang(zh-TW) .pricing-intro p{max-width:44rem;text-wrap:pretty}
+.upgrade-section .segmented button{min-height:44px;overflow-wrap:anywhere}
+.sample-diff p{overflow-wrap:anywhere}
+@media(max-width:480px){.upgrade-section .segmented{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}}
+
 .studio-command{display:flex;align-items:center;gap:8px}
 .studio-command code{min-width:0;overflow-wrap:anywhere}
 .studio-command .copy-button{margin-inline-start:auto;width:44px;height:44px}

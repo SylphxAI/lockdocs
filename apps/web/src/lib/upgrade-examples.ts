@@ -18,4 +18,22 @@ export const upgrades = {
     note: ["The old dict() method still works in v2, but is deprecated. Replace it with model_dump() at the call site.",
       "v2 仍可使用舊的 dict()，但這個方法已棄用。請將呼叫處改成 model_dump()。"],
   },
+  zod: {
+    label: "Zod 3.23 → 4.6", command: "lockdocs upgrade zod 4.6.7", change: ["Use z.email() in Zod v4", "Zod v4 改用 z.email()"],
+    path: "src/validation/account.ts:7", before: "const email = z.string().email()", after: "const email = z.email()",
+    oldSource: "zod@3.23.8 lib/types.d.ts:200", newSource: "zod@4.6.7 src/v4/classic/schemas.ts:710–712",
+    guide: ["Zod v4 migration · String formats", "Zod v4 升級指南：字串格式"],
+    guideUrl: "https://zod.dev/v4/changelog#deprecates-email-etc",
+    note: ["Zod v4 still supports z.string().email(), but deprecates it in favor of the top-level z.email() validator.",
+      "Zod v4 仍支援 z.string().email()，但已將它標記為棄用。請改用頂層的 z.email() 驗證函式。"],
+  },
+  react: {
+    label: "React 18 → 19", command: "lockdocs upgrade react-dom 19.0.0", change: ["React 19 removes ReactDOM.render()", "React 19 移除了 ReactDOM.render()"],
+    path: "src/main.tsx:6", before: "ReactDOM.render(<App />, container)", after: "createRoot(container).render(<App />)",
+    oldSource: "react-dom@18.3.1 cjs/react-dom.development.js:29908", newSource: "react-dom@19.0.0 cjs/react-dom-client.development.js:24452, 24602",
+    guide: ["React 19 upgrade guide · ReactDOM.render", "React 19 升級指南：ReactDOM.render"],
+    guideUrl: "https://react.dev/blog/2024/04/25/react-19-upgrade-guide#removed-reactdom-render",
+    note: ["Import createRoot from react-dom/client. Create one root for the container and call render() on that root.",
+      "從 react-dom/client 匯入 createRoot，為容器建立一個根節點，再呼叫該根節點的 render()。"],
+  },
 };

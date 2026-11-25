@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { withCampaign } from "../src/lib/campaign-navigation";
 
 test("keeps campaign values separate from currency, anchors and auth return paths", () => {
-  const touch = "gclid=g.1&gbraid=g-2&wbraid=w_3&utm_id=123456&utm_source=paid&utm_medium=cpc&utm_campaign=C%2B%2B+%26+Rust&utm_term=lockfile&utm_content=docs";
+  const touch = "gclid=g.1&gbraid=g-2&wbraid=w_3&utm_id=123456&utm_source=paid&utm_medium=cpc&utm_campaign=C%2B%2B+%26+Rust&utm_term=lockfile&utm_content=docs&utm_source_platform=fixture&utm_creative_format=video&utm_marketing_tactic=acquisition";
   assert.equal(withCampaign("/pricing?currency=EUR#plans", "?" + touch + "&email=private"), "/pricing?currency=EUR&" + touch + "#plans");
   assert.equal(withCampaign("/sign-in?next=%2Fpricing", "?" + touch), "/sign-in?next=%2Fpricing&" + touch);
 });

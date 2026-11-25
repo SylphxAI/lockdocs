@@ -79,12 +79,17 @@ export function CookieSettings(props: ParentProps) {
   const { href, text } = useSiteLanguage();
   const [id, setId] = createSignal<string>();
   const [ads, setAds] = createSignal<Ads>();
-  const configured = () => Boolean(id() || ads());
+  const [ingestEnabled, setIngestEnabled] = createSignal(false);
+  const configured = () => Boolean(id() || ads() || ingestEnabled());
   const [settings, setSettings] = createSignal<SignalConsent>();
   const [open, setOpen] = createSignal(false);
   const [protectedByGpc, setProtectedByGpc] = createSignal(false);
   const [active, setActive] = createSignal(false);
   let signal: ReturnType<typeof createSignalBrowser> | undefined;
+  let signalPath: string | undefined;
+  const checkoutCurrencies = new Set<string>();
+  let eventScope: string | undefined;
+  let routeVisit = 0;
   let unpersistedDenial = false;
   let serverGpc = false;
   let tag: HTMLIFrameElement | undefined;
@@ -162,7 +167,7 @@ export function CookieSettings(props: ParentProps) {
       }
       adsConfiguredInTag = !!adsDestination;
       setActive(true);
-      void consumeSignup(analyticsAllowed, params => emit("sign_up", params)).catch(() => {});
+      void consumeSignup(analyticsAllowed, forwardSignup).catch(() => {});
     }, { once: true });
     frame.src = "/api/analytics/tag";
     document.body.append(frame);
@@ -188,6 +193,7 @@ export function CookieSettings(props: ParentProps) {
     const gpc = resolveEffectiveConsent({ storedChoice: "granted", gpc: serverGpc }).analytics_storage === "denied";
     setProtectedByGpc(gpc);
     apply();
+    queueMicrotask(syncSignalPage);
     if (prompt) setOpen(saved === undefined && !gpc && currentConsent().analytics_storage === "denied");
   }
 
@@ -232,28 +238,59 @@ export function CookieSettings(props: ParentProps) {
         const label: unknown = config?.googleAdsPurchaseLabel;
         const configuredAds = validGoogleAdsId(adsId) && validGoogleAdsPurchaseLabel(label)
           ? { googleAdsId: adsId, googleAdsPurchaseLabel: label } : undefined;
-        if (!ga && !configuredAds) return;
+        const key: unknown = config?.signalKey;
+        const baseUrl: unknown = config?.signalApiOrigin;
+        const ingest = typeof key === "string" && key.startsWith("sylphx_pk_")
+          ? { apiKey: key, baseUrl: typeof baseUrl === "string" ? baseUrl : "https://api.sylphx.com" } : undefined;
+        if (!ga && !configuredAds && !ingest) return;
         unpersistedDenial = migrateSignalChoice() === "denied";
         syncChoice();
         serverGpc = config.gpc === true;
         // Pass an explicit unknown sentinel so Signal doesn't do a second geo
         // lookup from a source the checkout server cannot consult.
-        signal = createSignalBrowser({ storageKey: signalStorageKey, region: typeof config.region === "string" ? config.region : "XX", gpc: serverGpc });
+        signal = createSignalBrowser({ storageKey: signalStorageKey, region: typeof config.region === "string" ? config.region : "XX", gpc: serverGpc, ingest });
         await signal.ready;
         if (controller.signal.aborted) return;
         setId(ga);
         setAds(configuredAds);
+        setIngestEnabled(!!ingest);
         resolve(true);
       }).catch(() => {});
-    onCleanup(() => { controller.abort(); signal?.dispose(); stop(); });
+    onCleanup(() => { controller.abort(); signal?.dispose(); signal = undefined; stop(); });
   });
 
-  createEffect(() => {
-    void route.search;
-    if (settings()?.analytics_storage !== "granted") return;
-    // The router updates its search before window.location; Signal reads the latter.
-    queueMicrotask(() => { syncChoice(); signal?.capture(); });
-  });
+  function signalAllowed() {
+    return !!signal && ingestEnabled() && currentConsent().analytics_storage === "granted";
+  }
+
+  function syncSignalPage() {
+    if (!signal) return;
+    syncChoice();
+    signal.capture();
+    const origin = window.location.origin;
+    const page = analyticsPage(origin + route.pathname, "", origin);
+    const path = page ? new URL(page.page_location).pathname : undefined;
+    if (!signalAllowed()) {
+      signalPath = undefined;
+      checkoutCurrencies.clear();
+      eventScope = undefined;
+      return;
+    }
+    if (signalPath === path) return;
+    signalPath = path;
+    checkoutCurrencies.clear();
+    routeVisit++;
+    if (!path) return;
+    // Never queue a pending SDK page view: on grant the SDK re-reads the raw
+    // browser URL, which can have private query data. Emit the safe path on grant.
+    void signal.pageView(path);
+    if (!id()) void consumeSignup(signalAllowed, forwardSignup).catch(() => {});
+  }
+
+  createEffect(on(() => [route.pathname, route.search], () => {
+    // The router publishes before history commits; capture needs window.location.
+    queueMicrotask(syncSignalPage);
+  }, { defer: true }));
 
   // Start GA if the first allowed page is reached by client navigation.
   createEffect(on(() => route.pathname, () => resolve(), { defer: true }));
@@ -300,13 +337,31 @@ export function CookieSettings(props: ParentProps) {
     return true;
   }
 
+  function forwardSignal(eventName: string, properties: Record<string, unknown>, eventId?: string) {
+    if (!signalAllowed()) return false;
+    void signal?.track({ eventName, properties, eventId });
+    return true;
+  }
+
+  // Allocate an anonymous document scope only after consent. Repeated calls
+  // for the same logical event reuse the same ID within that scope.
+  function signalEventId(logicalEvent: string) {
+    return (eventScope ??= crypto.randomUUID()) + ":" + logicalEvent;
+  }
+
+  function forwardSignup(params: { method: string; entry_surface: string }) {
+    // consumeSignup atomically claims the verified login marker across tabs.
+    if (signalAllowed()) forwardSignal("sign_up", params, signalEventId("sign_up:" + params.method + ":" + params.entry_surface));
+    emit("sign_up", params);
+  }
+
   const trackEvent: TrackEvent = (event, params) => {
-    if (!active()) return false;
     try {
       syncChoice();
       const safe = behavioralParams(event, params);
-      // Keep future Signal forwarding here, behind the same consent check and allowlist.
-      return safe !== null && emit(event, safe);
+      if (!safe) return false;
+      const sent = forwardSignal(event, safe);
+      return emit(event, safe) || sent;
     } catch { return false; } // Analytics failures must not interrupt the UI or a native form submit.
   };
 
@@ -372,7 +427,15 @@ export function CookieSettings(props: ParentProps) {
       touch.value = allowed ? JSON.stringify(signal?.capture() ?? {}) : "";
     }
     const params = beginCheckoutParams(currency);
-    if (params) sendPricing("begin_checkout", params);
+    if (params) {
+      sendPricing("begin_checkout", params);
+      if (signalAllowed() && !checkoutCurrencies.has(currency)) {
+        checkoutCurrencies.add(currency);
+        const { value, plan_sku, entry_surface } = params;
+        forwardSignal("begin_checkout", { value, currency, plan_sku, entry_surface },
+          signalEventId("begin_checkout:" + routeVisit + ":" + currency));
+      }
+    }
   }
 
   function choose(next: StoredChoice) {
@@ -391,7 +454,7 @@ export function CookieSettings(props: ParentProps) {
     queueMicrotask(() => panel?.focus());
   }
 
-  return <CookieContext.Provider value={{ beginCheckout, trackEvent, ready: analyticsAllowed, open: showFrom, configured, adsReady, claimPurchase }}>
+  return <CookieContext.Provider value={{ beginCheckout, trackEvent, ready: () => id() ? analyticsAllowed() : settings()?.analytics_storage === "granted" && signalAllowed(), open: showFrom, configured, adsReady, claimPurchase }}>
     {props.children}
     <Show when={configured() && open()}><section id="cookie-settings" class="cookie-panel" aria-labelledby="cookie-heading" tabIndex={-1}
       ref={panel} onKeyDown={event => { if (event.key === "Escape" && trigger) close(); }}>

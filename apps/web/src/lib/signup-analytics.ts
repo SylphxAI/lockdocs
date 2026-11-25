@@ -1,7 +1,7 @@
 import { cookie } from "./http";
 import { resolveEffectiveConsent } from "@sylphx/sdk/signal";
 import { signalRequestPrivacy } from "./signal-privacy";
-import { measurementId } from "./analytics-config";
+import { measurementId, signalConfig } from "./analytics-config";
 import { localizedPath, defaultLocale } from "./locales";
 
 const markerCookie = "__Host-lockdocs-signup";
@@ -20,7 +20,7 @@ export function clearSignupMarker(request: Request, response: Response) {
 
 /** Call only after a verified login. Never place session or request data in the marker. */
 export function markSignup(request: Request, response: Response, isNewUser: boolean, method: string, next: string) {
-  if (isNewUser !== true || !methods.some(value => value === method) || !measurementId() ||
+  if (isNewUser !== true || !methods.some(value => value === method) || (!measurementId() && !signalConfig()) ||
       resolveEffectiveConsent(signalRequestPrivacy(request), request.headers).analytics_storage !== "granted") {
     clearSignupMarker(request, response);
     return;

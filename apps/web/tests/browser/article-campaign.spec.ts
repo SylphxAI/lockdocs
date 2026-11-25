@@ -4,6 +4,7 @@ const campaign = {
   gclid: "article-click", gbraid: "article-braid", wbraid: "article-web-braid",
   utm_id: "123456", utm_source: "google", utm_medium: "cpc", utm_campaign: "Docs + MCP & Pro",
   utm_term: "lockfile", utm_content: "upgrade report",
+  utm_source_platform: "fixture", utm_creative_format: "video", utm_marketing_tactic: "acquisition",
 };
 const query = new URLSearchParams({ ...campaign, token: "private-sentinel" });
 

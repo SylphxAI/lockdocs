@@ -1,6 +1,6 @@
 import { parseSignalAttribution } from "@sylphx/sdk/signal";
 
-const fields = ["gclid", "gbraid", "wbraid", "utm_id", "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"] as const;
+const fields = ["gclid", "gbraid", "wbraid", "utm_id", "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "utm_source_platform", "utm_creative_format", "utm_marketing_tactic"] as const;
 const base = "https://lockdocs.invalid";
 
 /** Carry campaign parameters in first-party links only. Signal owns all persistence after consent. */

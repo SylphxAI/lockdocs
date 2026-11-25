@@ -1,4 +1,5 @@
 import { httpsOrigin } from "./auth";
+import { signalConfig } from "./analytics-config";
 
 const googleTag = "https://www.googletagmanager.com";
 const googleCollection = [
@@ -15,6 +16,7 @@ const googleCollection = [
 export function documentPolicy(nonce: string, development: boolean) {
   const authOrigins = [process.env.SYLPHX_AUTH_URL, process.env.LOCKDOCS_TENANT_AUTH_ORIGIN]
     .map(httpsOrigin).filter(Boolean).join(" ");
+  const signalOrigin = signalConfig()?.signalApiOrigin;
   // Google scripts execute only in the separate, consent-gated document below.
   return [
     "default-src 'none'",
@@ -27,7 +29,7 @@ export function documentPolicy(nonce: string, development: boolean) {
     "font-src 'self' data:",
     "img-src 'self' data:",
     "manifest-src 'self'",
-    "connect-src 'self' " + [authOrigins, googleCollection, development ? "ws://localhost:* ws://127.0.0.1:*" : ""].filter(Boolean).join(" "),
+    "connect-src 'self' " + [...new Set([authOrigins, "https://api.sylphx.com", signalOrigin]), googleCollection, development ? "ws://localhost:* ws://127.0.0.1:*" : ""].filter(Boolean).join(" "),
     "frame-src 'self'",
     // Chromium can apply form-action to the final location as well as the POST URL.
     "form-action 'self' https://checkout.stripe.com https://billing.stripe.com http://127.0.0.1:*" + (authOrigins ? " " + authOrigins : ""),

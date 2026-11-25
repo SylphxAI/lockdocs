@@ -307,7 +307,7 @@ jobs:
           address=$(docker port "$container" 3000/tcp)
           # The published socket can reset connections before Node starts listening.
           body=$(curl --fail --silent --show-error --retry 10 --retry-all-errors --retry-connrefused --retry-delay 1 --retry-max-time 15 --max-time 2 "http://$address/api/health")
-          printf '%s\n' "$body" | grep -Fx '{"status":"ok"}'
+          printf '%s\n' "$body" | grep -Fx '{"status":"ok","money":"unconfigured"}'
       - name: Verify the Glama stdio container
         run: |
           set -euo pipefail

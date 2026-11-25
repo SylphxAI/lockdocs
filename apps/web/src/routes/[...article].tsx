@@ -6,6 +6,8 @@ import { SolidMarkdown as Markdown } from "solid-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSlug from "rehype-slug";
 import { visit } from "unist-util-visit";
+import { JsonLd } from "@/components/json-ld";
+import { canonicalOrigin } from "@/lib/indexing";
 import { PackageText } from "@/components/package-text";
 import { PageMeta } from "@/components/page-meta";
 import { context7AlternativePath, editorGuidePath } from "@/lib/editorial-routes";
@@ -39,6 +41,16 @@ export default function Article() {
     <Show when={article()} keyed fallback={<div class="wrap content-section"><HttpStatusCode code={404}/><PageMeta title="Page not found · Lockdocs" description="This Lockdocs page does not exist." unlisted/><h1>Page not found</h1><A href="/docs">Open the docs</A></div>}>
       {(page) => <div class="wrap docs-layout">
         <PageMeta title={text(page.title, "文件總覽") + " · Lockdocs"} description={text(page.description, "學會安裝 Lockdocs、設定 MCP，並查閱專案實際安裝版本的 API 文件。")}/>
+        <Show when={page.route === "/compare" || page.route === "/benchmarks"}>
+          <JsonLd data={{
+            "@context": "https://schema.org",
+            "@type": "TechArticle",
+            url: canonicalOrigin + page.route,
+            headline: page.route === "/compare" ? "Lockdocs vs Context7" : page.title,
+            description: page.description,
+            inLanguage: "en",
+          }}/>
+        </Show>
         <DocNavigation />
         <article class="doc-body"><div class="kicker"><span/> {text("LOCKDOCS MANUAL", "LOCKDOCS 使用指南")}</div>
         <Show when={page.route === "/docs"}><h1>{text("Documentation", "文件總覽")}</h1><p>{text("Look up APIs for the version you installed. Start in the terminal, then give the same answers to your coding agent.", "查閱你實際安裝版本的 API。先在終端機試用，再讓程式開發代理工具查閱同一版本的文件。")}</p><div class="doc-start"><A href="/guide"><Terminal size={18}/> {text("Quickstart", "快速入門（英文）")} <ArrowRight size={15}/></A><A href="/reference"><BookOpen size={18}/> {text("CLI reference", "CLI 參考（英文）")} <ArrowRight size={15}/></A><A href={editorGuidePath}>{text("Cursor & Claude Code setup", "設定 Cursor 與 Claude Code（英文）")} <ArrowRight size={15}/></A></div></Show>

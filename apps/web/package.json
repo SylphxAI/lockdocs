@@ -10,7 +10,7 @@
     "build": "vinxi build",
     "start": "node .output/server/index.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/*.test.ts",
+    "test": "tsx --test tests/*.test.ts src/lib/*.test.ts",
     "test:browser": "playwright test",
     "lint": "eslint src"
   },
@@ -33,7 +33,8 @@
     "solid-js": "1.9.20",
     "solid-markdown": "2.1.1",
     "unist-util-visit": "5.1.0",
-    "vinxi": "0.5.11"
+    "vinxi": "0.5.11",
+    "yaml": "2.9.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",

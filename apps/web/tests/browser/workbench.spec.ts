@@ -121,3 +121,64 @@ test("Chromium can load the manifest and official icons under enforcing CSP", as
   expect(await page.evaluate(() => (window as Window & { violations?: string[] }).violations)).toEqual([]);
   expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistrations()).length)).toBe(0);
 });
+
+
+test("the three new formats resolve locally, and format changes preserve pasted text", async ({ page }) => {
+  await page.goto("/playground");
+  const format = page.getByLabel("Lockfile format");
+  const editor = page.locator("#lockfile");
+  const resolve = page.getByRole("button", { name: "Resolve versions" });
+  await expect(format.locator("option")).toHaveCount(8);
+  const outgoing: string[] = [];
+  page.on("request", request => outgoing.push((request.postData() ?? "") + request.url()));
+  for (const row of [
+    { format: "pnpm-lock.yaml", sample: "react@18.3.1", input: "packages: {'preview-only@1.2.3(react@19.0.0)': {}}", output: "preview-only@1.2.3" },
+    { format: "yarn.lock", sample: "@babel/core@7.24.1", input: '"preview-only@npm:^2.0.0":\n  version: 2.1.0', output: "preview-only@2.1.0" },
+    { format: "go.mod", sample: "github.com/spf13/cobra@v1.8.0", input: "require example.com/preview-only v1.4.0 // indirect", output: "example.com/preview-only@v1.4.0" },
+  ]) {
+    await format.selectOption(row.format);
+    if (row.format !== "pnpm-lock.yaml") await expect(editor).toHaveValue(/preview-only/);
+    await page.getByRole("button", { name: "Load sample" }).click();
+    await expect(page.getByRole("heading", { name: row.sample, exact: true })).toBeVisible();
+    await editor.fill(row.input);
+    await resolve.click();
+    await expect(page.getByRole("heading", { name: row.output, exact: true })).toBeVisible();
+  }
+  await format.selectOption("pnpm-lock.yaml");
+  await editor.fill("packages: [");
+  await resolve.click();
+  await expect(page.getByRole("status").filter({ hasText: "Couldn’t parse" })).toBeVisible();
+  await expect(page.locator(".panel-count")).toHaveText("0 pinned");
+  expect(outgoing.filter(request => request.includes("preview-only"))).toEqual([]);
+});
+
+test("Traditional Chinese resolves Go pins using the same Playground", async ({ page }) => {
+  await page.goto("/zh-TW/playground");
+  await page.getByLabel("lockfile 格式").selectOption("go.mod");
+  await expect(page.getByText("已鎖定 2 個套件")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "github.com/spf13/cobra@v1.8.0" })).toBeVisible();
+});
+
+test("route-specific JSON-LD is in the initial HTML and drops attribution parameters", async ({ request }) => {
+  for (const [path, type, name, language] of [
+    ["/playground", "WebApplication", "Lockfile Playground", "en"],
+    ["/zh-TW/playground", "WebApplication", "lockfile 試用工具", "zh-TW"],
+    ["/compare", "TechArticle", "Lockdocs vs Context7", "en"],
+    ["/benchmarks", "TechArticle", "Benchmarks", "en"],
+  ]) {
+    const response = await request.get(path + "?utm_source=github&utm_medium=readme&utm_content=nav");
+    expect(response.ok()).toBe(true);
+    const html = await response.text();
+    const url = "https://lockdocs.sylphx.com" + path;
+    expect(html).toContain('rel="canonical" href="' + url + '"');
+    const scripts = [...html.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>(.*?)<\/script>/gs)];
+    expect(scripts).toHaveLength(1);
+    const data = JSON.parse(scripts[0][1]);
+    expect(data).toMatchObject({ "@context": "https://schema.org", "@type": type, url, inLanguage: language });
+    if (type === "WebApplication") {
+      expect(data).toMatchObject({ name, isAccessibleForFree: true, offers: { "@type": "Offer", price: 0, priceCurrency: "USD", url } });
+    } else expect(data.headline).toBe(name);
+  }
+  const docs = await request.get("/docs");
+  expect(await docs.text()).not.toContain('type="application/ld+json"');
+});

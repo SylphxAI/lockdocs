@@ -26,6 +26,7 @@ export function documentPolicy(nonce: string, development: boolean) {
     "style-src 'self'" + (development ? " 'unsafe-inline'" : " 'nonce-" + nonce + "'"),
     "font-src 'self' data:",
     "img-src 'self' data:",
+    "manifest-src 'self'",
     "connect-src 'self' " + [authOrigins, googleCollection, development ? "ws://localhost:* ws://127.0.0.1:*" : ""].filter(Boolean).join(" "),
     "frame-src 'self'",
     // Chromium can apply form-action to the final location as well as the POST URL.

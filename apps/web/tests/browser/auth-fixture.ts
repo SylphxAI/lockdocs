@@ -28,6 +28,7 @@ async function startFixture(billing: boolean) {
   const bindings: unknown[] = [];
   const rejections: string[] = [];
   const ticketSignal: { is_new_user?: boolean } = {};
+  const pro = { entitled: false };
   const tickets = new Map<string, string>();
   const oauthReturns = new Map<string, string>();
   const sessions = new Map<string, string>();
@@ -96,7 +97,13 @@ async function startFixture(billing: boolean) {
     if (path === "/v1/money/orgs/fixture/projects/lockdocs/envs/test/entitlement_grants:getMine" && req.method === "GET" &&
         sessionToken === "money-fixture-token" && req.headers["x-sylphx-key"] === pk &&
         url.searchParams.get("feature") === "lockdocs_pro_seat_year") {
-      return json(res, { subject_id: "usr_reader", entitled: false });
+      return json(res, { subject_id: "usr_reader", entitled: pro.entitled });
+    }
+    if (billing && pro.entitled && path === "/v1/money/orgs/fixture/projects/lockdocs/envs/test/licence_tokens:listMine" && req.method === "GET" &&
+        sessionToken === "money-fixture-token" && req.headers["x-sylphx-key"] === pk &&
+        url.searchParams.get("filter") === 'end_user = "usr_reader" AND token_product = "lockdocs"') {
+      return json(res, { next_page_token: "", licence_tokens: [{ token: "fixture-offline-grant", token_product: "lockdocs",
+        issue_time: new Date().toISOString(), expire_time: new Date(expiry * 1000).toISOString(), seats: 1 }] });
     }
     let raw = "";
     for await (const part of req) raw += part;
@@ -226,7 +233,7 @@ async function startFixture(billing: boolean) {
     }, stdio: ["ignore", "pipe", "inherit"] });
     await once(app.stdout!, "data");
     if (!(await fetch(`http://127.0.0.1:${appPort}/api/health`)).ok) throw new Error("Fixture app did not start");
-    return { origin, methods, calls, rejections, shipments, bindings, passkey, ticketSignal, close };
+    return { origin, methods, calls, rejections, shipments, bindings, passkey, pro, ticketSignal, close };
   } catch (error) {
     await close();
     throw error;

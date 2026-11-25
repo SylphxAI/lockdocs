@@ -8,9 +8,12 @@ import { A as Link } from "@solidjs/router";
 import { ArrowRight, ArrowUpRight, Box, Command, FileCode2, GitCompareArrows, ShieldCheck } from 'lucide-solid';
 import { PackageText } from '@/components/package-text';
 import { InstallCommand } from "@/components/install-command";
+import { useCookieSettings, useProImpression } from "@/components/cookie-settings";
 
 export default function Home() {
   const { href, campaignHref, text, locale } = useSiteLanguage();
+  const { trackEvent } = useCookieSettings();
+  const proImpression = useProImpression("home_pro_band");
   const url = () => canonicalOrigin + href("/");
   const questions = () => [
     { question: text("Is Lockdocs free?", "Lockdocs 可以免費使用嗎？"), answer: text("Yes. Exact-version docs and the local MCP server are free and don’t require an account. Lockdocs Pro adds Upgrade Reports and Private Package Docs.", "可以。查閱指定版本的文件和使用本機 MCP 伺服器都免費，也不需要帳戶。Lockdocs Pro 另外提供升級報告和私有套件文件。") },
@@ -64,7 +67,7 @@ export default function Home() {
         <article><ShieldCheck size={20}/><h3>{text("Keep it local", "在本機查詢")}</h3><p>{text("Query your local index from your CLI or coding agent. Fetch upstream docs when you want them.", "用命令列或程式開發代理工具查詢本機索引，需要時再下載上游文件。")}</p></article>
       </div>
     </section>
-    <section class="wrap section"><div class="pro-band"><GitCompareArrows size={25}/><div><div class="eyebrow">LOCKDOCS PRO</div><h2>{text("See what breaks before you upgrade.", "升級前先找出會受影響的程式碼")}</h2><p>{text("Get the full upgrade report for your call sites and exact-version docs for private packages.", "取得包含呼叫位置的完整升級報告，也能查閱指定版本的私有套件文件。")}</p></div><Link class="button outline" href={campaignHref("/pricing")}>{text("Explore Pro", "了解 Pro")} <ArrowRight size={16}/></Link></div></section>
+    <section class="wrap section"><div class="pro-band" ref={proImpression}><GitCompareArrows size={25}/><div><div class="eyebrow">LOCKDOCS PRO</div><h2>{text("See what breaks before you upgrade.", "升級前先找出會受影響的程式碼")}</h2><p>{text("Get the full upgrade report for your call sites and exact-version docs for private packages.", "取得包含呼叫位置的完整升級報告，也能查閱指定版本的私有套件文件。")}</p></div><Link class="button outline" href={campaignHref("/pricing")} onClick={() => trackEvent("pro_cta_clicked", { entry_surface: "home_pro_band" })}>{text("Explore Pro", "了解 Pro")} <ArrowRight size={16}/></Link></div></section>
     <div class="wrap"><EditorialFaq url={url()} items={questions()} heading={text("Frequently asked questions", "常見問題")}/></div>
   </>;
 }

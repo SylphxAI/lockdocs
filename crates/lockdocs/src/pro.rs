@@ -31,7 +31,7 @@ pub const POLICY: LicencePolicy<'static> = LicencePolicy {
     public_keys: PUBLIC_KEYS,
     env_var: "LOCKDOCS_LICENCE_TOKEN",
     file_name: "licence",
-    upgrade_url: "https://sylphxai.github.io/lockdocs/pricing",
+    upgrade_url: "https://lockdocs.sylphx.com/pricing",
     // Keel Money configuration is supplied to the Money-aware CLI entry point.
     checkout_base: None,
 };
@@ -39,7 +39,7 @@ pub const POLICY: LicencePolicy<'static> = LicencePolicy {
 pub const UPGRADE_REPORT: &str = "Upgrade report";
 pub const PRIVATE_SOURCES: &str = lockdocs_core::private::FEATURE;
 
-/// The product-owned Money checkout, parsed from the same Keel file the site uses.
+/// The legacy device-flow checkout, also used by the Keel docs preview.
 pub fn checkout() -> MoneyCheckout {
     MoneyCheckout::from_docs_toml(include_str!("money_docs.toml"), "pro").expect("lockdocs' embedded Keel Money configuration must be valid")
 }
@@ -90,9 +90,14 @@ mod tests {
     fn checkout_policy_and_docs_use_the_live_product() {
         assert_eq!(POLICY.product, "lockdocs");
         assert_eq!(POLICY.checkout_base, None);
-        assert_eq!(POLICY.upgrade_url, "https://sylphxai.github.io/lockdocs/pricing");
-        let config = include_str!("../../../docs/.vitepress/config.ts");
-        assert!(config.contains("checkoutUrl: 'https://sylphxai.github.io/lockdocs/pricing'"));
+        assert_eq!(POLICY.upgrade_url, "https://lockdocs.sylphx.com/pricing");
+        let page = include_str!("../../../docs/pro.md");
+        assert!(page.contains("[See Lockdocs Pro pricing](/pricing)"));
+        assert!(page.contains("`lockdocs login`"));
+    }
+
+    #[test]
+    fn legacy_checkout_keeps_pack_ids_and_uses_live_return_urls() {
         let storefront = checkout();
         assert_eq!(storefront.product, "lockdocs_pro_seat_year");
         assert!(storefront.checkout_enabled);
@@ -102,10 +107,9 @@ mod tests {
             storefront.prices.iter().map(|p| p.id.as_str()).collect::<Vec<_>>(),
             ["1", "5", "10", "25", "50"]
         );
-        let page = include_str!("../../../docs/pro.md");
-        assert!(page.contains("Buy lockdocs Pro"));
-        assert!(page.contains("lockdocs licence buy --pack 1"));
-        assert!(page.contains("starts the device flow"));
+        assert_eq!(storefront.success_url, format!("{}?session_id={{CHECKOUT_SESSION_ID}}", POLICY.upgrade_url));
+        assert_eq!(storefront.cancel_url, format!("{}?checkout=cancelled", POLICY.upgrade_url));
+        assert_eq!(storefront.recovery_url, "https://lockdocs.sylphx.com/recover");
     }
 
     #[test]

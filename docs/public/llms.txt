@@ -7,21 +7,21 @@ lockdocs is a Rust command-line tool and Model Context Protocol (MCP) server pub
 ## Install and Setup
 
 - npm: `npx -y @sylphx/lockdocs setup --client cursor,claude,codex`
-- [PyPI](https://pypi.org/project/lockdocs/): Run with `uvx lockdocs`, or install with `pip install lockdocs`. See [MCP setup without Node.js](https://sylphxai.github.io/lockdocs/guide/setup#without-nodejs) to connect a Python-based launcher to your editor.
+- [PyPI](https://pypi.org/project/lockdocs/): Run with `uvx lockdocs`, or install with `pip install lockdocs`. See [MCP setup without Node.js](https://lockdocs.sylphx.com/guide/setup#without-nodejs) to connect a Python-based launcher to your editor.
 - Cargo: `cargo install lockdocs`
 - Homebrew: `brew install sylphxai/tap/lockdocs`
 
 ## Documentation
 
-- [Home](https://sylphxai.github.io/lockdocs/)
-- [Quickstart](https://sylphxai.github.io/lockdocs/guide/quickstart)
-- [Editors and agents](https://sylphxai.github.io/lockdocs/guide/setup)
-- [Ecosystems](https://sylphxai.github.io/lockdocs/guide/ecosystems)
-- [Upstream docs and fetching](https://sylphxai.github.io/lockdocs/guide/fetch)
-- [How it works](https://sylphxai.github.io/lockdocs/guide/how-it-works)
-- [MCP tools](https://sylphxai.github.io/lockdocs/reference/tools)
-- [CLI reference](https://sylphxai.github.io/lockdocs/reference/cli)
-- [Benchmarks](https://sylphxai.github.io/lockdocs/benchmarks)
-- [Comparison](https://sylphxai.github.io/lockdocs/compare)
-- [Pricing](https://sylphxai.github.io/lockdocs/pricing)
+- [Home](https://lockdocs.sylphx.com/)
+- [Quickstart](https://lockdocs.sylphx.com/guide)
+- [Editors and agents](https://lockdocs.sylphx.com/guide/setup)
+- [Ecosystems](https://lockdocs.sylphx.com/guide/ecosystems)
+- [Upstream docs and fetching](https://lockdocs.sylphx.com/guide/fetch)
+- [How it works](https://lockdocs.sylphx.com/guide/how-it-works)
+- [MCP tools](https://lockdocs.sylphx.com/reference/tools)
+- [CLI reference](https://lockdocs.sylphx.com/reference)
+- [Benchmarks](https://lockdocs.sylphx.com/benchmarks)
+- [Comparison](https://lockdocs.sylphx.com/compare)
+- [Pricing](https://lockdocs.sylphx.com/pricing)
 - [GitHub repository](https://github.com/SylphxAI/lockdocs)

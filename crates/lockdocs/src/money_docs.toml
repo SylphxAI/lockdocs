@@ -1,7 +1,7 @@
 title = "lockdocs Pro"
 description = "The upgrade report and private sources for teams that pin versions."
 base_path = "/lockdocs"
-origin = "https://sylphxai.github.io"
+# This legacy storefront is built under /lockdocs for local docs previews.
 lang = "en"
 host = "github-pages"
 include = ["pricing.md", "recover.md"]
@@ -25,9 +25,9 @@ title = "Buy lockdocs Pro"
 description = "Upgrade reports and private sources, with offline licence verification. One yearly price per seat, no usage fees."
 consent_version = "waiver-v1"
 consent_text = "I ask for my licence to be supplied immediately after I pay. I understand that once it is supplied I lose my right to cancel this purchase and to a refund on that ground."
-success_url = "https://sylphxai.github.io/lockdocs/pricing?session_id={CHECKOUT_SESSION_ID}"
-cancel_url = "https://sylphxai.github.io/lockdocs/pricing?checkout=cancelled"
-recovery_url = "https://sylphxai.github.io/lockdocs/recover"
+success_url = "https://lockdocs.sylphx.com/pricing?session_id={CHECKOUT_SESSION_ID}"
+cancel_url = "https://lockdocs.sylphx.com/pricing?checkout=cancelled"
+recovery_url = "https://lockdocs.sylphx.com/recover"
 cta_label = "Continue to payment"
 recovery_label = "Email my licence recovery link"
 

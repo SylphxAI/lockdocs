@@ -1,4 +1,6 @@
 import { EditorialFaq } from "@/components/editorial";
+import { PricingProof } from "@/components/pricing-proof";
+import { pricingFaq } from "@/lib/pricing-faq";
 import { JsonLd } from "@/components/json-ld";
 import { canonicalOrigin } from "@/lib/indexing";
 import { useSiteLanguage } from "@/lib/site-language";
@@ -34,10 +36,6 @@ export default function Pricing() {
   const returnPath = () => locale() === "en"
     ? pricingPath(currency())
     : href("/pricing") + "?" + new URLSearchParams({ currency: currency() });
-  const questions = () => [
-    { question: text("How much does Lockdocs Pro cost?", "Lockdocs Pro 要多少錢？"), answer: text("Lockdocs Pro costs " + annual() + " per year, including tax. You pay the full annual amount upfront.", "Lockdocs Pro 年費為 " + annual() + "，已含稅，訂閱時一次付清。") },
-    { question: text("Do I need an account to use Lockdocs Free?", "使用免費版需要帳戶嗎？"), answer: text("No. Exact-version docs, symbol lookup and the local MCP server are free to use without an account. You sign in to buy or manage Pro.", "不用。查閱指定版本的文件、查詢符號和使用本機 MCP 伺服器都免費，也不用登入。購買或管理 Pro 時才需要登入。") },
-  ];
   const details = createAsync(() => account(), { deferStream: true });
   const session = () => details()?.user;
   const entitlement = () => details()?.entitlement;
@@ -60,8 +58,9 @@ export default function Pricing() {
       </article>
       <article class="surface plan"><div class="plan-label">{text("OPEN SOURCE", "開放原始碼")}</div><h2>{text("Free", "免費版")}</h2><div class="plan-price">{money(0)}</div><p class="quiet">{text("No account required. Runs on your machine.", "不必註冊，直接在本機執行。")}</p><ul class="check-list"><For each={[text("Exact-version dependency resolution", "確認相依套件的確切版本"), text("Local docs and symbol lookup", "在本機查閱文件與符號"), text("Three-tool MCP server for coding agents", "為程式開發代理工具提供三個 MCP 工具")]}>{(item) => <li><Check size={17}/>{item}</li>}</For></ul><Link class="button secondary" href={locale() === "en" ? "/guide" : href("/docs")}>{text("Install Lockdocs", "安裝 Lockdocs")} <ArrowRight size={16}/></Link></article>
     </div>
+    <PricingProof/>
     <section class="terms"><LockKeyhole size={19}/><div><h2>{text("Annual billing and cancellation", "年費與取消訂閱")}</h2><p>{text("The full annual amount is billed upfront. UK and EU consumers generally have 14 days from purchase to cancel a new subscription. See the", "年費在訂閱時一次收取。英國與歐盟的消費者通常可在購買後 14 天內取消新訂閱。取消方式及適用的例外情況請見")} <Link href="/legal/terms">{text("subscription terms", "訂閱條款")}</Link> {text("for how to cancel and when exceptions apply. Manage renewal and invoices in your", "。你可以在")} <Link href="/dashboard">{text("account", "帳戶")}</Link>{text(".", "管理續訂與帳單。")}</p><p class="mono quiet">{currencies.map(code => money(annualAmount(code), code) + text("/yr", "／年")).join(" · ")}{text(" · Tax included", "（已含稅）")}</p></div></section>
-    <EditorialFaq url={pricingUrl()} heading={text("Frequently asked questions", "常見問題")} items={questions()}/>
+    <EditorialFaq url={pricingUrl()} heading={text("Frequently asked questions", "常見問題")} items={pricingFaq(locale(), annual(), carryCampaign)}/>
   </div></Suspense>
   </>;
 }

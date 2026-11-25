@@ -150,7 +150,7 @@ test("workbench resolves pasted text and switches cited migrations", async ({ pa
   await expect(page.locator(".plan-pro .plan-price")).toHaveText("€109/yr");
   await page.getByRole("link", { name: "HKD" }).click();
   await expect(page.locator(".plan-pro .plan-price")).toHaveText("HK$938/yr");
-  await expect(page.getByText("generally have 14 days", { exact: false })).toBeVisible();
+  await expect(page.locator(".terms")).toContainText("generally have 14 days");
 });
 
 test("all technical docs load with working internal links and anchors", async ({ page, baseURL }) => {

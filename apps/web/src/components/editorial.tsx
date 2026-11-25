@@ -2,9 +2,8 @@ import { For, type JSX, type ParentProps } from "solid-js";
 import { CopyButton } from "@/components/copy-button";
 import { PackageText } from "@/components/package-text";
 import { JsonLd } from "@/components/json-ld";
+import { faqPage, type Faq } from "@/lib/faq-schema";
 import "./editorial.css";
-
-type Faq = { question: string; answer: string };
 
 export function EditorialHero(props: ParentProps<{ label: string; title: string; intro: string; actions?: JSX.Element }>) {
   return <header class="wrap editorial-hero">
@@ -32,17 +31,9 @@ export function EditorialFaq(props: { items: readonly Faq[]; url: string; headin
       <For each={props.items}>{item => <details>
         <summary>{item.question}</summary>
         <p>{item.answer}</p>
+        <For each={item.links}>{link => <a class="doc-source editorial-faq-link" href={link.href}>{link.label}</a>}</For>
       </details>}</For>
     </div>
-    <JsonLd data={{
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "@id": props.url + "#faq",
-      mainEntity: props.items.map(item => ({
-        "@type": "Question",
-        name: item.question,
-        acceptedAnswer: { "@type": "Answer", text: item.answer },
-      })),
-    }}/>
+    <JsonLd data={faqPage(props.url, props.items)}/>
   </section>;
 }

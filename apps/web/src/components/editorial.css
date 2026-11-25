@@ -119,6 +119,7 @@
 .editorial-faqs summary { cursor: pointer; font-weight: 600; }
 .editorial-faqs summary::marker { color: var(--mint); }
 .editorial-faqs details p { margin: 8px 0 0; }
+.editorial-faq-link { display: inline-block; margin: 8px 18px 0 0; }
 
 @media (max-width: 740px) {
   .editorial-hero { grid-template-columns: minmax(0, 1fr); }

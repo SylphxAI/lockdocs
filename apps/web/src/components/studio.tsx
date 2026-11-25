@@ -4,7 +4,8 @@ import { ArrowRight, ArrowUpRight, Braces, FileCode2, GitCompareArrows, ListTree
 import { PackageText } from "@/components/package-text";
 import { CopyButton } from "@/components/copy-button";
 import { useCookieSettings, useProImpression } from "@/components/cookie-settings";
-import { samples, resolveLockfile, sampleCitation, sampleExcerpt, upgrades, type Dependency } from "@/lib/playground";
+import { samples, resolveLockfile, sampleCitation, sampleExcerpt, type Dependency } from "@/lib/playground";
+import { upgrades } from "@/lib/upgrade-examples";
 import { formats, type Format } from "@/lib/lockfile-formats";
 import { useSiteLanguage } from "@/lib/site-language";
 

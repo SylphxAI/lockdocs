@@ -1,0 +1,61 @@
+.pricing-proof {
+  max-width: 970px;
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #0a0c10;
+}
+.pricing-proof header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  padding: 12px clamp(16px, 2.5vw, 24px);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 11px 11px 0 0;
+}
+.pricing-proof h2 { font-size: 17px; font-weight: 650; }
+.pricing-proof header span { color: var(--dim); font: 600 11px/1.5 var(--mono); letter-spacing: .08em; }
+.pricing-proof-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+.pricing-proof-grid article {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 16px clamp(16px, 2.5vw, 24px) 8px;
+}
+.pricing-proof-grid article + article { border-inline-start: 1px solid var(--line); }
+.pricing-proof-grid p { font-size: 14px; }
+.pricing-proof .pricing-proof-path { color: var(--dim); font: 500 12px/1.55 var(--mono); }
+.pricing-proof .sample-diff { width: 100%; margin: 0; overflow-wrap: anywhere; }
+.pricing-proof .sample-diff p { font-size: 11px; }
+.pricing-proof-terminal {
+  width: 100%;
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 9px 11px;
+  background: var(--surface);
+  color: var(--blue);
+}
+.pricing-proof-terminal pre { font: 500 12px/1.55 var(--mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+.pricing-proof-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  margin-top: auto;
+  color: var(--blue);
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.pricing-proof-link svg { flex: none; }
+@media (max-width: 740px) {
+  .pricing-proof-grid { grid-template-columns: minmax(0, 1fr); }
+  .pricing-proof-grid article + article { border-inline-start: 0; border-top: 1px solid var(--line); }
+}

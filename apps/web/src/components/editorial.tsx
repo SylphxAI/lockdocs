@@ -1,4 +1,4 @@
-import { For, type ParentProps } from "solid-js";
+import { For, type JSX, type ParentProps } from "solid-js";
 import { CopyButton } from "@/components/copy-button";
 import { PackageText } from "@/components/package-text";
 import { JsonLd } from "@/components/json-ld";
@@ -6,12 +6,13 @@ import "./editorial.css";
 
 type Faq = { question: string; answer: string };
 
-export function EditorialHero(props: ParentProps<{ label: string; title: string; intro: string }>) {
+export function EditorialHero(props: ParentProps<{ label: string; title: string; intro: string; actions?: JSX.Element }>) {
   return <header class="wrap editorial-hero">
     <div class="editorial-hero-copy">
       <p class="eyebrow"><span class="signal"/> {props.label}</p>
       <h1>{props.title}</h1>
       <p class="editorial-lead">{props.intro}</p>
+      <div class="button-row editorial-hero-actions">{props.actions}</div>
     </div>
     {props.children}
   </header>;

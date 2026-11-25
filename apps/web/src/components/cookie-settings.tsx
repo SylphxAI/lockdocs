@@ -1,9 +1,11 @@
 import { createContext, createEffect, createSignal, on, onCleanup, onMount, Show, useContext, type ParentProps } from "solid-js";
 import { useLocation } from "@solidjs/router";
+import { getRequestEvent } from "solid-js/web";
 import { mint } from "@sylphx/sdk/ids";
 import { createSignalBrowser, resolveEffectiveConsent, type SignalConsent } from "@sylphx/sdk/signal";
 import { clearAnalyticsCookies, migrateSignalChoice, saveSignalChoice } from "@/lib/signal-browser";
-import { readSignalChoice, signalChoiceKey, signalStorageKey, type StoredChoice } from "@/lib/signal-privacy";
+import { readSignalChoice, signalChoiceKey, signalRequestGpc, signalStorageKey, type StoredChoice } from "@/lib/signal-privacy";
+import { CampaignBlocked } from "@/lib/campaign-navigation";
 import { analyticsPage } from "@/lib/analytics-page";
 import { behavioralParams, beginCheckoutParams, type ProSurface, type TrackEvent } from "@/lib/analytics-events";
 import { consumeSignup } from "@/lib/signup-analytics";
@@ -92,7 +94,15 @@ export function CookieSettings(props: ParentProps) {
   let eventScope: string | undefined;
   let routeVisit = 0;
   let unpersistedDenial = false;
-  let serverGpc = false;
+  const requestHeaders = getRequestEvent()?.request.headers;
+  const documentGpc = import.meta.env.SSR
+    ? signalRequestGpc(requestHeaders)
+    : document.documentElement.dataset.campaignGpc === "1";
+  let serverGpc = documentGpc;
+  const [campaignDenied, setCampaignDenied] = createSignal(readSignalChoice(
+    import.meta.env.SSR ? requestHeaders?.get("cookie") ?? "" : document.cookie,
+  ) === "denied");
+  const campaignBlocked = () => documentGpc || protectedByGpc() || signalRequestGpc() || campaignDenied();
   let tag: HTMLIFrameElement | undefined;
   let adsConfiguredInTag = false;
   let trigger: HTMLButtonElement | undefined;
@@ -176,6 +186,7 @@ export function CookieSettings(props: ParentProps) {
 
   function syncChoice() {
     const saved = readSignalChoice(document.cookie);
+    setCampaignDenied(unpersistedDenial || saved === "denied");
     // localStorage is the SDK's browser input; mirror the expiring cookie into
     // it so expiration, cookie deletion and checkout cannot diverge.
     try {
@@ -246,7 +257,7 @@ export function CookieSettings(props: ParentProps) {
         if (!ga && !configuredAds && !ingest) return;
         unpersistedDenial = migrateSignalChoice() === "denied";
         syncChoice();
-        serverGpc = config.gpc === true;
+        serverGpc = documentGpc || config.gpc === true;
         // Pass an explicit unknown sentinel so Signal doesn't do a second geo
         // lookup from a source the checkout server cannot consult.
         signal = createSignalBrowser({ storageKey: signalStorageKey, region: typeof config.region === "string" ? config.region : "XX", gpc: serverGpc, ingest });
@@ -456,7 +467,7 @@ export function CookieSettings(props: ParentProps) {
   }
 
   return <CookieContext.Provider value={{ beginCheckout, trackEvent, ready: () => id() ? analyticsAllowed() : settings()?.analytics_storage === "granted" && signalAllowed(), open: showFrom, configured, adsReady, claimPurchase }}>
-    {props.children}
+    <CampaignBlocked.Provider value={campaignBlocked}>{props.children}</CampaignBlocked.Provider>
     <Show when={configured() && open()}><section id="cookie-settings" class="cookie-panel" aria-labelledby="cookie-heading" tabIndex={-1}
       ref={panel} onKeyDown={event => { if (event.key === "Escape" && trigger) close(); }}>
       <div class="cookie-copy">

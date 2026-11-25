@@ -14,7 +14,7 @@ export function readSignalChoice(cookies: string): StoredChoice | undefined {
   return !duplicates.length && (value === "granted" || value === "analytics_only") ? value : "denied";
 }
 
-export function signalRequestGpc(headers: Headers) {
+export function signalRequestGpc(headers?: Headers) {
   return resolveEffectiveConsent({ storedChoice: "granted" }, headers).analytics_storage === "denied";
 }
 

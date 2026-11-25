@@ -1,11 +1,13 @@
 import { JsonLd } from "@/components/json-ld";
 import { A } from "@solidjs/router";
 import { ArrowRight } from "lucide-solid";
+import { useCookieSettings } from "@/components/cookie-settings";
 import { CodeExample, EditorialFaq, EditorialHero } from "@/components/editorial";
 import { PageMeta } from "@/components/page-meta";
 import { PackageText } from "@/components/package-text";
 import { context7AlternativePath, editorGuidePath } from "@/lib/editorial-routes";
 import { canonicalOrigin } from "@/lib/indexing";
+import { useSiteLanguage } from "@/lib/site-language";
 
 const title = "Context7 alternative for exact-version docs";
 const description = "Compare Context7’s hosted docs search with Lockdocs’s local, lockfile-pinned lookup. Check the API your project actually installed, from the CLI or MCP.";
@@ -26,6 +28,8 @@ const faq = [
 ];
 
 export default function Context7Alternative() {
+  const { campaignHref } = useSiteLanguage();
+  const { trackEvent } = useCookieSettings();
   return <>
     <PageMeta title={title + " · Lockdocs"} description={description}/>
     <JsonLd data={{
@@ -40,7 +44,10 @@ export default function Context7Alternative() {
       downloadUrl: "https://www.npmjs.com/package/@sylphx/lockdocs",
       offers: { "@type": "Offer", price: 0, priceCurrency: "USD", description: "Free local CLI and MCP lookups" },
     }}/>
-    <EditorialHero label="LOCKDOCS / COMPARISON" title={title} intro="Use Lockdocs when the answer depends on the library version in your lockfile. Use Context7 when you need a guide or example from a hosted docs index.">
+    <EditorialHero label="LOCKDOCS / COMPARISON" title={title} intro="Use Lockdocs when the answer depends on the library version in your lockfile. Use Context7 when you need a guide or example from a hosted docs index." actions={<>
+      <A class="button primary" href={campaignHref("/playground")}>Try the playground <ArrowRight size={16}/></A>
+      <A class="button outline" href={campaignHref("/pricing")} onClick={() => trackEvent("pro_cta_clicked", { entry_surface: "context7_alternative" })}>See Lockdocs Pro</A>
+    </>}>
       <aside class="editorial-aside" aria-label="Example: cookies from next/headers">
         <p class="eyebrow">ONE IMPORT, TWO RETURN TYPES</p>
         <dl class="editorial-signatures">
@@ -72,21 +79,21 @@ export default function Context7Alternative() {
             <p>A hosted index can be useful for website guides and libraries you haven’t installed. Running the MCP client locally still requires access to the hosted service.</p>
           </div>
         </div>
-        <p class="editorial-note"><A href="/guide/how-it-works">How Lockdocs searches</A> · <A href="/compare">Full comparison</A></p>
+        <p class="editorial-note"><A href={campaignHref("/guide/how-it-works")}>How Lockdocs searches</A> · <A href={campaignHref("/compare")}>Full comparison</A></p>
       </section>
       <section class="editorial-section" aria-labelledby="bench-title">
         <h2 id="bench-title">The docs you have on disk matter</h2>
         <p>In the repo’s 105-question benchmark of Lockdocs 0.4.0, Lockdocs answered 70 correctly from an empty cache with default fetching. After <code>lockdocs fetch</code>, it answered 96 correctly. The anonymous Context7 arm answered 77 correctly and reused some unchanged answers from earlier runs.</p>
-        <p>Those are historical scores under different cache and network conditions. Read the <A href="/benchmarks">benchmark setup and misses</A> before applying them to your project.</p>
+        <p>Those are historical scores under different cache and network conditions. Read the <A href={campaignHref("/benchmarks")}>benchmark setup and misses</A> before applying them to your project.</p>
       </section>
       <EditorialFaq items={faq} url={url}/>
       <section class="editorial-section" aria-labelledby="try-title">
         <h2 id="try-title">Try a version-sensitive lookup</h2>
         <p>Start with an example in the playground, or connect Lockdocs to the project you already have open.</p>
         <div class="button-row">
-          <A class="button primary" href="/playground">Open playground <ArrowRight size={16}/></A>
-          <A class="button outline" href="/docs">Read the docs</A>
-          <A class="button outline" href={editorGuidePath}>Set up Cursor or Claude Code</A>
+          <A class="button primary" href={campaignHref("/playground")}>Open playground <ArrowRight size={16}/></A>
+          <A class="button outline" href={campaignHref("/docs")}>Read the docs</A>
+          <A class="button outline" href={campaignHref(editorGuidePath)}>Set up Cursor or Claude Code</A>
         </div>
       </section>
     </div></div>

@@ -24,6 +24,10 @@
   line-height: 1.6;
 }
 
+.editorial-hero .editorial-hero-actions { margin-top: 20px; }
+.editorial-hero-actions:empty { display: none; }
+.editorial-hero-actions .button { min-height: 44px; }
+
 .editorial-aside {
   min-width: 0;
   padding: clamp(16px, 2.2vw, 27px);

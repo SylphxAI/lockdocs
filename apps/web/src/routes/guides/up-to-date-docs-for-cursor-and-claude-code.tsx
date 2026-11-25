@@ -8,6 +8,7 @@ import { PackageText } from "@/components/package-text";
 import { context7AlternativePath, editorGuidePath } from "@/lib/editorial-routes";
 import { canonicalOrigin } from "@/lib/indexing";
 import { pypiUrl } from "@/lib/install";
+import { useSiteLanguage } from "@/lib/site-language";
 
 const title = "Up-to-date docs for Cursor and Claude Code";
 const description = "Connect Lockdocs to Cursor or Claude Code over local MCP, then check that the package version and API citation match your project’s lockfile.";
@@ -45,6 +46,7 @@ const cursorConfig = JSON.stringify({
 }, null, 2);
 
 export default function EditorDocsGuide() {
+  const { campaignHref } = useSiteLanguage();
   return <>
     <PageMeta title={title + " · Lockdocs"} description={description}/>
     <JsonLd data={{
@@ -55,7 +57,10 @@ export default function EditorDocsGuide() {
       description,
       step: steps.map(({ id, name, text }) => ({ "@type": "HowToStep", name, text, url: url + "#" + id })),
     }}/>
-    <EditorialHero label="LOCKDOCS / SETUP GUIDE" title={title} intro="Give your editor the docs for the version you run. Connect Lockdocs over MCP, then check one citation against your lockfile before relying on its answers.">
+    <EditorialHero label="LOCKDOCS / SETUP GUIDE" title={title} intro="Give your editor the docs for the version you run. Connect Lockdocs over MCP, then check one citation against your lockfile before relying on its answers." actions={<>
+      <A class="button primary" href={campaignHref("/playground")}>Try the playground <ArrowRight size={16}/></A>
+      <A class="button outline" href={campaignHref(context7AlternativePath)}>Compare with Context7</A>
+    </>}>
       <aside class="editorial-aside">
         <p class="eyebrow">ON THIS PAGE</p>
         <nav aria-label="Guide sections">
@@ -69,7 +74,7 @@ export default function EditorDocsGuide() {
         <li id={steps[0].id} class="editorial-section editorial-step">
           <h2>{steps[0].name}</h2>
           <p>{steps[0].text}</p>
-          <p>Using Python? Run the <a href={pypiUrl}>PyPI</a> release with <code>uvx lockdocs</code>, or run <code>pip install lockdocs</code> and use <code>lockdocs</code> directly. To connect your editor without npm, see <A href="/guide/setup#without-nodejs">MCP setup without Node.js</A>.</p>
+          <p>Using Python? Run the <a href={pypiUrl}>PyPI</a> release with <code>uvx lockdocs</code>, or run <code>pip install lockdocs</code> and use <code>lockdocs</code> directly. To connect your editor without npm, see <A href={campaignHref("/guide/setup#without-nodejs")}>MCP setup without Node.js</A>.</p>
           <CodeExample label="Optional scratch project" code={"mkdir lockdocs-editor-demo\ncd lockdocs-editor-demo\nnpm init -y\nnpm install --save-exact zod@4.6.7"}/>
           <CodeExample label="CLI version and lockfile check" code={"npx -y @sylphx/lockdocs version\nnpx -y @sylphx/lockdocs resolve --offline"}/>
           <p>In the scratch project, look for <code><PackageText text="zod@4.6.7"/></code> and <code>package-lock.json</code>. The first <code>npx</code> run may download Lockdocs; <code>--offline</code> applies to Lockdocs’s lookups, not to npm.</p>
@@ -98,8 +103,8 @@ export default function EditorDocsGuide() {
         <h2 id="next-title">Look up your next API</h2>
         <p>Use <code>api</code> for a symbol you know and <code>docs</code> for a question about a package.</p>
         <div class="button-row">
-          <A class="button primary" href="/reference/tools">Read the MCP tool reference <ArrowRight size={16}/></A>
-          <A class="button outline" href={context7AlternativePath}>Compare Lockdocs with Context7</A>
+          <A class="button primary" href={campaignHref("/reference/tools")}>Read the MCP tool reference <ArrowRight size={16}/></A>
+          <A class="button outline" href={campaignHref(context7AlternativePath)}>Compare Lockdocs with Context7</A>
         </div>
       </section>
     </div></div>

@@ -37,7 +37,7 @@ const entrySurface = { entry_surface: proSurfaces };
 const eventFields = {
   lockfile_resolved: {
     lockfile_format: formats,
-    source_kind: ["sample", "pasted"],
+    source_kind: ["sample", "pasted", "file"],
     package_count: (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value >= 0,
   },
   command_copied: {

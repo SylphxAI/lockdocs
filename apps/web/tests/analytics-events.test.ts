@@ -82,3 +82,12 @@ test("checkout events keep a named source and never emit arbitrary input", () =>
   }
   assert.equal(beginCheckoutParams("XXX", "article_pro"), null);
 });
+
+test("file resolutions allow only the known format, literal source kind, and pin count", () => {
+  const params = { lockfile_format: "requirements.txt", source_kind: "file", package_count: 42 };
+  assert.deepEqual(behavioralParams("lockfile_resolved", {
+    ...params, filename: "project-private.txt", input: "private dependency data", email: "fixture@example.test",
+  }), params);
+  assert.equal(behavioralParams("lockfile_resolved", { ...params, source_kind: "upload" }), null);
+  assert.equal(behavioralParams("lockfile_resolved", { ...params, lockfile_format: "project-private.txt" }), null);
+});

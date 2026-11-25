@@ -2,13 +2,14 @@ import { parse as jsonc, type ParseError } from "jsonc-parser";
 import { parse as toml } from "smol-toml";
 
 import type { Format } from "./lockfile-formats";
+import { previewLimit } from "./playground-file";
 import { upgrades } from "./upgrade-examples";
 import { readGoMod, readPnpm, readYarn } from "./playground-lockfiles";
 export type Dependency = { name: string; version: string; ecosystem: "npm" | "crate" | "PyPI" | "Go"; source: "release" | "git" };
 const record = (value: unknown): Record<string, unknown> => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
 
 export function resolveLockfile(format: Format, input: string) {
-  if (input.length > 400_000) throw new Error("This preview accepts up to 400,000 characters. Run the CLI for larger lockfiles.");
+  if (input.length > previewLimit) throw new Error("This preview accepts up to 400,000 characters. Run the CLI for larger lockfiles.");
   const rows = new Map<string, Dependency>();
   const add = (name: unknown, version: unknown, ecosystem: Dependency["ecosystem"], git = false) => {
     if (typeof name !== "string" || typeof version !== "string" || version.length > 120) return;

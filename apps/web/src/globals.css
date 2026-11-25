@@ -118,3 +118,15 @@ body{padding-bottom:var(--cookie-bar-height,0px)}
   .bench-rail small,.bench-label a{font-size:.75rem}
   .bench-rail .bench-latency{grid-column:1/-1;border-left:0;border-top:1px solid var(--line);flex-direction:row;align-items:center;justify-content:flex-start;flex-wrap:wrap;gap:6px 12px}
 }
+
+/* Lockfile workbench: the drop target and search share the editor’s surface. */
+.studio-input.studio-dragging{outline:2px dashed var(--brand);outline-offset:-4px;border-radius:10px}
+.studio-dragging textarea{background:var(--raised);border-color:var(--brand)}
+.studio-file-notice{margin-top:12px}
+.studio-file-notice .studio-command{margin-top:6px}
+.studio-file-notice code{font-size:12px}
+.package-filter{position:relative;margin-bottom:9px}
+.package-filter svg{position:absolute;inset-inline-start:10px;top:50%;transform:translateY(-50%);color:var(--dim);pointer-events:none}
+.package-filter input{display:block;width:100%;min-height:40px;padding:6px 10px 6px 34px;border:1px solid var(--strong);border-radius:6px;background:var(--canvas);color:var(--ink);font:500 14px var(--sans)}
+.package-filter input::placeholder{color:var(--dim)}
+@media(pointer:coarse){.studio-input .input-tools>*:not([hidden]),.package-filter input{min-height:44px}.studio-input textarea,.package-filter input{font-size:16px}}

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.9
+
+- CLI prompts to upgrade to or renew Pro now link to [Lockdocs pricing](https://lockdocs.sylphx.com/pricing).
+- The Pro guide explains single-seat annual pricing and how to connect the CLI with `lockdocs login`.
+
 ## 0.7.8
 
 - `lockdocs login` opens the Lockdocs website by default. No environment variable is needed to connect the CLI to your Pro account.

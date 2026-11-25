@@ -2,7 +2,7 @@ import { defineConfig } from 'vitepress'
 import tokens from '../../brand/tokens.json'
 
 const base = '/lockdocs/'
-const url = 'https://sylphxai.github.io/lockdocs/'
+const url = 'https://lockdocs.sylphx.com/'
 const desc = 'Exact-version library docs from your lockfile — local, offline, no rate limits.'
 
 export default defineConfig({
@@ -25,11 +25,11 @@ export default defineConfig({
     ['meta', { name: 'theme-color', content: tokens.color.bg.$value }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:site_name', content: 'lockdocs' }],
-    ['meta', { property: 'og:image', content: `${url}og.png` }],
+    ['meta', { property: 'og:image', content: `${url}og-image.png` }],
     ['meta', { property: 'og:image:width', content: '1200' }],
     ['meta', { property: 'og:image:height', content: '630' }],
     ['meta', { property: 'og:image:alt', content: 'lockdocs: the docs for the version you actually installed' }],
-    ['meta', { name: 'twitter:image', content: `${url}og.png` }],
+    ['meta', { name: 'twitter:image', content: `${url}og-image.png` }],
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
     [
       'script',
@@ -90,8 +90,6 @@ export default defineConfig({
       linkLabel: 'Return to lockdocs documentation',
       linkText: 'Back to lockdocs',
     },
-    // The product-owned Keel checkout/recovery pages live beside the docs.
-    pro: { checkoutUrl: 'https://sylphxai.github.io/lockdocs/pricing' },
     logo: { src: '/logo.svg', alt: '' },
     lastUpdated: { formatOptions: { dateStyle: 'medium' } },
     nav: [

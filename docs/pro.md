@@ -3,18 +3,11 @@ title: lockdocs Pro
 description: The upgrade report and private sources for teams that pin versions. Everything free in lockdocs stays free, under MIT.
 ---
 
-<script setup>
-import { useData } from 'vitepress'
-const { theme } = useData()
-</script>
-
 # lockdocs Pro
 
 Your agent already gets the right docs for every package you install, free,
 forever. Pro gives your team a clear answer to "what breaks if we upgrade?",
 and the same exact-version docs for the packages your company keeps private.
-
-[See Lockdocs Pro pricing](/pricing)
 
 ## Upgrade report
 
@@ -47,8 +40,7 @@ argument. Reading another version's docs and its migration guide stays free.
 
 Your internal packages are not on npmjs.org, PyPI, crates.io or the Go proxy,
 and a hosted doc service cannot read them. lockdocs Pro reads them from where
-you already keep them, using the credentials you already have. There is no new
-config file and no account: it looks at the files and variables your package
+you already keep them, using the files, variables and credentials your package
 manager and git already use.
 
 | Source | Where lockdocs looks |
@@ -80,30 +72,22 @@ lockdocs Pro, with the link. Nothing is sent to the private host.
 
 ## Price
 
-**See current prices and seat packs on the <a href="https://sylphxai.github.io/lockdocs/pricing" target="_self">pricing page</a>.** No
-per-call charges, no parsing fees, no usage caps. Seats come in packs of 1, 5,
-10, 25 and 50. CI runners don't count as seats. Pro includes email support with
-a reply within two business days.
+Lockdocs Pro costs **US$120/yr for one seat**, tax included and billed annually
+upfront. Checkout is available in USD, GBP, EUR and HKD.
 
-Context7 Pro is US$10 a seat a month, plus US$5 per 1,000 calls over 2,000 and
-US$5 per million tokens to parse private repositories (context7.com/plans,
-checked 2026-10-02). lockdocs Pro is one yearly price, and it answers for the
-version you pinned.
+[See Lockdocs Pro pricing](/pricing) to buy online. After checkout, run
+`lockdocs login` and sign in with the account you used to buy Pro. The CLI
+verifies and stores your licence.
 
-<p v-if="theme.pro.checkoutUrl"><a :href="theme.pro.checkoutUrl" target="_self">Buy lockdocs Pro</a></p>
+If you already have a licence token, run `lockdocs licence activate <token>`
+to verify and store it offline, or set `LOCKDOCS_LICENCE_TOKEN` in CI. Check
+your licence with `lockdocs licence status`. It shows where the token was read and
+warns when the licence expires within 30 days. The upgrade report also shows a
+renewal link during that period.
 
-`lockdocs licence buy --pack 1` starts the device flow for one lockdocs Pro seat: open the link
-printed in your terminal to buy, then return to the terminal. After checkout,
-lockdocs verifies and stores your licence automatically.
-
-Already bought? Run `lockdocs licence activate <token>` (it verifies the token
-offline and stores it for you), or set `LOCKDOCS_LICENCE_TOKEN` in CI. Check it
-with `lockdocs licence status`, which shows where the token was read and warns
-"expires in N days" during the last 30 days; the upgrade report adds a renewal
-line then too. Without a valid licence `lockdocs upgrade` exits 3 (so does
-`lockdocs fetch` or a named-package query that needs a private source), and an agent
-calling `upgrade_to` gets a normal answer with the preview above and the Pro
-link, marked `pro_required` so the agent can tell you.
+Without a valid licence, `lockdocs upgrade` exits 3. So does `lockdocs fetch`
+or a named-package query that needs a private source. An agent calling
+`upgrade_to` gets the preview above and the Pro link, marked `pro_required`.
 
 Everything free in lockdocs stays free, under MIT.
 

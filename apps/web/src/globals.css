@@ -95,6 +95,14 @@ body{padding-bottom:var(--cookie-bar-height,0px)}
 .pricing-section .plan-price{overflow-wrap:anywhere}
 .pricing-section .currency-picker a{display:grid;place-items:center;min-height:44px;min-width:44px}
 .pricing-section .plan-pro .button{min-height:44px}
+
+.article-bridge{margin-top:32px;padding:clamp(16px,3vw,24px)}
+.article-bridge h2{font-size:19px;margin:6px 0}
+.article-bridge p{font-size:14px;max-width:68ch;margin:0}
+.article-bridge .button-row{margin-top:14px}
+.article-bridge .button{min-height:44px;color:var(--ink);text-decoration:none}
+.article-bridge .button svg{flex:none;color:var(--blue)}
+@media(max-width:480px){.article-bridge .button-row{align-items:stretch;flex-direction:column}}
 @media(max-width:740px){
   .pricing-section{padding-top:24px}
   .pricing-intro h1{font-size:clamp(32px,9vw,52px);margin-block:10px 12px}

@@ -6,6 +6,9 @@ import { SolidMarkdown as Markdown } from "solid-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSlug from "rehype-slug";
 import { visit } from "unist-util-visit";
+import { ArticleBridge } from "@/components/article-bridge";
+import { articleSurface } from "@/lib/analytics-events";
+import { lockdocsApplication, usdProOffer } from "@/lib/storefront-schema";
 import { JsonLd } from "@/components/json-ld";
 import { canonicalOrigin } from "@/lib/indexing";
 import { PackageText } from "@/components/package-text";
@@ -51,6 +54,9 @@ export default function Article() {
             inLanguage: "en",
           }}/>
         </Show>
+        <Show when={page.route === "/pro"}>
+          <JsonLd data={lockdocsApplication(canonicalOrigin + page.route, [usdProOffer])}/>
+        </Show>
         <DocNavigation />
         <article class="doc-body"><div class="kicker"><span/> {text("LOCKDOCS MANUAL", "LOCKDOCS 使用指南")}</div>
         <Show when={page.route === "/docs"}><h1>{text("Documentation", "文件總覽")}</h1><p>{text("Look up APIs for the version you installed. Start in the terminal, then give the same answers to your coding agent.", "查閱你實際安裝版本的 API。先在終端機試用，再讓程式開發代理工具查閱同一版本的文件。")}</p><div class="doc-start"><A href="/guide"><Terminal size={18}/> {text("Quickstart", "快速入門（英文）")} <ArrowRight size={15}/></A><A href="/reference"><BookOpen size={18}/> {text("CLI reference", "CLI 參考（英文）")} <ArrowRight size={15}/></A><A href={editorGuidePath}>{text("Cursor & Claude Code setup", "設定 Cursor 與 Claude Code（英文）")} <ArrowRight size={15}/></A></div></Show>
@@ -73,6 +79,7 @@ export default function Article() {
           <p>Lockdocs 會讀取專案的 lockfile，根據指定版本查找文件、函式簽名和範例。你可以先在<A href={href("/playground")}>試用工具</A>貼上 lockfile，確認套件版本；若要搜尋完整文件，請在自己的專案使用 CLI 或 MCP。</p>
         </Show>
         <Show when={page.route === "/compare"}><p><A href={context7AlternativePath}>Looking for a Context7 alternative? See a version-sensitive Next.js example.</A></p></Show>
+        <Show when={articleSurface(page.route)}>{surface => <ArticleBridge surface={surface()}/>}</Show>
         </article>
       </div>}
     </Show>

@@ -87,6 +87,43 @@ base("Signal-only grant keeps nine UTMs, strips click IDs and emits 1/1/1 SPA vi
   expect(batches).toHaveLength(count);
 });
 
+for (const [path, entry_surface] of [
+  ["/compare", "article_compare"], ["/benchmarks", "article_benchmarks"],
+  ["/guide", "article_guide"], ["/pro", "article_pro"],
+] as const) {
+  base("article Pro click emits once with analytics consent: " + path, async ({ page }) => {
+    const { rows } = await signalOnly(page);
+    await page.goto(path + "?" + query);
+    const panel = settings(page);
+    await panel.getByRole("button", { name: "Analytics only", exact: true }).click();
+    await expect.poll(() => rows("page_view")).toHaveLength(1);
+    await page.getByRole("region", { name: "Try it with a lockfile" }).getByRole("link", { name: /See Lockdocs Pro/ }).click();
+    await expect(page).toHaveURL(url => url.pathname === "/pricing");
+    await expect.poll(() => rows("pro_cta_clicked").map(row => row.properties)).toEqual([{ ...campaign, entry_surface }]);
+  });
+}
+
+for (const mode of ["pre-choice", "denied", "GPC"]) {
+  base("article Pro navigation respects " + mode, async ({ page }) => {
+    const { batches } = await signalOnly(page);
+    if (mode === "GPC") await page.setExtraHTTPHeaders({ "CF-IPCountry": "US", "Sec-GPC": "1" });
+    await page.goto("/pro?" + query);
+    if (mode === "denied") await settings(page).getByRole("button", { name: "Reject optional", exact: true }).click();
+    if (mode === "pre-choice") await expect(settings(page)).toBeVisible();
+    const card = page.getByRole("region", { name: "Try it with a lockfile" });
+    const pro = card.getByRole("link", { name: /See Lockdocs Pro/ });
+    if (mode !== "pre-choice") {
+      await expect(pro).toHaveAttribute("href", "/pricing");
+      await expect(card.getByRole("link", { name: "Try the playground" })).toHaveAttribute("href", "/playground");
+    }
+    await pro.click();
+    await expect(page).toHaveURL(url => url.pathname === "/pricing" && (mode === "pre-choice" ? url.searchParams.has("utm_source") : !url.search));
+    await expect(page.getByRole("button", { name: "Cookie settings", exact: true })).toBeEnabled();
+    expect(batches).toEqual([]);
+    expect(await page.evaluate(() => localStorage.getItem("lockdocs.signal.v1.touch"))).toBeNull();
+  });
+}
+
 base("localized pricing emits a sanitized pricing view only on grant", async ({ page }) => {
   const { batches, rows } = await signalOnly(page);
   await page.goto("/zh-TW/pricing?currency=HKD&token=fixture-private");

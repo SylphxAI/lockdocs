@@ -6,7 +6,8 @@ import {
 import { bindCheckoutAttribution, resolveEffectiveConsent, type SignalAttribution } from "@sylphx/sdk/signal";
 import { signalRequestPrivacy } from "./signal-privacy";
 import { canonicalOrigin } from "./indexing";
-import { measurementId } from "./analytics-config";
+import { measurementId, signalConfig } from "./analytics-config";
+import { signalCheckoutStarted } from "./signal-server";
 import { pricingCheckoutSurface } from "./analytics-events";
 import { pricingPath, signInHref } from "./auth-entry";
 import { currencyCodePattern, liveCheckoutSessionId } from "./google-ads";
@@ -74,6 +75,7 @@ export async function checkout(request: Request) {
   }
   let currency: FormDataEntryValue | null;
   const ga = measurementId();
+  const signalEnabled = signalConfig() !== null;
   const privacy = signalRequestPrivacy(request);
   let attribution: SignalAttribution | undefined;
   try {
@@ -88,7 +90,7 @@ export async function checkout(request: Request) {
     // the form can never grant it. The SDK applies policy again at binding.
     if (form.has("signal_blocked")) privacy.gpc = true;
     const [touch, ...duplicates] = form.getAll("signal_touch");
-    if (ga && resolveEffectiveConsent(privacy, request.headers).analytics_storage === "granted" &&
+    if ((ga || signalEnabled) && resolveEffectiveConsent(privacy, request.headers).analytics_storage === "granted" &&
         !duplicates.length && typeof touch === "string" && touch.length <= 4096) {
       try { attribution = JSON.parse(touch); } catch { /* Omit malformed optional attribution. */ }
     }
@@ -118,15 +120,16 @@ export async function checkout(request: Request) {
       const body = await response.json();
       const location = stripeUrl(body?.url, "checkout.stripe.com");
       if (location) {
-        if (ga) {
+        if (ga || signalEnabled) {
           const prefix = cfg.parent + "/checkout_sessions/";
           const id = typeof body.name === "string" && body.name.startsWith(prefix) ? body.name.slice(prefix.length) : "";
           // Money normally returns a resource name; also accept an explicit ID if no name is supplied.
           const bindingId = body.name == null && typeof body.checkout_session_id === "string" ? body.checkout_session_id : id;
           if (/^[A-Za-z0-9_-]{1,128}$/.test(bindingId)) {
+            void signalCheckoutStarted(bindingId, privacy, request.headers).catch(() => {});
             void bindCheckoutAttribution({ checkoutSessionId: bindingId }, {
               apiKey: cfg.key, baseUrl: cfg.base, headers: request.headers, privacy, attribution,
-              gaMeasurementId: ga, pageLocation: new URL("/pricing", canonicalOrigin),
+              gaMeasurementId: ga ?? undefined, pageLocation: new URL("/pricing", canonicalOrigin),
               signal: AbortSignal.timeout(750),
             }).catch(() => console.warn("Checkout attribution binding unavailable"));
           }

@@ -1,3 +1,15 @@
+export function httpsOrigin(value: string | undefined): string | null {
+  if (!value || !/^https:\/\/[^/\\?#@\s%]+\/?$/.test(value)) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && url.hostname && !url.username && !url.password
+      ? url.origin
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 export function cookie(request: Request, name: string) {
   for (const part of (request.headers.get("cookie") ?? "").split(";")) {
     const entry = part.trim();

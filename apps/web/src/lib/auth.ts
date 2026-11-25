@@ -1,11 +1,13 @@
 import { createSylphxAuthHandler, readAuthSessionCookie, type SessionAdapter, type VerifiedIdentitySession } from "@sylphx/auth";
 import type { EntryConfig } from "@sylphx/auth/client";
 import { timingSafeEqual } from "node:crypto";
-import { cookie, setPrivateCookie } from "./http";
+import { cookie, httpsOrigin, setPrivateCookie } from "./http";
 import { boundedJson } from "./bounded-json";
 import { clearSignupMarker, markSignup } from "./signup-analytics";
 import { hasPublicOrigin } from "./public-origin";
 import { isCliCode, validateNext } from "./auth-entry";
+
+export { httpsOrigin } from "./http";
 
 export type Session = Readonly<{ id: string; name?: string; email?: string; token: string }>;
 export type OAuthProvider = "github" | "google";
@@ -25,18 +27,6 @@ export type SignInMethod = OAuthProvider | typeof methods[number];
 const privateHeaders = { "Cache-Control": "no-store", "Referrer-Policy": "no-referrer" };
 const verified = new WeakMap<Session, { agent: string | null; expires: number }>();
 const base64url = /^[A-Za-z0-9_-]+$/;
-
-export function httpsOrigin(value: string | undefined): string | null {
-  if (!value || !/^https:\/\/[^/\\?#@\s%]+\/?$/.test(value)) return null;
-  try {
-    const url = new URL(value);
-    return url.protocol === "https:" && url.hostname && !url.username && !url.password
-      ? url.origin
-      : null;
-  } catch {
-    return null;
-  }
-}
 
 export function appOrigin() {
   return httpsOrigin(process.env.LOCKDOCS_APP_ORIGIN);

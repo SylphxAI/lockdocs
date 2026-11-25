@@ -131,6 +131,12 @@ async function startFixture(billing: boolean) {
       return json(res, { name: paidCheckout, subject: { end_user: "usr_reader" }, processor_session_id: paidSession,
         livemode: true, state: "complete", payment_status: "paid", amount_total: 8250, currency_code: "GBP" });
     }
+    if (billing && path === "/v1/analytics/events:batch" && req.method === "POST") {
+      if (req.headers["x-sylphx-key"] !== pk || req.headers.authorization || req.headers["sec-gpc"] || body.consent !== "granted") {
+        return rejectContract("Signal requires only the publishable key and explicit consent");
+      }
+      return json(res, { accepted_events: body.events.length }, 202);
+    }
     if (billing && path === "/v1/events/attribution_bindings" && req.method === "POST") {
       if (req.headers["x-sylphx-key"] !== pk || req.headers.authorization || body.checkout_session_id !== "checkout_fixture") {
         return rejectContract("the binding requires the publishable key and the Money checkout ID");
@@ -241,7 +247,7 @@ async function startFixture(billing: boolean) {
       PATH: process.env.PATH, NODE_EXTRA_CA_CERTS: cert, HOST: "127.0.0.1", PORT: String(appPort), LOCKDOCS_APP_ORIGIN: origin,
       SYLPHX_AUTH_URL: origin, SYLPHX_AUTH_ORGANIZATION_ID: instance, SYLPHX_PUBLISHABLE_KEY: pk, SYLPHX_AUTH_SECRET_KEY: sk,
       ...(billing ? {
-        SYLPHX_MONEY_URL: origin, SYLPHX_MONEY_PARENT: "orgs/fixture/projects/lockdocs/envs/test", SYLPHX_MONEY_API_KEY: moneyCredential,
+        SYLPHX_API_URL: origin, SYLPHX_MONEY_URL: origin, SYLPHX_MONEY_PARENT: "orgs/fixture/projects/lockdocs/envs/test", SYLPHX_MONEY_API_KEY: moneyCredential,
         LOCKDOCS_CCR_TERMS_TEXT: "Fixture terms", LOCKDOCS_CCR_TERMS_VERSION: "fixture", LOCKDOCS_GA4_MEASUREMENT_ID: "G-TEST123456",
         LOCKDOCS_GOOGLE_ADS_ID: adsId, LOCKDOCS_GOOGLE_ADS_PURCHASE_LABEL: adsLabel,
       } : {}),

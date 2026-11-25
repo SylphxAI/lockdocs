@@ -56,7 +56,7 @@ test("Traditional Chinese pricing shows all four purchase amounts and wraps with
   await expect(heading).toBeVisible();
   for (const width of testInfo.project.name === "desktop" ? [1440, 1280, 1024] : [390]) {
     await page.setViewportSize({ width, height: page.viewportSize()!.height });
-    const lineLengths = await heading.evaluate(async (el) => {
+    const dimensions = async (locator: typeof heading) => locator.evaluate(async el => {
       await document.fonts.ready;
       const text = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
       const range = document.createRange();
@@ -66,15 +66,17 @@ test("Traditional Chinese pricing shows all four purchase amounts and wraps with
         for (let i = 0; i < node.length; i++) {
           range.setStart(node, i);
           range.setEnd(node, i + 1);
-          for (const rect of range.getClientRects()) {
-            if (rect.width > 0) lines.set(rect.top, (lines.get(rect.top) ?? 0) + 1);
-          }
+          const rect = range.getBoundingClientRect();
+          if (rect.width > 0) lines.set(rect.top, (lines.get(rect.top) ?? 0) + (/\S/u.test(node.data[i]) ? 1 : 0));
         }
       }
       return [...lines.values()];
     });
+    const lineLengths = await dimensions(heading);
     expect(lineLengths.reduce((total, length) => total + length, 0), `viewport ${width}px`).toBe(headingText.length);
     expect(lineLengths, `viewport ${width}px`).not.toContain(1);
+    const subtitle = await dimensions(page.locator(".pricing-intro p"));
+    expect(subtitle.at(-1), `subtitle at ${width}px`).toBeGreaterThan(3);
   }
   const currencies = page.getByRole("navigation", { name: "付款幣別" });
   for (const [code, label] of [["USD", "US$120"], ["GBP", "£99"], ["EUR", "€109"], ["HKD", "HK$938"]]) {
@@ -163,6 +165,31 @@ test("Docs exposes mobile navigation first and copies command blocks verbatim", 
   await block.getByRole("button", { name: "Copy code" }).click();
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(command);
   expect(await block.locator("pre").evaluate(el => [getComputedStyle(el).overflowX, el.scrollWidth >= el.clientWidth])).toEqual(["auto", true]);
+});
+
+test("Traditional Chinese Playground copies both commands without clipping", async ({ context, page }, info) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.setExtraHTTPHeaders({ "CF-IPCountry": "DE" });
+  await page.goto("/zh-TW/playground");
+  await page.getByRole("button", { name: "拒絕選用項目" }).click();
+  await page.getByLabel("lockfile 格式").selectOption("requirements.txt");
+  const name = "example-" + "a".repeat(160);
+  await page.locator("#lockfile").fill(name + "==1.2.3");
+  await page.getByRole("button", { name: "查出套件版本" }).click();
+  for (const [label, command] of [
+    ["複製 CLI 指令", "lockdocs " + name + " --offline"],
+    ["複製升級指令", "lockdocs upgrade next 15.0.0"],
+  ]) {
+    const button = page.getByRole("button", { name: label, exact: true });
+    const row = button.locator("..");
+    await expect(row.locator("code")).toHaveText(command);
+    if (info.project.name === "mobile") await button.tap();
+    else await button.press("Enter");
+    await expect(button.locator("+ [role=status]")).toHaveText("已複製");
+    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(command);
+    expect(await row.evaluate(el => el.scrollWidth)).toBe(await row.evaluate(el => el.clientWidth));
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(page.viewportSize()!.width);
 });
 
 test("default samples show exact React and Zod source snippets", async ({ page }) => {

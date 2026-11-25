@@ -28,7 +28,34 @@
   padding: 16px clamp(16px, 2.5vw, 24px) 8px;
 }
 .pricing-proof-grid article + article { border-inline-start: 1px solid var(--line); }
-.pricing-proof-grid p { font-size: 14px; }
+.pricing-proof-switcher {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  width: 100%;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.pricing-proof-switcher.upgrade-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pricing-proof-switcher button {
+  min-height: 44px;
+  padding: 4px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: var(--dim);
+  font: 550 12px/1.4 var(--mono);
+  overflow-wrap: anywhere;
+}
+.pricing-proof-switcher button:hover { background: var(--raised); color: var(--ink); }
+.pricing-proof-switcher button[aria-pressed="true"] {
+  border-color: #527c79;
+  background: #10191f;
+  color: var(--mint);
+}
+.pricing-proof-switcher button:focus-visible { outline-offset: -3px; }
+.pricing-proof-grid p { font-size: 14px; overflow-wrap: anywhere; }
 .pricing-proof .pricing-proof-path { color: var(--dim); font: 500 12px/1.55 var(--mono); }
 .pricing-proof .sample-diff { width: 100%; margin: 0; overflow-wrap: anywhere; }
 .pricing-proof .sample-diff p { font-size: 11px; }

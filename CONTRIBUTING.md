@@ -28,18 +28,17 @@ work first. Add a regression test for changed behavior and update the relevant
 docs. Keep the three-tool surface and versioned cache rules in
 [AGENTS.md](AGENTS.md).
 
-Rust stable builds the engine and CLI. Bun 1.4.0 runs the docs and repository
-scripts. From your checkout, the relevant checks are:
+Rust stable builds the engine and CLI. Bun runs the repository scripts.
+The SolidStart site uses Node.js 22. From your checkout, the relevant checks are:
 
 ```bash
 cargo test -p lockdocs-core
 cargo test --workspace --locked
 cargo fmt --all --check
 cargo clippy --workspace --locked -- -D warnings
-bun install --frozen-lockfile
 bun scripts/check-version.ts
 bun scripts/check-capabilities.ts
-bun run docs:build
+(cd apps/web && npm ci && npm run build)
 ```
 
 Use small synthetic fixtures for parser/extraction tests. A new lockfile format

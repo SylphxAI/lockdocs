@@ -8,7 +8,7 @@ npm ci
 npm run dev
 ```
 
-The container build context is the repository root. The documentation is generated from the existing technical Markdown at build time; the legacy storefront is intentionally not imported. The catalogue is read from the same source as the existing Money workflow. The app doesn't provision catalogue items, mutate Access, configure a domain, or alter GitHub Pages.
+The container build context is the repository root. The documentation is generated from the technical Markdown in `docs/` at build time. The catalogue is read from the same source as the existing Money workflow. The app doesn't provision catalogue items, mutate Access, configure a domain, or alter GitHub Pages.
 
 ## Preview operator setup
 

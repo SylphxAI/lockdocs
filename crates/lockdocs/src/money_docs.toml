@@ -1,11 +1,9 @@
 title = "lockdocs Pro"
 description = "The upgrade report and private sources for teams that pin versions."
 base_path = "/lockdocs"
-# This legacy storefront is built under /lockdocs for local docs previews.
 lang = "en"
 host = "github-pages"
 include = ["pricing.md", "recover.md"]
-edit_url = "https://github.com/SylphxAI/lockdocs/edit/main/docs/storefront/{path}"
 toc_max_level = 3
 
 [money]

@@ -20,10 +20,10 @@ MIT licensed.
 - `crates/lockdocs`: the `lockdocs` binary (CLI, MCP stdio server, `setup`)
 - `packages/lockdocs`: the npm launcher; `packages/npm/*`: native binaries
 - `bench/`: version-sensitive questions, project pins, and the runner
-- `docs/`: the VitePress site; `scripts/`: version sync
+- `docs/`: technical Markdown and source assets; `apps/web/`: the SolidStart site
+- `scripts/`: repository checks and version sync
 - `brand/`: the brand home — vector masters, generated favicons and app icons,
-  colour and type tokens. The site's logo, favicon and theme colours are copies
-  of it. See `brand/README.md`
+  colour and type tokens. See `brand/README.md`
 
 ## Release
 

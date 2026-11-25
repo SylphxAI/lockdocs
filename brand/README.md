@@ -76,7 +76,7 @@ never appears inside the logo and has no capitalised form anywhere.
 | Full-bleed square for masks (Android maskable, Apple touch, vendors that crop) | `svg/lockdocs-maskable.svg` |
 | Browser tab | `favicon/favicon.svg` (32 px pixel grid), `favicon/favicon.ico` (16, 32, 48), `favicon/favicon-16.png`, `favicon/favicon-32.png`, `favicon/favicon-48.png` |
 | Home screen, store listing, future web-app manifest | `app-icon/icon-192.png`, `app-icon/icon-512.png`, `app-icon/icon-1024.png`, `app-icon/icon-maskable-192.png`, `app-icon/icon-maskable-512.png`, `app-icon/apple-touch-icon-180.png` |
-| The website's own logo file (served at `/lockdocs/logo.svg`) | `docs/public/logo.svg` |
+| Documentation source logo | `docs/public/logo.svg` |
 | Colour and type tokens | `tokens.json` (source), `tokens.css` (generated) |
 | Where every file came from, with its SHA-256 | `provenance.json` |
 
@@ -94,19 +94,12 @@ never appears inside the logo and has no capitalised form anywhere.
 | `--brand-color-mint` | `#42D6A4` | The shackle; second stop of the hero gradient |
 | `--brand-color-gold` | `#FFD166` | Third stop of the hero gradient |
 
-The docs site gets its theme colours from these tokens: `custom.css` imports
-`brand/tokens.css` and assigns `--vp-c-*` from `var(--brand-color-*)`, and
-`docs/.vitepress/config.ts` reads the `theme-color` meta tag from
-`tokens.json`. The values are unchanged from the site that shipped before the
-brand home existed.
+`tokens.json` records the brand colours and generates `tokens.css`.
 
 ## Type
 
-Body and interface are set in Inter (`--brand-font-sans`), served by VitePress
-with the docs theme from the built site's own `/assets` — self-hosted, no font
-CDN — under the SIL Open Font License 1.1. The theme already defaults
-`--vp-font-family-base` to it, so no surface declares its own face. No type
-face is part of the mark, because the mark has no lettering.
+Inter is the brand's typeface for body text and interfaces. No typeface is
+part of the mark, because the mark has no lettering.
 
 ## Small sizes
 
@@ -143,29 +136,19 @@ alone — for anything that crops or masks, use the full-bleed `lockdocs-maskabl
 
 | Surface | Is a copy of |
 |---|---|
-| `docs/public/logo.svg` (site header) | `svg/lockdocs-symbol.svg` |
+| `docs/public/logo.svg` | `svg/lockdocs-symbol.svg` |
 | `docs/public/favicon.svg` | `favicon/favicon.svg` |
 | `docs/public/favicon.ico` | `favicon/favicon.ico` |
+| `docs/public/og.png` | `og/lockdocs-og.png` |
 
-the [shared recipe](#shared-generator) with `OPERATION=check` fails if any of these stops being a
-byte-for-byte copy. The website files are plain copies under `docs/public/`, so
-a regenerated icon is picked up by the next docs build and deploy; the deploy
-workflow runs on changes under `docs/`.
+The [shared recipe](#shared-generator) with `OPERATION=check` fails if any of
+these stops being a byte-for-byte copy.
 
 ### Surfaces still to move
 
-- `docs/.vitepress/theme/custom.css` keeps three brand tints as literal
-  `rgba()`: `--vp-c-brand-soft` (`rgba(124, 156, 255, 0.14)`) and the hero
-  radial gradient (`rgba(124,156,255,.35)`, `rgba(66,214,164,.2)`). They are alpha tints
-  of `--brand-color-accent` and `--brand-color-mint`; writing them as tokens
-  needs `color-mix()`, which drops the whole declaration on browsers older
-  than 2023, so they stay literals.
 - `README.md` badges: the shields.io URLs carry `color=7c9cff` (npm badge) and
   `42d6a4` (MCP Registry badge). shields.io renders from its own servers and
   cannot read a local token.
-- Social preview: `docs/public/og.png` is a copy of `og/lockdocs-og.png`, a
-  1200×630 still rendered from the shared Sylphx docs card template with this
-  brand's tokens and symbol (`docs/.vitepress/config.ts` sets `og:image`).
 
 ## Provenance
 

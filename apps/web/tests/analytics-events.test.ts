@@ -28,6 +28,14 @@ test("the editorial Pro CTA reports only its named surface", () => {
   assert.equal(behavioralParams("paywall_view", { entry_surface: "context7_alternative" }), null);
 });
 
+test("pricing proof clicks allow exactly the two named targets, not URLs or paywall impressions", () => {
+  for (const entry_surface of ["pricing_proof_upgrade_report", "pricing_proof_private_sources"]) {
+    assert.deepEqual(behavioralParams("pro_cta_clicked", { entry_surface, href: "/pro?token=private" }), { entry_surface });
+    assert.equal(behavioralParams("paywall_view", { entry_surface }), null);
+  }
+  assert.equal(behavioralParams("pro_cta_clicked", { entry_surface: "/pro#private-sources" }), null);
+});
+
 test("only allowlisted article surfaces can report Pro clicks, not paywall impressions", () => {
   for (const [route, entry_surface] of [
     ["/compare", "article_compare"], ["/benchmarks", "article_benchmarks"],

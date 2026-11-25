@@ -1,5 +1,6 @@
 import { A } from "@solidjs/router";
 import { ArrowRight } from "lucide-solid";
+import { useCookieSettings } from "@/components/cookie-settings";
 import { PackageText } from "@/components/package-text";
 import { useSiteLanguage } from "@/lib/site-language";
 import { upgrades } from "@/lib/upgrade-examples";
@@ -10,6 +11,7 @@ const example = upgrades.next;
 
 export function PricingProof() {
   const { text, locale, carryCampaign } = useSiteLanguage();
+  const { trackEvent } = useCookieSettings();
   const paths = () => proProofPaths(locale());
   return <section class="pricing-proof" aria-labelledby="pricing-proof-title">
     <header>
@@ -25,7 +27,8 @@ export function PricingProof() {
           <div><pre><code>- {example.before}</code></pre><p><PackageText text={example.oldSource}/></p></div>
           <div><pre><code>+ {example.after}</code></pre><p><PackageText text={example.newSource}/></p></div>
         </div>
-        <A class="pricing-proof-link" href={carryCampaign(paths().preview)}>{text("Try the report preview", "互動預覽升級報告")} <ArrowRight size={15} aria-hidden="true"/></A>
+        <A class="pricing-proof-link" href={carryCampaign(paths().preview)}
+          onClick={() => trackEvent("pro_cta_clicked", { entry_surface: "pricing_proof_upgrade_report" }, { requireExplicitConsent: true })}>{text("Try the report preview", "互動預覽升級報告")} <ArrowRight size={15} aria-hidden="true"/></A>
       </article>
       <article>
         <h3 class="plan-label">{text("02 / PRIVATE PACKAGE DOCS", "02 / 私有套件文件")}</h3>
@@ -35,7 +38,8 @@ export function PricingProof() {
           <pre><code>{'lockdocs docs "session renewal" --pkg @acme/session --offline'}</code></pre>
         </div>
         <p class="quiet">{text("Uses your existing .npmrc. Credentials go only to their configured origin; your project code stays local.", "沿用現有的 .npmrc 設定。憑證只會傳到設定的來源，專案程式碼仍留在本機。")}</p>
-        <A class="pricing-proof-link" href={carryCampaign(paths().privateSources)}>{text("Read the private registry setup", "查看私有套件庫設定（英文）")} <ArrowRight size={15} aria-hidden="true"/></A>
+        <A class="pricing-proof-link" href={carryCampaign(paths().privateSources)}
+          onClick={() => trackEvent("pro_cta_clicked", { entry_surface: "pricing_proof_private_sources" }, { requireExplicitConsent: true })}>{text("Read the private registry setup", "查看私有套件庫設定（英文）")} <ArrowRight size={15} aria-hidden="true"/></A>
       </article>
     </div>
   </section>;

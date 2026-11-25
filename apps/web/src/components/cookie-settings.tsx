@@ -390,9 +390,10 @@ export function CookieSettings(props: ParentProps) {
     emit("sign_up", params);
   }
 
-  const trackEvent: TrackEvent = (event, params) => {
+  const trackEvent: TrackEvent = (event, params, options) => {
     try {
-      syncChoice();
+      const saved = syncChoice();
+      if (options?.requireExplicitConsent && (unpersistedDenial || (saved !== "analytics_only" && saved !== "granted"))) return false;
       const safe = behavioralParams(event, params);
       if (!safe) return false;
       const sent = forwardSignal(event, safe);

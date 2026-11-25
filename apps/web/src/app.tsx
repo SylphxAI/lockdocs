@@ -3,7 +3,7 @@ import { createEffect, Suspense } from "solid-js";
 import { Router } from "@solidjs/router";
 import { FileRoutes } from "@solidjs/start/router";
 import { MetaProvider } from "@solidjs/meta";
-import { A as Link, useLocation } from "@solidjs/router";
+import { A as Link, useLocation, useSearchParams } from "@solidjs/router";
 import { ArrowUpRight, Braces, GitFork } from 'lucide-solid';
 import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
@@ -15,6 +15,7 @@ import { CookieSettings, CookieSettingsButton } from "@/components/cookie-settin
 
 import { useSiteLanguage } from "@/lib/site-language";
 import { localizedPath, pagePath } from "@/lib/locales";
+import { pricingPath } from "@/lib/auth-entry";
 
 const github = 'https://github.com/SylphxAI/lockdocs';
 function Wordmark() {
@@ -24,15 +25,16 @@ function Wordmark() {
 function Layout(props: ParentProps) {
   const { locale, campaignHref, carryCampaign, text } = useSiteLanguage();
   const location = useLocation();
+  const [query] = useSearchParams();
   createEffect(() => { document.documentElement.lang = locale(); });
   const targetLocale = () => locale() === "en" ? "zh-TW" : "en";
   const switchHref = () => {
     const current = pagePath(location.pathname);
     const path = localizedPath(current, targetLocale());
     if (path === current) return carryCampaign(localizedPath("/", targetLocale()));
-    const currency = new URLSearchParams(location.search).get("currency");
-    return carryCampaign(localizedPath(path, "en") === "/pricing" && currency
-      ? path + "?" + new URLSearchParams({ currency }) : path);
+    return carryCampaign(localizedPath(path, "en") === "/pricing"
+      ? pricingPath(typeof query.currency === "string" ? query.currency : "USD", query.entry_surface, targetLocale())
+      : path);
   };
   return <>
     <a class="skip" href="#main">{text("Skip to content", "跳至主要內容")}</a>

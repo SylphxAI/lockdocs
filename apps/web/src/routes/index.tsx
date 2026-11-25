@@ -11,7 +11,7 @@ import { InstallCommand } from "@/components/install-command";
 import { useCookieSettings, useProImpression } from "@/components/cookie-settings";
 
 export default function Home() {
-  const { href, campaignHref, text, locale } = useSiteLanguage();
+  const { href, campaignHref, proHref, text, locale } = useSiteLanguage();
   const { trackEvent } = useCookieSettings();
   const proImpression = useProImpression("home_pro_band");
   const url = () => canonicalOrigin + href("/");
@@ -67,7 +67,7 @@ export default function Home() {
         <article><ShieldCheck size={20}/><h3>{text("Keep it local", "在本機查詢")}</h3><p>{text("Query your local index from your CLI or coding agent. Fetch upstream docs when you want them.", "用命令列或程式開發代理工具查詢本機索引，需要時再下載上游文件。")}</p></article>
       </div>
     </section>
-    <section class="wrap section"><div class="pro-band" ref={proImpression}><GitCompareArrows size={25}/><div><div class="eyebrow">LOCKDOCS PRO</div><h2>{text("See what breaks before you upgrade.", "升級前先找出會受影響的程式碼")}</h2><p>{text("Get the full upgrade report for your call sites and exact-version docs for private packages.", "取得包含呼叫位置的完整升級報告，也能查閱指定版本的私有套件文件。")}</p></div><Link class="button outline" href={campaignHref("/pricing")} onClick={() => trackEvent("pro_cta_clicked", { entry_surface: "home_pro_band" })}>{text("Explore Pro", "了解 Pro")} <ArrowRight size={16}/></Link></div></section>
+    <section class="wrap section"><div class="pro-band" ref={proImpression}><GitCompareArrows size={25}/><div><div class="eyebrow">LOCKDOCS PRO</div><h2>{text("See what breaks before you upgrade.", "升級前先找出會受影響的程式碼")}</h2><p>{text("Get the full upgrade report for your call sites and exact-version docs for private packages.", "取得包含呼叫位置的完整升級報告，也能查閱指定版本的私有套件文件。")}</p></div><Link class="button outline" href={proHref("home_pro_band")} onClick={() => trackEvent("pro_cta_clicked", { entry_surface: "home_pro_band" })}>{text("Explore Pro", "了解 Pro")} <ArrowRight size={16}/></Link></div></section>
     <div class="wrap"><EditorialFaq url={url()} items={questions()} heading={text("Frequently asked questions", "常見問題")}/></div>
   </>;
 }

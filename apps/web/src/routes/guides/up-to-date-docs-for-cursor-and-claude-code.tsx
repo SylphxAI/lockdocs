@@ -47,7 +47,7 @@ const cursorConfig = JSON.stringify({
 }, null, 2);
 
 export default function EditorDocsGuide() {
-  const { campaignHref } = useSiteLanguage();
+  const { campaignHref, proHref } = useSiteLanguage();
   const { trackEvent } = useCookieSettings();
   return <>
     <PageMeta title={title + " · Lockdocs"} description={description}/>
@@ -107,7 +107,7 @@ export default function EditorDocsGuide() {
         <div class="button-row">
           <A class="button primary" href={campaignHref("/reference/tools")}>Read the MCP tool reference <ArrowRight size={16}/></A>
           <A class="button outline" href={campaignHref(context7AlternativePath)}>Compare Lockdocs with Context7</A>
-          <A class="button outline" href={campaignHref("/pricing")} onClick={() => trackEvent("pro_cta_clicked", { entry_surface: "guide_cursor_claude_code" }, { requireExplicitConsent: true })}>See Lockdocs Pro</A>
+          <A class="button outline" href={proHref("guide_cursor_claude_code")} onClick={() => trackEvent("pro_cta_clicked", { entry_surface: "guide_cursor_claude_code" }, { requireExplicitConsent: true })}>See Lockdocs Pro</A>
         </div>
       </section>
     </div></div>

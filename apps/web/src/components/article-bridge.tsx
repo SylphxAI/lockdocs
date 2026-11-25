@@ -8,7 +8,7 @@ import { usdProOffer } from "@/lib/storefront-schema";
 const annualPrice = "US$" + new Intl.NumberFormat("en-US").format(usdProOffer.price);
 
 export function ArticleBridge(props: { surface: ArticleSurface }) {
-  const { campaignHref, text } = useSiteLanguage();
+  const { campaignHref, proHref, text } = useSiteLanguage();
   const { trackEvent } = useCookieSettings();
   return <section class="surface article-bridge" aria-labelledby="article-next-step">
     <div class="eyebrow">{text("NEXT STEP", "下一步")}</div>
@@ -19,7 +19,7 @@ export function ArticleBridge(props: { surface: ArticleSurface }) {
     )}</p>
     <div class="button-row">
       <A class="button secondary" href={campaignHref("/playground")}>{text("Try the playground", "開啟試用工具")} <ArrowRight size={16} aria-hidden="true"/></A>
-      <A class="button outline" href={campaignHref("/pricing")} onClick={() => trackEvent("pro_cta_clicked", { entry_surface: props.surface })}>{text(`See Lockdocs Pro — ${annualPrice}/yr`, `查看 Lockdocs Pro — ${annualPrice}／年`)} <ArrowRight size={16} aria-hidden="true"/></A>
+      <A class="button outline" href={proHref(props.surface)} onClick={() => trackEvent("pro_cta_clicked", { entry_surface: props.surface })}>{text(`See Lockdocs Pro — ${annualPrice}/yr`, `查看 Lockdocs Pro — ${annualPrice}／年`)} <ArrowRight size={16} aria-hidden="true"/></A>
     </div>
   </section>;
 }

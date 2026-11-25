@@ -19,11 +19,11 @@ test("keeps campaign parameters on the Pro Markdown CTA before a consent choice"
   await expect(cta.locator("svg")).toBeVisible();
   const destination = new URL((await cta.getAttribute("href"))!, page.url());
   expect(destination.pathname).toBe("/pricing");
-  expect(Object.fromEntries(destination.searchParams)).toEqual(campaign);
+  expect(Object.fromEntries(destination.searchParams)).toEqual({ ...campaign, entry_surface: "article_pro" });
 
   await cta.click();
   await expect(page).toHaveURL(url => url.pathname === "/pricing");
-  expect(Object.fromEntries(new URL(page.url()).searchParams)).toEqual(campaign);
+  expect(Object.fromEntries(new URL(page.url()).searchParams)).toEqual({ ...campaign, entry_surface: "article_pro" });
   await expect(cookieSettings).toBeVisible();
   expect(await page.context().cookies()).toEqual([]);
   expect(await page.evaluate(() => [localStorage.length, sessionStorage.length])).toEqual([0, 0]);

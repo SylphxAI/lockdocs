@@ -108,7 +108,7 @@ for (const [path, entry_surface] of [
     await card.getByRole("link", { name: zh ? /查看 Lockdocs Pro/ : /See Lockdocs Pro/ }).click();
     await expect(page).toHaveURL(url => url.pathname === (zh ? "/zh-TW/pricing" : "/pricing"));
     expect(Object.fromEntries(new URL(page.url()).searchParams)).toEqual({ ...campaign,
-      gclid: clicks.gclid, gbraid: clicks.gbraid, wbraid: clicks.wbraid,
+      gclid: clicks.gclid, gbraid: clicks.gbraid, wbraid: clicks.wbraid, entry_surface,
     });
     await expect.poll(() => rows("pro_cta_clicked").map(row => row.properties)).toEqual([{ ...campaign, entry_surface }]);
   });
@@ -124,11 +124,11 @@ for (const mode of ["pre-choice", "denied", "GPC"]) {
     const card = page.getByRole("region", { name: "Try it with a lockfile" });
     const pro = card.getByRole("link", { name: /See Lockdocs Pro/ });
     if (mode !== "pre-choice") {
-      await expect(pro).toHaveAttribute("href", "/pricing");
+      await expect(pro).toHaveAttribute("href", "/pricing?entry_surface=article_pro");
       await expect(card.getByRole("link", { name: "Try the playground" })).toHaveAttribute("href", "/playground");
     }
     await pro.click();
-    await expect(page).toHaveURL(url => url.pathname === "/pricing" && (mode === "pre-choice" ? url.searchParams.has("utm_source") : !url.search));
+    await expect(page).toHaveURL(url => url.pathname === "/pricing" && (mode === "pre-choice" ? url.searchParams.has("utm_source") : url.search === "?entry_surface=article_pro"));
     await expect(page.getByRole("button", { name: "Cookie settings", exact: true })).toBeEnabled();
     expect(batches).toEqual([]);
     expect(await page.evaluate(() => localStorage.getItem("lockdocs.signal.v1.touch"))).toBeNull();
@@ -180,7 +180,7 @@ for (const [path, heading, entry_surface] of [
       await expect(link).toBeVisible();
       await page.evaluate(() => document.fonts.ready);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(page.viewportSize()!.width);
-      const expectedQuery = gpc ? {} : { ...campaign, gclid: clicks.gclid, gbraid: clicks.gbraid, wbraid: clicks.wbraid };
+      const expectedQuery = gpc ? { entry_surface } : { ...campaign, entry_surface, gclid: clicks.gclid, gbraid: clicks.gbraid, wbraid: clicks.wbraid };
       const href = new URL((await link.getAttribute("href"))!, page.url());
       expect(href.pathname).toBe("/pricing");
       expect(Object.fromEntries(href.searchParams)).toEqual(expectedQuery);
@@ -191,7 +191,7 @@ for (const [path, heading, entry_surface] of [
       await expect(page).toHaveURL(url => url.pathname === "/pricing");
       expect(Object.fromEntries(new URL(page.url()).searchParams)).toEqual(expectedQuery);
       if (mode === "analytics only" || regionalDefault) {
-        await expect.poll(() => rows("pricing_view")).toHaveLength(1);
+        await expect.poll(() => rows("pricing_view").map(row => row.properties.entry_surface)).toEqual([entry_surface]);
         await expect.poll(() => rows("pro_cta_clicked").map(row => row.properties)).toEqual(
           mode === "analytics only" ? [{ ...campaign, entry_surface }] : [],
         );
@@ -290,20 +290,31 @@ base("Sec-GPC denies Signal even with an existing grant", async ({ page }) => {
 });
 
 authTest.use({ billing: true });
-authTest("full grant binds all UTMs through sign-in and emits begin_checkout and checkout_started", async ({ page, auth }) => {
+authTest("organic Pro CTA keeps its source and campaign through sign-in and checkout", async ({ page, auth }) => {
   await install(page, "DE");
   auth.ticketSignal.is_new_user = true;
   const { batches, rows } = await intercept(page, auth.origin);
-  await page.goto(auth.origin + "/pricing?" + query);
+  const source = "/context7-alternative";
+  const entry_surface = "context7_alternative";
+  const next = "/pricing?currency=GBP&entry_surface=" + entry_surface;
+  await page.goto(auth.origin + source + "?" + query);
   await expect(settings(page)).toBeVisible();
   expect(batches).toEqual([]);
   await settings(page).getByRole("button", { name: "Allow analytics & ads", exact: true }).click();
-  await expect.poll(() => rows("page_view").map(row => row.properties)).toEqual([{ path: "/pricing", ...campaign, ...clicks }]);
+  await expect.poll(() => rows("page_view").map(row => row.properties)).toEqual([{ path: source, ...campaign, ...clicks }]);
+  await page.locator(".editorial-hero").getByRole("link", { name: "See Lockdocs Pro" }).click();
+  await page.getByRole("link", { name: "GBP", exact: true }).click();
+  await expect(page).toHaveURL(url => url.pathname === "/pricing" && url.searchParams.get("entry_surface") === entry_surface);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBe(0);
   await page.getByRole("link", { name: /Get Lockdocs Pro/ }).click();
+  await expect(page).toHaveURL(url => url.pathname === "/sign-in" && url.searchParams.get("next") === next &&
+    url.searchParams.get("utm_campaign") === campaign.utm_campaign);
   await page.getByRole("link", { name: "Continue with Google" }).click();
-  await expect(page).toHaveURL(auth.origin + "/pricing");
+  await expect(page).toHaveURL(auth.origin + next);
+  const { gclid, gbraid, wbraid } = clicks;
+  const carried = { ...campaign, gclid, gbraid, wbraid };
   await expect.poll(() => rows("sign_up").map(row => row.properties)).toEqual([
-    { ...campaign, ...clicks, method: "google", entry_surface: "pricing" },
+    { ...carried, method: "google", entry_surface: "pricing" },
   ]);
   // Cancel native submission twice to exercise the same logical begin_checkout
   // twice, then submit for real and observe the separate server-side milestone.
@@ -317,21 +328,71 @@ authTest("full grant binds all UTMs through sign-in and emits begin_checkout and
   await button.click();
   await button.click();
   await expect.poll(() => rows("begin_checkout").map(row => row.properties)).toEqual([
-    { ...campaign, ...clicks, entry_surface: "pricing", plan_sku: "lockdocs_pro_seat_year", currency: "USD", value: 120 },
+    { ...carried, entry_surface, plan_sku: "lockdocs_pro_seat_year", currency: "GBP", value: 99 },
   ]);
   await page.route("https://checkout.stripe.com/fixture", route => route.fulfill({ status: 200, body: "Fixture checkout" }));
+  const posted = page.waitForRequest(request => new URL(request.url()).pathname === "/api/billing/checkout" && request.method() === "POST");
   await button.click();
+  expect(new URLSearchParams((await posted).postData()!).getAll("entry_surface")).toEqual([entry_surface]);
   await expect(page).toHaveURL("https://checkout.stripe.com/fixture");
+  expect(auth.checkouts).toMatchObject([{ currency_code: "GBP", metadata: { entry_surface }, cancel_url: auth.origin + next }]);
   expect(rows("begin_checkout")).toHaveLength(1);
   expect(JSON.stringify(batches.map(batch => batch.events))).not.toMatch(/private-query|reader@|usr_reader|auth_ticket|checkout_fixture/);
   await expect.poll(() => auth.signalBatches.flatMap(batch => batch.events)).toMatchObject([
-    { event_name: "checkout_started", numeric_value: 120,
-      properties: { entry_surface: "pricing", plan_sku: "lockdocs_pro_seat_year", currency: "USD" } },
+    { event_name: "checkout_started", numeric_value: 99,
+      properties: { entry_surface, plan_sku: "lockdocs_pro_seat_year", currency: "GBP" } },
   ]);
   await expect.poll(() => auth.bindings).toHaveLength(1);
   const binding = auth.bindings[0] as { gclid: string; gbraid: string; wbraid: string; fbc: string; page_location: string };
   expect(binding).toMatchObject({ gclid: clicks.gclid, gbraid: clicks.gbraid, wbraid: clicks.wbraid });
-  expect(binding.fbc).toMatch(/\.meta-click$/);
+  expect(binding.fbc).toBeUndefined();
   expect(Object.fromEntries(new URL(binding.page_location).searchParams)).toEqual(campaign);
   expect(auth.rejections).toEqual([]);
 });
+
+for (const mode of ["pre-consent", "GPC"] as const) {
+  authTest("Traditional Chinese organic checkout retains its source with zero analytics under " + mode, async ({ page, auth }) => {
+    const hits = await install(page, "DE");
+    const { requests } = await intercept(page, auth.origin);
+    const gpc = mode === "GPC";
+    if (gpc) await page.setExtraHTTPHeaders({ "CF-IPCountry": "DE", "Sec-GPC": "1" });
+    const entry_surface = "article_docs_zh_tw";
+    const next = "/zh-TW/pricing?currency=HKD&entry_surface=" + entry_surface;
+    await page.goto(auth.origin + "/zh-TW/docs?" + query);
+    const pro = page.getByRole("link", { name: /查看 Lockdocs Pro/ });
+    await expect(pro).toHaveAttribute("href", gpc ? "/zh-TW/pricing?entry_surface=" + entry_surface : /utm_source=newsletter/);
+    await pro.click();
+    await page.getByRole("link", { name: "HKD", exact: true }).click();
+    const destination = new URL(page.url());
+    expect(destination.pathname + (gpc ? destination.search : "")).toBe(gpc ? next : "/zh-TW/pricing");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBe(0);
+    await page.getByRole("link", { name: /^購買 Lockdocs Pro/ }).click();
+    await expect(page).toHaveURL(url => url.pathname === "/sign-in" && url.searchParams.get("next") === next &&
+      url.searchParams.get("utm_source") === (gpc ? null : campaign.utm_source));
+    await page.getByRole("link", { name: "Continue with Google" }).click();
+    await expect(page).toHaveURL(auth.origin + next);
+
+    for (const invalid of ["unknown", entry_surface + "&entry_surface=" + entry_surface]) {
+      const response = await page.request.post(auth.origin + "/api/billing/checkout", {
+        headers: { Origin: auth.origin, "Content-Type": "application/x-www-form-urlencoded" },
+        data: "currency=HKD&entry_surface=" + invalid,
+      });
+      expect(response.status()).toBe(400);
+      expect(await response.json()).toEqual({ error: "invalid_entry_surface" });
+    }
+    expect(auth.checkouts).toEqual([]);
+    const form = page.locator('form[action="/api/billing/checkout"]');
+    await expect(form.locator('input[name="entry_surface"]')).toHaveValue(entry_surface);
+    await expect(page.locator(analyticsFrame)).toHaveCount(0);
+    await page.route("https://checkout.stripe.com/fixture", route => route.fulfill({ status: 200, body: "Fixture checkout" }));
+    const posted = page.waitForRequest(request => new URL(request.url()).pathname === "/api/billing/checkout" && request.method() === "POST");
+    await form.getByRole("button").click();
+    const data = new URLSearchParams((await posted).postData()!);
+    expect(data.getAll("entry_surface")).toEqual([entry_surface]);
+    expect(data.get("signal_blocked")).toBe("1");
+    expect(data.has("signal_touch")).toBe(false);
+    await expect(page).toHaveURL("https://checkout.stripe.com/fixture");
+    expect(auth.checkouts).toMatchObject([{ currency_code: "HKD", metadata: { entry_surface } }]);
+    expect([...requests, ...hits, ...auth.signalBatches, ...auth.rejections]).toEqual([]);
+  });
+}

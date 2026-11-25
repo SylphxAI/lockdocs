@@ -1,11 +1,18 @@
+import { knownCheckoutSurface, pricingCheckoutSurface, proPrice } from "./analytics-events";
+import { defaultLocale, localizedPath, type Locale } from "./locales";
+
 const aliases = new Set(["/login", "/signup", "/sign-up", "/register", "/forgot-password"]);
 
 export function signInHref(next: string) {
   return "/sign-in?" + new URLSearchParams({ next });
 }
 
-export function pricingPath(currency: string) {
-  return currency === "USD" ? "/pricing" : "/pricing?" + new URLSearchParams({ currency });
+export function pricingPath(currency: string, entrySurface?: unknown, locale: Locale = defaultLocale) {
+  const query = new URLSearchParams();
+  if (currency !== "USD" && Object.hasOwn(proPrice.unit_amounts, currency)) query.set("currency", currency);
+  const surface = knownCheckoutSurface(entrySurface);
+  if (surface && surface !== pricingCheckoutSurface) query.set("entry_surface", surface);
+  return localizedPath("/pricing", locale) + (query.size ? "?" + query : "");
 }
 
 export function isCliCode(value: string | null): value is string {
@@ -14,7 +21,20 @@ export function isCliCode(value: string | null): value is string {
 
 /** Accept only known return pages and the CLI's exact loopback-consent input. */
 export function validateNext(value: string | null): string {
-  if (value && (value === "/dashboard" || /^(?:\/zh-TW)?\/pricing(?:\?currency=(?:USD|GBP|EUR|HKD))?$/.test(value))) {
+  if (value === "/dashboard" || value === "/pricing" || value === "/zh-TW/pricing") return value;
+  // Auth accepts only exact, unencoded pricing keys/values, each at most once.
+  // Campaign data is not part of the Auth return target.
+  const queryIndex = value?.indexOf("?") ?? -1;
+  if (value && queryIndex > 0 && ["/pricing", "/zh-TW/pricing"].includes(value.slice(0, queryIndex))) {
+    const query = value.slice(queryIndex + 1);
+    const params = new URLSearchParams(query);
+    if (!params.size || params.size > 2 || params.toString() !== query) return "/dashboard";
+    const seen = new Set<string>();
+    for (const [key, param] of params) {
+      if (seen.has(key) || !(key === "currency" ? Object.hasOwn(proPrice.unit_amounts, param)
+        : key === "entry_surface" && knownCheckoutSurface(param))) return "/dashboard";
+      seen.add(key);
+    }
     return value;
   }
   const prefix = "/cli/authorize?";

@@ -38,7 +38,8 @@ for (const path of paths) {
       await expect(link).toBeInViewport({ ratio: 1 });
       const href = new URL((await link.getAttribute("href"))!, page.url());
       expect(href.pathname).toBe(prefix + destination);
-      expect(Object.fromEntries(href.searchParams)).toEqual(campaign);
+      const entry_surface = zh ? "article_docs_zh_tw" : "article" + path.replaceAll(/[-/]/g, "_");
+      expect(Object.fromEntries(href.searchParams)).toEqual(destination === "/pricing" ? { ...campaign, entry_surface } : campaign);
       const box = (await link.boundingBox())!;
       expect(box.height).toBeGreaterThanOrEqual(44);
       expect(box.x).toBeGreaterThanOrEqual(0);

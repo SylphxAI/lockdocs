@@ -35,6 +35,7 @@ function fixture(t: TestContext) {
   } });
   const calls: { url: string; init: RequestInit }[] = [];
   const checkoutMetadata: unknown[] = [];
+  const cancelUrls: string[] = [];
   const billing: { name?: string; checkout_session_id?: string; url: string } = { name: parent + "/checkout_sessions/" + id, url: location };
   let events = (_: RequestInit): Promise<Response> => Promise.resolve(Response.json({
     binding_id: "binding_fixture", checkout_session_id: id, processor_session_id: null, expires_at: "2026-11-24T00:00:00Z",
@@ -48,6 +49,7 @@ function fixture(t: TestContext) {
       const body = JSON.parse(String(init.body));
       assert.equal(body.success_url, app + "/dashboard?billing=return&session_id={CHECKOUT_SESSION_ID}");
       checkoutMetadata.push(body.metadata);
+      cancelUrls.push(body.cancel_url);
       return Response.json(billing);
     }
     calls.push({ url: url.href, init });
@@ -67,10 +69,10 @@ function fixture(t: TestContext) {
     assert.equal(response.headers.get("set-cookie"), null);
     return response;
   }
-  return { calls, checkoutMetadata, start, billing, setEvents: (handler: typeof events) => { events = handler; } };
+  return { calls, checkoutMetadata, cancelUrls, start, billing, setEvents: (handler: typeof events) => { events = handler; } };
 }
 
-test("Money receives only the allowlisted pricing surface, even with untrusted form values", async t => {
+test("Money receives only a single allowlisted checkout surface", async t => {
   const { calls, checkoutMetadata, start } = fixture(t);
   for (const form of [undefined, new URLSearchParams({ currency: "GBP" })]) {
     const response = await start({ cookies: [ga, gs1], gpc: "1", body: form });
@@ -78,7 +80,7 @@ test("Money receives only the allowlisted pricing surface, even with untrusted f
     assert.equal(response.headers.get("location"), location);
     assert.deepEqual(checkoutMetadata.splice(0), [{ entry_surface: "pricing" }]);
   }
-  for (const surfaces of [["dashboard"], [""], [" Pricing "], ["pricing\n"], ["定價"],
+  for (const surfaces of [["dashboard"], ["pricing_proof_upgrade_report"], ["pricing", "article_pro"], [""], [" Pricing "], ["pricing\n"], ["定價"],
     ["/pricing?gclid=private"], ["x".repeat(101)], ["pricing", "pricing"], [new File([], "pricing")]]) {
     const form = new FormData();
     form.set("currency", "GBP");
@@ -205,4 +207,15 @@ test("Events timeout is 750 ms, checkout does not await Events, and diagnostics 
   assert.deepEqual(warnings.mock.calls.map(call => call.arguments), [
     ["Checkout attribution binding unavailable"], ["Checkout attribution binding unavailable"], ["Checkout attribution binding unavailable"],
   ]);
+});
+
+test("an organic source reaches Money metadata and stays on the checkout return path", async t => {
+  const { checkoutMetadata, cancelUrls, start, billing } = fixture(t);
+  const body = new URLSearchParams({ currency: "GBP", entry_surface: "guide_cursor_claude_code" });
+  const back = app + "/pricing?currency=GBP&entry_surface=guide_cursor_claude_code";
+  assert.equal((await start({ gpc: "1", body })).headers.get("location"), location);
+  assert.deepEqual(checkoutMetadata, [{ entry_surface: "guide_cursor_claude_code" }]);
+  assert.deepEqual(cancelUrls, [back]);
+  billing.url = "invalid";
+  assert.equal((await start({ body })).headers.get("location"), back + "&billing=unavailable");
 });

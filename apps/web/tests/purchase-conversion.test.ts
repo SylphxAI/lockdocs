@@ -219,3 +219,21 @@ test("Signal failure does not suppress a valid Google Ads claim", async t => {
   signalStatus.code = 503;
   assert.equal((await claim()).status, 200);
 });
+
+test("only an allowlisted source from the owner-verified Money checkout can attribute a purchase", async t => {
+  const { claim, batches, checkout, enableSignal } = fixture(t);
+  enableSignal();
+  for (const [metadata, expected] of [
+    [{ entry_surface: "article_compare" }, "article_compare"],
+    [{ entry_surface: "private@example.test" }, "pricing"],
+    [{ entry_surface: ["article_pro"] }, "pricing"],
+    [undefined, "pricing"],
+  ]) {
+    checkout.metadata = metadata;
+    const result = await claim({ choice: "analytics_only", body: { ...analyticsOnly, entry_surface: "home_pro_band" } });
+    assert.equal(result.status, 204);
+    assert.deepEqual(batches.splice(0), [{ ...expectedBatch, events: [{ ...expectedBatch.events[0],
+      properties: { ...expectedBatch.events[0].properties, entry_surface: expected },
+    }] }]);
+  }
+});

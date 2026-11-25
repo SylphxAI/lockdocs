@@ -28,7 +28,7 @@ const faq = [
 ];
 
 export default function Context7Alternative() {
-  const { campaignHref } = useSiteLanguage();
+  const { campaignHref, proHref } = useSiteLanguage();
   const { trackEvent } = useCookieSettings();
   return <>
     <PageMeta title={title + " · Lockdocs"} description={description}/>
@@ -46,7 +46,7 @@ export default function Context7Alternative() {
     }}/>
     <EditorialHero label="LOCKDOCS / COMPARISON" title={title} intro="Use Lockdocs when the answer depends on the library version in your lockfile. Use Context7 when you need a guide or example from a hosted docs index." actions={<>
       <A class="button primary" href={campaignHref("/playground")}>Try the playground <ArrowRight size={16}/></A>
-      <A class="button outline" href={campaignHref("/pricing")} onClick={() => trackEvent("pro_cta_clicked", { entry_surface: "context7_alternative" })}>See Lockdocs Pro</A>
+      <A class="button outline" href={proHref("context7_alternative")} onClick={() => trackEvent("pro_cta_clicked", { entry_surface: "context7_alternative" })}>See Lockdocs Pro</A>
     </>}>
       <aside class="editorial-aside" aria-label="Example: cookies from next/headers">
         <p class="eyebrow">ONE IMPORT, TWO RETURN TYPES</p>
@@ -94,7 +94,7 @@ export default function Context7Alternative() {
           <A class="button primary" href={campaignHref("/playground")}>Open playground <ArrowRight size={16}/></A>
           <A class="button outline" href={campaignHref("/docs")}>Read the docs</A>
           <A class="button outline" href={campaignHref(editorGuidePath)}>Set up Cursor or Claude Code</A>
-          <A class="button outline" href={campaignHref("/pricing")} onClick={() => trackEvent("pro_cta_clicked", { entry_surface: "context7_alternative" }, { requireExplicitConsent: true })}>See Lockdocs Pro</A>
+          <A class="button outline" href={proHref("context7_alternative")} onClick={() => trackEvent("pro_cta_clicked", { entry_surface: "context7_alternative" }, { requireExplicitConsent: true })}>See Lockdocs Pro</A>
         </div>
       </section>
     </div></div>

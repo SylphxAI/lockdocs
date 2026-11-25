@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { articleSurface, behavioralParams } from "../src/lib/analytics-events";
+import { articleSurface, behavioralParams, beginCheckoutParams, knownCheckoutSurface } from "../src/lib/analytics-events";
 
 test("behavioral events project only their allowlisted scalar fields", () => {
   assert.deepEqual(behavioralParams("lockfile_resolved", {
@@ -49,6 +49,7 @@ test("only allowlisted article surfaces can report Pro clicks, not paywall impre
     ["/capabilities", "article_capabilities"], ["/docs", "article_docs"], ["/zh-TW/docs", "article_docs_zh_tw"],
   ]) {
     assert.equal(articleSurface(route), entry_surface);
+    assert.equal(knownCheckoutSurface(entry_surface), entry_surface);
     assert.deepEqual(behavioralParams("pro_cta_clicked", { entry_surface, token: "private-sentinel" }), { entry_surface });
     assert.equal(behavioralParams("paywall_view", { entry_surface }), null);
   }
@@ -67,4 +68,17 @@ test("behavioral events refuse unknown names and missing or invalid values", () 
   assert.equal(behavioralParams("command_copied", { surface: "docs_code", command_kind: "fixture@example.test" }), null);
   assert.equal(behavioralParams("paywall_view", { entry_surface: "cli_authorize" }), null);
   assert.equal(behavioralParams("upgrade_preview_switched", { example_id: "private-package" }), null);
+});
+
+test("checkout events keep a named source and never emit arbitrary input", () => {
+  for (const surface of ["pricing", "home_pro_band", "playground_upgrade_cta", "playground_report_preview",
+    "context7_alternative", "guide_cursor_claude_code", "article_pro"]) {
+    assert.equal(knownCheckoutSurface(surface), surface);
+    assert.equal(beginCheckoutParams("GBP", surface)?.entry_surface, surface);
+  }
+  for (const surface of [undefined, "", "pricing\n", "PRICING", "pricing_proof_private_sources", ["article_pro"], "reader@example.test"]) {
+    assert.equal(knownCheckoutSurface(surface), undefined);
+    assert.equal(beginCheckoutParams("GBP", surface)?.entry_surface, "pricing");
+  }
+  assert.equal(beginCheckoutParams("XXX", "article_pro"), null);
 });

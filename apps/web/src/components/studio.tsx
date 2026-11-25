@@ -17,7 +17,7 @@ const snippet = JSON.stringify({ mcpServers: { lockdocs: { command: "npx", args:
 const keyFor = (row: Dependency) => [row.ecosystem, row.name, row.version, row.source].join(":");
 
 export function Studio() {
-  const { campaignHref, text } = useSiteLanguage();
+  const { proHref, text } = useSiteLanguage();
   const { trackEvent } = useCookieSettings();
   const upgradeImpression = useProImpression("playground_upgrade_cta");
   const reportImpression = useProImpression("playground_report_preview");
@@ -100,7 +100,7 @@ export function Studio() {
         <h2 id="pro-upgrade-preview">{text("Pro Upgrade Preview", "Pro 升級預覽")}</h2>
         <p>{text("Free resolves the exact versions in your lockfile. In your project, Pro Upgrade Reports show which call sites an upgrade affects, with citations. Pro also includes docs for private packages.", "免費版可查出 lockfile 裡的確切版本。Pro 升級報告會找出專案中受升級影響的呼叫位置，並附上原始碼出處。Pro 也能查閱私有套件的文件。")}</p>
       </div>
-      <Link href={campaignHref("/pricing")} class="button secondary small" onClick={() => trackEvent("pro_cta_clicked", { entry_surface: "playground_upgrade_cta" })}>{text("See Pro plans", "查看 Pro 方案")} <ArrowRight size={16}/></Link>
+      <Link href={proHref("playground_upgrade_cta")} class="button secondary small" onClick={() => trackEvent("pro_cta_clicked", { entry_surface: "playground_upgrade_cta" })}>{text("See Pro plans", "查看 Pro 方案")} <ArrowRight size={16}/></Link>
     </section>
     <section class="snippet-box surface">
       <button type="button" class="snippet-toggle" aria-expanded={snippetOpen()} onClick={() => setSnippetOpen(!snippetOpen())}><Braces size={18}/> {text("MCP agent setup", "MCP 代理工具設定")} <span aria-hidden="true">{snippetOpen() ? "−" : "+"}</span></button>
@@ -118,7 +118,7 @@ export function Studio() {
           <p>{text(active().note[0], active().note[1])}</p><a class="doc-source" href={active().guideUrl}>{text(active().guide[0], active().guide[1])} <ArrowUpRight size={14}/></a>
         </div>
       </article>
-      <Link href={campaignHref("/pricing")} class="doc-source" onClick={() => trackEvent("pro_cta_clicked", { entry_surface: "playground_report_preview" })}>{text("Get full reports with Pro", "用 Pro 取得完整升級報告")} <ArrowRight size={14}/></Link>
+      <Link href={proHref("playground_report_preview")} class="doc-source" onClick={() => trackEvent("pro_cta_clicked", { entry_surface: "playground_report_preview" })}>{text("Get full reports with Pro", "用 Pro 取得完整升級報告")} <ArrowRight size={14}/></Link>
     </section>
   </>;
 }

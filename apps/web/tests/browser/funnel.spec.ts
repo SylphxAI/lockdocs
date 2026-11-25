@@ -62,13 +62,13 @@ for (const mode of ["unanswered", "denied", "gpc", "granted"] as const) {
     await report.getByRole("heading", { level: 2 }).scrollIntoViewIfNeeded();
     if (granted) await seen("paywall_view", { entry_surface: "playground_report_preview" });
     await report.getByRole("link", { name: "Get full reports with Pro" }).click();
-    await expect(page).toHaveURL(url => url.pathname === "/pricing");
+    await expect(page).toHaveURL(url => url.pathname === "/pricing" && url.searchParams.get("entry_surface") === "playground_report_preview");
     await page.getByRole("banner").getByRole("link", { name: "Playground" }).click();
     const previewCTA = page.getByRole("link", { name: "See Pro plans" });
     await previewCTA.scrollIntoViewIfNeeded();
     if (granted) await seen("paywall_view", { entry_surface: "playground_upgrade_cta" });
     await previewCTA.click();
-    await expect(page).toHaveURL(url => url.pathname === "/pricing");
+    await expect(page).toHaveURL(url => url.pathname === "/pricing" && url.searchParams.get("entry_surface") === "playground_upgrade_cta");
     await page.goto("/guide/setup");
     if (granted) await ready();
     await page.getByRole("button", { name: "Copy code", exact: true }).first().click();
@@ -85,7 +85,7 @@ for (const mode of ["unanswered", "denied", "gpc", "granted"] as const) {
     await homeCTA.scrollIntoViewIfNeeded();
     if (granted) await seen("paywall_view", { entry_surface: "home_pro_band" });
     await homeCTA.click();
-    await expect(page).toHaveURL(url => url.pathname === "/pricing");
+    await expect(page).toHaveURL(url => url.pathname === "/pricing" && url.searchParams.get("entry_surface") === "home_pro_band");
     if (granted) {
       await seen("pro_cta_clicked", { entry_surface: "home_pro_band" });
       expect(funnelWire(wire)).toEqual(expect.arrayContaining([

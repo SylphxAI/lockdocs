@@ -8,7 +8,7 @@ import { signalRequestPrivacy } from "./signal-privacy";
 import { canonicalOrigin } from "./indexing";
 import { measurementId, signalConfig } from "./analytics-config";
 import { signalCheckoutStarted } from "./signal-server";
-import { pricingCheckoutSurface, proPrice } from "./analytics-events";
+import { knownCheckoutSurface, pricingCheckoutSurface, proPrice, type CheckoutSurface } from "./analytics-events";
 import { pricingPath, signInHref } from "./auth-entry";
 import { currencyCodePattern, liveCheckoutSessionId } from "./google-ads";
 
@@ -74,6 +74,7 @@ export async function checkout(request: Request) {
     return privateJson({ error: "invalid_currency" }, 400);
   }
   let currency: FormDataEntryValue | null;
+  let surface: CheckoutSurface = pricingCheckoutSurface;
   const ga = measurementId();
   const signalEnabled = signalConfig() !== null;
   const privacy = signalRequestPrivacy(request);
@@ -81,10 +82,11 @@ export async function checkout(request: Request) {
   try {
     const form = await request.formData();
     currency = form.getAll("currency").length === 1 ? form.get("currency") : null;
-    // Pricing is the only checkout form. Requests without the new field still start there.
     const surfaces = form.getAll("entry_surface");
-    if (surfaces.length > 0 && (surfaces.length !== 1 || surfaces[0] !== pricingCheckoutSurface)) {
-      return privateJson({ error: "invalid_entry_surface" }, 400);
+    if (surfaces.length) {
+      const known = surfaces.length === 1 ? knownCheckoutSurface(surfaces[0]) : undefined;
+      if (!known) return privateJson({ error: "invalid_entry_surface" }, 400);
+      surface = known;
     }
     // An unready browser or a navigator-only GPC signal can lower permission;
     // the form can never grant it. The SDK applies policy again at binding.
@@ -101,7 +103,7 @@ export async function checkout(request: Request) {
     return privateJson({ error: "invalid_currency" }, 400);
   }
   if (!isVerifiedSession(session)) return privateJson({ error: "authentication_required" }, 401);
-  const backToPricing = new URL(pricingPath(currency), cfg.origin);
+  const backToPricing = new URL(pricingPath(currency, surface), cfg.origin);
   try {
     const response = await providerFetch(resource(cfg, "checkout_sessions", false), {
       method: "POST",
@@ -110,7 +112,7 @@ export async function checkout(request: Request) {
         subject: { end_user: session.id },
         line_items: [{ price: cfg.price.key, quantity: 1 }],
         currency_code: currency,
-        metadata: { entry_surface: pricingCheckoutSurface },
+        metadata: { entry_surface: surface },
         success_url: new URL("/dashboard?billing=return&session_id={CHECKOUT_SESSION_ID}", cfg.origin).href,
         cancel_url: backToPricing.href,
         consent_collection: { terms_required: true, terms_text: cfg.termsText, terms_version: cfg.termsVersion },
@@ -126,7 +128,7 @@ export async function checkout(request: Request) {
           // Money normally returns a resource name; also accept an explicit ID if no name is supplied.
           const bindingId = body.name == null && typeof body.checkout_session_id === "string" ? body.checkout_session_id : id;
           if (/^[A-Za-z0-9_-]{1,128}$/.test(bindingId)) {
-            void signalCheckoutStarted(bindingId, currency, privacy, request.headers).catch(() => {});
+            void signalCheckoutStarted(bindingId, currency, privacy, request.headers, surface).catch(() => {});
             void bindCheckoutAttribution({ checkoutSessionId: bindingId }, {
               apiKey: cfg.key, baseUrl: cfg.base, headers: request.headers, privacy, attribution,
               gaMeasurementId: ga ?? undefined, pageLocation: new URL("/pricing", canonicalOrigin),
@@ -172,7 +174,10 @@ export async function verifiedPaidCheckout(session: Session, sid: string) {
         checkout.state !== "complete" || checkout.payment_status !== "paid" || checkout.denied_reason) return null;
     const { amount_total: amount, currency_code: currency } = checkout;
     if (!Number.isSafeInteger(amount) || amount <= 0 || typeof currency !== "string" || !currencyCodePattern.test(currency)) return null;
-    return { name, value: amount / (zeroDecimal.has(currency) ? 1 : threeDecimal.has(currency) ? 1000 : 100), currency };
+    return {
+      name, value: amount / (zeroDecimal.has(currency) ? 1 : threeDecimal.has(currency) ? 1000 : 100), currency,
+      entry_surface: knownCheckoutSurface(checkout.metadata?.entry_surface) ?? pricingCheckoutSurface,
+    };
   } catch {
     return null;
   }

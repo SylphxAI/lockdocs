@@ -97,7 +97,7 @@ test("sign-in keeps a visible recovery action when the session request fails", a
 
 for (const currency of ["USD", "GBP", "EUR", "HKD"]) {
   test("Traditional Chinese Pro sign-in returns to pricing in " + currency, async ({ page, auth }) => {
-    const next = "/zh-TW/pricing?currency=" + currency;
+    const next = currency === "USD" ? "/zh-TW/pricing" : "/zh-TW/pricing?currency=" + currency;
     const query = new URLSearchParams({ next });
     await page.goto(auth.origin + "/zh-TW/pricing");
     const picker = page.getByRole("navigation", { name: "付款幣別" });

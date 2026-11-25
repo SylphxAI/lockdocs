@@ -181,3 +181,17 @@ test("headless proofs use the public credential; only a ticket redeemed for the 
     marker + "passkey.cli; Max-Age=60; Path=/; Secure; SameSite=Lax",
   ]);
 });
+
+test("pricing return targets preserve only a single allowlisted surface and currency", () => {
+  for (const path of ["/pricing", "/zh-TW/pricing"]) {
+    for (const query of ["entry_surface=article_compare", "currency=GBP&entry_surface=home_pro_band", "entry_surface=pricing&currency=USD"]) {
+      assert.equal(validateNext(path + "?" + query), path + "?" + query);
+    }
+    for (const query of ["", "entry_surface", "entry_surface=", "entry_surface=foreign", "entry_surface=article_pro&entry_surface=article_pro",
+      "currency=GBP&currency=EUR", "currency=XXX&entry_surface=article_pro", "entry_surface=article_pro&gclid=fixture",
+      "entry_surface=article_pro&", "entry_surface=article_pro&&currency=EUR", "entry_surface=article_pro#section",
+      "entry_surface=article_pro\n", "entry_surface=article%5Fpro", "%65ntry_surface=article_pro"]) {
+      assert.equal(validateNext(path + "?" + query), "/dashboard", query);
+    }
+  }
+});

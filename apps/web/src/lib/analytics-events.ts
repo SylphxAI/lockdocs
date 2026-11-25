@@ -23,6 +23,16 @@ export function articleSurface(path: string): ArticleSurface | undefined {
   return Object.hasOwn(articleSurfaces, path) ? articleSurfaces[path as keyof typeof articleSurfaces] : undefined;
 }
 
+export const pricingCheckoutSurface = "pricing";
+export const checkoutEntrySurfaces = [
+  pricingCheckoutSurface, ...proSurfaces, "context7_alternative", "guide_cursor_claude_code", ...Object.values(articleSurfaces),
+] as const;
+export type CheckoutSurface = (typeof checkoutEntrySurfaces)[number];
+
+export function knownCheckoutSurface(value: unknown): CheckoutSurface | undefined {
+  return checkoutEntrySurfaces.find(surface => surface === value);
+}
+
 const entrySurface = { entry_surface: proSurfaces };
 const eventFields = {
   lockfile_resolved: {
@@ -35,7 +45,7 @@ const eventFields = {
     command_kind: ["npx", "uvx", "pip", "mcp_config", "code", "cli"],
   },
   paywall_view: entrySurface,
-  pro_cta_clicked: { entry_surface: [...proSurfaces, "context7_alternative", "guide_cursor_claude_code", ...Object.values(articleSurfaces),
+  pro_cta_clicked: { entry_surface: [...checkoutEntrySurfaces.filter(surface => surface !== pricingCheckoutSurface),
     "pricing_proof_upgrade_report", "pricing_proof_private_sources"] },
   upgrade_preview_switched: { example_id: ["next", "pydantic"] },
   cli_authorized: { entry_surface: ["cli_authorize"] },
@@ -63,16 +73,15 @@ export function behavioralParams(event: string, params: Readonly<Record<string, 
 }
 
 export const proPrice = catalogue.spec.products[0].prices[0];
-export const pricingCheckoutSurface = "pricing";
 
-export function beginCheckoutParams(currency: unknown) {
+export function beginCheckoutParams(currency: unknown, entrySurface: unknown = pricingCheckoutSurface) {
   const amounts = proPrice.unit_amounts;
   if (typeof currency !== "string" || !Object.hasOwn(amounts, currency)) return null;
   const minor = Number(amounts[currency as keyof typeof amounts]);
   if (!Number.isSafeInteger(minor) || minor <= 0) return null;
   const value = minor / 100;
   return {
-    value, currency, plan_sku: proPrice.key, entry_surface: pricingCheckoutSurface,
+    value, currency, plan_sku: proPrice.key, entry_surface: knownCheckoutSurface(entrySurface) ?? pricingCheckoutSurface,
     items: [{ item_id: proPrice.key, item_name: "Lockdocs Pro", quantity: 1, price: value }],
   };
 }

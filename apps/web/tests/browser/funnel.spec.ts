@@ -11,13 +11,14 @@ const funnelNames = new Set(["lockfile_resolved", "command_copied", "paywall_vie
 function funnelWire(wire: URLSearchParams[]) {
   return wire.filter(event => funnelNames.has(event.get("en") ?? "")).map(event => [event.get("en"), Object.fromEntries(
     [...event].filter(([key]) => /^epn?./.test(key)).map(([key, value]) => [key.split(".")[1], key.startsWith("epn.") ? Number(value) : value]),
-  )]);
+  )] as const);
 }
 
 const privatePackage = "internal-payroll-fixture";
 async function copyFrom(page: Page, name: string) {
-  await page.getByRole("button", { name, exact: true }).click();
-  await expect(page.getByRole("status").filter({ hasText: /^Copied$/ })).toBeAttached();
+  const button = page.getByRole("button", { name, exact: true });
+  await button.click();
+  await expect(button.locator("+ [role=status]")).toHaveText("Copied");
 }
 
 for (const mode of ["unanswered", "denied", "gpc", "granted"] as const) {
@@ -45,12 +46,18 @@ for (const mode of ["unanswered", "denied", "gpc", "granted"] as const) {
     await page.locator("#lockfile").fill(privatePackage + "==1.2.3");
     await page.getByRole("button", { name: "Resolve versions" }).click();
     await expect(page.getByRole("heading", { name: privatePackage + "@1.2.3" })).toBeVisible();
+    await copyFrom(page, "Copy CLI command");
+    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe("lockdocs " + privatePackage + " --offline");
+    await copyFrom(page, "Copy upgrade command");
+    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe("lockdocs upgrade next 15.0.0");
     await page.getByRole("button", { name: "MCP agent setup" }).click();
     await copyFrom(page, "Copy");
     expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('"mcpServers"');
     const example = page.getByRole("button", { name: "Pydantic 1.10 → 2.9" });
     await example.click();
     await example.click();
+    await copyFrom(page, "Copy upgrade command");
+    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe("lockdocs upgrade pydantic 2.9.2");
     const report = page.getByRole("region", { name: "See exactly what breaks." });
     await report.getByRole("heading", { level: 2 }).scrollIntoViewIfNeeded();
     if (granted) await seen("paywall_view", { entry_surface: "playground_report_preview" });
@@ -87,6 +94,11 @@ for (const mode of ["unanswered", "denied", "gpc", "granted"] as const) {
         ["pro_cta_clicked", { entry_surface: "playground_report_preview" }],
         ["pro_cta_clicked", { entry_surface: "playground_upgrade_cta" }],
       ]));
+      expect(funnelWire(wire).filter(([name, params]) => name === "command_copied" && /^playground_(cli|upgrade)$/.test(String(params.surface)))).toEqual([
+        ["command_copied", { surface: "playground_cli", command_kind: "cli" }],
+        ["command_copied", { surface: "playground_upgrade", command_kind: "cli" }],
+        ["command_copied", { surface: "playground_upgrade", command_kind: "cli" }],
+      ]);
       expect(funnelWire(wire).filter(([name]) => name === "upgrade_preview_switched")).toEqual([["upgrade_preview_switched", { example_id: "pydantic" }]]);
       expect(wire.map(event => event.toString()).join(" ")).not.toMatch(/internal-payroll|fixture-only|fixture-hash|mcpServers/);
     } else {

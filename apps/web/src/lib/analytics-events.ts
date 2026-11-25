@@ -11,8 +11,8 @@ const eventFields = {
     package_count: (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value >= 0,
   },
   command_copied: {
-    surface: ["home_install", "playground_mcp", "docs_code"],
-    command_kind: ["npx", "uvx", "pip", "mcp_config", "code"],
+    surface: ["home_install", "playground_mcp", "docs_code", "playground_cli", "playground_upgrade"],
+    command_kind: ["npx", "uvx", "pip", "mcp_config", "code", "cli"],
   },
   paywall_view: entrySurface,
   pro_cta_clicked: entrySurface,

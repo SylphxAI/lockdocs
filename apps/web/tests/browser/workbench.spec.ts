@@ -68,7 +68,7 @@ test("Traditional Chinese covers the initial, expanded, empty, and invalid workb
   await expect(main.getByRole("heading", { name: "cookies() 改為非同步函式" })).toBeVisible();
   await main.getByRole("button", { name: "MCP 代理工具設定" }).click();
   await expect(main.getByText(/請從專案根目錄啟動代理工具/)).toBeVisible();
-  await expect(main.getByRole("button", { name: "複製" })).toBeVisible();
+  await expect(main.getByRole("button", { name: "複製", exact: true })).toBeVisible();
   await main.getByRole("button", { name: "Pydantic 1.10 → 2.9" }).click();
   await expect(main.getByRole("heading", { name: "Pydantic v2 改用 model_dump()" })).toBeVisible();
   await expect(main.getByText(/這個方法已棄用/)).toBeVisible();

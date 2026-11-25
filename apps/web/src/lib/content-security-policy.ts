@@ -1,4 +1,4 @@
-import { httpsOrigin } from "./auth";
+import { httpsOrigin } from "./http";
 import { signalConfig } from "./analytics-config";
 
 const googleTag = "https://www.googletagmanager.com";
@@ -11,12 +11,15 @@ const googleCollection = [
   "https://www.googleadservices.com",
   "https://googleads.g.doubleclick.net",
   "https://stats.g.doubleclick.net",
-].join(" ");
+];
 
 export function documentPolicy(nonce: string, development: boolean) {
-  const authOrigins = [process.env.SYLPHX_AUTH_URL, process.env.LOCKDOCS_TENANT_AUTH_ORIGIN]
-    .map(httpsOrigin).filter(Boolean).join(" ");
-  const signalOrigin = signalConfig()?.signalApiOrigin;
+  const authOrigins = [...new Set([process.env.SYLPHX_AUTH_URL, process.env.LOCKDOCS_TENANT_AUTH_ORIGIN]
+    .map(httpsOrigin).filter(Boolean))];
+  const connectSources = new Set([
+    "'self'", ...authOrigins, "https://api.sylphx.com", signalConfig()?.signalApiOrigin, ...googleCollection,
+    ...(development ? ["ws://localhost:*", "ws://127.0.0.1:*"] : []),
+  ].filter(Boolean));
   // Google scripts execute only in the separate, consent-gated document below.
   return [
     "default-src 'none'",
@@ -29,10 +32,10 @@ export function documentPolicy(nonce: string, development: boolean) {
     "font-src 'self' data:",
     "img-src 'self' data:",
     "manifest-src 'self'",
-    "connect-src 'self' " + [...new Set([authOrigins, "https://api.sylphx.com", signalOrigin]), googleCollection, development ? "ws://localhost:* ws://127.0.0.1:*" : ""].filter(Boolean).join(" "),
+    "connect-src " + [...connectSources].join(" "),
     "frame-src 'self'",
     // Chromium can apply form-action to the final location as well as the POST URL.
-    "form-action 'self' https://checkout.stripe.com https://billing.stripe.com http://127.0.0.1:*" + (authOrigins ? " " + authOrigins : ""),
+    ["form-action", "'self'", "https://checkout.stripe.com", "https://billing.stripe.com", "http://127.0.0.1:*", ...authOrigins].join(" "),
   ].join("; ");
 }
 
@@ -43,6 +46,6 @@ export const analyticsFramePolicy = [
   "frame-ancestors 'self'",
   "form-action 'none'",
   "script-src " + googleTag,
-  "connect-src " + googleTag + " " + googleCollection,
-  "img-src " + googleTag + " " + googleCollection,
+  "connect-src " + googleTag + " " + googleCollection.join(" "),
+  "img-src " + googleTag + " " + googleCollection.join(" "),
 ].join("; ");

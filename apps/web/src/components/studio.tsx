@@ -80,13 +80,18 @@ export function Studio() {
           : text("Couldn’t parse this input. Check the selected format and use a valid lockfile under 400,000 characters.", "無法讀取這份 lockfile。請確認選對格式，檔案內容正確，且不超過 40 萬個字元。")}</p>}</Show>
         <ul class="package-list"><For each={rows().slice(0,count())}>{(row) => <li><button type="button" aria-pressed={selected() ? keyFor(selected()!) === keyFor(row) : false} onClick={() => setSelected(row)}><strong>{row.name}</strong><span>{row.version}</span><small>{row.ecosystem}</small></button></li>}</For></ul>
         {rows().length > count() && <button class="button secondary small" type="button" onClick={() => setCount(count()+35)}>{text("Show more packages", "顯示更多套件")}</button>}
-        <Show when={selected()} keyed>{item => <div class="inspect">
+        <Show when={selected()} keyed>{item => {
+          const command = `lockdocs ${item.name} --offline`;
+          return <div class="inspect">
           <div class="plan-label">{text("Bundled citation preview", "內建引用範例")}</div><h3><PackageText text={item.name + "@" + item.version}/></h3>
           <p class="quiet">{text("Pinned in ", "版本鎖定於 ")}<code>{formatUsed()}</code>{item.source === "git" && text(" · Git source", " · 來源為 Git")}{text(".", "。")}</p>
           <Show when={sampleExcerpt(item)} fallback={<>{sampleCitation(item) ? <p class="citation"><PackageText text={sampleCitation(item) ?? ""}/></p> : <p class="quiet">{text("No bundled citation for this version. Run the CLI in your project to search the installed files.", "此版本沒有內建的引用範例。請在專案中執行 CLI，搜尋已安裝的檔案。")}</p>}</>}>
             {excerpt => <><pre class="sample-source"><code>{excerpt().code}</code></pre><a class="doc-source" href={excerpt().url}>{excerpt().cite} <ArrowUpRight size={14}/></a></>}
-          </Show><code>lockdocs {item.name} --offline</code>
-        </div>}</Show>
+          </Show><div class="studio-command">
+            <code>{command}</code>
+            <CopyButton value={command} label={text("Copy CLI command", "複製 CLI 指令")} analytics={{ surface: "playground_cli", command_kind: "cli" }}/>
+          </div>
+        </div>;}}</Show>
       </section>
     </div>
     <section class="surface upgrade-cta" aria-labelledby="pro-upgrade-preview" ref={upgradeImpression}>
@@ -104,7 +109,9 @@ export function Studio() {
       <div class="page-intro" ref={reportImpression}><div class="kicker"><span/> {text("PRO / REPORT PREVIEW", "PRO / 升級報告預覽")}</div><h2 id="report-preview-title">{text("See exactly what breaks.", "升級後，哪些程式碼需要改？")}</h2><p>{text("Compare two example call sites with citations from each release. Pasting a lockfile above checks versions only; it doesn’t scan your source code.", "比較兩個呼叫範例，查看各版本的原始碼出處。上方貼上的 lockfile 只用來查版本，不會掃描你的程式碼。")}</p></div>
       <div class="segmented" role="group" aria-label={text("Upgrade example", "升級範例")}><For each={exampleIds}>{id => <button type="button" aria-pressed={id === upgrade()} onClick={() => switchExample(id)}>{upgrades[id].label}</button>}</For></div>
       <article class="surface upgrade-card">
-        <div class="panel-title"><GitCompareArrows size={17}/><code>{active().command}</code></div>
+        <div class="panel-title studio-command"><GitCompareArrows size={17}/><code>{active().command}</code>
+          <Show when={active().command} keyed>{command => <CopyButton value={command} label={text("Copy upgrade command", "複製升級指令")} analytics={{ surface: "playground_upgrade", command_kind: "cli" }}/>}</Show>
+        </div>
         <div class="upgrade-body"><h3>{text(active().change[0], active().change[1])}</h3><p class="quiet">{text("Example call site: ", "呼叫位置範例：")}<code>{active().path}</code></p>
           <div class="sample-diff"><div><pre>- {active().before}</pre><p><PackageText text={active().oldSource}/></p></div><div><pre>+ {active().after}</pre><p><PackageText text={active().newSource}/></p></div></div>
           <p>{text(active().note[0], active().note[1])}</p><a class="doc-source" href={active().guideUrl}>{text(active().guide[0], active().guide[1])} <ArrowUpRight size={14}/></a>

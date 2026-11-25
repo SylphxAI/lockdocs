@@ -12,6 +12,15 @@ test("behavioral events project only their allowlisted scalar fields", () => {
   }), { entry_surface: "cli_authorize" });
 });
 
+test("Playground copy events never forward command text or package names", () => {
+  for (const surface of ["playground_cli", "playground_upgrade"]) {
+    assert.deepEqual(behavioralParams("command_copied", {
+      surface, command_kind: "cli", command: "lockdocs internal-payroll-fixture --offline", package_name: "internal-payroll-fixture",
+    }), { surface, command_kind: "cli" });
+  }
+  assert.equal(behavioralParams("command_copied", { surface: "playground_unknown", command_kind: "cli" }), null);
+});
+
 test("behavioral events refuse unknown names and missing or invalid values", () => {
   assert.equal(behavioralParams("toString", {}), null);
   assert.equal(behavioralParams("lockfile_resolved", { lockfile_format: "Cargo.lock", source_kind: "sample" }), null);

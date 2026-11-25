@@ -114,7 +114,7 @@ export function Studio() {
       <Show when={snippetOpen()}><p class="quiet">{text("Run your agent from the project root so Lockdocs can find the lockfile.", "請從專案根目錄啟動代理工具，Lockdocs 才能找到 lockfile。")}</p><pre>{snippet}</pre><CopyButton value={snippet} analytics={{ surface: "playground_mcp", command_kind: "mcp_config" }}/></Show>
     </section>
     <section class="upgrade-section" id="upgrade" aria-labelledby="report-preview-title">
-      <div class="page-intro" ref={reportImpression}><div class="kicker"><span/> {text("PRO / REPORT PREVIEW", "PRO / 升級報告預覽")}</div><h2 id="report-preview-title">{text("See exactly what breaks.", "升級後，哪些程式碼需要改？")}</h2><p>{text("Compare two example call sites with citations from each release. The lockfile preview checks versions only; it doesn’t scan your source code.", "比較兩個呼叫範例，查看各版本的原始碼出處。上方的 lockfile 預覽只用來查版本，不會掃描你的程式碼。")}</p></div>
+      <div class="page-intro" ref={reportImpression}><div class="kicker"><span/> {text("PRO / REPORT PREVIEW", "PRO / 升級報告預覽")}</div><h2 id="report-preview-title">{text("See exactly what breaks.", "升級後，哪些程式碼需要改？")}</h2><p>{text("Compare call sites before and after an upgrade, with source citations from each release. The lockfile preview checks versions only; it doesn’t scan your source code.", "比較升級前後的呼叫範例，並查看各版本的原始碼出處。上方的 lockfile 預覽只用來查版本，不會掃描你的程式碼。")}</p></div>
       <div class="segmented" role="group" aria-label={text("Upgrade example", "升級範例")}><For each={exampleIds}>{id => <button type="button" aria-pressed={id === upgrade()} onClick={() => switchExample(id)}>{upgrades[id].label}</button>}</For></div>
       <article class="surface upgrade-card">
         <div class="panel-title studio-command"><GitCompareArrows size={17}/><code>{active().command}</code>

@@ -166,12 +166,19 @@ test("package filtering matches each displayed field, ignoring case and surround
   assert.deepEqual(filterPackages(rows, "missing"), []);
 });
 
-test("contextual examples use ecosystem and prefer Next.js when both packages are present", () => {
-  const python = resolveLockfile("requirements.txt", "Pydantic==1.10.18\nnext==1.0.0");
-  const js = resolveLockfile("package-lock.json", samples["package-lock.json"]);
-  const wrongEcosystem = resolveLockfile("yarn.lock", 'pydantic@^1.0.0:\n  version "1.0.0"');
-  assert.equal(matchingUpgrade(wrongEcosystem), undefined);
-  assert.equal(matchingUpgrade(python), "pydantic");
-  assert.equal(matchingUpgrade(js), "next");
-  assert.equal(matchingUpgrade([...python, ...js]), "next");
+test("contextual examples match exact ecosystem and package names with fixed precedence", () => {
+  const unrelated = resolveLockfile("requirements.txt", "next==1.0.0\nzod==1.0.0\nreact==1.0.0");
+  const wrongEcosystem = resolveLockfile("yarn.lock", 'pydantic@^1.0.0:\n  version "1.0.0"\nreact-native@^1.0.0:\n  version "1.0.0"');
+  const react = resolveLockfile("pnpm-lock.yaml", samples["pnpm-lock.yaml"]);
+  const zod = resolveLockfile("yarn.lock", samples["yarn.lock"]);
+  const pydantic = resolveLockfile("requirements.txt", "Pydantic==1.10.18");
+  const next = resolveLockfile("package-lock.json", samples["package-lock.json"]);
+  assert.equal(matchingUpgrade([...unrelated, ...wrongEcosystem]), undefined);
+  assert.equal(matchingUpgrade(react), "react");
+  assert.equal(matchingUpgrade(zod), "zod");
+  assert.equal(matchingUpgrade(pydantic), "pydantic");
+  assert.equal(matchingUpgrade(next), "next");
+  assert.equal(matchingUpgrade([...react, ...zod]), "zod");
+  assert.equal(matchingUpgrade([...react, ...zod, ...pydantic]), "pydantic");
+  assert.equal(matchingUpgrade([...react, ...zod, ...pydantic, ...next]), "next");
 });

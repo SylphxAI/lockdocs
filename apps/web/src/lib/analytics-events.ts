@@ -35,7 +35,7 @@ const eventFields = {
     command_kind: ["npx", "uvx", "pip", "mcp_config", "code", "cli"],
   },
   paywall_view: entrySurface,
-  pro_cta_clicked: { entry_surface: [...proSurfaces, "context7_alternative", ...Object.values(articleSurfaces),
+  pro_cta_clicked: { entry_surface: [...proSurfaces, "context7_alternative", "guide_cursor_claude_code", ...Object.values(articleSurfaces),
     "pricing_proof_upgrade_report", "pricing_proof_private_sources"] },
   upgrade_preview_switched: { example_id: ["next", "pydantic"] },
   cli_authorized: { entry_surface: ["cli_authorize"] },

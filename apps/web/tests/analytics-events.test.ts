@@ -21,11 +21,14 @@ test("Playground copy events never forward command text or package names", () =>
   assert.equal(behavioralParams("command_copied", { surface: "playground_unknown", command_kind: "cli" }), null);
 });
 
-test("the editorial Pro CTA reports only its named surface", () => {
-  assert.deepEqual(behavioralParams("pro_cta_clicked", {
-    entry_surface: "context7_alternative", gclid: "TEST999", email: "fixture@example.test",
-  }), { entry_surface: "context7_alternative" });
-  assert.equal(behavioralParams("paywall_view", { entry_surface: "context7_alternative" }), null);
+test("editorial Pro clicks allow only named surfaces, not paywall impressions", () => {
+  for (const entry_surface of ["context7_alternative", "guide_cursor_claude_code"]) {
+    assert.deepEqual(behavioralParams("pro_cta_clicked", {
+      entry_surface, gclid: "TEST999", email: "fixture@example.test",
+    }), { entry_surface });
+    assert.equal(behavioralParams("paywall_view", { entry_surface }), null);
+  }
+  assert.equal(behavioralParams("pro_cta_clicked", { entry_surface: "guide_cursor_claude_code_unknown" }), null);
 });
 
 test("pricing proof clicks allow exactly the two named targets, not URLs or paywall impressions", () => {

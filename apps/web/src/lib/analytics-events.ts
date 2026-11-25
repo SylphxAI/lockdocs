@@ -35,7 +35,8 @@ const eventFields = {
     command_kind: ["npx", "uvx", "pip", "mcp_config", "code", "cli"],
   },
   paywall_view: entrySurface,
-  pro_cta_clicked: { entry_surface: [...proSurfaces, "context7_alternative", ...Object.values(articleSurfaces)] },
+  pro_cta_clicked: { entry_surface: [...proSurfaces, "context7_alternative", ...Object.values(articleSurfaces),
+    "pricing_proof_upgrade_report", "pricing_proof_private_sources"] },
   upgrade_preview_switched: { example_id: ["next", "pydantic"] },
   cli_authorized: { entry_surface: ["cli_authorize"] },
 } as const;
@@ -45,7 +46,9 @@ type FieldValue<T> = T extends readonly (infer Value)[] ? Value : number;
 export type EventParams<Name extends EventName> = {
   [Key in keyof (typeof eventFields)[Name]]: FieldValue<(typeof eventFields)[Name][Key]>;
 };
-export type TrackEvent = <Name extends EventName>(event: Name, params: EventParams<NoInfer<Name>>) => boolean;
+export type TrackEvent = <Name extends EventName>(
+  event: Name, params: EventParams<NoInfer<Name>>, options?: { requireExplicitConsent: boolean },
+) => boolean;
 
 // Rebuild from the allowlist at the transport boundary. Never forward a caller's object as-is.
 export function behavioralParams(event: string, params: Readonly<Record<string, unknown>>) {

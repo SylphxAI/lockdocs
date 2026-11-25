@@ -12,8 +12,10 @@ const query = new URLSearchParams({ ...campaign, ...clicks, token: "private-quer
 type Row = { event_id: string; event_name: string; distinct_id: string; session_id: string; properties: Record<string, unknown> };
 
 async function intercept(page: Page, origin: string) {
+  const requests: string[] = [];
   const batches: { consent: string; events: Row[]; headers: Record<string, string> }[] = [];
   await page.route(origin + endpoint, async route => {
+    requests.push(route.request().method());
     if (route.request().method() === "POST") {
       batches.push({ ...route.request().postDataJSON(), headers: await route.request().allHeaders() });
     }
@@ -21,7 +23,7 @@ async function intercept(page: Page, origin: string) {
       "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "content-type,x-sylphx-key",
     } });
   });
-  return { batches, rows: (event: string) => batches.flatMap(batch => batch.events).filter(row => row.event_name === event) };
+  return { batches, requests, rows: (event: string) => batches.flatMap(batch => batch.events).filter(row => row.event_name === event) };
 }
 
 async function signalOnly(page: Page) {
@@ -145,6 +147,75 @@ base("localized pricing emits a sanitized pricing view only on grant", async ({ 
   ]);
   expect(JSON.stringify(batches)).not.toContain("fixture-private");
 });
+
+for (const [path, heading, panelName, grant, labels, reportPath] of [
+  ["/pricing", "What Pro shows you", "Cookie settings", "Analytics only",
+    ["Try the report preview", "Read the private registry setup"], "/playground"],
+  ["/zh-TW/pricing", "Pro 功能實例", "Cookie 設定", "僅限分析",
+    ["互動預覽升級報告", "查看私有套件庫設定（英文）"], "/zh-TW/playground"],
+] as const) {
+  for (const mode of ["pre-consent", "Sec-GPC", "regional default", "analytics only"] as const) {
+    base(path + " proof clicks: " + mode, async ({ page }) => {
+      const { batches, requests, rows } = await signalOnly(page);
+      const gpc = mode === "Sec-GPC";
+      const regionalDefault = mode === "regional default";
+      if (regionalDefault || gpc) await page.setExtraHTTPHeaders({ "CF-IPCountry": "US", ...(gpc ? { "Sec-GPC": "1" } : {}) });
+      if (gpc) {
+        await page.addInitScript(() => {
+          document.cookie = "__Host-lockdocs-signal-choice=analytics_only; Path=/; Secure; SameSite=Lax";
+        });
+      }
+      const panel = page.getByRole("region", { name: panelName });
+      const settingsButton = page.getByRole("button", { name: panelName, exact: true });
+      const proof = page.getByRole("region", { name: heading });
+      const targets = [
+        { pathname: reportPath, hash: "#upgrade", entry_surface: "pricing_proof_upgrade_report" },
+        { pathname: "/pro", hash: "#private-sources", entry_surface: "pricing_proof_private_sources" },
+      ];
+      const expected = [];
+      for (const [i, { pathname, hash, entry_surface }] of targets.entries()) {
+        await page.goto(path + "?" + query);
+        await expect(settingsButton).toBeEnabled();
+        if (mode === "analytics only" && i === 0) {
+          await expect(panel).toBeVisible();
+          expect(batches).toEqual([]);
+          await panel.getByRole("button", { name: grant, exact: true }).click();
+        }
+        if (mode === "analytics only" || regionalDefault) {
+          await expect.poll(() => rows("pricing_view")).toHaveLength(i + 1);
+        }
+        if (gpc) {
+          expect(await page.evaluate(() => document.cookie)).toContain("__Host-lockdocs-signal-choice=analytics_only");
+          await settingsButton.click();
+          await expect(panel.getByRole("button", { name: grant, exact: true })).toBeDisabled();
+          await page.keyboard.press("Escape");
+        }
+        const landed = gpc ? {} : { ...campaign, gclid: clicks.gclid, gbraid: clicks.gbraid, wbraid: clicks.wbraid };
+        const link = proof.getByRole("link", { name: labels[i], exact: true });
+        await link.click();
+        await expect(page).toHaveURL(url => url.pathname === pathname && url.hash === hash);
+        expect(Object.fromEntries(new URL(page.url()).searchParams)).toEqual(landed);
+        if (mode === "analytics only") {
+          expected.push({ ...campaign, entry_surface });
+          await expect.poll(() => rows("pro_cta_clicked").map(row => row.properties)).toEqual(expected);
+          await expect.poll(() => rows("page_view").filter(row => row.properties.path === pathname)).toHaveLength(1);
+        } else if (regionalDefault) {
+          // Existing regional-default page views are unchanged, but a proof click requires a choice.
+          await expect.poll(() => rows("page_view").filter(row => row.properties.path === pathname)).toHaveLength(1);
+          expect(rows("pro_cta_clicked")).toEqual([]);
+        } else {
+          expect(requests).toEqual([]);
+          expect(await page.evaluate(() => localStorage.getItem("lockdocs.signal.v1.touch"))).toBeNull();
+        }
+      }
+      if (mode === "analytics only") {
+        const clickBatches = batches.filter(batch => batch.events.some(row => row.event_name === "pro_cta_clicked"));
+        expect(clickBatches.map(batch => [batch.consent, batch.events.length])).toEqual([["granted", 1], ["granted", 1]]);
+        expect(new Set(rows("pro_cta_clicked").map(row => row.event_id)).size).toBe(2);
+      }
+    });
+  }
+}
 
 base("Sec-GPC denies Signal even with an existing grant", async ({ page }) => {
   const { batches } = await signalOnly(page);

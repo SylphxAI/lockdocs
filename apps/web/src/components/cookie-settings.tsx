@@ -9,15 +9,23 @@ import { consumeSignup } from "@/lib/signup-analytics";
 import { useSiteLanguage } from "@/lib/site-language";
 import { localizedPath, defaultLocale } from "@/lib/locales";
 
+import {
+  claimedPurchases, claimedPurchasesKey, currencyCodePattern, fullAdsConsent, maxClaimedPurchases,
+  purchaseConversionPath, transactionIdPattern, validGoogleAdsId, validGoogleAdsPurchaseLabel,
+} from "@/lib/google-ads";
+
 type Page = NonNullable<ReturnType<typeof analyticsPage>>;
 type Tag = Window & { gtag?: (...args: unknown[]) => void; dataLayer?: IArguments[] };
-function startTag(frame: HTMLIFrameElement, id: string, consent: SignalConsent, page: Page) {
+type Ads = { googleAdsId: string; googleAdsPurchaseLabel: string };
+function startTag(frame: HTMLIFrameElement, measurement: string | undefined, ads: Ads | undefined, consent: SignalConsent, page: Page, landingUrl: string) {
+  const id = measurement ?? ads?.googleAdsId;
+  if (!id) return false;
   const client = frame.contentWindow as Tag | null;
   const doc = frame.contentDocument;
   if (!client || !doc?.documentElement.hasAttribute("data-analytics-frame")) return false;
   // Even a tag-internal event that ignores our page_location must fall back
   // to the real, sanitized landing page, not the tag transport URL.
-  try { client.history.replaceState(null, "", page.page_location); } catch { return false; }
+  try { client.history.replaceState(null, "", landingUrl); } catch { return false; }
   const commands: IArguments[] = [];
   client.dataLayer = commands;
   client.gtag = function () { commands.push(arguments); };
@@ -26,12 +34,13 @@ function startTag(frame: HTMLIFrameElement, id: string, consent: SignalConsent, 
   // bootstrap and config page views: only the parent emits a page_view.
   client.gtag("set", { ...page, send_page_view: false });
   client.gtag("js", new Date());
-  client.gtag("config", id, {
+  if (measurement) client.gtag("config", measurement, {
     send_page_view: false,
     allow_google_signals: consent.ad_user_data === "granted",
     allow_ad_personalization_signals: consent.ad_personalization === "granted",
     cookie_domain: "none",
   });
+  if (ads && fullAdsConsent(consent)) client.gtag("config", ads.googleAdsId, { send_page_view: false });
   const script = doc.createElement("script");
   script.async = true;
   script.referrerPolicy = "no-referrer";
@@ -40,7 +49,7 @@ function startTag(frame: HTMLIFrameElement, id: string, consent: SignalConsent, 
   return true;
 }
 const home = (origin: string) => ({ page_location: origin + "/", page_referrer: "", page_title: "Lockdocs" });
-const CookieContext = createContext<{ ready: () => boolean; trackEvent: TrackEvent; beginCheckout: (form: HTMLFormElement, currency: string) => void; open: (button: HTMLButtonElement) => void; configured: () => boolean }>();
+const CookieContext = createContext<{ ready: () => boolean; trackEvent: TrackEvent; beginCheckout: (form: HTMLFormElement, currency: string) => void; open: (button: HTMLButtonElement) => void; configured: () => boolean; adsReady: () => boolean; claimPurchase: (sid: string, abort: AbortSignal) => Promise<void> }>();
 export const useCookieSettings = () => useContext(CookieContext)!;
 
 // Count an offer when it comes into view with analytics active, once per mount.
@@ -69,6 +78,8 @@ export function CookieSettings(props: ParentProps) {
   const route = useLocation();
   const { href, text } = useSiteLanguage();
   const [id, setId] = createSignal<string>();
+  const [ads, setAds] = createSignal<Ads>();
+  const configured = () => Boolean(id() || ads());
   const [settings, setSettings] = createSignal<SignalConsent>();
   const [open, setOpen] = createSignal(false);
   const [protectedByGpc, setProtectedByGpc] = createSignal(false);
@@ -77,6 +88,7 @@ export function CookieSettings(props: ParentProps) {
   let unpersistedDenial = false;
   let serverGpc = false;
   let tag: HTMLIFrameElement | undefined;
+  let adsConfiguredInTag = false;
   let trigger: HTMLButtonElement | undefined;
   let panel: HTMLElement | undefined;
   let measuredPage: Page | null = null;
@@ -89,6 +101,7 @@ export function CookieSettings(props: ParentProps) {
     if (frame && id()) Object.assign(frame, { ["ga-disable-" + id()]: true });
     tag?.remove();
     tag = undefined;
+    adsConfiguredInTag = false;
     setActive(false);
     measuredPage = null;
     previousLocation = "";
@@ -98,20 +111,23 @@ export function CookieSettings(props: ParentProps) {
 
   function currentConsent() {
     // GPC can change after first paint; the SDK always rechecks navigator GPC.
-    return signal?.getConsent() ?? resolveEffectiveConsent();
+    const consent = signal?.getConsent() ?? resolveEffectiveConsent();
+    // A regional GA default is not an explicit grant to the Ads destination.
+    if (!ads() || (!unpersistedDenial && readSignalChoice(document.cookie) === "granted")) return consent;
+    return { ...consent, ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" } as const;
   }
 
   function analyticsAllowed() {
-    return !!settings() && active() && currentConsent().analytics_storage === "granted";
+    return Boolean(id() && settings() && active() && currentConsent().analytics_storage === "granted");
   }
 
   function apply() {
     const next = currentConsent();
     const previous = settings();
-    if (next.analytics_storage === "denied" || (tag && next.ad_storage !== previous?.ad_storage)) stop();
+    if (next.analytics_storage === "denied" || (tag && fullAdsConsent(next) !== (previous && fullAdsConsent(previous)))) stop();
     setSettings(next);
     const measurement = id();
-    if (next.analytics_storage !== "granted" || tag || !measurement) return;
+    if (next.analytics_storage !== "granted" || tag || (!measurement && !(ads() && fullAdsConsent(next)))) return;
     const { origin } = window.location;
     const page = analyticsPage(origin + route.pathname, document.referrer, origin);
     if (!page) return;
@@ -128,10 +144,23 @@ export function CookieSettings(props: ParentProps) {
       syncChoice();
       const consent = currentConsent();
       const landing = analyticsPage(origin + route.pathname, document.referrer, origin);
-      if (consent.analytics_storage !== "granted" || !landing || !startTag(frame, measurement, consent, landing)) {
+      const adsDestination = fullAdsConsent(consent) ? ads() : undefined;
+      const landingUrl = landing && new URL(landing.page_location);
+      if (adsDestination && landingUrl) {
+        // Let the Ads tag see only Signal-validated click IDs, never the raw
+        // query or checkout session. GA's page_location stays path-only.
+        const touch = signal?.capture();
+        for (const key of ["gclid", "gbraid", "wbraid"] as const) {
+          const value = touch?.[key];
+          if (value) landingUrl.searchParams.set(key, value);
+        }
+      }
+      if (consent.analytics_storage !== "granted" || !landing || !landingUrl ||
+          !startTag(frame, measurement, adsDestination, consent, landing, landingUrl.href)) {
         stop();
         return;
       }
+      adsConfiguredInTag = !!adsDestination;
       setActive(true);
       void consumeSignup(analyticsAllowed, params => emit("sign_up", params)).catch(() => {});
     }, { once: true });
@@ -163,7 +192,7 @@ export function CookieSettings(props: ParentProps) {
   }
 
   createEffect(() => {
-    if (!id() || !open() || !panel) return;
+    if (!configured() || !open() || !panel) return;
     const element = panel;
     const root = document.documentElement;
     const reserveSpace = () => root.style.setProperty("--cookie-bar-height", element.getBoundingClientRect().height + "px");
@@ -196,7 +225,14 @@ export function CookieSettings(props: ParentProps) {
     void fetch("/api/analytics/config", { cache: "no-store", credentials: "omit", signal: controller.signal })
       .then(response => response.ok ? response.json() : null)
       .then(async config => {
-        if (controller.signal.aborted || !/^G-[A-Z0-9]{10}$/.test(config?.measurementId ?? "")) return;
+        if (controller.signal.aborted) return;
+        const ga = typeof config?.measurementId === "string" && /^G-[A-Z0-9]{10}$/.test(config.measurementId)
+          ? config.measurementId as string : undefined;
+        const adsId: unknown = config?.googleAdsId;
+        const label: unknown = config?.googleAdsPurchaseLabel;
+        const configuredAds = validGoogleAdsId(adsId) && validGoogleAdsPurchaseLabel(label)
+          ? { googleAdsId: adsId, googleAdsPurchaseLabel: label } : undefined;
+        if (!ga && !configuredAds) return;
         unpersistedDenial = migrateSignalChoice() === "denied";
         syncChoice();
         serverGpc = config.gpc === true;
@@ -205,7 +241,8 @@ export function CookieSettings(props: ParentProps) {
         signal = createSignalBrowser({ storageKey: signalStorageKey, region: typeof config.region === "string" ? config.region : "XX", gpc: serverGpc });
         await signal.ready;
         if (controller.signal.aborted) return;
-        setId(config.measurementId);
+        setId(ga);
+        setAds(configuredAds);
         resolve(true);
       }).catch(() => {});
     onCleanup(() => { controller.abort(); signal?.dispose(); stop(); });
@@ -220,6 +257,40 @@ export function CookieSettings(props: ParentProps) {
 
   // Start GA if the first allowed page is reached by client navigation.
   createEffect(on(() => route.pathname, () => resolve(), { defer: true }));
+
+  function adsReady() {
+    const consent = settings();
+    return active() && adsConfiguredInTag && !!consent && fullAdsConsent(consent) && fullAdsConsent(currentConsent());
+  }
+
+  async function claimPurchase(sid: string, abort: AbortSignal) {
+    try {
+      syncChoice();
+      const client = tag?.contentWindow as Tag | undefined;
+      const destination = ads();
+      if (!adsReady() || !client?.gtag || !destination || abort.aborted) return;
+      const response = await fetch(purchaseConversionPath, {
+        method: "POST", credentials: "same-origin", redirect: "error", cache: "no-store", referrerPolicy: "no-referrer", signal: abort,
+        headers: { "Content-Type": "application/json" }, body: JSON.stringify({ session_id: sid, ads_consent: true }),
+      });
+      if (response.status !== 200) return;
+      const purchase = await response.json();
+      syncChoice();
+      if (abort.aborted || !adsReady() || tag?.contentWindow !== client ||
+          typeof purchase?.transactionId !== "string" || !transactionIdPattern.test(purchase.transactionId) ||
+          typeof purchase.value !== "number" || !Number.isFinite(purchase.value) || purchase.value <= 0 ||
+          typeof purchase.currency !== "string" || !currencyCodePattern.test(purchase.currency)) return;
+      try {
+        const claimed = claimedPurchases(localStorage.getItem(claimedPurchasesKey) ?? "");
+        if (claimed.includes(purchase.transactionId)) return;
+        localStorage.setItem(claimedPurchasesKey, [...claimed, purchase.transactionId].slice(-maxClaimedPurchases).join(","));
+      } catch { /* The server cookie and Google transaction ID still deduplicate. */ }
+      client.gtag("event", "conversion", {
+        send_to: destination.googleAdsId + "/" + destination.googleAdsPurchaseLabel,
+        value: purchase.value, currency: purchase.currency, transaction_id: purchase.transactionId,
+      });
+    } catch { /* Optional tracking must not interrupt billing. */ }
+  }
 
   function emit(event: string, params: Record<string, unknown>) {
     if (!analyticsAllowed()) return false;
@@ -314,15 +385,15 @@ export function CookieSettings(props: ParentProps) {
 
   function close() { setOpen(false); trigger?.focus(); trigger = undefined; }
   function showFrom(button: HTMLButtonElement) {
-    if (!id()) return;
+    if (!configured()) return;
     trigger = button;
     setOpen(true);
     queueMicrotask(() => panel?.focus());
   }
 
-  return <CookieContext.Provider value={{ beginCheckout, trackEvent, ready: active, open: showFrom, configured: () => Boolean(id()) }}>
+  return <CookieContext.Provider value={{ beginCheckout, trackEvent, ready: analyticsAllowed, open: showFrom, configured, adsReady, claimPurchase }}>
     {props.children}
-    <Show when={id() && open()}><section id="cookie-settings" class="cookie-panel" aria-labelledby="cookie-heading" tabIndex={-1}
+    <Show when={configured() && open()}><section id="cookie-settings" class="cookie-panel" aria-labelledby="cookie-heading" tabIndex={-1}
       ref={panel} onKeyDown={event => { if (event.key === "Escape" && trigger) close(); }}>
       <div class="cookie-copy">
         <h2 id="cookie-heading">{text("Cookie settings", "Cookie 設定")}</h2>

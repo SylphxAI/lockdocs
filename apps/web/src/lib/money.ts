@@ -9,6 +9,7 @@ import { canonicalOrigin } from "./indexing";
 import { measurementId } from "./analytics-config";
 import { pricingCheckoutSurface } from "./analytics-events";
 import { pricingPath, signInHref } from "./auth-entry";
+import { currencyCodePattern, liveCheckoutSessionId } from "./google-ads";
 
 const feature = "lockdocs_pro_seat_year";
 const product = catalogue.spec.products.find((item) => item.key === feature);
@@ -108,7 +109,7 @@ export async function checkout(request: Request) {
         line_items: [{ price: cfg.price.key, quantity: 1 }],
         currency_code: currency,
         metadata: { entry_surface: pricingCheckoutSurface },
-        success_url: new URL("/dashboard?billing=return", cfg.origin).href,
+        success_url: new URL("/dashboard?billing=return&session_id={CHECKOUT_SESSION_ID}", cfg.origin).href,
         cancel_url: backToPricing.href,
         consent_collection: { terms_required: true, terms_text: cfg.termsText, terms_version: cfg.termsVersion },
       }),
@@ -136,6 +137,42 @@ export async function checkout(request: Request) {
   } catch { /* Fail closed on upstream errors and unexpected data. */ }
   backToPricing.searchParams.set("billing", "unavailable");
   return privateRedirect(backToPricing);
+}
+
+// Stripe presentment units, not ISO exponents for ISK and UGX (those still use cents).
+const zeroDecimal = new Set("BIF CLP DJF GNF JPY KMF KRW MGA PYG RWF VND VUV XAF XOF XPF".split(" "));
+const threeDecimal = new Set("BHD JOD KWD OMR TND".split(" "));
+
+/** Redeem reconciles settlement with Stripe; the scoped resource confirms ownership and value. */
+export async function verifiedPaidCheckout(session: Session, sid: string) {
+  const cfg = config();
+  const key = process.env.SYLPHX_MONEY_API_KEY;
+  if (!cfg || !key || !isVerifiedSession(session) || !liveCheckoutSessionId(sid)) return null;
+  const headers = { authorization: "Bearer " + key, accept: "application/json" };
+  try {
+    const redemption = await providerFetch(new URL("/v1/money/checkout_sessions:redeem", cfg.base), {
+      method: "POST", headers: { ...headers, "content-type": "application/json" },
+      body: JSON.stringify({ checkout_session: sid }),
+    });
+    if (redemption.status !== 200) return null;
+    const redeemed = await redemption.json();
+    const name = redeemed?.checkout_session;
+    const prefix = cfg.parent + "/checkout_sessions/";
+    if (redeemed?.paid !== true || typeof name !== "string" || !name.startsWith(prefix) ||
+        !/^chk[_-][A-Za-z0-9_-]{1,128}$/.test(name.slice(prefix.length))) return null;
+
+    const response = await providerFetch(new URL("/v1/" + name, cfg.base), { headers });
+    if (response.status !== 200) return null;
+    const checkout = await response.json();
+    if (checkout?.name !== name || checkout.subject?.end_user !== session.id || checkout.processor_session_id !== sid ||
+        (checkout.livemode !== undefined && checkout.livemode !== null && checkout.livemode !== true) ||
+        checkout.state !== "complete" || checkout.payment_status !== "paid" || checkout.denied_reason) return null;
+    const { amount_total: amount, currency_code: currency } = checkout;
+    if (!Number.isSafeInteger(amount) || amount <= 0 || typeof currency !== "string" || !currencyCodePattern.test(currency)) return null;
+    return { name, value: amount / (zeroDecimal.has(currency) ? 1 : threeDecimal.has(currency) ? 1000 : 100), currency };
+  } catch {
+    return null;
+  }
 }
 
 export async function portal(request: Request) {

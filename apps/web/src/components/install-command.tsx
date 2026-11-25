@@ -28,7 +28,7 @@ export function InstallCommand() {
       <div class="install-code">
         <For each={options}>{option => <code classList={{ active: selected() === option }}>{option.command}</code>}</For>
       </div>
-      <Show when={selected().command} keyed>{command => <CopyButton value={command} label="Copy install command"/>}</Show>
+      <Show when={selected()} keyed>{option => <CopyButton value={option.command} label="Copy install command" analytics={{ surface: "home_install", command_kind: option.tool }}/>}</Show>
     </div>
   </section>;
 }

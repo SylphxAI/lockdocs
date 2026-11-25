@@ -4,7 +4,7 @@ import { createSignalBrowser, resolveEffectiveConsent, type SignalConsent } from
 import { clearAnalyticsCookies, migrateSignalChoice, saveSignalChoice } from "@/lib/signal-browser";
 import { readSignalChoice, signalChoiceKey, signalStorageKey, type StoredChoice } from "@/lib/signal-privacy";
 import { analyticsPage } from "@/lib/analytics-page";
-import { beginCheckoutParams } from "@/lib/analytics-events";
+import { behavioralParams, beginCheckoutParams, type ProSurface, type TrackEvent } from "@/lib/analytics-events";
 import { consumeSignup } from "@/lib/signup-analytics";
 import { useSiteLanguage } from "@/lib/site-language";
 import { localizedPath, defaultLocale } from "@/lib/locales";
@@ -40,8 +40,30 @@ function startTag(frame: HTMLIFrameElement, id: string, consent: SignalConsent, 
   return true;
 }
 const home = (origin: string) => ({ page_location: origin + "/", page_referrer: "", page_title: "Lockdocs" });
-const CookieContext = createContext<{ beginCheckout: (form: HTMLFormElement, currency: string) => void; open: (button: HTMLButtonElement) => void; configured: () => boolean }>();
+const CookieContext = createContext<{ ready: () => boolean; trackEvent: TrackEvent; beginCheckout: (form: HTMLFormElement, currency: string) => void; open: (button: HTMLButtonElement) => void; configured: () => boolean }>();
 export const useCookieSettings = () => useContext(CookieContext)!;
+
+// Count an offer when it comes into view with analytics active, once per mount.
+// No observer or replay of pre-consent impressions while analytics is disabled.
+export function useProImpression(surface: ProSurface) {
+  const { ready, trackEvent } = useCookieSettings();
+  const [element, setElement] = createSignal<HTMLElement>();
+  let seen = false;
+  createEffect(() => {
+    const target = element();
+    if (!target || seen || !ready()) return;
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting && entry.intersectionRatio >= 0.25) &&
+        trackEvent("paywall_view", { entry_surface: surface })) {
+        seen = true;
+        observer.disconnect();
+      }
+    }, { threshold: 0.25 });
+    observer.observe(target);
+    onCleanup(() => observer.disconnect());
+  });
+  return (target: HTMLElement) => { setElement(target); };
+}
 
 export function CookieSettings(props: ParentProps) {
   const route = useLocation();
@@ -200,9 +222,22 @@ export function CookieSettings(props: ParentProps) {
   createEffect(on(() => route.pathname, () => resolve(), { defer: true }));
 
   function emit(event: string, params: Record<string, unknown>) {
-    if (!analyticsAllowed()) return;
-    (tag?.contentWindow as Tag | null)?.gtag?.("event", event, { ...params, send_to: id() });
+    if (!analyticsAllowed()) return false;
+    const client = tag?.contentWindow as Tag | undefined;
+    if (!client?.gtag) return false;
+    client.gtag("event", event, { ...params, send_to: id() });
+    return true;
   }
+
+  const trackEvent: TrackEvent = (event, params) => {
+    if (!active()) return false;
+    try {
+      syncChoice();
+      const safe = behavioralParams(event, params);
+      // Keep future Signal forwarding here, behind the same consent check and allowlist.
+      return safe !== null && emit(event, safe);
+    } catch { return false; } // Analytics failures must not interrupt the UI or a native form submit.
+  };
 
   // The hidden frame never takes focus. Use the parent clock so GA4 receives
   // actual post-consent foreground time; gtag still owns the session ID.
@@ -285,7 +320,7 @@ export function CookieSettings(props: ParentProps) {
     queueMicrotask(() => panel?.focus());
   }
 
-  return <CookieContext.Provider value={{ beginCheckout, open: showFrom, configured: () => Boolean(id()) }}>
+  return <CookieContext.Provider value={{ beginCheckout, trackEvent, ready: active, open: showFrom, configured: () => Boolean(id()) }}>
     {props.children}
     <Show when={id() && open()}><section id="cookie-settings" class="cookie-panel" aria-labelledby="cookie-heading" tabIndex={-1}
       ref={panel} onKeyDown={event => { if (event.key === "Escape" && trigger) close(); }}>

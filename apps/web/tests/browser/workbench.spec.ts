@@ -1,0 +1,123 @@
+import { expect, test } from "@playwright/test";
+
+const manifestPath = "/manifest.webmanifest";
+const icons = [
+  { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+  { src: "/icon-maskable-192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
+  { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+  { src: "/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+];
+
+test.beforeEach(async ({ page }) => {
+  await page.route("**/api/analytics/config", route => route.fulfill({ json: { measurementId: null } }));
+});
+
+test("the server paints a usable sample before hydration", async ({ browser, baseURL }) => {
+  const page = await browser.newPage({ baseURL, javaScriptEnabled: false });
+  try {
+    await page.goto("/playground");
+    await expect(page.locator("#lockfile")).toHaveValue(/"lockfileVersion": 3[\s\S]*"node_modules\/next"/);
+    await expect(page.locator("#lockfile")).toBeVisible();
+    await expect(page.locator(".panel-count")).toHaveText("3 pinned");
+  } finally { await page.close(); }
+});
+
+test("the hydrated editor changes samples but never overwrites visitor edits on format change", async ({ page }) => {
+  await page.goto("/playground");
+  const editor = page.locator("#lockfile");
+  const format = page.getByLabel("Lockfile format");
+  const load = page.getByRole("button", { name: "Load sample" });
+  await expect(editor).toHaveValue(/"node_modules\/next"/);
+  await expect(load).toHaveCSS("background-color", "rgb(18, 25, 35)");
+  await expect(load).toHaveCSS("border-top-color", "rgb(56, 73, 96)");
+  await expect(load).toHaveCSS("border-top-width", "1px");
+  if ((await page.evaluate(() => matchMedia("(hover: hover)").matches))) {
+    await load.hover();
+    await expect(load).toHaveCSS("border-top-color", "rgb(124, 156, 255)");
+  }
+  await format.focus();
+  await page.keyboard.press("Tab");
+  await expect(load).toBeFocused();
+  await expect(load).toHaveCSS("outline-width", "2px");
+  await expect(load).toHaveCSS("outline-color", "rgb(124, 156, 255)");
+  await format.selectOption("requirements.txt");
+  await expect(editor).toHaveValue(/pydantic==1\.10\.18/);
+  await expect(page.locator(".panel-count")).toHaveText("2 pinned");
+  await editor.fill("Django==5.1.3");
+  await format.selectOption("package-lock.json");
+  await expect(editor).toHaveValue("Django==5.1.3");
+  await format.selectOption("requirements.txt");
+  await page.getByRole("button", { name: "Resolve versions" }).click();
+  await expect(page.getByRole("heading", { name: "django@5.1.3" })).toBeVisible();
+  await load.click();
+  await expect(editor).toHaveValue(/pydantic==1\.10\.18/);
+  await expect(page.locator(".panel-count")).toHaveText("2 pinned");
+  await page.goto("/pricing");
+  await expect(page.getByRole("link", { name: "Install Lockdocs" })).toHaveCSS("border-top-color", "rgb(56, 73, 96)");
+});
+
+test("Traditional Chinese covers the initial, expanded, empty, and invalid workbench states", async ({ page }) => {
+  await page.goto("/zh-TW/playground");
+  const main = page.getByRole("main");
+  await expect(main.getByRole("heading", { name: "lockfile 試用工具" })).toBeVisible();
+  await expect(main.getByText(/你貼上的內容只會留在這個瀏覽器裡/)).toBeVisible();
+  await expect(main.getByText("已鎖定 3 個套件")).toBeVisible();
+  await expect(main.getByText("版本鎖定於 package-lock.json。")).toBeVisible();
+  await expect(main.getByRole("heading", { name: "Pro 升級預覽" })).toBeVisible();
+  await expect(main.getByRole("heading", { name: "升級後，哪些程式碼需要改？" })).toBeVisible();
+  await expect(main.getByRole("heading", { name: "cookies() 改為非同步函式" })).toBeVisible();
+  await main.getByRole("button", { name: "MCP 代理工具設定" }).click();
+  await expect(main.getByText(/請從專案根目錄啟動代理工具/)).toBeVisible();
+  await expect(main.getByRole("button", { name: "複製" })).toBeVisible();
+  await main.getByRole("button", { name: "Pydantic 1.10 → 2.9" }).click();
+  await expect(main.getByRole("heading", { name: "Pydantic v2 改用 model_dump()" })).toBeVisible();
+  await expect(main.getByText(/這個方法已棄用/)).toBeVisible();
+  await expect(main.getByRole("link", { name: "Pydantic v2 升級指南：BaseModel 的變更" })).toBeVisible();
+  const editor = main.locator("#lockfile");
+  const resolve = main.getByRole("button", { name: "查出套件版本" });
+  await editor.fill("{}");
+  await resolve.click();
+  await expect(main.getByText(/找不到指定確切版本的套件/)).toBeVisible();
+  await editor.fill("{");
+  await resolve.click();
+  await expect(main.getByText(/無法讀取這份 lockfile/)).toBeVisible();
+  await expect(main).not.toContainText(/Resolve the exact|\d pinned|Pinned in|Pro Upgrade Preview|See exactly what breaks|REPORT PREVIEW|Example call site|Run your agent|migration|Couldn’t parse|try a pinned sample/i);
+});
+
+test("Chromium can load the manifest and official icons under enforcing CSP", async ({ page, context, request, baseURL }) => {
+  await page.addInitScript(() => {
+    document.addEventListener("securitypolicyviolation", event => {
+      (window as Window & { violations?: string[] }).violations?.push(event.violatedDirective);
+    });
+    Object.assign(window, { violations: [] });
+  });
+  const doc = await page.goto("/playground");
+  const policy = doc?.headers()["content-security-policy"]?.split("; ");
+  expect(policy).toContain("default-src 'none'");
+  expect(policy).toContain("manifest-src 'self'");
+  expect(policy?.find(value => value.startsWith("form-action "))).toContain("http://127.0.0.1:*");
+  await expect(page.locator('link[rel="manifest"]')).toHaveAttribute("href", manifestPath);
+  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute("content", "#06080C");
+  await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute("href", "/apple-touch-icon-180.png");
+  const cdp = await context.newCDPSession(page);
+  const loaded = await cdp.send("Page.getAppManifest");
+  expect(loaded.url).toBe(baseURL + manifestPath);
+  expect(loaded.errors).toEqual([]);
+  expect(loaded.data).toBeTruthy();
+  const response = await request.get(manifestPath);
+  expect(response.status()).toBe(200);
+  expect(response.headers()["content-type"]).toMatch(/application\/(manifest\+json|json)/);
+  const manifest = await response.json();
+  expect(JSON.parse(loaded.data!)).toEqual(manifest);
+  expect(manifest).toMatchObject({ name: "Lockdocs", short_name: "Lockdocs", start_url: "/playground", scope: "/",
+    display: "standalone", background_color: "#06080C", theme_color: "#06080C", icons });
+  for (const { src, sizes } of [...icons, { src: "/apple-touch-icon-180.png", sizes: "180x180" }]) {
+    const image = await request.get(src);
+    expect(image.status(), src).toBe(200);
+    expect(image.headers()["content-type"]).toBe("image/png");
+    const png = await image.body();
+    expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual(sizes.split("x").map(Number));
+  }
+  expect(await page.evaluate(() => (window as Window & { violations?: string[] }).violations)).toEqual([]);
+  expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistrations()).length)).toBe(0);
+});

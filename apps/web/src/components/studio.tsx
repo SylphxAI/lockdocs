@@ -1,10 +1,13 @@
 import { createMemo, createSignal, For, Show } from "solid-js";
 import { A as Link } from "@solidjs/router";
-import { ArrowRight, ArrowUpRight, Braces, FileCode2, GitCompareArrows, ListTree } from "lucide-solid";
+import { ArrowRight, ArrowUpRight, Braces, GitCompareArrows, ListTree, Search } from "lucide-solid";
+import { StudioInput } from "@/components/studio-input";
 import { PackageText } from "@/components/package-text";
 import { CopyButton } from "@/components/copy-button";
 import { useCookieSettings, useProImpression } from "@/components/cookie-settings";
 import { samples, resolveLockfile, sampleCitation, sampleExcerpt, type Dependency } from "@/lib/playground";
+import { filterPackages, matchingUpgrade } from "@/lib/playground-results";
+import type { EventParams } from "@/lib/analytics-events";
 import { upgrades } from "@/lib/upgrade-examples";
 import { formats, type Format } from "@/lib/lockfile-formats";
 import { useSiteLanguage } from "@/lib/site-language";
@@ -12,54 +15,50 @@ import { useSiteLanguage } from "@/lib/site-language";
 type ExampleId = keyof typeof upgrades;
 const exampleIds = Object.keys(upgrades) as ExampleId[];
 const initialFormat = formats[0];
-const initialSample = samples[initialFormat];
+const initialRows = resolveLockfile(initialFormat, samples[initialFormat]);
+const pageSize = 35;
 const snippet = JSON.stringify({ mcpServers: { lockdocs: { command: "npx", args: ["-y", "@sylphx/lockdocs", "mcp"] } } }, null, 2);
-const keyFor = (row: Dependency) => [row.ecosystem, row.name, row.version, row.source].join(":");
 
 export function Studio() {
   const { proHref, text } = useSiteLanguage();
   const { trackEvent } = useCookieSettings();
   const upgradeImpression = useProImpression("playground_upgrade_cta");
   const reportImpression = useProImpression("playground_report_preview");
-  const [format, setFormat] = createSignal<Format>(initialFormat);
   const [formatUsed, setFormatUsed] = createSignal<Format>(initialFormat);
-  const initialRows = resolveLockfile(initialFormat, initialSample);
   const [rows, setRows] = createSignal(initialRows);
   const [selected, setSelected] = createSignal<Dependency | null>(initialRows[0] ?? null);
   const [message, setMessage] = createSignal<"empty" | "invalid">();
-  const [count, setCount] = createSignal(35);
+  const [count, setCount] = createSignal(pageSize);
+  const [query, setQuery] = createSignal("");
+  const visibleRows = createMemo(() => filterPackages(rows(), query()));
+  const inspected = createMemo(() => {
+    const current = selected();
+    return current && visibleRows().includes(current) ? current : visibleRows()[0];
+  });
+  const isInspected = (row: Dependency) => inspected() === row;
+  let packageList!: HTMLUListElement;
+
+  function updateQuery(next: string) {
+    setQuery(next);
+    setCount(pageSize);
+    packageList.scrollTop = 0;
+  }
   const [upgrade, setUpgrade] = createSignal<ExampleId>("next");
   const [snippetOpen, setSnippetOpen] = createSignal(false);
   const active = createMemo(() => upgrades[upgrade()]);
-  let editor!: HTMLTextAreaElement;
-  let usingSample = true;
 
-  function isSample() { return usingSample && editor.value === samples[format()]; }
-  function resolve(nextFormat: Format, input: string, sourceKind: "sample" | "pasted") {
+  function resolve(nextFormat: Format, input: string, sourceKind: EventParams<"lockfile_resolved">["source_kind"]) {
+    updateQuery("");
     let resolved: Dependency[];
     try { resolved = resolveLockfile(nextFormat, input); }
     catch { setRows([]); setSelected(null); setMessage("invalid"); return; }
     setRows(resolved);
     setSelected(resolved[0] ?? null);
-    setCount(35);
     setFormatUsed(nextFormat);
     setMessage(resolved.length ? undefined : "empty");
+    const example = sourceKind !== "sample" && matchingUpgrade(resolved);
+    if (example) setUpgrade(example);
     trackEvent("lockfile_resolved", { lockfile_format: nextFormat, source_kind: sourceKind, package_count: resolved.length });
-  }
-  function submit(event: SubmitEvent) {
-    event.preventDefault();
-    resolve(format(), editor.value, isSample() ? "sample" : "pasted");
-  }
-  function loadSample(next: Format) {
-    setFormat(next);
-    editor.value = samples[next];
-    usingSample = true;
-    resolve(next, editor.value, "sample");
-  }
-  function changeFormat(next: Format) {
-    // Switch bundled examples immediately, but never replace the visitor’s edits.
-    if (isSample()) loadSample(next);
-    else { usingSample = false; setFormat(next); }
   }
   function switchExample(id: ExampleId) {
     if (id === upgrade()) return;
@@ -69,19 +68,27 @@ export function Studio() {
 
   return <>
     <div class="studio-grid surface">
-      <form onSubmit={submit} class="studio-input"><div class="panel-title"><FileCode2 size={17}/> <label for="lockfile">{text("Lockfile input", "輸入 lockfile")}</label></div>
-        <div class="input-tools"><select aria-label={text("Lockfile format", "lockfile 格式")} value={format()} onChange={event => changeFormat(event.currentTarget.value as Format)}><For each={formats}>{option => <option>{option}</option>}</For></select><button type="button" class="button secondary small" onClick={() => loadSample(format())}>{text("Load sample", "載入範例")}</button></div>
-        {/* HTML uses the textarea's contents, not a value attribute, for its initial value. */}
-        <textarea id="lockfile" ref={editor} onInput={() => { usingSample = false; }} spellcheck={false} maxlength={400000}>{initialSample}</textarea>
-        <div class="inline-actions"><button class="button primary small" type="submit">{text("Resolve versions", "查出套件版本")} <ArrowRight size={15}/></button><span class="quiet mono">{text("Runs locally", "在本機執行")}</span></div>
-      </form>
-      <section class="studio-output"><div class="panel-title"><ListTree size={17}/> {text("Resolved packages", "找到的套件")} <span class="panel-count" aria-live="polite">{text(rows().length + " pinned", "已鎖定 " + rows().length + " 個套件")}</span></div>
+      <StudioInput resolve={resolve}/>
+      <section class="studio-output">
+        <div class="panel-title"><ListTree size={17}/> {text("Resolved packages", "找到的套件")}
+          <span class="panel-count" aria-live="polite">{query().trim()
+            ? text(visibleRows().length + " of " + rows().length + " pinned", "符合 " + visibleRows().length + " / " + rows().length + " 個套件")
+            : text(rows().length + " pinned", "已鎖定 " + rows().length + " 個套件")}</span>
+        </div>
+        <Show when={rows().length > 5}><div class="package-filter">
+          <Search size={16} aria-hidden="true"/>
+          <input type="search" aria-label={text("Filter packages", "篩選套件")} placeholder={text("Filter packages…", "篩選套件…")}
+            value={query()} onInput={event => updateQuery(event.currentTarget.value)}/>
+        </div></Show>
         <Show when={message()}>{kind => <p class="notice" role="status">{kind() === "empty"
           ? text("No exact package versions found in this input. Try a pinned sample.", "找不到指定確切版本的套件。可以先載入範例試試看。")
           : text("Couldn’t parse this input. Check the selected format and use a valid lockfile under 400,000 characters.", "無法讀取這份 lockfile。請確認選對格式，檔案內容正確，且不超過 40 萬個字元。")}</p>}</Show>
-        <ul class="package-list"><For each={rows().slice(0,count())}>{(row) => <li><button type="button" aria-pressed={selected() ? keyFor(selected()!) === keyFor(row) : false} onClick={() => setSelected(row)}><strong>{row.name}</strong><span>{row.version}</span><small>{row.ecosystem}</small></button></li>}</For></ul>
-        {rows().length > count() && <button class="button secondary small" type="button" onClick={() => setCount(count()+35)}>{text("Show more packages", "顯示更多套件")}</button>}
-        <Show when={selected()} keyed>{item => {
+        <Show when={!message() && !visibleRows().length}>
+          <p class="notice">{text("No matching packages", "找不到符合的套件")}</p>
+        </Show>
+        <ul ref={packageList} class="package-list"><For each={visibleRows().slice(0, count())}>{row => <li><button type="button" aria-pressed={isInspected(row)} onClick={() => setSelected(row)}><strong>{row.name}</strong><span>{row.version}</span><small>{row.ecosystem}</small></button></li>}</For></ul>
+        {visibleRows().length > count() && <button class="button secondary small" type="button" onClick={() => setCount(count() + pageSize)}>{text("Show more packages", "顯示更多套件")}</button>}
+        <Show when={inspected()} keyed>{item => {
           const command = `lockdocs ${item.name} --offline`;
           return <div class="inspect">
           <div class="plan-label">{text("Bundled citation preview", "內建引用範例")}</div><h3><PackageText text={item.name + "@" + item.version}/></h3>
@@ -107,7 +114,7 @@ export function Studio() {
       <Show when={snippetOpen()}><p class="quiet">{text("Run your agent from the project root so Lockdocs can find the lockfile.", "請從專案根目錄啟動代理工具，Lockdocs 才能找到 lockfile。")}</p><pre>{snippet}</pre><CopyButton value={snippet} analytics={{ surface: "playground_mcp", command_kind: "mcp_config" }}/></Show>
     </section>
     <section class="upgrade-section" id="upgrade" aria-labelledby="report-preview-title">
-      <div class="page-intro" ref={reportImpression}><div class="kicker"><span/> {text("PRO / REPORT PREVIEW", "PRO / 升級報告預覽")}</div><h2 id="report-preview-title">{text("See exactly what breaks.", "升級後，哪些程式碼需要改？")}</h2><p>{text("Compare two example call sites with citations from each release. Pasting a lockfile above checks versions only; it doesn’t scan your source code.", "比較兩個呼叫範例，查看各版本的原始碼出處。上方貼上的 lockfile 只用來查版本，不會掃描你的程式碼。")}</p></div>
+      <div class="page-intro" ref={reportImpression}><div class="kicker"><span/> {text("PRO / REPORT PREVIEW", "PRO / 升級報告預覽")}</div><h2 id="report-preview-title">{text("See exactly what breaks.", "升級後，哪些程式碼需要改？")}</h2><p>{text("Compare two example call sites with citations from each release. The lockfile preview checks versions only; it doesn’t scan your source code.", "比較兩個呼叫範例，查看各版本的原始碼出處。上方的 lockfile 預覽只用來查版本，不會掃描你的程式碼。")}</p></div>
       <div class="segmented" role="group" aria-label={text("Upgrade example", "升級範例")}><For each={exampleIds}>{id => <button type="button" aria-pressed={id === upgrade()} onClick={() => switchExample(id)}>{upgrades[id].label}</button>}</For></div>
       <article class="surface upgrade-card">
         <div class="panel-title studio-command"><GitCompareArrows size={17}/><code>{active().command}</code>

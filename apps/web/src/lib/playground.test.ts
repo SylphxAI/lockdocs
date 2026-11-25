@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { formats, type Format } from "./lockfile-formats";
+import { detectLockfileFormat, formats, type Format } from "./lockfile-formats";
 import { resolveLockfile, samples } from "./playground";
+import { readPreviewFile } from "./playground-file";
+import { filterPackages, matchingUpgrade } from "./playground-results";
 
 function pins(format: Format, input: string) {
   return resolveLockfile(format, input).map(({ name, version, ecosystem, source }) =>
@@ -116,4 +118,60 @@ test("the input size limit also applies to the new formats", () => {
   for (const format of ["pnpm-lock.yaml", "yarn.lock", "go.mod"] as const) {
     assert.throws(() => pins(format, " ".repeat(400_001)), /400,000/);
   }
+});
+
+test("detects all eight canonical lockfile basenames case-insensitively", () => {
+  for (const format of formats) {
+    assert.equal(detectLockfileFormat(format), format);
+    assert.equal(detectLockfileFormat("/project/" + format.toUpperCase()), format);
+    assert.equal(detectLockfileFormat("project\\" + format.toUpperCase()), format);
+  }
+  for (const name of ["", "lock.json", "prod-requirements.txt", "yarn.lock.bak", "Cargo.lock/other"]) {
+    assert.equal(detectLockfileFormat(name), undefined, name);
+  }
+});
+
+test("file import detects canonical names and keeps the chosen format for custom names", async () => {
+  assert.deepEqual(await readPreviewFile(new File(["Pydantic==1.10.18"], "REQUIREMENTS.TXT"), "go.mod"), {
+    kind: "ready", format: "requirements.txt", text: "Pydantic==1.10.18",
+  });
+  assert.deepEqual(await readPreviewFile(new File(["pytest==8.3.3"], "prod-requirements.txt"), "requirements.txt"), {
+    kind: "ready", format: "requirements.txt", text: "pytest==8.3.3",
+  });
+});
+
+test("file import rejects oversize bytes before reading and never truncates decoded text", async () => {
+  const oversizedFile = new File(["é".repeat(200_001)], "requirements.txt");
+  let read = false;
+  assert.deepEqual(await readPreviewFile({ name: oversizedFile.name, size: oversizedFile.size, text: async () => {
+    read = true;
+    return "";
+  } }, "go.mod"), { kind: "oversize" });
+  assert.equal(read, false);
+  assert.deepEqual(await readPreviewFile({ name: "yarn.lock", size: 1, text: async () => "x".repeat(400_001) }, "go.mod"), { kind: "oversize" });
+  const exact = "x".repeat(400_000);
+  assert.deepEqual(await readPreviewFile(new File([exact], "yarn.lock"), "go.mod"), { kind: "ready", format: "yarn.lock", text: exact });
+  assert.deepEqual(await readPreviewFile({ name: "yarn.lock", size: 1, text: async () => { throw new Error("read failed"); } }, "go.mod"), { kind: "unreadable" });
+});
+
+test("package filtering matches each displayed field, ignoring case and surrounding spaces", () => {
+  const rows = [
+    ...resolveLockfile("package-lock.json", samples["package-lock.json"]),
+    ...resolveLockfile("requirements.txt", "Pydantic==1.10.18"),
+  ];
+  assert.equal(filterPackages(rows, "  "), rows);
+  assert.deepEqual(filterPackages(rows, "  DANTIC ").map(row => row.name), ["pydantic"]);
+  assert.deepEqual(filterPackages(rows, "10.18").map(row => row.name), ["pydantic"]);
+  assert.deepEqual(filterPackages(rows, "PyPi").map(row => row.name), ["pydantic"]);
+  assert.deepEqual(filterPackages(rows, "missing"), []);
+});
+
+test("contextual examples use ecosystem and prefer Next.js when both packages are present", () => {
+  const python = resolveLockfile("requirements.txt", "Pydantic==1.10.18\nnext==1.0.0");
+  const js = resolveLockfile("package-lock.json", samples["package-lock.json"]);
+  const wrongEcosystem = resolveLockfile("yarn.lock", 'pydantic@^1.0.0:\n  version "1.0.0"');
+  assert.equal(matchingUpgrade(wrongEcosystem), undefined);
+  assert.equal(matchingUpgrade(python), "pydantic");
+  assert.equal(matchingUpgrade(js), "next");
+  assert.equal(matchingUpgrade([...python, ...js]), "next");
 });

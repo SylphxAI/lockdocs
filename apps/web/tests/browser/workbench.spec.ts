@@ -19,6 +19,9 @@ test("the server paints a usable sample before hydration", async ({ browser, bas
     await expect(page.locator("#lockfile")).toHaveValue(/"lockfileVersion": 3[\s\S]*"node_modules\/next"/);
     await expect(page.locator("#lockfile")).toBeVisible();
     await expect(page.locator(".panel-count")).toHaveText("3 pinned");
+    const selected = page.locator('.package-list [aria-pressed="true"]');
+    await expect(selected).toHaveCount(1);
+    await expect(selected).toContainText("next");
   } finally { await page.close(); }
 });
 
@@ -36,6 +39,8 @@ test("the hydrated editor changes samples but never overwrites visitor edits on 
     await expect(load).toHaveCSS("border-top-color", "rgb(124, 156, 255)");
   }
   await format.focus();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Open file" })).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(load).toBeFocused();
   await expect(load).toHaveCSS("outline-width", "2px");

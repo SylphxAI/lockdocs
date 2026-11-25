@@ -7,7 +7,7 @@ import { useSiteLanguage } from "@/lib/site-language";
 export default function Playground() {
   const { href, locale, text } = useSiteLanguage();
   const name = () => text("Lockfile Playground", "lockfile 試用工具");
-  const description = () => text("Resolve exact dependency versions from a lockfile in your browser. Pasted text stays in this browser.", "直接在瀏覽器中從 lockfile 查出確切的套件版本。你貼上的內容只會留在這個瀏覽器裡。");
+  const description = () => text("Resolve exact dependency versions from a lockfile in your browser. Opened files and pasted text stay in this browser.", "直接在瀏覽器中從 lockfile 查出確切的套件版本。你貼上的內容只會留在這個瀏覽器裡，開啟的檔案也不會上傳。");
   const url = () => canonicalOrigin + href("/playground");
   return <div class="wrap content-section">
     <PageMeta title={name() + " · Lockdocs"} description={description()}/>
@@ -26,7 +26,7 @@ export default function Playground() {
     <div class="page-intro">
       <div class="kicker"><span/> {text("WORKBENCH / 01", "試用工具 / 01")}</div>
       <h1>{name()}</h1>
-      <p>{text("Resolve the exact versions in a lockfile and see what changes when you upgrade. Pasted text stays in this browser.", "從 lockfile 查出確切的套件版本，再看看升級會帶來哪些變更。你貼上的內容只會留在這個瀏覽器裡。")}</p>
+      <p>{text("Resolve the exact versions in a lockfile and see what changes when you upgrade. Opened files and pasted text stay in this browser.", "從 lockfile 查出確切的套件版本，再看看升級會帶來哪些變更。你貼上的內容只會留在這個瀏覽器裡，開啟的檔案也不會上傳。")}</p>
     </div>
     <Studio/>
   </div>;

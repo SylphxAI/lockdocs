@@ -7,6 +7,8 @@
 Reads your lockfile. Answers from the docs and type declarations of the exact version you installed.<br>
 npm · PyPI · crates.io · Go. MCP server + CLI in one Rust binary. No account, no API key. MIT.
 
+[Lockdocs Pro](https://lockdocs.sylphx.com/pricing?utm_source=github&utm_medium=readme&utm_content=hero_pro) adds private package docs (npm, PyPI, Cargo, Go, GitHub Enterprise, GitLab, Bitbucket) and `lockdocs upgrade` impact reports for US$120/year.
+
 ```bash
 npx -y @sylphx/lockdocs setup
 ```
@@ -14,11 +16,11 @@ npx -y @sylphx/lockdocs setup
 [![npm](https://mark.sylphx.com/npm/v/@sylphx/lockdocs?color=7c9cff&label=npm)](https://www.npmjs.com/package/@sylphx/lockdocs)
 [![npm downloads](https://mark.sylphx.com/npm/dm/@sylphx/lockdocs?color=7c9cff&label=downloads)](https://www.npmjs.com/package/@sylphx/lockdocs)
 [![CI](https://github.com/SylphxAI/lockdocs/actions/workflows/ci.yml/badge.svg)](https://github.com/SylphxAI/lockdocs/actions/workflows/ci.yml)
-[![MCP Registry](https://mark.sylphx.com/badge/MCP%20Registry-io.github.SylphxAI%2Flockdocs-42d6a4)](https://registry.modelcontextprotocol.io/)
+[![MCP Registry](https://mark.sylphx.com/badge/MCP%20Registry-io.github.SylphxAI%2Flockdocs-42d6a4)](https://registry.modelcontextprotocol.io/v0/servers?search=lockdocs)
 [![Glama MCP Server Quality Score](https://glama.ai/mcp/servers/SylphxAI/lockdocs/badges/score.svg)](https://glama.ai/mcp/servers/SylphxAI/lockdocs)
 [![License: MIT](https://mark.sylphx.com/badge/license-MIT-ffb454)](https://github.com/SylphxAI/lockdocs/blob/main/LICENSE) <!-- repomap:agent-ready -->[![agent-ready 94/100](https://mark.sylphx.com/badge/agent--ready-94%2F100-brightgreen)](https://github.com/SylphxAI/repomap#agent-readiness-score)<!-- /repomap:agent-ready -->
 
-[Docs](https://lockdocs.sylphx.com/) · [Quickstart](https://github.com/SylphxAI/lockdocs#quickstart) · [Tools](https://github.com/SylphxAI/lockdocs#what-your-agent-gets) · [Benchmarks](https://github.com/SylphxAI/lockdocs#benchmarks) · [Compare](https://github.com/SylphxAI/lockdocs#how-it-compares) · [How it works](https://github.com/SylphxAI/lockdocs#how-it-works)
+[Docs](https://lockdocs.sylphx.com/?utm_source=github&utm_medium=readme&utm_content=nav) · [Playground](https://lockdocs.sylphx.com/playground?utm_source=github&utm_medium=readme&utm_content=nav) · [Pro, US$120/yr](https://lockdocs.sylphx.com/pricing?utm_source=github&utm_medium=readme&utm_content=nav) · [Quickstart](https://github.com/SylphxAI/lockdocs#quickstart) · [Tools](https://github.com/SylphxAI/lockdocs#what-your-agent-gets) · [Benchmarks](https://github.com/SylphxAI/lockdocs#benchmarks) · [Compare](https://github.com/SylphxAI/lockdocs#how-it-compares) · [How it works](https://github.com/SylphxAI/lockdocs#how-it-works)
 
 <img src="https://raw.githubusercontent.com/SylphxAI/lockdocs/main/docs/public/img/demo.gif" alt="lockdocs demo: the same question in a Next.js 14 and a Next.js 15 project, then pydantic 1.10.18 answers BaseModel.dict() and pydantic 2.9.2 answers model_dump(), each cited to the installed file and line" width="100%">
 
@@ -177,7 +179,7 @@ Legacy copies bundled inside a package (`zod/v3` inside zod 4, `pydantic/v1` ins
 
 ### Upstream docs on first use
 
-The first `docs` or `api` query adds the selected dependencies' public release-tag docs once: it finds the GitHub repository in the package's own metadata and the git tag of your pinned version, resolves that tag to an immutable commit, and downloads only its docs folders (Markdown, MDX, reStructuredText, docs examples). It does not use ambient GitHub credentials or download major-version website docs by default. Previously opted-in docs-site caches are preserved and their provenance stays visible. `lockdocs fetch` remains available to prewarm docs and explicitly add major-version docs sites. Answers then cite `next@15.1.0 upstream:docs/01-app/.../cookies.mdx:12`. See [Upstream docs and fetching](https://lockdocs.sylphx.com/guide/fetch).
+The first `docs` or `api` query adds the selected dependencies' public release-tag docs once: it finds the GitHub repository in the package's own metadata and the git tag of your pinned version, resolves that tag to an immutable commit, and downloads only its docs folders (Markdown, MDX, reStructuredText, docs examples). It does not use ambient GitHub credentials or download major-version website docs by default. Previously opted-in docs-site caches are preserved and their provenance stays visible. `lockdocs fetch` remains available to prewarm docs and explicitly add major-version docs sites. Answers then cite `next@15.1.0 upstream:docs/01-app/.../cookies.mdx:12`. See [Upstream docs and fetching](https://lockdocs.sylphx.com/guide/fetch?utm_source=github&utm_medium=readme&utm_content=fetch_guide).
 
 ### Not installed? Fetch the exact version (opt-in)
 
@@ -199,7 +201,7 @@ Registry package downloads remain opt-in; default upstream enrichment uses insta
 - **Tied on the newest majors (53/55 each) and on tokio (5/5 each); ahead on held-out questions (16/18 vs 15/18)**, which were written before the ranking changes they measure and not used for tuning.
 - **Faster, fewer tokens, no quota.** Median 58 ms per question after `lockdocs fetch` (185 ms on first use), a fresh CLI process each time. Context7's hosted API took a median 2,583 ms in the earlier runs its reused answers come from.
 
-Method, questions, per-question results and scripts: [benchmark page](https://lockdocs.sylphx.com/benchmarks) and [`bench/`](https://github.com/SylphxAI/lockdocs/tree/main/bench).
+Method, questions, per-question results and scripts: [benchmark page](https://lockdocs.sylphx.com/benchmarks?utm_source=github&utm_medium=readme&utm_content=benchmarks_section) and [`bench/`](https://github.com/SylphxAI/lockdocs/tree/main/bench).
 
 The same 105 questions are also asked through [Sylphx Search](https://sylphx.com) — our platform's web search, whose technical-documentation vertical is the hosted index for docs that never ship inside a package — with `bench/cloud.py`. Local and cloud answer one corpus with one grader, so lockdocs and Sylphx Search are one index format and one ranking rather than two products.
 
@@ -253,7 +255,7 @@ Prebuilt binaries for macOS (arm64, x64), Linux glibc (x64, arm64) and Windows x
 
 Everything above is free, under MIT. Pro adds two things for teams. Private sources: lockdocs reads your internal packages and docs from the private npm, PyPI, Cargo and Go registries and the GitHub Enterprise, GitLab and Bitbucket hosts you already use, with the credentials your `.npmrc`, uv, pip, Cargo, Go and git already hold, each sent only to its own host, inside the same `resolve`, `docs` and `api` tools and `lockdocs fetch`. And the upgrade report (`lockdocs upgrade next 15.0.0`, or `upgrade_to` in the `docs` tool): which APIs you call were removed, renamed or deprecated between your pinned version and the target, with your call sites.
 
-[Get Lockdocs Pro for US$120/year](https://lockdocs.sylphx.com/pricing). Once Pro is active, connect your terminal by signing in with the same account and approving the CLI in your browser:
+[Get Lockdocs Pro for US$120/year](https://lockdocs.sylphx.com/pricing?utm_source=github&utm_medium=readme&utm_content=pro_section). Once Pro is active, connect your terminal by signing in with the same account and approving the CLI in your browser:
 
 ```sh
 lockdocs login

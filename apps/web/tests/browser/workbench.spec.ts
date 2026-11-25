@@ -165,6 +165,17 @@ test("route-specific JSON-LD is in the initial HTML and drops attribution parame
     ["/zh-TW/playground", "WebApplication", "lockfile 試用工具", "zh-TW"],
     ["/compare", "TechArticle", "Lockdocs vs Context7", "en"],
     ["/benchmarks", "TechArticle", "Benchmarks", "en"],
+    ["/guide", "TechArticle", "Quickstart", "en"],
+    ["/guide/setup", "TechArticle", "Agent setup", "en"],
+    ["/guide/ecosystems", "TechArticle", "Supported ecosystems", "en"],
+    ["/guide/fetch", "TechArticle", "Fetching docs", "en"],
+    ["/guide/how-it-works", "TechArticle", "How it works", "en"],
+    ["/reference", "TechArticle", "CLI reference", "en"],
+    ["/reference/tools", "TechArticle", "MCP tools", "en"],
+    ["/capabilities", "TechArticle", "Capabilities", "en"],
+    ["/vision", "TechArticle", "Vision", "en"],
+    ["/docs", "CollectionPage", "Documentation", "en"],
+    ["/zh-TW/docs", "CollectionPage", "文件總覽", "zh-TW"],
   ]) {
     const response = await request.get(path + "?utm_source=github&utm_medium=readme&utm_content=nav");
     expect(response.ok()).toBe(true);
@@ -172,13 +183,16 @@ test("route-specific JSON-LD is in the initial HTML and drops attribution parame
     const url = "https://lockdocs.sylphx.com" + path;
     expect(html).toContain('rel="canonical" href="' + url + '"');
     const scripts = [...html.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>(.*?)<\/script>/gs)];
-    expect(scripts).toHaveLength(1);
+    expect(scripts, path).toHaveLength(1);
     const data = JSON.parse(scripts[0][1]);
+    expect(JSON.stringify(data), path).not.toMatch(/utm_/);
     expect(data).toMatchObject({ "@context": "https://schema.org", "@type": type, url, inLanguage: language });
     if (type === "WebApplication") {
       expect(data).toMatchObject({ name, isAccessibleForFree: true, offers: { "@type": "Offer", price: 0, priceCurrency: "USD", url } });
-    } else expect(data.headline).toBe(name);
+    } else if (type === "TechArticle") {
+      expect(data.headline).toBe(name);
+    } else {
+      expect(data.name).toBe(name);
+    }
   }
-  const docs = await request.get("/docs");
-  expect(await docs.text()).not.toContain('type="application/ld+json"');
 });

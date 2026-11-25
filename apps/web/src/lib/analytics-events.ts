@@ -8,6 +8,15 @@ const articleSurfaces = {
   "/benchmarks": "article_benchmarks",
   "/guide": "article_guide",
   "/pro": "article_pro",
+  "/guide/setup": "article_guide_setup",
+  "/guide/ecosystems": "article_guide_ecosystems",
+  "/guide/fetch": "article_guide_fetch",
+  "/guide/how-it-works": "article_guide_how_it_works",
+  "/reference": "article_reference",
+  "/reference/tools": "article_reference_tools",
+  "/capabilities": "article_capabilities",
+  "/docs": "article_docs",
+  "/zh-TW/docs": "article_docs_zh_tw",
 } as const;
 export type ArticleSurface = (typeof articleSurfaces)[keyof typeof articleSurfaces];
 export function articleSurface(path: string): ArticleSurface | undefined {

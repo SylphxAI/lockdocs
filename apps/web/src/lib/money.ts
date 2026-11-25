@@ -8,13 +8,13 @@ import { signalRequestPrivacy } from "./signal-privacy";
 import { canonicalOrigin } from "./indexing";
 import { measurementId, signalConfig } from "./analytics-config";
 import { signalCheckoutStarted } from "./signal-server";
-import { pricingCheckoutSurface } from "./analytics-events";
+import { pricingCheckoutSurface, proPrice } from "./analytics-events";
 import { pricingPath, signInHref } from "./auth-entry";
 import { currencyCodePattern, liveCheckoutSessionId } from "./google-ads";
 
 const feature = "lockdocs_pro_seat_year";
 const product = catalogue.spec.products.find((item) => item.key === feature);
-const price = product?.prices.find((item) => item.key === feature);
+const price = proPrice.key === feature ? proPrice : undefined;
 const tokenProduct = product?.licence.token_product;
 
 function config() {
@@ -126,7 +126,7 @@ export async function checkout(request: Request) {
           // Money normally returns a resource name; also accept an explicit ID if no name is supplied.
           const bindingId = body.name == null && typeof body.checkout_session_id === "string" ? body.checkout_session_id : id;
           if (/^[A-Za-z0-9_-]{1,128}$/.test(bindingId)) {
-            void signalCheckoutStarted(bindingId, privacy, request.headers).catch(() => {});
+            void signalCheckoutStarted(bindingId, currency, privacy, request.headers).catch(() => {});
             void bindCheckoutAttribution({ checkoutSessionId: bindingId }, {
               apiKey: cfg.key, baseUrl: cfg.base, headers: request.headers, privacy, attribution,
               gaMeasurementId: ga ?? undefined, pageLocation: new URL("/pricing", canonicalOrigin),

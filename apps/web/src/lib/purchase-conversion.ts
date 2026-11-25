@@ -1,12 +1,13 @@
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { resolveEffectiveConsent } from "@sylphx/sdk/signal";
-import { googleAdsConfig } from "./analytics-config";
+import { googleAdsConfig, signalConfig } from "./analytics-config";
 import { appOrigin, getSession, sameOrigin } from "./auth";
 import { boundedJson } from "./bounded-json";
 import { claimedPurchases, fullAdsConsent, liveCheckoutSessionId, maxClaimedPurchases, purchaseConversionPath } from "./google-ads";
 import { cookie } from "./http";
 import { verifiedPaidCheckout } from "./money";
-import { signalRequestGpc, signalRequestPrivacy } from "./signal-privacy";
+import { signalRequestPrivacy } from "./signal-privacy";
+import { signalPurchaseCompleted } from "./signal-server";
 
 const claimedCookie = "__Secure-lockdocs-ads-claimed";
 const privateHeaders = { "Cache-Control": "private, no-store", "Referrer-Policy": "no-referrer" };
@@ -31,15 +32,26 @@ export async function claimPurchaseConversion(request: Request) {
   const session = await getSession(request);
   if (!session) return empty(401);
   const privacy = signalRequestPrivacy(request);
-  if (privacy.storedChoice !== "granted" || signalRequestGpc(request.headers) || !fullAdsConsent(resolveEffectiveConsent(privacy, request.headers))) return empty(403);
+  const consent = resolveEffectiveConsent(privacy, request.headers);
+  if (consent.analytics_storage !== "granted" ||
+      (privacy.storedChoice !== "analytics_only" && privacy.storedChoice !== "granted")) return empty(403);
   const body = await boundedJson(request, 1024);
-  if (body?.ads_consent !== true) return empty(403);
-  const sid = body.session_id;
+  const adsConsent = body?.ads_consent === true && privacy.storedChoice === "granted" && fullAdsConsent(consent);
+  // Older Ads callers also granted analytics. New Ads-only follow-ups explicitly
+  // opt out here because the separate Signal claim already ran.
+  const analyticsConsent = body?.analytics_consent === true || (adsConsent && body?.analytics_consent === undefined);
+  if (!analyticsConsent && !adsConsent) return empty(403);
+  const sid = body?.session_id;
   const key = process.env.SYLPHX_MONEY_API_KEY;
-  if (!liveCheckoutSessionId(sid) || !key || !googleAdsConfig()) return empty(204);
+  const sendSignal = analyticsConsent && !!signalConfig();
+  const claimAds = adsConsent && !!googleAdsConfig();
+  if (!liveCheckoutSessionId(sid) || !key || (!sendSignal && !claimAds)) return empty(204);
 
   const checkout = await verifiedPaidCheckout(session, sid);
   if (!checkout) return empty(204);
+  // Replayed checkout returns reuse the same Signal event ID across devices.
+  if (sendSignal) await signalPurchaseCompleted(checkout, privacy, request.headers).catch(() => {});
+  if (!claimAds) return empty(204);
   const transactionId = createHash("sha256").update("lockdocs-ads-purchase:" + checkout.name).digest("hex").slice(0, 32);
   const claimed = readClaims(request, key, session.id);
   if (claimed.includes(transactionId)) return empty(204);

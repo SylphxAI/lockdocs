@@ -61,6 +61,8 @@ base("Signal-only grant keeps nine UTMs, strips click IDs and emits 1/1/1 SPA vi
   await expect.poll(() => rows("page_view").map(row => row.properties)).toEqual([
     { path: "/", ...campaign }, { path: "/pricing", ...campaign }, { path: "/", ...campaign },
   ]);
+  const pricing = () => rows("pricing_view");
+  expect(pricing().map(row => row.properties)).toEqual([{ path: "/pricing", entry_surface: "pricing", ...campaign }]);
   expect(documents).toBe(1);
   expect(new Set(rows("page_view").map(row => row.session_id)).size).toBe(1);
   expect(new Set(rows("page_view").map(row => row.event_id)).size).toBe(3);
@@ -71,6 +73,11 @@ base("Signal-only grant keeps nine UTMs, strips click IDs and emits 1/1/1 SPA vi
     for (const header of ["authorization", "cookie", "referer"]) expect(batch.headers[header]).toBeUndefined();
   }
 
+  await page.getByRole("navigation", { name: "Main navigation" }).getByRole("link", { name: "Pricing", exact: true }).click();
+  await expect.poll(() => pricing().length).toBe(2);
+  expect(pricing()[0].event_id).not.toBe(pricing()[1].event_id);
+  await page.locator("header .wordmark").click();
+  await expect.poll(() => rows("page_view").length).toBe(5);
   await page.getByRole("button", { name: "Cookie settings", exact: true }).click();
   await settings(page).getByRole("button", { name: "Reject optional", exact: true }).click();
   await expect.poll(() => page.evaluate(() => localStorage.getItem("lockdocs.signal.v1.touch"))).toBeNull();
@@ -78,6 +85,19 @@ base("Signal-only grant keeps nine UTMs, strips click IDs and emits 1/1/1 SPA vi
   await page.getByRole("navigation", { name: "Main navigation" }).getByRole("link", { name: "Pricing", exact: true }).click();
   await expect(page).toHaveURL(url => url.pathname === "/pricing");
   expect(batches).toHaveLength(count);
+});
+
+base("localized pricing emits a sanitized pricing view only on grant", async ({ page }) => {
+  const { batches, rows } = await signalOnly(page);
+  await page.goto("/zh-TW/pricing?currency=HKD&token=fixture-private");
+  const panel = page.getByRole("region", { name: "Cookie 設定" });
+  await expect(panel).toBeVisible();
+  expect(batches).toEqual([]);
+  await panel.getByRole("button", { name: "僅限分析", exact: true }).click();
+  await expect.poll(() => rows("pricing_view").map(row => row.properties)).toEqual([
+    { path: "/zh-TW/pricing", entry_surface: "pricing" },
+  ]);
+  expect(JSON.stringify(batches)).not.toContain("fixture-private");
 });
 
 base("Sec-GPC denies Signal even with an existing grant", async ({ page }) => {
@@ -131,7 +151,10 @@ authTest("full grant binds all UTMs through sign-in and emits begin_checkout and
   await expect(page).toHaveURL("https://checkout.stripe.com/fixture");
   expect(rows("begin_checkout")).toHaveLength(1);
   expect(JSON.stringify(batches.map(batch => batch.events))).not.toMatch(/private-query|reader@|usr_reader|auth_ticket|checkout_fixture/);
-  await expect.poll(() => auth.calls.filter(path => path === endpoint)).toHaveLength(1);
+  await expect.poll(() => auth.signalBatches.flatMap(batch => batch.events)).toMatchObject([
+    { event_name: "checkout_started", numeric_value: 120,
+      properties: { entry_surface: "pricing", plan_sku: "lockdocs_pro_seat_year", currency: "USD" } },
+  ]);
   await expect.poll(() => auth.bindings).toHaveLength(1);
   const binding = auth.bindings[0] as { gclid: string; gbraid: string; wbraid: string; fbc: string; page_location: string };
   expect(binding).toMatchObject({ gclid: clicks.gclid, gbraid: clicks.gbraid, wbraid: clicks.wbraid });

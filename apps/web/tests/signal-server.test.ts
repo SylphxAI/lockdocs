@@ -39,14 +39,20 @@ test("checkout batch is consent-gated, zero-PII, key-only, and deterministic acr
   for (const [privacy, inbound] of [
     [{ region: "DE" }, headers], [{}, headers], [{ storedChoice: "denied", region: "US" }, headers],
     [{ storedChoice: "granted", gpc: true }, headers], [{ storedChoice: "granted" }, new Headers({ "Sec-GPC": "1" })],
-  ] as const) await signalCheckoutStarted("fixture", privacy, inbound);
+  ] as const) await signalCheckoutStarted("fixture", "GBP", privacy, inbound);
   assert.equal(outgoing.mock.callCount(), 0);
 
-  for (const id of ["fixture-checkout-1", "fixture-checkout-1", "fixture-checkout-2"]) {
-    await signalCheckoutStarted(id, { storedChoice: "analytics_only" }, headers);
+  await signalCheckoutStarted("fixture", "XXX", { storedChoice: "granted" }, headers);
+  for (const [id, currency] of [
+    ["fixture-checkout-1", "GBP"], ["fixture-checkout-1", "GBP"], ["fixture-checkout-2", "JPY"],
+    ["fixture-checkout-2", "HKD"], ["fixture-checkout-3", "USD"], ["fixture-checkout-4", "EUR"],
+  ]) {
+    await signalCheckoutStarted(id, currency, { storedChoice: "analytics_only" }, headers);
   }
   const ids: string[] = [];
-  for (const { arguments: [url, options] } of outgoing.mock.calls) {
+  const expected = [["GBP", 99], ["GBP", 99], ["HKD", 938], ["USD", 120], ["EUR", 109]];
+  assert.equal(outgoing.mock.callCount(), expected.length);
+  for (const [i, { arguments: [url, options] }] of outgoing.mock.calls.entries()) {
     assert.ok(url instanceof URL);
     assert.ok(options);
     assert.equal(url.href, origin + "/v1/analytics/events:batch");
@@ -59,11 +65,12 @@ test("checkout batch is consent-gated, zero-PII, key-only, and deterministic acr
     const data = JSON.parse(String(options.body));
     const id = data.events[0].event_id;
     assert.match(id, /^lockdocs-checkout-[0-9a-f]{64}$/);
+    const [currency, value] = expected[i];
     assert.deepEqual(data, { consent: "granted", events: [{ event_id: id, distinct_id: id,
-      event_name: "checkout_started", properties: { entry_surface: "pricing" } }] });
+      event_name: "checkout_started", numeric_value: value, properties: { entry_surface: "pricing", currency, plan_sku: "lockdocs_pro_seat_year" } }] });
     ids.push(id);
   }
   assert.equal(ids[0], ids[1]);
   assert.notEqual(ids[0], ids[2]);
-  assert.deepEqual(timeout.mock.calls.map(call => call.arguments), [[10_000], [10_000], [10_000]]);
+  assert.deepEqual(timeout.mock.calls.map(call => call.arguments), expected.map(() => [10_000]));
 });

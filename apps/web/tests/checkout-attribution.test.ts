@@ -46,7 +46,7 @@ function fixture(t: TestContext) {
     });
     if (url.href === api + "/v1/" + parent + "/checkout_sessions") {
       const body = JSON.parse(String(init.body));
-      assert.equal(body.success_url, app + "/dashboard?billing=return");
+      assert.equal(body.success_url, app + "/dashboard?billing=return&session_id={CHECKOUT_SESSION_ID}");
       checkoutMetadata.push(body.metadata);
       return Response.json(billing);
     }

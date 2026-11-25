@@ -61,7 +61,7 @@ test("billing and CLI consent use verified account scope and separate provider c
     url: money + "/v1/" + parent + "/checkout_sessions", method: "POST", bearer: "fixture-checkout",
     body: { subject: { end_user: subject }, line_items: [{ price: product, quantity: 1 }], currency_code: "GBP",
       metadata: { entry_surface: "pricing" },
-      success_url: origin + "/dashboard?billing=return", cancel_url: origin + "/pricing?currency=GBP",
+      success_url: origin + "/dashboard?billing=return&session_id={CHECKOUT_SESSION_ID}", cancel_url: origin + "/pricing?currency=GBP",
       consent_collection: { terms_required: true, terms_text: config.LOCKDOCS_CCR_TERMS_TEXT, terms_version: config.LOCKDOCS_CCR_TERMS_VERSION } },
     result: { url: "https://checkout.stripe.com/example" },
   };

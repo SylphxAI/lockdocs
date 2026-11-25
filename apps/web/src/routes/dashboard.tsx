@@ -1,10 +1,12 @@
-import { For, Suspense } from "solid-js";
+import { createEffect, createSignal, For, onCleanup, onMount, Suspense } from "solid-js";
 import { createAsync, useSearchParams } from "@solidjs/router";
 import { account } from "@/lib/account-query";
 import { PageMeta } from "@/components/page-meta";
 import { A as Link } from "@solidjs/router";
 import { ArrowRight, BadgeCheck, CreditCard, Terminal } from "lucide-solid";
 import { signInHref } from "@/lib/auth-entry";
+import { useCookieSettings } from "@/components/cookie-settings";
+import { liveCheckoutSessionId } from "@/lib/google-ads";
 
 const notices: Record<string, string> = {
   "billing:return": "Back from checkout. Pro access updates once payment is confirmed. Reload this page if it hasn’t appeared yet.",
@@ -19,6 +21,24 @@ const notices: Record<string, string> = {
 
 export default function Dashboard() {
   const [query] = useSearchParams();
+  const analytics = useCookieSettings();
+  const [checkoutReturn, setCheckoutReturn] = createSignal<string>();
+  const claim = new AbortController();
+  onMount(() => {
+    const url = new URL(window.location.href);
+    const [id, ...duplicates] = url.searchParams.getAll("session_id");
+    if (id === undefined) return;
+    url.searchParams.delete("session_id");
+    window.history.replaceState(window.history.state, "", url);
+    if (url.searchParams.get("billing") === "return" && !duplicates.length && liveCheckoutSessionId(id)) setCheckoutReturn(id);
+  });
+  onCleanup(() => claim.abort());
+  createEffect(() => {
+    const sid = checkoutReturn();
+    if (!sid || !analytics.adsReady()) return;
+    setCheckoutReturn(undefined);
+    void analytics.claimPurchase(sid, claim.signal);
+  });
   const details = createAsync(() => account(), { deferStream: true });
   const session = () => details()?.user;
   const entitlement = () => details()?.entitlement;

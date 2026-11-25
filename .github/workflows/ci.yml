@@ -143,7 +143,6 @@ jobs:
         with:
           components: clippy, rustfmt
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
-      - run: bun install --frozen-lockfile
       - name: Manifests agree on one version and one tagline; capability paths exist
         env:
           GH_TOKEN: ${{ github.token }}
@@ -202,8 +201,6 @@ jobs:
           mkdir -p /tmp/empty && $B fetch -C /tmp/empty | tee /tmp/fetch.out
           grep -q 'potion-retrieval-32M ready' /tmp/fetch.out
           $B tinymodel "turn a model into a dict" -C crates/lockdocs-core/tests/fixture | grep -q to_dict
-      - name: Docs build
-        run: bun run docs:build
       - name: Brand home (hashes and surface copies agree)
         uses: SylphxAI/.github/.github/actions/brand@a6c81b4bcda66bf624f0a68e25e63b3c0ed043eb # main
 

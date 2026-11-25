@@ -16,7 +16,7 @@ import { CopyButton } from "@/components/copy-button";
 import { localizedPath } from "@/lib/locales";
 import { useSiteLanguage } from "@/lib/site-language";
 
-const files = import.meta.glob(["../../../../docs/**/*.md", "!../../../../docs/storefront/**"], { eager: true, query: "?raw", import: "default" }) as Record<string, string>;
+const files = import.meta.glob("../../../../docs/**/*.md", { eager: true, query: "?raw", import: "default" }) as Record<string, string>;
 const redirects: Record<string, string> = { "/guide/quickstart": "/guide", "/reference/cli": "/reference", "/recover": "/dashboard" };
 const isPricingLink = (href?: string) => /^\/pricing\/?(?:[?#]|$)/.test(href ?? "");
 function customAnchors() {

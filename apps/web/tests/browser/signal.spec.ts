@@ -148,6 +148,62 @@ base("localized pricing emits a sanitized pricing view only on grant", async ({ 
   expect(JSON.stringify(batches)).not.toContain("fixture-private");
 });
 
+for (const [path, heading, entry_surface] of [
+  ["/guides/up-to-date-docs-for-cursor-and-claude-code", "Look up your next API", "guide_cursor_claude_code"],
+  ["/context7-alternative", "Try a version-sensitive lookup", "context7_alternative"],
+] as const) {
+  for (const mode of ["pre-consent", "Sec-GPC", "regional default", "analytics only"] as const) {
+    base(heading + " Pro link: " + mode, async ({ page }, info) => {
+      const { requests, rows } = await signalOnly(page);
+      const gpc = mode === "Sec-GPC";
+      const regionalDefault = mode === "regional default";
+      if (regionalDefault || gpc) await page.setExtraHTTPHeaders({ "CF-IPCountry": "US", ...(gpc ? { "Sec-GPC": "1" } : {}) });
+      if (gpc) await page.addInitScript(() => {
+        document.cookie = "__Host-lockdocs-signal-choice=analytics_only; Path=/; Secure; SameSite=Lax";
+      });
+      const response = await page.goto(path + "?" + query);
+      expect(response?.status()).toBe(200);
+      await expect(page.getByRole("button", { name: "Cookie settings", exact: true })).toBeEnabled();
+      if (mode === "pre-consent" || mode === "analytics only") {
+        await expect(settings(page)).toBeVisible();
+        expect(requests).toEqual([]);
+      }
+      if (mode === "analytics only") {
+        await settings(page).getByRole("button", { name: "Analytics only", exact: true }).click();
+      }
+      if (mode === "analytics only" || regionalDefault) {
+        await expect.poll(() => rows("page_view").map(row => row.properties.path)).toEqual([path]);
+      }
+
+      const band = page.getByRole("region", { name: heading, exact: true });
+      const link = band.getByRole("link", { name: "See Lockdocs Pro", exact: true });
+      await expect(link).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(page.viewportSize()!.width);
+      const expectedQuery = gpc ? {} : { ...campaign, gclid: clicks.gclid, gbraid: clicks.gbraid, wbraid: clicks.wbraid };
+      const href = new URL((await link.getAttribute("href"))!, page.url());
+      expect(href.pathname).toBe("/pricing");
+      expect(Object.fromEntries(href.searchParams)).toEqual(expectedQuery);
+      if (process.env.LOCKDOCS_LOCAL_CAPTURES && mode === "analytics only") {
+        await band.screenshot({ path: info.outputPath("closing-pro-link.png"), animations: "disabled" });
+      }
+      await link.click();
+      await expect(page).toHaveURL(url => url.pathname === "/pricing");
+      expect(Object.fromEntries(new URL(page.url()).searchParams)).toEqual(expectedQuery);
+      if (mode === "analytics only" || regionalDefault) {
+        await expect.poll(() => rows("pricing_view")).toHaveLength(1);
+        await expect.poll(() => rows("pro_cta_clicked").map(row => row.properties)).toEqual(
+          mode === "analytics only" ? [{ ...campaign, entry_surface }] : [],
+        );
+      } else {
+        expect(requests).toEqual([]);
+        await expect(page.locator(analyticsFrame)).toHaveCount(0);
+        expect(await page.evaluate(() => localStorage.getItem("lockdocs.signal.v1.touch"))).toBeNull();
+      }
+    });
+  }
+}
+
 for (const [path, heading, panelName, grant, labels, reportPath] of [
   ["/pricing", "What Pro shows you", "Cookie settings", "Analytics only",
     ["Try the report preview", "Read the private registry setup"], "/playground"],

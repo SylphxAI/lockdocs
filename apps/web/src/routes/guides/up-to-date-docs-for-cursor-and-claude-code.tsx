@@ -2,6 +2,7 @@ import { JsonLd } from "@/components/json-ld";
 import { A } from "@solidjs/router";
 import { For } from "solid-js";
 import { ArrowRight } from "lucide-solid";
+import { useCookieSettings } from "@/components/cookie-settings";
 import { CodeExample, EditorialFaq, EditorialHero } from "@/components/editorial";
 import { PageMeta } from "@/components/page-meta";
 import { PackageText } from "@/components/package-text";
@@ -47,6 +48,7 @@ const cursorConfig = JSON.stringify({
 
 export default function EditorDocsGuide() {
   const { campaignHref } = useSiteLanguage();
+  const { trackEvent } = useCookieSettings();
   return <>
     <PageMeta title={title + " · Lockdocs"} description={description}/>
     <JsonLd data={{
@@ -105,6 +107,7 @@ export default function EditorDocsGuide() {
         <div class="button-row">
           <A class="button primary" href={campaignHref("/reference/tools")}>Read the MCP tool reference <ArrowRight size={16}/></A>
           <A class="button outline" href={campaignHref(context7AlternativePath)}>Compare Lockdocs with Context7</A>
+          <A class="button outline" href={campaignHref("/pricing")} onClick={() => trackEvent("pro_cta_clicked", { entry_surface: "guide_cursor_claude_code" }, { requireExplicitConsent: true })}>See Lockdocs Pro</A>
         </div>
       </section>
     </div></div>

@@ -94,6 +94,7 @@ export default function Context7Alternative() {
           <A class="button primary" href={campaignHref("/playground")}>Open playground <ArrowRight size={16}/></A>
           <A class="button outline" href={campaignHref("/docs")}>Read the docs</A>
           <A class="button outline" href={campaignHref(editorGuidePath)}>Set up Cursor or Claude Code</A>
+          <A class="button outline" href={campaignHref("/pricing")} onClick={() => trackEvent("pro_cta_clicked", { entry_surface: "context7_alternative" }, { requireExplicitConsent: true })}>See Lockdocs Pro</A>
         </div>
       </section>
     </div></div>

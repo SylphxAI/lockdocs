@@ -10,8 +10,8 @@ const playground = (page: Page) => hero(page).getByRole("link", { name: "Try the
 const pricing = (page: Page) => hero(page).getByRole("link", { name: "See Lockdocs Pro" });
 
 for (const [path, secondary, destinations] of [
-  [comparison, "See Lockdocs Pro", ["/playground", "/pricing", "/guide/how-it-works", "/compare", "/benchmarks", "/playground", "/docs", guide]],
-  [guide, "Compare with Context7", ["/playground", comparison, "/guide/setup#without-nodejs", "/reference/tools", comparison]],
+  [comparison, "See Lockdocs Pro", ["/playground", "/pricing", "/guide/how-it-works", "/compare", "/benchmarks", "/playground", "/docs", guide, "/pricing"]],
+  [guide, "Compare with Context7", ["/playground", comparison, "/guide/setup#without-nodejs", "/reference/tools", comparison, "/pricing"]],
 ] as const) {
   test(`shows campaign CTAs and keeps attribution URL-only on ${path}`, async ({ page }, info) => {
     const google = await install(page, "DE");

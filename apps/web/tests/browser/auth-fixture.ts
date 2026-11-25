@@ -85,6 +85,10 @@ async function startFixture(billing: boolean, googleAds: boolean) {
       req.pipe(upstream);
       return;
     }
+    if (billing && path === "/v1/whoami" && req.method === "GET" && !url.search &&
+        req.headers.authorization === "Bearer " + moneyCredential && req.headers.accept === "application/json") {
+      return json(res, { env: "orgs/fixture/projects/lockdocs/envs/test" });
+    }
     calls.push(path);
     const expiry = Math.floor(Date.now() / 1000) + 3600;
     const rejectContract = (reason: string) => { rejections.push(path + ": " + reason); json(res, {}, 403); };
@@ -255,7 +259,10 @@ async function startFixture(billing: boolean, googleAds: boolean) {
       } : {}),
     }, stdio: ["ignore", "pipe", "inherit"] });
     await once(app.stdout!, "data");
-    if (!(await fetch(`http://127.0.0.1:${appPort}/api/health`)).ok) throw new Error("Fixture app did not start");
+    const health = await fetch(`http://127.0.0.1:${appPort}/api/health`);
+    if (health.status !== 200 || (await health.json()).money !== (billing ? "ok" : "unconfigured")) {
+      throw new Error("Fixture app health did not report the expected Money state");
+    }
     return { origin, methods, calls, rejections, shipments, bindings, signalBatches, passkey, pro, ticketSignal, close };
   } catch (error) {
     await close();

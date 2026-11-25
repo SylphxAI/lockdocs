@@ -1,5 +1,6 @@
 import { createContext, createEffect, createSignal, on, onCleanup, onMount, Show, useContext, type ParentProps } from "solid-js";
 import { useLocation } from "@solidjs/router";
+import { mint } from "@sylphx/sdk/ids";
 import { createSignalBrowser, resolveEffectiveConsent, type SignalConsent } from "@sylphx/sdk/signal";
 import { clearAnalyticsCookies, migrateSignalChoice, saveSignalChoice } from "@/lib/signal-browser";
 import { readSignalChoice, signalChoiceKey, signalStorageKey, type StoredChoice } from "@/lib/signal-privacy";
@@ -346,7 +347,7 @@ export function CookieSettings(props: ParentProps) {
   // Allocate an anonymous document scope only after consent. Repeated calls
   // for the same logical event reuse the same ID within that scope.
   function signalEventId(logicalEvent: string) {
-    return (eventScope ??= crypto.randomUUID()) + ":" + logicalEvent;
+    return (eventScope ??= mint("evt").toString()) + ":" + logicalEvent;
   }
 
   function forwardSignup(params: { method: string; entry_surface: string }) {

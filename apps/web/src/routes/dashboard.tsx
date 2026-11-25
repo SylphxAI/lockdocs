@@ -24,6 +24,8 @@ export default function Dashboard() {
   const analytics = useCookieSettings();
   const [checkoutReturn, setCheckoutReturn] = createSignal<string>();
   const claim = new AbortController();
+  let signalRequested = false;
+  let adsRequested = false;
   onMount(() => {
     const url = new URL(window.location.href);
     const [id, ...duplicates] = url.searchParams.getAll("session_id");
@@ -35,9 +37,15 @@ export default function Dashboard() {
   onCleanup(() => claim.abort());
   createEffect(() => {
     const sid = checkoutReturn();
-    if (!sid || !analytics.adsReady()) return;
-    setCheckoutReturn(undefined);
-    void analytics.claimPurchase(sid, claim.signal);
+    if (!sid) return;
+    // Do not wait for the optional Google tag before recording the Signal purchase.
+    const signal = !signalRequested && analytics.purchaseSignalReady();
+    const ads = !adsRequested && analytics.adsReady();
+    if (!signal && !ads) return;
+    signalRequested ||= signal;
+    adsRequested ||= ads;
+    if (signalRequested && adsRequested) setCheckoutReturn(undefined);
+    void analytics.claimPurchase(sid, { signal, ads }, claim.signal);
   });
   const details = createAsync(() => account(), { deferStream: true });
   const session = () => details()?.user;

@@ -5,6 +5,7 @@ import { analyticsFrame, commands, install, settings } from "./analytics-fixture
 import { claimedPurchasesKey, purchaseConversionPath } from "../../src/lib/google-ads";
 
 test.use({ billing: true });
+const signalEventId = "lockdocs-purchase-" + createHash("sha256").update(paidCheckout).digest("hex");
 const returnPath = "/dashboard?billing=return";
 const checkoutReturn = returnPath + "&session_id=" + paidSession;
 const adsCommands = async (page: Page) => (await commands(page)).filter(([command, target]) =>
@@ -31,7 +32,7 @@ test("claims a Money-verified Ads conversion once and strips the return URL", as
   const referrers: string[] = [];
   page.on("request", request => {
     referrers.push(request.headers().referer ?? "");
-    if (new URL(request.url()).pathname === purchaseConversionPath) claims.push(request.postDataJSON());
+    if (new URL(request.url()).pathname === purchaseConversionPath && request.postDataJSON().ads_consent) claims.push(request.postDataJSON());
   });
   const response = await page.goto(auth.origin + checkoutReturn);
   expect(response?.headers()["referrer-policy"]).toBe("no-referrer");
@@ -41,7 +42,12 @@ test("claims a Money-verified Ads conversion once and strips the return URL", as
     ["config", adsId, { send_page_view: false }],
     ["event", "conversion", { send_to: adsId + "/" + adsLabel, value: 82.5, currency: "GBP", transaction_id: id }],
   ]);
-  expect(claims).toEqual([{ session_id: paidSession, ads_consent: true }]);
+  expect(claims).toEqual([{ session_id: paidSession, analytics_consent: false, ads_consent: true }]);
+  const purchases = () => auth.signalBatches.flatMap(batch => batch.events).filter(row => row.event_name === "purchase_completed");
+  await expect.poll(purchases).toEqual([{
+    event_id: signalEventId, distinct_id: signalEventId, event_name: "purchase_completed", numeric_value: 82.5,
+    properties: { currency: "GBP", entry_surface: "pricing", plan_sku: "lockdocs_pro_seat_year" },
+  }]);
   expect(referrers.every(value => !value.includes(paidSession))).toBe(true);
   expect(JSON.stringify(await commands(page))).not.toContain(paidSession);
   expect(hits.length).toBeGreaterThan(0);
@@ -54,7 +60,7 @@ test("claims a Money-verified Ads conversion once and strips the return URL", as
   await expect.poll(() => adsCommands(page)).toEqual([["config", adsId, { send_page_view: false }]]);
   expect(claims).toHaveLength(1);
   const [replay] = await Promise.all([
-    page.waitForResponse(item => new URL(item.url()).pathname === purchaseConversionPath),
+    page.waitForResponse(item => new URL(item.url()).pathname === purchaseConversionPath && item.request().postDataJSON().ads_consent),
     page.goto(auth.origin + checkoutReturn),
   ]);
   expect(replay.status()).toBe(204);
@@ -65,7 +71,7 @@ test("claims a Money-verified Ads conversion once and strips the return URL", as
   // Simulate a removed server cookie. The verified 200 still must not queue a duplicate locally.
   await page.context().clearCookies({ name: "__Secure-lockdocs-ads-claimed" });
   const [recovered] = await Promise.all([
-    page.waitForResponse(item => new URL(item.url()).pathname === purchaseConversionPath),
+    page.waitForResponse(item => new URL(item.url()).pathname === purchaseConversionPath && item.request().postDataJSON().ads_consent),
     page.goto(auth.origin + checkoutReturn),
   ]);
   expect(recovered.status()).toBe(200);
@@ -73,9 +79,9 @@ test("claims a Money-verified Ads conversion once and strips the return URL", as
 });
 
 for (const [choice, gpc] of [
-  ["Reject optional", "off"], ["Analytics only", "off"], ["Allow analytics & ads", "header"], ["Allow analytics & ads", "navigator"],
+  ["Reject optional", "off"], ["Allow analytics & ads", "header"], ["Allow analytics & ads", "navigator"],
 ] as const) {
-  test("does not configure or claim Ads with " + choice + " and GPC " + gpc, async ({ page, auth }) => {
+  test("does not record a purchase or configure Ads with " + choice + " and GPC " + gpc, async ({ page, auth }) => {
     const hits = await install(page, "DE");
     await signIn(page, auth.origin);
     await settings(page).getByRole("button", { name: choice, exact: true }).click();
@@ -88,14 +94,40 @@ for (const [choice, gpc] of [
     await page.goto(auth.origin + checkoutReturn);
     await expect(page).toHaveURL(auth.origin + returnPath);
     await expect(cookieButton(page)).toBeEnabled();
-    if (choice === "Analytics only") {
-      await expect.poll(() => commands(page)).toContainEqual(["config", "G-TEST123456", expect.objectContaining({ send_page_view: false })]);
-    } else {
-      await expect(page.locator(analyticsFrame)).toHaveCount(0);
-      expect(hits).toEqual([]);
-    }
+    await expect(page.locator(analyticsFrame)).toHaveCount(0);
+    expect(hits).toEqual([]);
     expect(await adsCommands(page)).toEqual([]);
     expect(claims).toEqual([]);
     expect(auth.calls).not.toContain("/v1/money/checkout_sessions:redeem");
+    expect(auth.signalBatches.flatMap(batch => batch.events).filter(row => row.event_name === "purchase_completed")).toEqual([]);
   });
 }
+
+
+test.describe("organic checkout without any Ads configuration", () => {
+  test.use({ googleAds: false });
+  test("Analytics only records the paid return on the server and never claims Ads", async ({ page, auth }) => {
+    await install(page, "DE");
+    await signIn(page, auth.origin);
+    await settings(page).getByRole("button", { name: "Analytics only", exact: true }).click();
+    const isClaim = (url: string) => new URL(url).pathname === purchaseConversionPath;
+    const [claim] = await Promise.all([
+      page.waitForResponse(response => isClaim(response.url())),
+      page.goto(auth.origin + checkoutReturn),
+    ]);
+    expect(claim.request().postDataJSON()).toEqual({ session_id: paidSession, analytics_consent: true, ads_consent: false });
+    expect(claim.status()).toBe(204);
+    expect(await claim.headerValue("set-cookie")).toBeNull();
+    await expect(page).toHaveURL(auth.origin + returnPath);
+    const purchases = () => auth.signalBatches.flatMap(batch => batch.events).filter(row => row.event_name === "purchase_completed");
+    expect(purchases()).toEqual([{
+      event_id: signalEventId, distinct_id: signalEventId, event_name: "purchase_completed", numeric_value: 82.5,
+      properties: { currency: "GBP", entry_surface: "pricing", plan_sku: "lockdocs_pro_seat_year" },
+    }]);
+    expect(await adsCommands(page)).toEqual([]);
+    await page.reload();
+    await expect(cookieButton(page)).toBeEnabled();
+    expect(purchases()).toHaveLength(1);
+    expect(auth.rejections).toEqual([]);
+  });
+});

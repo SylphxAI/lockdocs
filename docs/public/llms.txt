@@ -1,27 +1,35 @@
-# lockdocs
+# Lockdocs
 
-> Exact-version library docs from your lockfile — local, offline, no rate limits.
+> Lockdocs gives developers and coding agents documentation for the exact library versions in their project's lockfile. It searches local material and cites source files and lines. Once indexed, lookups work offline.
 
-lockdocs is a Rust command-line tool and Model Context Protocol (MCP) server published by Sylphx (`https://sylphx.com`). It reads your project's lockfile (`Cargo.lock`, `bun.lock`, `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `uv.lock`, `poetry.lock`, `go.sum`) and serves the documentation and API symbols for the exact versions your project installed — locally and offline, with no API key and no rate limits.
+## Install
 
-## Install and Setup
-
-- npm: `npx -y @sylphx/lockdocs setup --client cursor,claude,codex`
-- [PyPI](https://pypi.org/project/lockdocs/): Run with `uvx lockdocs`, or install with `pip install lockdocs`. See [MCP setup without Node.js](https://lockdocs.sylphx.com/guide/setup#without-nodejs) to connect a Python-based launcher to your editor.
+- npm: `npx -y @sylphx/lockdocs setup`
+- [PyPI](https://pypi.org/project/lockdocs/): Run with `uvx lockdocs` (or `uvx lockdocs setup` for editor setup), or install with `pip install lockdocs`. Automatic editor setup uses `npx`; see [MCP setup without Node.js](https://lockdocs.sylphx.com/guide/setup#without-nodejs) for a Python-only configuration.
 - Cargo: `cargo install lockdocs`
 - Homebrew: `brew install sylphxai/tap/lockdocs`
 
 ## Documentation
 
-- [Home](https://lockdocs.sylphx.com/)
-- [Quickstart](https://lockdocs.sylphx.com/guide)
-- [Editors and agents](https://lockdocs.sylphx.com/guide/setup)
-- [Ecosystems](https://lockdocs.sylphx.com/guide/ecosystems)
-- [Upstream docs and fetching](https://lockdocs.sylphx.com/guide/fetch)
-- [How it works](https://lockdocs.sylphx.com/guide/how-it-works)
-- [MCP tools](https://lockdocs.sylphx.com/reference/tools)
-- [CLI reference](https://lockdocs.sylphx.com/reference)
-- [Benchmarks](https://lockdocs.sylphx.com/benchmarks)
-- [Comparison](https://lockdocs.sylphx.com/compare)
-- [Pricing](https://lockdocs.sylphx.com/pricing)
-- [GitHub repository](https://github.com/SylphxAI/lockdocs)
+- [Quickstart](https://lockdocs.sylphx.com/guide): Install Lockdocs and look up an API for a pinned dependency.
+- [Agent setup](https://lockdocs.sylphx.com/guide/setup): Connect the local MCP server to a coding agent.
+- [MCP tools](https://lockdocs.sylphx.com/reference/tools): `resolve` reports pinned versions, `docs` searches indexed documentation, and `api` looks up a symbol's signatures and types.
+- [CLI reference](https://lockdocs.sylphx.com/reference): Index, resolve, and query dependencies from the terminal.
+- [Supported ecosystems](https://lockdocs.sylphx.com/guide/ecosystems): Lockfile support for JavaScript, Python, Rust, and Go.
+- [Upstream docs and fetching](https://lockdocs.sylphx.com/guide/fetch): How Lockdocs finds and indexes sources.
+- [How it works](https://lockdocs.sylphx.com/guide/how-it-works): From the lockfile to a cited answer.
+- [Benchmarks](https://lockdocs.sylphx.com/benchmarks): Version-sensitive documentation lookup results.
+- [Comparison](https://lockdocs.sylphx.com/compare): Compare Lockdocs with other documentation tools.
+- [GitHub repository](https://github.com/SylphxAI/lockdocs): Source, releases, and issue tracker.
+
+## Try and compare Lockdocs
+
+- [Lockfile Playground](https://lockdocs.sylphx.com/playground): Try exact-version resolution with a sample or your own lockfile in the browser.
+- [Lockdocs Pro](https://lockdocs.sylphx.com/pro): Index docs from private package registries and see upgrade impact at affected call sites.
+- [Pricing](https://lockdocs.sylphx.com/pricing): Compare the free MIT-licensed tools with Lockdocs Pro (US$120/year).
+- [Context7 alternative](https://lockdocs.sylphx.com/context7-alternative): Compare Lockdocs and Context7 for exact-version dependency docs.
+
+## Companion Sylphx developer tools
+
+- [Anymd](https://anymd.sylphx.com/): Convert PDF, Office, HTML, and media to Markdown locally with an MCP server and CLI.
+- [RepoMap](https://sylphxai.github.io/repomap/): Map a local codebase, search it, and trace change impact with an MCP server and CLI.

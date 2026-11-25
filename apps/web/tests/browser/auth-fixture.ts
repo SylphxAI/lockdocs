@@ -22,7 +22,7 @@ const moneyCredential = "fixture-money-credential";
 const random = () => randomBytes(32).toString("base64url");
 const hash = (value: string) => createHash("sha256").update(value).digest();
 
-async function startFixture(billing: boolean) {
+async function startFixture(billing: boolean, googleAds: boolean) {
   const tmp = mkdtempSync(join(tmpdir(), "lockdocs-browser-auth-"));
   const cert = join(tmp, "cert.pem");
   const key = join(tmp, "key.pem");
@@ -31,6 +31,7 @@ async function startFixture(billing: boolean) {
   const calls: string[] = [];
   const shipments: string[] = [];
   const bindings: unknown[] = [];
+  const signalBatches: { consent: string; events: { event_name: string; event_id: string; distinct_id: string; numeric_value?: number; properties: Record<string, unknown> }[] }[] = [];
   const rejections: string[] = [];
   const ticketSignal: { is_new_user?: boolean } = {};
   const pro = { entitled: false };
@@ -135,6 +136,7 @@ async function startFixture(billing: boolean) {
       if (req.headers["x-sylphx-key"] !== pk || req.headers.authorization || req.headers["sec-gpc"] || body.consent !== "granted") {
         return rejectContract("Signal requires only the publishable key and explicit consent");
       }
+      signalBatches.push(body);
       return json(res, { accepted_events: body.events.length }, 202);
     }
     if (billing && path === "/v1/events/attribution_bindings" && req.method === "POST") {
@@ -249,23 +251,24 @@ async function startFixture(billing: boolean) {
       ...(billing ? {
         SYLPHX_API_URL: origin, SYLPHX_MONEY_URL: origin, SYLPHX_MONEY_PARENT: "orgs/fixture/projects/lockdocs/envs/test", SYLPHX_MONEY_API_KEY: moneyCredential,
         LOCKDOCS_CCR_TERMS_TEXT: "Fixture terms", LOCKDOCS_CCR_TERMS_VERSION: "fixture", LOCKDOCS_GA4_MEASUREMENT_ID: "G-TEST123456",
-        LOCKDOCS_GOOGLE_ADS_ID: adsId, LOCKDOCS_GOOGLE_ADS_PURCHASE_LABEL: adsLabel,
+        ...(googleAds ? { LOCKDOCS_GOOGLE_ADS_ID: adsId, LOCKDOCS_GOOGLE_ADS_PURCHASE_LABEL: adsLabel } : {}),
       } : {}),
     }, stdio: ["ignore", "pipe", "inherit"] });
     await once(app.stdout!, "data");
     if (!(await fetch(`http://127.0.0.1:${appPort}/api/health`)).ok) throw new Error("Fixture app did not start");
-    return { origin, methods, calls, rejections, shipments, bindings, passkey, pro, ticketSignal, close };
+    return { origin, methods, calls, rejections, shipments, bindings, signalBatches, passkey, pro, ticketSignal, close };
   } catch (error) {
     await close();
     throw error;
   }
 }
 
-export const test = base.extend<{ billing: boolean; auth: Awaited<ReturnType<typeof startFixture>> }>({
+export const test = base.extend<{ billing: boolean; googleAds: boolean; auth: Awaited<ReturnType<typeof startFixture>> }>({
   billing: [false, { option: true }],
+  googleAds: [true, { option: true }],
   ignoreHTTPSErrors: true, // A per-test certificate; the production child validates it via NODE_EXTRA_CA_CERTS.
-  auth: async ({ billing }, use) => {
-    const fixture = await startFixture(billing);
+  auth: async ({ billing, googleAds }, use) => {
+    const fixture = await startFixture(billing, googleAds);
     try { await use(fixture); }
     finally { await fixture.close(); }
   },

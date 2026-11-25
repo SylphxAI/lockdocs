@@ -11,6 +11,8 @@ import { signalChoiceCookie } from "../src/lib/signal-privacy";
 const app = "https://lockdocs.example.test";
 const identity = "https://auth.example.test";
 const money = "https://money.example.test";
+const signal = "https://signal.example.test";
+const pk = "sylphx_pk_purchase_fixture";
 const parent = "orgs/fixture/projects/fixture/envs/live";
 const checkoutName = parent + "/checkout_sessions/chk-fixture";
 const sid = "cs_live_fixture";
@@ -23,7 +25,7 @@ const config = {
   LOCKDOCS_GOOGLE_ADS_ID: adId, LOCKDOCS_GOOGLE_ADS_PURCHASE_LABEL: label,
   SYLPHX_AUTH_URL: identity, SYLPHX_AUTH_ORGANIZATION_ID: "fixture-instance",
   SYLPHX_AUTH_SECRET_KEY: "fixture-auth", SYLPHX_PUBLISHABLE_KEY: "fixture-publishable-key",
-  SYLPHX_MONEY_URL: money, SYLPHX_MONEY_PARENT: parent, SYLPHX_MONEY_API_KEY: auth,
+  SYLPHX_API_URL: signal, SYLPHX_MONEY_URL: money, SYLPHX_MONEY_PARENT: parent, SYLPHX_MONEY_API_KEY: auth,
 };
 
 function env(t: TestContext) {
@@ -69,12 +71,21 @@ function fixture(t: TestContext) {
   const redeem = { status: 200, body: { paid: true, checkout_session: checkoutName } };
   const calls: string[] = [];
   let user = "usr_reader";
+  const batches: unknown[] = [];
+  const signalStatus = { code: 202 };
   t.mock.method(globalThis, "fetch", async (url: URL, init: RequestInit) => {
     calls.push(url.href);
     if (url.href === identity + "/v1/client/session") {
       assert.equal(new Headers(init.headers).get("authorization"), "Bearer identity_org_session_fixture");
       return Response.json({ user: { id: user }, session: { id: "fixture-session", instance_id: config.SYLPHX_AUTH_ORGANIZATION_ID,
         expires_at: Math.floor(Date.now() / 1000) + 300 } });
+    }
+    if (url.href === signal + "/v1/analytics/events:batch") {
+      assert.deepEqual(Object.fromEntries(new Headers(init.headers)), { "content-type": "application/json", "x-sylphx-key": pk });
+      assert.equal(init.credentials, "omit");
+      assert.equal(init.redirect, "error");
+      batches.push(JSON.parse(String(init.body)));
+      return new Response(null, { status: signalStatus.code });
     }
     assert.equal(new Headers(init.headers).get("authorization"), "Bearer " + auth);
     assert.equal(init.redirect, "error");
@@ -93,15 +104,40 @@ function fixture(t: TestContext) {
     if (origin !== null) headers.set("Origin", origin);
     return POST(event(new Request(app + purchaseConversionPath, { method: "POST", headers, body: JSON.stringify(body) })));
   }
-  return { claim, calls, redeem, checkout, asUser: (id: string) => { user = id; } };
+  function enableSignal() {
+    process.env.SYLPHX_PUBLISHABLE_KEY = pk;
+  }
+  return { claim, calls, redeem, checkout, batches, enableSignal, signalStatus, asUser: (id: string) => { user = id; } };
 }
+
+const analyticsOnly = { session_id: sid, analytics_consent: true, ads_consent: false };
+const purchaseEventId = "lockdocs-purchase-" + createHash("sha256").update(checkoutName).digest("hex");
+const expectedBatch = { consent: "granted", events: [{ event_id: purchaseEventId, distinct_id: purchaseEventId,
+  event_name: "purchase_completed", numeric_value: 82.5,
+  properties: { currency: "GBP", plan_sku: "lockdocs_pro_seat_year", entry_surface: "pricing" } }] };
+
+test("analytics-only claims use Money's paid amount with Ads absent and ignore client prices", async t => {
+  const { claim, batches, enableSignal } = fixture(t);
+  enableSignal();
+  delete process.env.LOCKDOCS_GOOGLE_ADS_ID;
+  delete process.env.LOCKDOCS_GOOGLE_ADS_PURCHASE_LABEL;
+  for (const choice of ["analytics_only", "granted"]) {
+    const result = await claim({ choice, body: { ...analyticsOnly, value: 9999, currency: "USD", plan_sku: "wrong" } });
+    assert.equal(result.status, 204);
+    assert.equal(result.headers.get("set-cookie"), null);
+    assert.equal(await result.text(), "");
+  }
+  assert.deepEqual(batches, [expectedBatch, expectedBatch]); // Signal deduplicates stable IDs even across devices.
+});
 
 const expectedTransactionId = createHash("sha256").update("lockdocs-ads-purchase:" + checkoutName).digest("hex").slice(0, 32);
 
 test("returns a verified conversion once per signed, user-bound claim cookie", async t => {
-  const { claim, checkout, asUser } = fixture(t);
+  const { claim, checkout, asUser, batches, enableSignal } = fixture(t);
+  enableSignal();
   const first = await claim();
   assert.equal(first.status, 200);
+  assert.deepEqual(batches, [expectedBatch]);
   assert.deepEqual(await first.json(), { transactionId: expectedTransactionId, value: 82.5, currency: "GBP" });
   assert.equal(first.headers.get("cache-control"), "private, no-store");
   const claimed = first.headers.get("set-cookie")!;
@@ -111,6 +147,7 @@ test("returns a verified conversion once per signed, user-bound claim cookie", a
   const reload = await claim({ cookie: session + "; " + pair });
   assert.equal(reload.status, 204);
   assert.equal(reload.headers.get("set-cookie"), null);
+  assert.deepEqual(batches, [expectedBatch, expectedBatch]);
   const tampered = await claim({ cookie: session + "; " + pair + "a" });
   assert.equal(tampered.status, 200);
   asUser("usr_other");
@@ -128,11 +165,14 @@ test("uses Stripe presentment units for each paid currency", async t => {
 });
 
 test("denies non-origin, unsigned-in, or nonconsenting requests before calling Money", async t => {
-  const { claim, calls } = fixture(t);
+  const { claim, calls, batches, enableSignal } = fixture(t);
+  enableSignal();
   for (const [options, status] of [
     [{ origin: null }, 403], [{ origin: app + "/" }, 403], [{ origin: "https://cross.example.test" }, 403],
     [{ cookie: "" }, 401], [{ choice: "denied" }, 403], [{ choice: "analytics_only" }, 403], [{ choice: "" }, 403],
-    [{ gpc: "1" }, 403], [{ body: { session_id: sid, ads_consent: false } }, 403], [{ body: { session_id: sid, ads_consent: "true" } }, 403],
+    [{ choice: "denied", body: analyticsOnly }, 403], [{ choice: "", body: analyticsOnly }, 403],
+    [{ choice: "analytics_only; " + signalChoiceCookie + "=granted", body: analyticsOnly }, 403],
+    [{ gpc: "1", body: analyticsOnly }, 403], [{ gpc: "1" }, 403], [{ body: { session_id: sid, ads_consent: false } }, 403], [{ body: { session_id: sid, ads_consent: "true" } }, 403],
     [{ body: { session_id: "cs_test_fixture", ads_consent: true } }, 204],
     [{ body: { session_id: "cs_live_invalid/path", ads_consent: true } }, 204],
   ] as const) {
@@ -141,20 +181,20 @@ test("denies non-origin, unsigned-in, or nonconsenting requests before calling M
     assert.equal(response.headers.get("set-cookie"), null);
     assert.equal(response.headers.get("cache-control"), "private, no-store");
   }
-  delete process.env.LOCKDOCS_GOOGLE_ADS_PURCHASE_LABEL;
-  assert.equal((await claim()).status, 204);
+  assert.deepEqual(batches, []);
   assert.ok(calls.every(url => url === identity + "/v1/client/session"));
 });
 
 test("refuses any unverified settlement, mismatched resource or invalid amount", async t => {
-  const { claim, checkout, redeem, calls } = fixture(t);
+  const { claim, checkout, redeem, calls, batches, enableSignal } = fixture(t);
+  enableSignal();
   for (const [key, value] of [
     ["name", checkoutName + "-wrong"], ["subject", { end_user: "usr_other" }], ["processor_session_id", "cs_live_other"],
     ["livemode", false], ["state", "open"], ["payment_status", "unpaid"], ["denied_reason", "blocked"], ["amount_total", 0],
     ["amount_total", -42], ["amount_total", 1.1], ["amount_total", "8250"], ["currency_code", "gbp"],
   ] as const) {
     const initial = checkout[key];
-    const response = await (checkout[key] = value, claim());
+    const response = await (checkout[key] = value, claim({ choice: "analytics_only", body: analyticsOnly }));
     assert.equal(response.status, 204, key);
     assert.equal(response.headers.get("set-cookie"), null);
     checkout[key] = initial;
@@ -169,4 +209,13 @@ test("refuses any unverified settlement, mismatched resource or invalid amount",
     assert.equal((await claim()).status, 204);
     assert.deepEqual(calls, [identity + "/v1/client/session", money + "/v1/money/checkout_sessions:redeem"]);
   }
+  assert.deepEqual(batches, []);
+});
+
+
+test("Signal failure does not suppress a valid Google Ads claim", async t => {
+  const { claim, enableSignal, signalStatus } = fixture(t);
+  enableSignal();
+  signalStatus.code = 503;
+  assert.equal((await claim()).status, 200);
 });

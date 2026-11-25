@@ -7,7 +7,7 @@ import { clearAnalyticsCookies, migrateSignalChoice, saveSignalChoice } from "@/
 import { readSignalChoice, signalChoiceKey, signalRequestGpc, signalStorageKey, type StoredChoice } from "@/lib/signal-privacy";
 import { CampaignBlocked } from "@/lib/campaign-navigation";
 import { analyticsPage } from "@/lib/analytics-page";
-import { behavioralParams, beginCheckoutParams, type ProSurface, type TrackEvent } from "@/lib/analytics-events";
+import { behavioralParams, beginCheckoutParams, pricingCheckoutSurface, type ProSurface, type TrackEvent } from "@/lib/analytics-events";
 import { consumeSignup } from "@/lib/signup-analytics";
 import { useSiteLanguage } from "@/lib/site-language";
 import { localizedPath, defaultLocale } from "@/lib/locales";
@@ -52,7 +52,17 @@ function startTag(frame: HTMLIFrameElement, measurement: string | undefined, ads
   return true;
 }
 const home = (origin: string) => ({ page_location: origin + "/", page_referrer: "", page_title: "Lockdocs" });
-const CookieContext = createContext<{ ready: () => boolean; trackEvent: TrackEvent; beginCheckout: (form: HTMLFormElement, currency: string) => void; open: (button: HTMLButtonElement) => void; configured: () => boolean; adsReady: () => boolean; claimPurchase: (sid: string, abort: AbortSignal) => Promise<void> }>();
+type PurchaseDestinations = { signal: boolean; ads: boolean };
+const CookieContext = createContext<{
+  ready: () => boolean;
+  trackEvent: TrackEvent;
+  beginCheckout: (form: HTMLFormElement, currency: string) => void;
+  open: (button: HTMLButtonElement) => void;
+  configured: () => boolean;
+  adsReady: () => boolean;
+  purchaseSignalReady: () => boolean;
+  claimPurchase: (sid: string, destinations: PurchaseDestinations, abort: AbortSignal) => Promise<void>;
+}>();
 export const useCookieSettings = () => useContext(CookieContext)!;
 
 // Count an offer when it comes into view with analytics active, once per mount.
@@ -296,6 +306,9 @@ export function CookieSettings(props: ParentProps) {
     // Never queue a pending SDK page view: on grant the SDK re-reads the raw
     // browser URL, which can have private query data. Emit the safe path on grant.
     void signal.pageView(path);
+    if (localizedPath(path, defaultLocale) === "/pricing") {
+      forwardSignal("pricing_view", { path, entry_surface: pricingCheckoutSurface }, signalEventId("pricing_view:" + routeVisit));
+    }
     if (!id()) void consumeSignup(signalAllowed, forwardSignup).catch(() => {});
   }
 
@@ -312,17 +325,27 @@ export function CookieSettings(props: ParentProps) {
     return active() && adsConfiguredInTag && !!consent && fullAdsConsent(consent) && fullAdsConsent(currentConsent());
   }
 
-  async function claimPurchase(sid: string, abort: AbortSignal) {
+  function purchaseSignalReady() {
+    if (settings()?.analytics_storage !== "granted" || !signalAllowed()) return false;
+    const choice = readSignalChoice(document.cookie);
+    return choice === "analytics_only" || choice === "granted";
+  }
+
+  async function claimPurchase(sid: string, destinations: PurchaseDestinations, abort: AbortSignal) {
     try {
       syncChoice();
       const client = tag?.contentWindow as Tag | undefined;
       const destination = ads();
-      if (!adsReady() || !client?.gtag || !destination || abort.aborted) return;
+      const analyticsConsent = destinations.signal && purchaseSignalReady();
+      const adsConsent = destinations.ads && adsReady() && !!client?.gtag && !!destination;
+      if ((!analyticsConsent && !adsConsent) || abort.aborted) return;
       const response = await fetch(purchaseConversionPath, {
         method: "POST", credentials: "same-origin", redirect: "error", cache: "no-store", referrerPolicy: "no-referrer", signal: abort,
-        headers: { "Content-Type": "application/json" }, body: JSON.stringify({ session_id: sid, ads_consent: true }),
+        headers: { "Content-Type": "application/json" }, body: JSON.stringify({
+          session_id: sid, analytics_consent: analyticsConsent, ads_consent: adsConsent,
+        }),
       });
-      if (response.status !== 200) return;
+      if (response.status !== 200 || !adsConsent || !client?.gtag || !destination) return;
       const purchase = await response.json();
       syncChoice();
       if (abort.aborted || !adsReady() || tag?.contentWindow !== client ||
@@ -466,7 +489,7 @@ export function CookieSettings(props: ParentProps) {
     queueMicrotask(() => panel?.focus());
   }
 
-  return <CookieContext.Provider value={{ beginCheckout, trackEvent, ready: () => id() ? analyticsAllowed() : settings()?.analytics_storage === "granted" && signalAllowed(), open: showFrom, configured, adsReady, claimPurchase }}>
+  return <CookieContext.Provider value={{ beginCheckout, trackEvent, ready: () => id() ? analyticsAllowed() : settings()?.analytics_storage === "granted" && signalAllowed(), open: showFrom, configured, adsReady, purchaseSignalReady, claimPurchase }}>
     <CampaignBlocked.Provider value={campaignBlocked}>{props.children}</CampaignBlocked.Provider>
     <Show when={configured() && open()}><section id="cookie-settings" class="cookie-panel" aria-labelledby="cookie-heading" tabIndex={-1}
       ref={panel} onKeyDown={event => { if (event.key === "Escape" && trigger) close(); }}>

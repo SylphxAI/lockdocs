@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.10
+
+- `lockdocs fetch` now selects Express API pages and English guides for the major version pinned in your lockfile. Run it again to refresh previously fetched Express docs.
+
 ## 0.7.9
 
 - CLI prompts to upgrade to or renew Pro now link to [Lockdocs pricing](https://lockdocs.sylphx.com/pricing).

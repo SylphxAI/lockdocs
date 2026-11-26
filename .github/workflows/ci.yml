@@ -17,6 +17,7 @@ concurrency:
 jobs:
   plain-language:
     name: plain language
+    if: github.event.repository.visibility == 'public'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -26,6 +27,7 @@ jobs:
 
   identifiers:
     name: Identifiers
+    if: github.event.repository.visibility == 'public'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -44,6 +46,7 @@ jobs:
     # lane stays cheap enough for a hosted runner; the merge group still fails
     # the change through its own run, and a follow-up moves the lane onto the
     # standard pool once the pool serves this repository reliably.
+    if: github.event.repository.visibility == 'public'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -60,6 +63,7 @@ jobs:
 
   stack-conformance:
     name: Stack conformance
+    if: github.event.repository.visibility == 'public'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -73,6 +77,7 @@ jobs:
           auth-surface: full
 
   scope:
+    if: github.event.repository.visibility == 'public'
     runs-on: ubuntu-latest
     outputs:
       kind: ${{ steps.paths.outputs.kind }}
@@ -114,6 +119,7 @@ jobs:
     needs: scope
     # A job-level skip would not expand the required check names. Publish the
     # three named no-op receipts on Linux for a web-only PR.
+    if: github.event.repository.visibility == 'public'
     runs-on: ${{ needs.scope.outputs.kind == 'web' && 'ubuntu-latest' || matrix.os }}
     strategy:
       fail-fast: false
@@ -133,6 +139,7 @@ jobs:
 
   checks:
     name: manifests, smoke, docs
+    if: github.event.repository.visibility == 'public'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -206,6 +213,7 @@ jobs:
 
   web-native:
     name: Web checks and native login
+    if: github.event.repository.visibility == 'public'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -229,7 +237,7 @@ jobs:
   web-preview:
     name: SolidStart preview
     needs: scope
-    if: needs.scope.outputs.kind != 'rust'
+    if: github.event.repository.visibility == 'public' && needs.scope.outputs.kind != 'rust'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -284,7 +292,7 @@ jobs:
   web-container:
     name: SolidStart container
     needs: scope
-    if: needs.scope.outputs.kind != 'rust'
+    if: github.event.repository.visibility == 'public' && needs.scope.outputs.kind != 'rust'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -321,7 +329,8 @@ jobs:
             | jq -es '([.[] | select(.id == 1) | .result.serverInfo.name] == ["lockdocs"]) and ([.[] | select(.id == 2) | .result.tools[].name] | sort == ["api", "docs", "resolve"])'
 
   # The org-wide required check name: every lane passes or is skipped, except
-  # chat-senders, which must actually succeed.
+  # chat-senders, which must actually succeed. Keep this verdict on the control
+  # pool: skipping hosted lanes for non-public visibility must fail this check.
   ci-ok:
     if: always()
     needs: [scope, plain-language, identifiers, stack-conformance, chat-senders, test, checks, web-native, web-preview, web-container]

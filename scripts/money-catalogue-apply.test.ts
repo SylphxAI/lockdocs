@@ -340,8 +340,11 @@ describe('money catalogue workflow', () => {
 		])
 		expect(workflow.jobs.preview.needs).toBe('test')
 		expect(workflow.jobs.production.needs).toBe('preview')
+		const publicRepo = "github.event.repository.visibility == 'public'"
+		expect(workflow.jobs.test.if).toBe(publicRepo)
+		expect(workflow.jobs.verify.if).toBe(`${publicRepo} && github.event_name == 'workflow_dispatch' && inputs.verify_only == true`)
 		for (const job of [workflow.jobs.preview, workflow.jobs.production]) {
-			expect(job.if).toBe(`github.event_name != 'pull_request' && inputs.verify_only != true && github.ref == 'refs/heads/${defaultBranch}'`)
+			expect(job.if).toBe(`${publicRepo} && github.event_name != 'pull_request' && inputs.verify_only != true && github.ref == 'refs/heads/${defaultBranch}'`)
 			expect(job.steps.map((step) => step.run).filter(Boolean)).toEqual([
 				'bash scripts/money-catalogue-apply.sh',
 			])

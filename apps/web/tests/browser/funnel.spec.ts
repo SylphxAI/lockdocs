@@ -47,7 +47,7 @@ for (const mode of ["unanswered", "denied", "gpc", "granted"] as const) {
     await page.getByRole("button", { name: "Resolve versions" }).click();
     await expect(page.getByRole("heading", { name: privatePackage + "@1.2.3" })).toBeVisible();
     await copyFrom(page, "Copy CLI command");
-    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe("lockdocs " + privatePackage + " --offline");
+    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(`npx -y @sylphx/lockdocs pypi:${privatePackage}@1.2.3 --offline`);
     await copyFrom(page, "Copy upgrade command");
     await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe("lockdocs upgrade next 15.0.0");
     await page.getByRole("button", { name: "MCP agent setup" }).click();
@@ -89,11 +89,14 @@ for (const mode of ["unanswered", "denied", "gpc", "granted"] as const) {
     if (granted) {
       await seen("pro_cta_clicked", { entry_surface: "home_pro_band" });
       expect(funnelWire(wire)).toEqual(expect.arrayContaining([
-        ["lockfile_resolved", { lockfile_format: "requirements.txt", source_kind: "pasted", package_count: 1 }],
         ["command_copied", { surface: "playground_mcp", command_kind: "mcp_config" }],
         ["pro_cta_clicked", { entry_surface: "playground_report_preview" }],
         ["pro_cta_clicked", { entry_surface: "playground_upgrade_cta" }],
       ]));
+      expect(funnelWire(wire).filter(([name]) => name === "lockfile_resolved")).toEqual([
+        ["lockfile_resolved", { lockfile_format: "requirements.txt", source_kind: "sample", package_count: 2 }],
+        ["lockfile_resolved", { lockfile_format: "requirements.txt", source_kind: "pasted", package_count: 1 }],
+      ]);
       expect(funnelWire(wire).filter(([name, params]) => name === "command_copied" && /^playground_(cli|upgrade)$/.test(String(params.surface)))).toEqual([
         ["command_copied", { surface: "playground_cli", command_kind: "cli" }],
         ["command_copied", { surface: "playground_upgrade", command_kind: "cli" }],

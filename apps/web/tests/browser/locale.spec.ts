@@ -177,7 +177,7 @@ test("Traditional Chinese Playground copies both commands without clipping", asy
   await page.locator("#lockfile").fill(name + "==1.2.3");
   await page.getByRole("button", { name: "查出套件版本" }).click();
   for (const [label, command] of [
-    ["複製 CLI 指令", "lockdocs " + name + " --offline"],
+    ["複製 CLI 指令", `npx -y @sylphx/lockdocs pypi:${name}@1.2.3 --offline`],
     ["複製升級指令", "lockdocs upgrade next 15.0.0"],
   ]) {
     const button = page.getByRole("button", { name: label, exact: true });

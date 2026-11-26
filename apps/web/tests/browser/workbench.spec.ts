@@ -25,6 +25,32 @@ test("the server paints a usable sample before hydration", async ({ browser, bas
   } finally { await page.close(); }
 });
 
+for (const zh of [false, true]) {
+  test(`copy the inspected sample into a fresh terminal (${zh ? "zh-TW" : "en"})`, async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.goto(zh ? "/zh-TW/playground" : "/playground");
+    const inspect = page.locator(".inspect");
+    const command = "npx -y @sylphx/lockdocs npm:next@15.0.0 --offline";
+    await expect(inspect.getByRole("heading", { name: "next@15.0.0" })).toBeVisible();
+    await expect(inspect.getByText(/npx .*下載 Lockdocs|npx may download Lockdocs/)).toBeVisible();
+    const install = inspect.getByRole("link", { name: zh ? "CLI 安裝方式（英文）" : "CLI install options" });
+    await expect(install).toHaveAttribute("href", "/guide#install-lockdocs");
+    const copy = inspect.getByRole("button", { name: zh ? "複製 CLI 指令" : "Copy CLI command", exact: true });
+    await expect(copy.locator("..").locator("code")).toHaveText(command);
+    await install.focus();
+    await page.keyboard.press("Tab");
+    await expect(copy).toBeFocused();
+    await expect(copy).toBeInViewport();
+    await page.keyboard.press("Enter");
+    await expect(copy.locator("+ [role=status]")).toHaveText(zh ? "已複製" : "Copied");
+    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(command);
+    const copyBox = await copy.boundingBox();
+    expect(copyBox?.width).toBeGreaterThanOrEqual(44);
+    expect(copyBox?.height).toBeGreaterThanOrEqual(44);
+    await expect(page.evaluate(() => document.documentElement.scrollWidth)).resolves.toBe(page.viewportSize()!.width);
+  });
+}
+
 test("the hydrated editor changes samples but never overwrites visitor edits on format change", async ({ page }) => {
   await page.goto("/playground");
   const editor = page.locator("#lockfile");

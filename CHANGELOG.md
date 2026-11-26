@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.12
+
+- Answers now flag cached upstream docs fetched with older rules and show the `lockdocs fetch <pkg>` command to refresh them.
+
 ## 0.7.11
 
 - `lockdocs fetch` now includes code examples that docs pull in from other files in the same release, such as FastAPI’s startup guide. After upgrading, run `lockdocs fetch` again to refresh previously fetched docs.

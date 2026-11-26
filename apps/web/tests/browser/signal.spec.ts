@@ -114,6 +114,53 @@ for (const [path, entry_surface] of [
   });
 }
 
+for (const [path, zh] of [["/benchmarks", false], ["/compare", false], ["/zh-TW/docs", true]] as const) {
+  base("article example links preserve campaign without sending Signal: " + path, async ({ page }, info) => {
+    const { requests } = await signalOnly(page);
+    const errors: string[] = [];
+    page.on("pageerror", error => errors.push(error.message));
+    page.on("console", message => { if (message.type() === "error") errors.push(message.text()); });
+    await page.addInitScript(() => {
+      const violations: string[] = [];
+      Object.assign(window, { articleCspViolations: violations });
+      document.addEventListener("securitypolicyviolation", event => violations.push(event.violatedDirective));
+    });
+
+    const response = await page.goto(path + "?" + query);
+    expect(response?.status()).toBe(200);
+    const policy = response?.headers()["content-security-policy"] ?? "";
+    expect(policy).toMatch(/(?:^|; )style-src [^;]*'nonce-[^']+'/);
+    expect(policy).not.toMatch(/'unsafe-inline'|'unsafe-eval'/);
+    await expect(zh ? page.getByRole("region", { name: "Cookie 設定" }) : settings(page)).toBeVisible();
+    const bridge = page.getByRole("region", { name: zh ? "用 lockfile 試試看" : "Try it with a lockfile" });
+    const examples = bridge.getByRole("navigation", { name: zh ? "升級範例" : "Upgrade examples" });
+    const links = examples.getByRole("link");
+    await expect(links).toHaveText(["Next.js", "Pydantic", "Zod", "React"]);
+    const carried = new URLSearchParams({ gclid: clicks.gclid, gbraid: clicks.gbraid, wbraid: clicks.wbraid, ...campaign });
+    const playground = zh ? "/zh-TW/playground" : "/playground";
+    const destination = (example: string) => playground + "?example=" + example + "&" + carried + "#upgrade";
+    for (const [index, example] of ["next", "pydantic", "zod", "react"].entries()) {
+      await expect(links.nth(index)).toHaveAttribute("href", destination(example));
+    }
+    const expectNoOverflow = async () => expect(await page.evaluate(() => [document.documentElement,
+      ...document.querySelectorAll(".article-bridge, .article-upgrade-links, .article-upgrade-row, #upgrade")]
+      .filter(node => node.scrollWidth > node.clientWidth).map(node => node.className))).toEqual([]);
+    await expectNoOverflow();
+    await expect(bridge.locator("[style]")).toHaveCount(0);
+    if (process.env.LOCKDOCS_LOCAL_CAPTURES) await bridge.screenshot({ path: info.outputPath("article-bridge.png") });
+
+    await examples.getByRole("link", { name: "Pydantic", exact: true }).click();
+    await expect(page).toHaveURL(new URL(destination("pydantic"), response!.url()).href);
+    await expect(page.getByLabel(zh ? "lockfile 格式" : "Lockfile format")).toHaveValue("uv.lock");
+    const report = page.locator("#upgrade");
+    await expect(report.getByRole("button", { pressed: true })).toHaveText("Pydantic 1.10 → 2.9");
+    await expect(report.getByRole("heading", { name: zh ? "Pydantic v2 改用 model_dump()" : "Use model_dump() in Pydantic v2" })).toBeVisible();
+    await expectNoOverflow();
+    expect({ requests, errors, csp: await page.evaluate(() => Reflect.get(window, "articleCspViolations")) })
+      .toEqual({ requests: [], errors: [], csp: [] });
+  });
+}
+
 for (const mode of ["pre-choice", "denied", "GPC"]) {
   base("article Pro navigation respects " + mode, async ({ page }) => {
     const { batches } = await signalOnly(page);

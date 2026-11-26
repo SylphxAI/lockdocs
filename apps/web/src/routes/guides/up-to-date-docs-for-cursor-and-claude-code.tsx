@@ -3,6 +3,7 @@ import { A } from "@solidjs/router";
 import { For } from "solid-js";
 import { ArrowRight } from "lucide-solid";
 import { useCookieSettings } from "@/components/cookie-settings";
+import { EditorMcpTabs } from "@/components/editor-mcp-tabs";
 import { CodeExample, EditorialFaq, EditorialHero } from "@/components/editorial";
 import { PageMeta } from "@/components/page-meta";
 import { PackageText } from "@/components/package-text";
@@ -10,6 +11,7 @@ import { context7AlternativePath, editorGuidePath } from "@/lib/editorial-routes
 import { canonicalOrigin } from "@/lib/indexing";
 import { pypiUrl } from "@/lib/install";
 import { useSiteLanguage } from "@/lib/site-language";
+import { upgradePreviewPath } from "@/lib/upgrade-examples";
 
 const title = "Up-to-date docs for Cursor and Claude Code";
 const description = "Connect Lockdocs to Cursor or Claude Code over local MCP, then check that the package version and API citation match your project’s lockfile.";
@@ -42,12 +44,10 @@ const faq = [
     answer: "Install the CLI and dependencies while online. For a fully offline launch, use the absolute path to an already installed lockdocs executable as the MCP command and pass mcp --offline as its arguments. Local and cached files remain available; missing upstream docs will not download.",
   },
 ];
-const cursorConfig = JSON.stringify({
-  mcpServers: { lockdocs: { command: "npx", args: ["-y", "@sylphx/lockdocs", "mcp"] } },
-}, null, 2);
 
 export default function EditorDocsGuide() {
-  const { campaignHref, proHref } = useSiteLanguage();
+  const { campaignHref, carryCampaign, href, proHref } = useSiteLanguage();
+  const zodExample = () => carryCampaign(upgradePreviewPath(href("/playground"), "zod"));
   const { trackEvent } = useCookieSettings();
   return <>
     <PageMeta title={title + " · Lockdocs"} description={description}/>
@@ -60,7 +60,7 @@ export default function EditorDocsGuide() {
       step: steps.map(({ id, name, text }) => ({ "@type": "HowToStep", name, text, url: url + "#" + id })),
     }}/>
     <EditorialHero label="LOCKDOCS / SETUP GUIDE" title={title} intro="Give your editor the docs for the version you run. Connect Lockdocs over MCP, then check one citation against your lockfile before relying on its answers." actions={<>
-      <A class="button primary" href={campaignHref("/playground")}>Try the playground <ArrowRight size={16}/></A>
+      <A class="button primary" href={zodExample()}>Try the Zod example <ArrowRight size={16} aria-hidden="true"/></A>
       <A class="button outline" href={campaignHref(context7AlternativePath)}>Compare with Context7</A>
     </>}>
       <aside class="editorial-aside">
@@ -80,17 +80,12 @@ export default function EditorDocsGuide() {
           <CodeExample label="Optional scratch project" code={"mkdir lockdocs-editor-demo\ncd lockdocs-editor-demo\nnpm init -y\nnpm install --save-exact zod@4.6.7"}/>
           <CodeExample label="CLI version and lockfile check" code={"npx -y @sylphx/lockdocs version\nnpx -y @sylphx/lockdocs resolve --offline"}/>
           <p>In the scratch project, look for <code><PackageText text="zod@4.6.7"/></code> and <code>package-lock.json</code>. The first <code>npx</code> run may download Lockdocs; <code>--offline</code> applies to Lockdocs’s lookups, not to npm.</p>
+          <p>Want to see what changes between versions? <A href={zodExample()}>Try the Zod example in the playground</A> to see Zod 3.23.8 resolve from a sample <code>yarn.lock</code> and compare its API with Zod v4.</p>
         </li>
         <li id={steps[1].id} class="editorial-section editorial-step">
           <h2>{steps[1].name}</h2>
           <p>{steps[1].text}</p>
-          <h3>Cursor</h3>
-          <p>Save this as <code>.cursor/mcp.json</code> in your project. If the file exists, add only the <code>lockdocs</code> entry under <code>mcpServers</code> so you keep your other servers. Reload Cursor and check that <code>lockdocs</code> is enabled in its MCP settings.</p>
-          <CodeExample label="Cursor project configuration" code={cursorConfig}/>
-          <h3>Claude Code</h3>
-          <p>Run this from your project folder. <code>--scope local</code> keeps the registration private to you in this project. If a <code>lockdocs</code> entry already exists, inspect it with <code>claude mcp get lockdocs</code> before replacing it.</p>
-          <CodeExample label="Claude Code project setup" code={"claude mcp add --scope local --transport stdio lockdocs -- npx -y @sylphx/lockdocs mcp\nclaude mcp list"}/>
-          <p>Look for <code>lockdocs</code> in the list. If Claude Code is already open, start a new session and type <code>/mcp</code> to check its connection.</p>
+          <EditorMcpTabs/>
         </li>
         <li id={steps[2].id} class="editorial-section editorial-step">
           <h2>{steps[2].name}</h2>

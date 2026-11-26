@@ -1,9 +1,9 @@
 .editor-mcp .segmented button { min-height: 44px; }
 .editor-mcp .segmented [aria-pressed="true"] { color: var(--mint); }
 
-/* Keep instructions, copy controls, and the next step in place when switching editors. */
+/* Share row heights to keep the controls and next step fixed, without stretching the code card. */
 .editor-mcp-panels { display: grid; grid-template-columns: minmax(0, 1fr); row-gap: 12px; }
 .editor-mcp-panel { display: grid; grid-area: 1 / 1 / span 3; grid-template-rows: subgrid; }
 .editor-mcp-panel[aria-hidden="true"] { visibility: hidden; }
-.editor-mcp-panel p, .editor-mcp-panel .editorial-code { margin: 0; }
+.editor-mcp-panel p, .editor-mcp-panel .editorial-code { align-self: start; margin: 0; }
 .editor-mcp-panel pre { white-space: pre-wrap; overflow-wrap: anywhere; }

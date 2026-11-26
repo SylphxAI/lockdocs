@@ -1,0 +1,5 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Benchmark fixtures pin versions so benchmark results stay comparable.",
+  "includePaths": ["!bench/projects/**"]
+}

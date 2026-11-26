@@ -34,6 +34,12 @@ for (const zh of [false, true]) {
     const next = page.getByRole("button", { name: "Next.js 14 → 15" });
     const open = page.getByRole("button", { name: zh ? "開啟檔案" : "Open file" });
     const picker = panel.locator('input[type="file"]');
+    const load = panel.getByRole("button", { name: zh ? "載入範例" : "Load sample" });
+    const parseError = page.getByRole("status").filter({ hasText: zh ? "無法讀取這份 lockfile" : "Couldn’t parse this input" });
+    const expectNoInputError = async () => {
+      await expect(editor).not.toHaveAttribute("aria-invalid");
+      await expect(editor).not.toHaveAttribute("aria-describedby");
+    };
     const resolve = page.getByRole("button", { name: zh ? "查出套件版本" : "Resolve versions" });
     const showMore = page.getByRole("button", { name: zh ? "顯示更多套件" : "Show more packages" });
     const noOverflow = () => expect(page.evaluate(() => document.documentElement.scrollWidth)).resolves.toBeLessThanOrEqual(page.viewportSize()!.width);
@@ -62,6 +68,7 @@ for (const zh of [false, true]) {
     await search.fill("workbench-private-no-match");
     await expect(page.getByText(zh ? "找不到符合的套件" : "No matching packages")).toBeVisible();
     await expect(count).toHaveText(zh ? "符合 0 / 45 個套件" : "0 of 45 pinned");
+    await expectNoInputError();
     await search.clear();
     await expect(list).toHaveCount(35);
 
@@ -85,6 +92,7 @@ for (const zh of [false, true]) {
 
     await picker.setInputFiles({ name: "workbench-private-big.txt", mimeType: "text/plain", buffer: Buffer.from("é".repeat(200_001)) });
     await expect(panel.getByRole("status").filter({ hasText: "400,000" })).toContainText(zh ? "400,000 位元組" : "400,000 bytes");
+    await expectNoInputError();
     await expect(editor).toHaveValue("pytest==8.3.3");
     await expect(count).toHaveText(zh ? "已鎖定 1 個套件" : "1 pinned");
     await noOverflow();
@@ -93,12 +101,56 @@ for (const zh of [false, true]) {
     await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe("npx -y @sylphx/lockdocs --offline");
 
     await format.selectOption("package-lock.json");
-    await editor.fill('{"packages":{"node_modules/next":{"version":"14.2.3"}}}');
+    for (const empty of ["", "{}"]) {
+      await editor.fill(empty);
+      await resolve.click();
+      await expect(page.getByRole("status").filter({ hasText: zh ? "找不到指定確切版本的套件" : "No exact package versions found" })).toBeVisible();
+      await expectNoInputError();
+    }
+
+    const malformed = '{"packages":{"node_modules/workbench-private-invalid":';
+    const submitInvalid = async () => {
+      await editor.fill(malformed);
+      await expectNoInputError();
+      await resolve.click();
+      await expect(parseError).toBeVisible();
+      await expect(count).toHaveText(zh ? "已鎖定 0 個套件" : "0 pinned");
+      await expect(editor).toHaveAttribute("aria-invalid", "true");
+      const errorId = await editor.getAttribute("aria-describedby");
+      expect(errorId).toBeTruthy();
+      await expect(parseError).toHaveAttribute("id", errorId!);
+      await expect(editor).toHaveAccessibleDescription(await parseError.innerText());
+    };
+    await submitInvalid();
+    await noOverflow();
+    if (process.env.LOCKDOCS_LOCAL_CAPTURES) await page.screenshot({ path: info.outputPath("parse-error.png"), fullPage: true });
+    await load.click();
+    await expect(count).toHaveText(zh ? "已鎖定 3 個套件" : "3 pinned");
+    await expectNoInputError();
+    await expect(parseError).toHaveCount(0);
+
+    await submitInvalid();
+    await format.selectOption("requirements.txt");
+    await expect(editor).toHaveValue(malformed);
+    await expectNoInputError();
+    await expect(parseError).toHaveCount(0);
+    await format.selectOption("package-lock.json");
     await resolve.click();
+    await expect(editor).toHaveAttribute("aria-invalid", "true");
+    await editor.fill('{"packages":{"node_modules/workbench-private-recovery":{"version":"1.2.3"},"node_modules/next":{"version":"14.2.3"}}}');
+    await expectNoInputError();
+    await expect(parseError).toHaveCount(0);
+    await resolve.click();
+    await expect(page.getByRole("heading", { name: "next@14.2.3", exact: true })).toBeVisible();
+    await expect(count).toHaveText(zh ? "已鎖定 2 個套件" : "2 pinned");
+    await expectNoInputError();
+    await expect(parseError).toHaveCount(0);
     await expect(next).toHaveAttribute("aria-pressed", "true");
     await expect(panel.getByText(/400,000/)).toHaveCount(0);
-    await expect.poll(() => wire.some(params => params.get("en") === "lockfile_resolved" &&
-      params.get("ep.source_kind") === "pasted" && params.get("ep.lockfile_format") === "package-lock.json")).toBe(true);
+    await expect.poll(() => wire.filter(params => params.get("en") === "lockfile_resolved" &&
+      params.get("ep.lockfile_format") === "package-lock.json")
+      .map(params => [params.get("ep.source_kind"), params.get("epn.package_count")]))
+      .toEqual([["pasted", "0"], ["sample", "3"], ["pasted", "2"]]);
     expect(wire.some(params => params.get("en") === "upgrade_preview_switched")).toBe(false);
     await pydantic.click();
     await expect.poll(() => wire.filter(params => params.get("en") === "upgrade_preview_switched")

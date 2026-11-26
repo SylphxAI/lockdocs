@@ -56,14 +56,14 @@ jobs:
 
   release:
     if: github.event.repository.visibility == 'public'
-    uses: SylphxAI/mcp-kit/.github/workflows/release.yml@0db554b5882d1f0e77d070089af544c6789f6c4c # main
+    uses: SylphxAI/mcp-kit/.github/workflows/release.yml@ee5d7e5d9fd51422171e35c99c0c7a27ef2bb51f # mcp-kit #61
     permissions:
       actions: write
       contents: write
       id-token: write
       packages: write
     with:
-      kit-ref: 0db554b5882d1f0e77d070089af544c6789f6c4c
+      kit-ref: ee5d7e5d9fd51422171e35c99c0c7a27ef2bb51f # mcp-kit #61
       name: lockdocs
       npm-package: '@sylphx/lockdocs'
       mcp-name: io.github.SylphxAI/lockdocs
@@ -121,7 +121,7 @@ jobs:
           echo "value=$(node -p 'require("./packages/lockdocs/package.json").version')" >> "$GITHUB_OUTPUT"
       # The source job's OIDC identity is declared as lockdocs-package-managers.
       # Missing Access/Broker authority fails this delivery instead of skipping it.
-      - uses: SylphxAI/mcp-kit/.github/actions/package-managers@0db554b5882d1f0e77d070089af544c6789f6c4c # main
+      - uses: SylphxAI/mcp-kit/.github/actions/package-managers@ee5d7e5d9fd51422171e35c99c0c7a27ef2bb51f # mcp-kit #61
         with:
           name: lockdocs
           version: ${{ steps.version.outputs.value }}
@@ -149,7 +149,7 @@ jobs:
           sparse-checkout-cone-mode: false
       - name: Build wheels from the tagged release
         id: build
-        uses: SylphxAI/mcp-kit/.github/actions/pypi-wheels@be5dbc46f8d1ca200f0b9e04398191653f64bc67 # main
+        uses: SylphxAI/mcp-kit/.github/actions/pypi-wheels@ee5d7e5d9fd51422171e35c99c0c7a27ef2bb51f # mcp-kit #61
         with:
           mode: build
           name: lockdocs
@@ -195,7 +195,7 @@ jobs:
           packages-dir: dist
           skip-existing: true
       - name: Verify the published wheels on PyPI
-        uses: SylphxAI/mcp-kit/.github/actions/pypi-wheels@be5dbc46f8d1ca200f0b9e04398191653f64bc67 # main
+        uses: SylphxAI/mcp-kit/.github/actions/pypi-wheels@ee5d7e5d9fd51422171e35c99c0c7a27ef2bb51f # mcp-kit #61
         with:
           mode: verify
           name: lockdocs

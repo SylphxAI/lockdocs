@@ -1,6 +1,4 @@
 import { createSylphxAuthHandler, readAuthSessionCookie, type SessionAdapter, type VerifiedIdentitySession } from "@sylphx/auth";
-import type { EntryConfig } from "@sylphx/auth/client";
-import { httpsOrigin } from "./http";
 import { validateNext } from "./auth-entry";
 
 export type Session = Readonly<{ id: string; name?: string; email?: string; token: string }>;
@@ -8,30 +6,13 @@ export type OAuthProvider = "github" | "google";
 const methods = ["email_otp", "passkey"] as const;
 export type AuthCapabilities = Record<OAuthProvider | typeof methods[number], boolean>;
 
-type AuthConfig = { origin: string; base: string; key: string; secret: string; instance: string };
+export type AuthConfig = { origin: string; base: string; key: string; secret: string; instance: string };
 export const SESSION = "__Host-lockdocs-session";
 export const routePrefix = "/api/auth";
 const providers = ["google", "github"] as const;
 export const OAUTH = "__Host-lockdocs-oauth";
 export type SignInMethod = OAuthProvider | typeof methods[number];
 const verified = new WeakMap<Session, { agent: string | null; expires: number }>();
-
-export function appOrigin() {
-  return httpsOrigin(process.env.LOCKDOCS_APP_ORIGIN);
-}
-
-export function config(): AuthConfig | null {
-  const origin = appOrigin();
-  const base = httpsOrigin(process.env.SYLPHX_AUTH_URL);
-  const key = process.env.SYLPHX_PUBLISHABLE_KEY;
-  const secret = process.env.SYLPHX_AUTH_SECRET_KEY ?? process.env.SYLPHX_SECRET_KEY;
-  const instance = process.env.SYLPHX_AUTH_ORGANIZATION_ID;
-  return origin && base && key && secret && instance ? { origin, base, key, secret, instance } : null;
-}
-
-export function authConfigured(): boolean {
-  return config() !== null;
-}
 
 export function providerFetch(url: URL, init: Omit<RequestInit, "redirect"> = {}): Promise<Response> {
   return fetch(url, { ...init, cache: "no-store", redirect: "error", signal: AbortSignal.timeout(8_000) });
@@ -77,9 +58,7 @@ async function inspect(auth: AuthConfig, token: string, agent: string | null) {
   }
 }
 
-/** The token is a private Auth session credential: never serialize it to the client. */
-export async function getSession(request: Request): Promise<Session | null> {
-  const auth = config();
+export async function inspectRequestSession(request: Request, auth: AuthConfig | null): Promise<Session | null> {
   if (!auth) return null;
   const token = readAuthSessionCookie(request, { sessionCookie: SESSION })?.value;
   if (!opaqueSession(token)) return null;
@@ -91,9 +70,7 @@ export function isVerifiedSession(session: Session): boolean {
   return (verified.get(session)?.expires ?? 0) > Date.now() / 1000;
 }
 
-/** Exchange only a verified direct session; OAuth credentials cannot open Money's end-user routes. */
-export async function moneyAccessToken(session: Session): Promise<string | null> {
-  const auth = config();
+export async function exchangeMoneyToken(session: Session, auth: AuthConfig | null): Promise<string | null> {
   const context = verified.get(session);
   if (!auth || !context || !isVerifiedSession(session)) return null;
   try {
@@ -143,9 +120,9 @@ export async function oauthSessionAge(auth: AuthConfig, session: VerifiedIdentit
 }
 
 // Keep Identity discovery pinned to the instance that backs Lockdocs and Money.
-export function sdk(auth: AuthConfig, session?: SessionAdapter) {
+export function createIdentityHandler(auth: AuthConfig, tenantAuthOrigin: string | undefined, session?: SessionAdapter) {
   return createSylphxAuthHandler({
-    origin: auth.origin, authApiOrigin: auth.base, tenantAuthOrigin: process.env.LOCKDOCS_TENANT_AUTH_ORIGIN,
+    origin: auth.origin, authApiOrigin: auth.base, tenantAuthOrigin,
     publishableKey: auth.key, sessionMode: "server", sessionSecret: auth.secret,
     routePrefix, loginPath: "/sign-in", defaultReturnTo: "/dashboard",
     allowReturnTo: path => path === validateNext(path),
@@ -164,20 +141,6 @@ export function sdk(auth: AuthConfig, session?: SessionAdapter) {
       return response;
     },
   });
-}
-
-// Keep the existing options shape for the Lockdocs sign-in view.
-export async function getCapabilities(request: Request, auth = config()): Promise<AuthCapabilities | null> {
-  if (!auth) return null;
-  try {
-    const url = new URL(request.url);
-    url.pathname = routePrefix + "/config";
-    const response = await sdk(auth)(new Request(url, { headers: request.headers, signal: request.signal }));
-    if (!response.ok) return null;
-    const entry: EntryConfig = await response.json();
-    return { google: entry.providers.includes("google"), github: entry.providers.includes("github"),
-      email_otp: entry.otp, passkey: entry.passkey };
-  } catch { return null; }
 }
 
 export function clientEndpoint(auth: AuthConfig, path: string) {

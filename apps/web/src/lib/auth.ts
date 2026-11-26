@@ -1,17 +1,19 @@
-import { readAuthSessionCookie, type VerifiedIdentitySession } from "@sylphx/auth";
+import { readAuthSessionCookie, type SessionAdapter, type VerifiedIdentitySession } from "@sylphx/auth";
+import type { EntryConfig } from "@sylphx/auth/client";
 import { timingSafeEqual } from "node:crypto";
 import {
-  appOrigin, authHeaders, clientEndpoint, config, getCapabilities, getSession, OAUTH,
-  oauthSessionAge, providerFetch, redeem, routePrefix, sdk, SESSION, type OAuthProvider, type SignInMethod,
+  authHeaders, clientEndpoint, createIdentityHandler, inspectRequestSession, exchangeMoneyToken,
+  OAUTH, oauthSessionAge, providerFetch, redeem, routePrefix, SESSION,
+  type AuthCapabilities, type AuthConfig, type OAuthProvider, type Session, type SignInMethod,
 } from "./auth-identity";
-import { cookie, setPrivateCookie } from "./http";
+import { cookie, httpsOrigin, setPrivateCookie } from "./http";
 import { boundedJson } from "./bounded-json";
 import { clearSignupMarker, markSignup } from "./signup-analytics";
 import { hasPublicOrigin } from "./public-origin";
 import { isCliCode, validateNext } from "./auth-entry";
 
 export { httpsOrigin } from "./http";
-export { appOrigin, authConfigured, endUserId, getCapabilities, getSession, isVerifiedSession, moneyAccessToken, providerFetch } from "./auth-identity";
+export { endUserId, isVerifiedSession, providerFetch } from "./auth-identity";
 export type { AuthCapabilities, OAuthProvider, Session, SignInMethod } from "./auth-identity";
 
 const EMAIL_FLOW = "__Host-lockdocs-email-flow";
@@ -20,6 +22,51 @@ const LAST_USED = "__Host-lockdocs-last-auth-method";
 const lastUsedAge = 90 * 24 * 60 * 60;
 const privateHeaders = { "Cache-Control": "no-store", "Referrer-Policy": "no-referrer" };
 const base64url = /^[A-Za-z0-9_-]+$/;
+
+export function appOrigin() {
+  return httpsOrigin(process.env.LOCKDOCS_APP_ORIGIN);
+}
+
+function config(): AuthConfig | null {
+  const origin = appOrigin();
+  const base = httpsOrigin(process.env.SYLPHX_AUTH_URL);
+  const key = process.env.SYLPHX_PUBLISHABLE_KEY;
+  const secret = process.env.SYLPHX_AUTH_SECRET_KEY ?? process.env.SYLPHX_SECRET_KEY;
+  const instance = process.env.SYLPHX_AUTH_ORGANIZATION_ID;
+  return origin && base && key && secret && instance ? { origin, base, key, secret, instance } : null;
+}
+
+export function authConfigured(): boolean {
+  return config() !== null;
+}
+
+/** The token is a private Auth session credential: never serialize it to the client. */
+export async function getSession(request: Request): Promise<Session | null> {
+  return inspectRequestSession(request, config());
+}
+
+/** Exchange only a verified direct session; OAuth credentials cannot open Money's end-user routes. */
+export async function moneyAccessToken(session: Session): Promise<string | null> {
+  return exchangeMoneyToken(session, config());
+}
+
+function sdk(auth: AuthConfig, session?: SessionAdapter) {
+  return createIdentityHandler(auth, process.env.LOCKDOCS_TENANT_AUTH_ORIGIN, session);
+}
+
+// Keep the existing options shape for the Lockdocs sign-in view.
+export async function getCapabilities(request: Request, auth = config()): Promise<AuthCapabilities | null> {
+  if (!auth) return null;
+  try {
+    const url = new URL(request.url);
+    url.pathname = routePrefix + "/config";
+    const response = await sdk(auth)(new Request(url, { headers: request.headers, signal: request.signal }));
+    if (!response.ok) return null;
+    const entry: EntryConfig = await response.json();
+    return { google: entry.providers.includes("google"), github: entry.providers.includes("github"),
+      email_otp: entry.otp, passkey: entry.passkey };
+  } catch { return null; }
+}
 
 export function privateJson(body: object, status = 200) {
   return Response.json(body, { status, headers: privateHeaders });

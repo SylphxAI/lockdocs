@@ -23,6 +23,8 @@ export function articleSurface(path: string): ArticleSurface | undefined {
   return Object.hasOwn(articleSurfaces, path) ? articleSurfaces[path as keyof typeof articleSurfaces] : undefined;
 }
 
+export const proPrice = catalogue.spec.products[0].prices[0];
+export const billingCurrencies = Object.keys(proPrice.unit_amounts) as (keyof typeof proPrice.unit_amounts)[];
 export const pricingCheckoutSurface = "pricing";
 export const checkoutEntrySurfaces = [
   pricingCheckoutSurface, ...proSurfaces, "context7_alternative", "guide_cursor_claude_code", ...Object.values(articleSurfaces),
@@ -47,6 +49,7 @@ const eventFields = {
   paywall_view: entrySurface,
   pro_cta_clicked: { entry_surface: [...checkoutEntrySurfaces.filter(surface => surface !== pricingCheckoutSurface),
     "pricing_proof_upgrade_report", "pricing_proof_private_sources"] },
+  pricing_buy_clicked: { entry_surface: checkoutEntrySurfaces, currency: billingCurrencies, locale: ["en", "zh-TW"] },
   upgrade_preview_switched: { example_id: ["next", "pydantic", "zod", "react"] },
   cli_authorized: { entry_surface: ["cli_authorize"] },
 } as const;
@@ -71,8 +74,6 @@ export function behavioralParams(event: string, params: Readonly<Record<string, 
   }
   return safe;
 }
-
-export const proPrice = catalogue.spec.products[0].prices[0];
 
 export function beginCheckoutParams(currency: unknown, entrySurface: unknown = pricingCheckoutSurface) {
   const amounts = proPrice.unit_amounts;

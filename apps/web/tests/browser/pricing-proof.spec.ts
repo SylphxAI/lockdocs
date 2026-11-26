@@ -5,7 +5,7 @@ import { privateProofExamples } from "../../src/lib/private-proof-examples";
 for (const zh of [false, true]) {
   const prefix = zh ? "/zh-TW" : "";
   const path = prefix + "/pricing";
-  test(path + " lets buyers switch both Pro proofs without tracking or losing checkout attribution", async ({ page }) => {
+  test(path + " puts a report example beside the signed-out purchase decision and keeps the full proofs usable", async ({ page }, info) => {
     const errors: string[] = [];
     page.on("pageerror", error => errors.push(error.message));
     page.on("console", message => { if (message.type() === "error") errors.push(message.text()); });
@@ -37,6 +37,25 @@ for (const zh of [false, true]) {
     expect((await (await config).json()).signalKey).toBe("sylphx_pk_signal_fixture");
 
     const locale = zh ? 1 : 0;
+    const plan = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Lockdocs Pro", exact: true }) });
+    const decisionProof = plan.locator(".pricing-decision-proof");
+    const example = upgrades.next;
+    await expect(decisionProof).toBeVisible();
+    await expect(decisionProof).toContainText(example.label);
+    await expect(decisionProof).toContainText(example.change[locale]);
+    await expect(decisionProof.locator("code")).toHaveText(example.path);
+    const buy = plan.getByRole("link", { name: zh ? "購買 Lockdocs Pro — €109／年" : "Get Lockdocs Pro — €109/yr", exact: true });
+    await expect(buy).toHaveAccessibleDescription(zh ? "請先登入，回到此頁後即可繼續結帳。"
+      : "Sign in first, then return here to continue to checkout.");
+    await expect(buy).toBeVisible();
+    expect(await buy.evaluate(link => {
+      const next = link.nextElementSibling!;
+      const proof = next.nextElementSibling!;
+      const [linkBox, nextBox, proofBox] = [link, next, proof].map(el => el.getBoundingClientRect());
+      return proof.scrollWidth <= proof.clientWidth && linkBox.height >= 44 &&
+        linkBox.bottom <= nextBox.top && nextBox.bottom <= proofBox.top && proofBox.top - linkBox.bottom < 60;
+    })).toBe(true);
+    if (process.env.LOCKDOCS_LOCAL_CAPTURES) await plan.screenshot({ path: info.outputPath("pricing-decision.png"), animations: "disabled" });
     const proof = page.getByRole("region", { name: zh ? "Pro 功能實例" : "What Pro shows you" });
     const upgrade = proof.getByRole("article").filter({ has: page.getByRole("group", { name: zh ? /升級報告/ : /UPGRADE REPORT/ }) });
     const registry = proof.getByRole("article").filter({ has: page.getByRole("group", { name: zh ? /私有套件文件/ : /PRIVATE PACKAGE DOCS/ }) });

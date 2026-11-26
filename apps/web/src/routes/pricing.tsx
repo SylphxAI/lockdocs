@@ -1,5 +1,5 @@
 import { EditorialFaq } from "@/components/editorial";
-import { PricingProof } from "@/components/pricing-proof";
+import { PricingDecisionProof, PricingProof } from "@/components/pricing-proof";
 import { pricingFaq } from "@/lib/pricing-faq";
 import { JsonLd } from "@/components/json-ld";
 import { canonicalOrigin } from "@/lib/indexing";
@@ -11,11 +11,11 @@ import { account } from "@/lib/account-query";
 import { PageMeta } from "@/components/page-meta";
 import { A as Link } from "@solidjs/router";
 import { ArrowRight, Check, LockKeyhole } from "lucide-solid";
-import { knownCheckoutSurface, pricingCheckoutSurface, proPrice as price } from "@/lib/analytics-events";
+import { billingCurrencies, knownCheckoutSurface, pricingCheckoutSurface, proPrice as price } from "@/lib/analytics-events";
 import { pricingPath, signInHref } from "@/lib/auth-entry";
 import { useCookieSettings } from "@/components/cookie-settings";
 
-const currencies = ["USD", "GBP", "EUR", "HKD"] as const;
+const currencies = billingCurrencies;
 const prefixes = { USD: "US$", GBP: "£", EUR: "€", HKD: "HK$" };
 const annualAmount = (code: typeof currencies[number]) => Number(price.unit_amounts[code]) / 100;
 
@@ -47,7 +47,15 @@ export default function Pricing() {
     <div class="plan-grid">
       <article class="surface plan plan-pro"><div class="plan-label">{text("PAID PLAN", "付費方案")}</div><h2>Lockdocs Pro</h2><div class="plan-price">{annual()}{text("/yr", "／年")}</div><p class="plan-total">{text("Billed annually upfront · Tax included", "年費一次付清，已含稅")}</p><ul class="check-list"><For each={[text("Everything in Free", "包含免費版的所有功能"), text("Upgrade Reports with call-site citations", "升級報告，附上受影響的呼叫位置"), text("Private Package Docs", "私有套件文件")]}>{(item) => <li><Check size={17}/>{item}</li>}</For></ul>
       {query.billing === "unavailable" && <p role="status" class="notice">{text("Checkout isn’t available right now. No payment was confirmed here.", "目前無法結帳，尚未確認任何付款。")}</p>}
-      {entitlement()?.entitled ? <Link class="button primary" href="/dashboard">Manage Pro <ArrowRight size={16}/></Link> : !session() ? <Link class="button primary" href={carryCampaign(signInHref(returnPath()))}>{text(`Get Lockdocs Pro — ${annual()}/yr`, `購買 Lockdocs Pro — ${annual()}／年`)} <ArrowRight size={16}/></Link> : details()?.billing && entitlement()?.status === "not_entitled" ? <form method="post" action="/api/billing/checkout" onSubmit={event => analytics.beginCheckout(event.currentTarget, currency(), entrySurface())}>
+      {entitlement()?.entitled ? <Link class="button primary" href="/dashboard">Manage Pro <ArrowRight size={16}/></Link> : !session() ? <>
+        <Link class="button primary" href={carryCampaign(signInHref(returnPath()))} aria-describedby="pricing-sign-in-next"
+          onClick={event => {
+            if (!event.isTrusted || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+            analytics.trackEvent("pricing_buy_clicked", { entry_surface: entrySurface(), currency: currency(), locale: locale() });
+          }}>{text(`Get Lockdocs Pro — ${annual()}/yr`, `購買 Lockdocs Pro — ${annual()}／年`)} <ArrowRight size={16}/></Link>
+        <p id="pricing-sign-in-next" class="pricing-sign-in-next quiet">{text("Sign in first, then return here to continue to checkout.", "請先登入，回到此頁後即可繼續結帳。")}</p>
+        <PricingDecisionProof/>
+      </> : details()?.billing && entitlement()?.status === "not_entitled" ? <form method="post" action="/api/billing/checkout" onSubmit={event => analytics.beginCheckout(event.currentTarget, currency(), entrySurface())}>
         <input type="hidden" name="signal_blocked" value="1"/>
         <input type="hidden" name="signal_touch" disabled/>
         <input type="hidden" name="currency" value={currency()}/>

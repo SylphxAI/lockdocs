@@ -1,53 +1,25 @@
-import { createSylphxAuthHandler, readAuthSessionCookie, type SessionAdapter, type VerifiedIdentitySession } from "@sylphx/auth";
-import type { EntryConfig } from "@sylphx/auth/client";
+import { readAuthSessionCookie, type VerifiedIdentitySession } from "@sylphx/auth";
 import { timingSafeEqual } from "node:crypto";
-import { cookie, httpsOrigin, setPrivateCookie } from "./http";
+import {
+  appOrigin, authHeaders, clientEndpoint, config, getCapabilities, getSession, OAUTH,
+  oauthSessionAge, providerFetch, redeem, routePrefix, sdk, SESSION, type OAuthProvider, type SignInMethod,
+} from "./auth-identity";
+import { cookie, setPrivateCookie } from "./http";
 import { boundedJson } from "./bounded-json";
 import { clearSignupMarker, markSignup } from "./signup-analytics";
 import { hasPublicOrigin } from "./public-origin";
 import { isCliCode, validateNext } from "./auth-entry";
 
 export { httpsOrigin } from "./http";
+export { appOrigin, authConfigured, endUserId, getCapabilities, getSession, isVerifiedSession, moneyAccessToken, providerFetch } from "./auth-identity";
+export type { AuthCapabilities, OAuthProvider, Session, SignInMethod } from "./auth-identity";
 
-export type Session = Readonly<{ id: string; name?: string; email?: string; token: string }>;
-export type OAuthProvider = "github" | "google";
-const methods = ["email_otp", "passkey"] as const;
-export type AuthCapabilities = Record<OAuthProvider | typeof methods[number], boolean>;
-
-type AuthConfig = { origin: string; base: string; key: string; secret: string; instance: string };
-const SESSION = "__Host-lockdocs-session";
-const routePrefix = "/api/auth";
-const providers = ["google", "github"] as const;
-const OAUTH = "__Host-lockdocs-oauth";
 const EMAIL_FLOW = "__Host-lockdocs-email-flow";
 const PASSKEY = "__Host-lockdocs-passkey";
 const LAST_USED = "__Host-lockdocs-last-auth-method";
 const lastUsedAge = 90 * 24 * 60 * 60;
-export type SignInMethod = OAuthProvider | typeof methods[number];
 const privateHeaders = { "Cache-Control": "no-store", "Referrer-Policy": "no-referrer" };
-const verified = new WeakMap<Session, { agent: string | null; expires: number }>();
 const base64url = /^[A-Za-z0-9_-]+$/;
-
-export function appOrigin() {
-  return httpsOrigin(process.env.LOCKDOCS_APP_ORIGIN);
-}
-
-function config(): AuthConfig | null {
-  const origin = appOrigin();
-  const base = httpsOrigin(process.env.SYLPHX_AUTH_URL);
-  const key = process.env.SYLPHX_PUBLISHABLE_KEY;
-  const secret = process.env.SYLPHX_AUTH_SECRET_KEY ?? process.env.SYLPHX_SECRET_KEY;
-  const instance = process.env.SYLPHX_AUTH_ORGANIZATION_ID;
-  return origin && base && key && secret && instance ? { origin, base, key, secret, instance } : null;
-}
-
-export function authConfigured(): boolean {
-  return config() !== null;
-}
-
-export function providerFetch(url: URL, init: Omit<RequestInit, "redirect"> = {}): Promise<Response> {
-  return fetch(url, { ...init, cache: "no-store", redirect: "error", signal: AbortSignal.timeout(8_000) });
-}
 
 export function privateJson(body: object, status = 200) {
   return Response.json(body, { status, headers: privateHeaders });
@@ -61,149 +33,10 @@ export function sameOrigin(request: Request, origin: string) {
   return request.headers.get("origin") === origin;
 }
 
-function authHeaders(agent: string | null, credential?: string, json = false) {
-  const outgoing = new Headers({ accept: "application/json" });
-  if (agent) outgoing.set("user-agent", agent);
-  if (credential) outgoing.set("authorization", "Bearer " + credential);
-  if (json) outgoing.set("content-type", "application/json");
-  return outgoing;
-}
-
-function opaqueSession(token: unknown): token is string {
-  return typeof token === "string" && token.length < 3_000 && /^identity_org_session_[A-Za-z0-9_-]+$/.test(token);
-}
-
-export function endUserId(id: unknown): id is string {
-  return typeof id === "string" && id.length <= 160 && /^usr_[A-Za-z0-9_-]+$/.test(id);
-}
-
-async function inspect(auth: AuthConfig, token: string, agent: string | null) {
-  try {
-    const response = await providerFetch(new URL("/v1/client/session", auth.base), {
-      headers: authHeaders(agent, token),
-    });
-    if (!response.ok) return null;
-    const body = await response.json();
-    const user = body?.user;
-    const expiry = body?.session?.expires_at;
-    if (body?.session?.instance_id !== auth.instance || typeof body?.session?.id !== "string" ||
-      !Number.isSafeInteger(expiry) || expiry <= Date.now() / 1000 || !endUserId(user?.id)) return null;
-    const session: Session = Object.freeze({
-      id: user.id,
-      ...(typeof user.name === "string" && user.name ? { name: user.name } : {}),
-      ...(typeof user.email === "string" && user.email ? { email: user.email } : {}),
-      token,
-    });
-    verified.set(session, { agent, expires: expiry });
-    return session;
-  } catch {
-    return null;
-  }
-}
-
-/** The token is a private Auth session credential: never serialize it to the client. */
-export async function getSession(request: Request): Promise<Session | null> {
-  const auth = config();
-  if (!auth) return null;
-  const token = readAuthSessionCookie(request, { sessionCookie: SESSION })?.value;
-  if (!opaqueSession(token)) return null;
-  const incoming = request.headers;
-  return inspect(auth, token, incoming.get("user-agent"));
-}
-
-export function isVerifiedSession(session: Session): boolean {
-  return (verified.get(session)?.expires ?? 0) > Date.now() / 1000;
-}
-
-/** Exchange only a verified direct session; OAuth credentials cannot open Money's end-user routes. */
-export async function moneyAccessToken(session: Session): Promise<string | null> {
-  const auth = config();
-  const context = verified.get(session);
-  if (!auth || !context || !isVerifiedSession(session)) return null;
-  try {
-    const response = await providerFetch(new URL("/v1/client/token", auth.base), {
-      method: "POST",
-      headers: authHeaders(context.agent, session.token, true),
-      body: "{}",
-    });
-    if (!response.ok) return null;
-    const body = await response.json();
-    return typeof body?.access_token === "string" &&
-      /^[A-Za-z0-9._~-]+$/.test(body.access_token) && body.access_token.length <= 16_384 &&
-      Number.isSafeInteger(body.expires_in) && body.expires_in > 0 ? body.access_token : null;
-  } catch {
-    return null;
-  }
-}
-
-async function redeem(auth: AuthConfig, ticket: string, agent: string | null) {
-  try {
-    const response = await providerFetch(new URL("/v1/client/tickets:redeem", auth.base), {
-      method: "POST",
-      headers: authHeaders(agent, auth.secret, true),
-      body: JSON.stringify({ ticket }),
-    });
-    if (!response.ok) return null;
-    const { session, is_new_user } = await response.json();
-    if (!opaqueSession(session?.token) || !Number.isSafeInteger(session.expires_at)) return null;
-    const identity = await inspect(auth, session.token, agent);
-    if (!identity) return null;
-    const maxAge = Math.floor(Math.min(session.expires_at, verified.get(identity)!.expires) - Date.now() / 1000);
-    return maxAge > 0 ? { token: identity.token, maxAge, isNewUser: is_new_user === true } : null;
-  } catch {
-    return null;
-  }
-}
-
 function equal(left: string, right: string) {
   const a = Buffer.from(left);
   const b = Buffer.from(right);
   return a.length === b.length && timingSafeEqual(a, b);
-}
-
-// Keep Identity discovery pinned to the instance that backs Lockdocs and Money.
-function sdk(auth: AuthConfig, session?: SessionAdapter) {
-  return createSylphxAuthHandler({
-    origin: auth.origin, authApiOrigin: auth.base, tenantAuthOrigin: process.env.LOCKDOCS_TENANT_AUTH_ORIGIN,
-    publishableKey: auth.key, sessionMode: "server", sessionSecret: auth.secret,
-    routePrefix, loginPath: "/sign-in", defaultReturnTo: "/dashboard",
-    allowReturnTo: path => path === validateNext(path),
-    trustSylphxEdge: true,
-    allowedMethods: ["oauth", "otp", "passkey"], providers, directOAuth: true,
-    flowCookie: OAUTH, sessionCookie: SESSION, session,
-    async fetch(url, init) {
-      const response = await fetch(url, init);
-      if (url.origin === auth.base && url.pathname === "/v1/client/config" && response.ok) {
-        try {
-          if ((await response.clone().json()).instance?.id === auth.instance) return response;
-        } catch { /* Unreadable discovery must also fail closed. */ }
-        void response.body?.cancel().catch(() => undefined);
-        return new Response(null, { status: 502 });
-      }
-      return response;
-    },
-  });
-}
-
-// Keep the existing options shape for the Lockdocs sign-in view.
-export async function getCapabilities(request: Request, auth = config()): Promise<AuthCapabilities | null> {
-  if (!auth) return null;
-  try {
-    const url = new URL(request.url);
-    url.pathname = routePrefix + "/config";
-    const response = await sdk(auth)(new Request(url, { headers: request.headers, signal: request.signal }));
-    if (!response.ok) return null;
-    const entry: EntryConfig = await response.json();
-    return { google: entry.providers.includes("google"), github: entry.providers.includes("github"),
-      email_otp: entry.otp, passkey: entry.passkey };
-  } catch { return null; }
-}
-
-// Keep OTP and passkey flow cookies until the Solid SDK can preserve the OTP-step passkey option.
-function clientEndpoint(auth: AuthConfig, path: string) {
-  const url = new URL("/v1/client/" + path, auth.base);
-  url.searchParams.set("publishable_key", auth.key);
-  return url;
 }
 
 export async function signInOptions(request: Request) {
@@ -239,11 +72,8 @@ export async function finishOAuth(request: Request) {
   try {
     const response = await sdk(auth, {
       async issue(session, request) {
-        if (!opaqueSession(session.token) || typeof session.expiresAt !== "number" || !Number.isSafeInteger(session.expiresAt)) return;
-        const identity = await inspect(auth, session.token, request.headers.get("user-agent"));
-        if (!identity || identity.id !== session.user.id) return;
-        const age = Math.floor(Math.min(session.expiresAt, verified.get(identity)!.expires) - Date.now() / 1000);
-        if (age < 1 || (session.provider !== "google" && session.provider !== "github")) return;
+        const age = await oauthSessionAge(auth, session, request);
+        if (age === null || age < 1 || (session.provider !== "google" && session.provider !== "github")) return;
         signedIn = session;
         return [[SESSION, session.token, age], [LAST_USED, session.provider, lastUsedAge]];
       },
@@ -284,6 +114,7 @@ export async function signOut(request: Request) {
   return response;
 }
 
+// Keep OTP and passkey flow cookies until the Solid SDK can preserve the OTP-step passkey option.
 export async function beginPasskey(request: Request) {
   const auth = config();
   if (!auth) return privateJson({ error: "auth_unavailable" }, 503);

@@ -10,8 +10,7 @@ use super::ranking::{api_words, change_intent, hybrid_rank, identifiers};
 use super::render::{provenance, Pack};
 use super::{Answer, Engine};
 use crate::bm25::{self, Bm25};
-use crate::extract::Kind;
-use crate::{embed, est_tokens, upstream};
+use crate::{embed, est_tokens};
 use serde_json::json;
 
 use self::answer::{overview, pack_hits, search_header};
@@ -29,7 +28,7 @@ impl Engine {
         let SearchScope { scopes, public_calls } = search_scope(&ready, &imports, query)?;
         let q = query.trim();
         if q.is_empty() {
-            return Ok(self.with_upstream_hints(overview(&ready, &scopes, tokens), &ready));
+            return Ok(self.with_answer_notices(overview(&ready, &scopes, tokens), &ready, false));
         }
         let qterms = bm25::query_terms(q);
         // One BM25 over the selected packages so scores compare.
@@ -61,21 +60,10 @@ impl Engine {
         } else if broad {
             out.prepend(&format!("Sources: {}\n", used_pkgs.join(", ")));
         }
-        // Packages that ship few docs: point at the one-time upstream fetch.
-        for (idx, dep, _) in &ready {
-            let prose = idx.entries.iter().filter(|e| e.kind == Kind::Prose).count();
-            if !broad && idx.upstream.is_none() && prose < 40 && !self.opts.fetch && upstream::cached(dep).is_none() {
-                out.push_raw(&format!(
-                    "\nTip: {} ships few docs. `lockdocs fetch {}` adds its upstream docs at this version's git tag (one-time download, then offline).\n",
-                    idx.id(),
-                    idx.name
-                ));
-            }
-        }
         let answer = Answer {
             json: json!({"query": q, "packages": ready.iter().map(|r| r.0.id()).collect::<Vec<_>>(), "hits": hits_json, "provenance": provenance(&ready), "tokens": est_tokens(&out.text)}),
             text: out.text,
         };
-        Ok(self.with_upstream_hints(answer, ready.iter().filter(|(idx, _, _)| !broad || used_pkgs.contains(&idx.id()))))
+        Ok(self.with_answer_notices(answer, ready.iter().filter(|(idx, _, _)| !broad || used_pkgs.contains(&idx.id())), !broad))
     }
 }

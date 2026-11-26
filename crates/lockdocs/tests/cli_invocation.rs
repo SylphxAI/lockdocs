@@ -339,6 +339,78 @@ fn mcp_client(mut command: Command) -> impl FnMut(Value) -> Value {
 }
 
 const REFRESH_HINT: &str = "Upstream docs for tiny-schema@1.2.0 were fetched with older rules. Refresh with `lockdocs fetch tiny-schema`.";
+const FETCH_TIP: &str = "Tip: tiny-schema@1.2.0 ships few docs. Run `lockdocs fetch tiny-schema`.";
+
+#[test]
+fn focused_docs_put_at_most_one_fetch_notice_first_in_cli_and_mcp() {
+    let full = tempfile::tempdir().unwrap();
+    let pkg = full.path().join("node_modules/tiny-schema");
+    std::fs::create_dir_all(&pkg).unwrap();
+    for file in [
+        "package.json",
+        "package-lock.json",
+        "node_modules/tiny-schema/package.json",
+        "node_modules/tiny-schema/index.d.ts",
+    ] {
+        std::fs::copy(fixture().join(file), full.path().join(file)).unwrap();
+    }
+    let readme: String = (0..40)
+        .map(|i| format!("## Guide {i}\n\nPart {i} explains how to reject unknown keys in a schema.\n\n"))
+        .collect();
+    std::fs::write(pkg.join("README.md"), readme).unwrap();
+
+    for (root, upstream_format, expected) in [
+        (fixture(), None, Some(FETCH_TIP)),
+        (fixture(), Some(8), Some(REFRESH_HINT)),
+        (fixture(), Some(lockdocs_core::upstream::FORMAT), None),
+        (full.path().to_path_buf(), None, None),
+    ] {
+        let home = tempfile::tempdir().unwrap();
+        if let Some(format) = upstream_format {
+            write_upstream_cache(home.path(), format, 1, "# Guide\n\nReject unknown keys by making the schema strict.");
+        }
+        let query = "reject unknown keys";
+        let package = "tiny-schema";
+        let mut cli = command(home.path());
+        cli.env("LOCKDOCS_EMBED", "0").args([package, query, "--offline", "-C"]).arg(&root);
+        let output = output(cli, false);
+        assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
+        let cli_text = String::from_utf8(output.stdout).unwrap();
+
+        let mut mcp = command(home.path());
+        mcp.env("LOCKDOCS_EMBED", "0").args(["mcp", "--offline", "-C"]).arg(&root);
+        let mut request = mcp_client(mcp);
+        let response = request(json!({"jsonrpc":"2.0","id":2,"method":"tools/call",
+            "params":{"name":"docs","arguments":{"package":package,"query":query}}}));
+        let result = &response["result"];
+        assert_ne!(result["isError"], true, "{response}");
+        assert_eq!(result["content"].as_array().unwrap().len(), 1, "{response}");
+        assert_eq!(result["content"][0]["type"], "text", "{response}");
+        let mcp_text = result["content"][0]["text"].as_str().unwrap();
+
+        let texts = [cli_text.as_str(), mcp_text];
+        if let Some(notice) = expected {
+            assert_eq!(texts.map(|text| text.lines().next()), [Some(notice); 2], "CLI and MCP first lines");
+        }
+        for text in texts {
+            let notices = text.lines().filter(|line| line.contains("`lockdocs fetch tiny-schema`")).count();
+            assert_eq!(notices, usize::from(expected.is_some()), "{text}");
+        }
+    }
+}
+
+#[test]
+fn few_docs_tip_keeps_existing_json_token_estimate() {
+    let home = tempfile::tempdir().unwrap();
+    let mut cli = command(home.path());
+    cli.env("LOCKDOCS_EMBED", "0")
+        .args(["tiny-schema", "reject unknown keys", "--offline", "--json", "-C"])
+        .arg(fixture());
+    let answer = successful_json(&output(cli, false));
+    // Contract from the unmodified binary: includes the cost of the original trailing tip.
+    assert_eq!(answer["tokens"], 239);
+    assert!(!answer.to_string().contains("lockdocs fetch tiny-schema"));
+}
 
 fn write_upstream_cache(home: &Path, format: u32, files: usize, text: &str) {
     let dir = home.join("cache/upstream/npm/tiny-schema@1.2.0");

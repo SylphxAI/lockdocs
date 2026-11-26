@@ -1,6 +1,7 @@
 import { createMemo, createSignal, For, Show } from "solid-js";
 import { A as Link, useLocation } from "@solidjs/router";
-import { ArrowRight, ArrowUpRight, Braces, GitCompareArrows, ListTree, Search } from "lucide-solid";
+import { ArrowRight, ArrowUpRight, GitCompareArrows, ListTree, Search } from "lucide-solid";
+import { PlaygroundMcp } from "@/components/playground-mcp";
 import { StudioInput } from "@/components/studio-input";
 import { PackageText } from "@/components/package-text";
 import { CopyButton } from "@/components/copy-button";
@@ -14,7 +15,6 @@ import { formats, type Format } from "@/lib/lockfile-formats";
 import { useSiteLanguage } from "@/lib/site-language";
 
 const pageSize = 35;
-const snippet = JSON.stringify({ mcpServers: { lockdocs: { command: "npx", args: ["-y", "@sylphx/lockdocs", "mcp"] } } }, null, 2);
 
 export function Studio() {
   const initialUpgrade = upgradeExample(useLocation().search);
@@ -47,7 +47,6 @@ export function Studio() {
     packageList.scrollTop = 0;
   }
   const [upgrade, setUpgrade] = createSignal<UpgradeId>(initialUpgrade ?? "next");
-  const [snippetOpen, setSnippetOpen] = createSignal(false);
   const active = createMemo(() => upgrades[upgrade()]);
 
   function resolve(nextFormat: Format, input: string, sourceKind: EventParams<"lockfile_resolved">["source_kind"]) {
@@ -112,10 +111,7 @@ export function Studio() {
       </div>
       <Link href={proHref("playground_upgrade_cta")} class="button secondary small" onClick={() => trackEvent("pro_cta_clicked", { entry_surface: "playground_upgrade_cta" })}>{text("See Pro plans", "查看 Pro 方案")} <ArrowRight size={16}/></Link>
     </section>
-    <section class="snippet-box surface">
-      <button type="button" class="snippet-toggle" aria-expanded={snippetOpen()} onClick={() => setSnippetOpen(!snippetOpen())}><Braces size={18}/> {text("MCP agent setup", "MCP 代理工具設定")} <span aria-hidden="true">{snippetOpen() ? "−" : "+"}</span></button>
-      <Show when={snippetOpen()}><p class="quiet">{text("Run your agent from the project root so Lockdocs can find the lockfile.", "請從專案根目錄啟動代理工具，Lockdocs 才能找到 lockfile。")}</p><pre>{snippet}</pre><CopyButton value={snippet} analytics={{ surface: "playground_mcp", command_kind: "mcp_config" }}/></Show>
-    </section>
+    <PlaygroundMcp/>
     <section class="upgrade-section" id="upgrade" aria-labelledby="report-preview-title">
       <div class="page-intro" ref={reportImpression}><div class="kicker"><span/> {text("PRO / REPORT PREVIEW", "PRO / 升級報告預覽")}</div><h2 id="report-preview-title">{text("See exactly what breaks.", "升級後，哪些程式碼需要改？")}</h2><p>{text("Compare call sites before and after an upgrade, with source citations from each release. The lockfile preview checks versions only; it doesn’t scan your source code.", "比較升級前後的呼叫範例，並查看各版本的原始碼出處。上方的 lockfile 預覽只用來查版本，不會掃描你的程式碼。")}</p></div>
       <div class="segmented" role="group" aria-label={text("Upgrade example", "升級範例")}><For each={upgradeIds}>{id => <button type="button" aria-pressed={id === upgrade()} onClick={() => switchExample(id)}>{upgrades[id].label}</button>}</For></div>

@@ -51,7 +51,7 @@ for (const mode of ["unanswered", "denied", "gpc", "granted"] as const) {
     await copyFrom(page, "Copy upgrade command");
     await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe("lockdocs upgrade next 15.0.0");
     await page.getByRole("button", { name: "MCP agent setup" }).click();
-    await copyFrom(page, "Copy");
+    await copyFrom(page, "Copy .cursor/mcp.json");
     expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('"mcpServers"');
     const example = page.getByRole("button", { name: "Pydantic 1.10 → 2.9" });
     await example.click();

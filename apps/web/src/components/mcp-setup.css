@@ -1,0 +1,26 @@
+.mcp-editor-picker button { min-height: 44px; }
+.mcp-editor-picker [aria-pressed="true"] { color: var(--mint); }
+
+.playground-mcp { margin-top: 13px; padding-inline: 18px; }
+.mcp-drawer-toggle {
+  display: flex;
+  width: 100%;
+  min-height: 48px;
+  align-items: center;
+  gap: 9px;
+  text-align: left;
+  font: 600 13px var(--mono);
+}
+.mcp-drawer-toggle svg { flex: none; color: var(--blue); }
+.mcp-drawer-toggle span { margin-inline-start: auto; color: var(--mint); }
+.mcp-drawer-content { display: grid; gap: 10px; padding-block: 3px 14px; }
+.mcp-drawer-content p { margin: 0; font-size: 13px; }
+.playground-mcp .segmented { margin: 0; }
+.playground-mcp .editorial-code { min-width: 0; margin: 0; background: var(--canvas); }
+.playground-mcp .editorial-code figcaption { background: var(--raised); border-radius: 7px 7px 0 0; }
+.playground-mcp .editorial-code .copy-button { width: 44px; height: 44px; }
+.playground-mcp .editorial-code figcaption span { overflow-wrap: anywhere; }
+.playground-mcp .editorial-code pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.mcp-guide-link { display: inline-flex; align-items: center; gap: 4px; justify-self: start; color: var(--dim); font-size: 13px; }
+.mcp-guide-link:hover { color: var(--ink); text-decoration: underline; }
+.mcp-guide-link svg { flex: none; }

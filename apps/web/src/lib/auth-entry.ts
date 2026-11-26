@@ -1,5 +1,23 @@
 import { knownCheckoutSurface, pricingCheckoutSurface, proPrice } from "./analytics-events";
-import { defaultLocale, localizedPath, type Locale } from "./locales";
+import { defaultLocale, localizedPath, pageLocale, type Locale } from "./locales";
+
+export function signInLocale(search: string): Locale {
+  const params = new URLSearchParams(search);
+  const languages = params.getAll("lang");
+  const lang = languages[0];
+  if (languages.length === 1 && (lang === "en" || lang === "zh-TW")) return lang;
+  const targets = params.getAll("next");
+  return pageLocale(validateNext(targets.length === 1 ? targets[0] : null).split("?", 1)[0]);
+}
+
+export function signInLanguageHref(href: string, search: string, locale: Locale) {
+  // Keep Auth state byte-for-byte. Carry campaign parameters separately under existing consent rules.
+  const state = search.slice(1).split("&").filter(pair => {
+    const key = new URLSearchParams("&" + pair).keys().next().value;
+    return key === "next" || key === "auth" || key === "error";
+  });
+  return href + (href.includes("?") ? "&" : "?") + [...state, "lang=" + locale].join("&");
+}
 
 const aliases = new Set(["/login", "/signup", "/sign-up", "/register", "/forgot-password"]);
 

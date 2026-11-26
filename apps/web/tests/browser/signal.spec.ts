@@ -395,7 +395,7 @@ for (const [mode, zh, currency, surface] of [
     if (isMobile) await buy.tap();
     else await buy.press("Enter");
     await expect(page).toHaveURL(destination.href);
-    await expect(page.getByRole("heading", { name: "Sign in", exact: false })).toBeVisible();
+    await expect(page.getByRole("heading", { name: zh ? "登入 Lockdocs" : "Sign in to Lockdocs", exact: true })).toBeVisible();
     if (explicit) await expect.poll(() => rows("pricing_buy_clicked").map(row => row.properties)).toEqual([
       { entry_surface: surface, currency, locale },
     ]);
@@ -503,7 +503,7 @@ for (const mode of ["pre-consent", "GPC"] as const) {
     await page.getByRole("link", { name: /^購買 Lockdocs Pro/ }).click();
     await expect(page).toHaveURL(url => url.pathname === "/sign-in" && url.searchParams.get("next") === next &&
       url.searchParams.get("utm_source") === (gpc ? null : campaign.utm_source));
-    await page.getByRole("link", { name: "Continue with Google" }).click();
+    await page.getByRole("link", { name: "使用 Google 登入", exact: true }).click();
     await expect(page).toHaveURL(auth.origin + next);
 
     for (const invalid of ["unknown", entry_surface + "&entry_surface=" + entry_surface]) {

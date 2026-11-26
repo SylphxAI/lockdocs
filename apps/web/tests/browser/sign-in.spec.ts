@@ -108,7 +108,7 @@ for (const currency of ["USD", "GBP", "EUR", "HKD"]) {
     await expect(pro).toHaveAttribute("href", "/sign-in?" + query);
     await pro.click();
     await expect(page).toHaveURL(auth.origin + "/sign-in?" + query);
-    const google = page.getByRole("link", { name: "Continue with Google" });
+    const google = page.getByRole("link", { name: "使用 Google 登入", exact: true });
     await expect(google).toHaveAttribute("href", "/api/auth/google?" + query);
     await google.click();
     await expect(page).toHaveURL(auth.origin + next);

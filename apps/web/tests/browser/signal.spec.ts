@@ -250,7 +250,7 @@ for (const [path, heading, panelName, grant, labels, reportPath] of [
         const link = proof.getByRole("link", { name: labels[i], exact: true });
         await link.click();
         await expect(page).toHaveURL(url => url.pathname === pathname && url.hash === hash);
-        expect(Object.fromEntries(new URL(page.url()).searchParams)).toEqual(landed);
+        expect(Object.fromEntries(new URL(page.url()).searchParams)).toEqual(i === 0 ? { ...landed, example: "next" } : landed);
         if (mode === "analytics only") {
           expected.push({ ...campaign, entry_surface });
           await expect.poll(() => rows("pro_cta_clicked").map(row => row.properties)).toEqual(expected);

@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { detectLockfileFormat, formats, type Format } from "./lockfile-formats";
-import { resolveLockfile, samples } from "./playground";
+import { resolveLockfile } from "./playground";
+import { samples, upgradeSample } from "./playground-samples";
+import { upgradeExample } from "./upgrade-examples";
 import { readPreviewFile } from "./playground-file";
 import { filterPackages, matchingUpgrade } from "./playground-results";
 
@@ -181,4 +183,25 @@ test("contextual examples match exact ecosystem and package names with fixed pre
   assert.equal(matchingUpgrade([...react, ...zod]), "zod");
   assert.equal(matchingUpgrade([...react, ...zod, ...pydantic]), "pydantic");
   assert.equal(matchingUpgrade([...react, ...zod, ...pydantic, ...next]), "next");
+});
+
+test("only a single exact upgrade ID selects a pinned lockfile sample", () => {
+  const expected = [
+    ["next", "package-lock.json", "next", "14.2.3"],
+    ["pydantic", "uv.lock", "pydantic", "1.10.18"],
+    ["zod", "yarn.lock", "zod", "3.23.8"],
+    ["react", "pnpm-lock.yaml", "react-dom", "18.3.1"],
+  ] as const;
+  for (const [id, format, name, version] of expected) {
+    assert.equal(upgradeExample(`?utm_source=newsletter&example=${id}`), id);
+    const sample = upgradeSample(id);
+    assert.equal(sample.format, format);
+    assert.equal(sample.pin, `${name}@${version}`);
+    assert.ok(resolveLockfile(sample.format, sample.input).some(row => row.name === name && row.version === version));
+    assert.ok(sample.input.includes(sample.snippet));
+    assert.equal(sample.snippet.split("\n").length, 3);
+    assert.ok(sample.snippet.includes(version));
+  }
+  for (const query of ["", "?example=", "?example=bogus", "?example=toString", "?example=__proto__", "?example=React",
+    "?example=react&example=react", "?example=zod&example=bogus"]) assert.equal(upgradeExample(query), undefined, query);
 });

@@ -1,32 +1,35 @@
 import { createMemo, createSignal, For, Show } from "solid-js";
-import { A as Link } from "@solidjs/router";
+import { A as Link, useLocation } from "@solidjs/router";
 import { ArrowRight, ArrowUpRight, Braces, GitCompareArrows, ListTree, Search } from "lucide-solid";
 import { StudioInput } from "@/components/studio-input";
 import { PackageText } from "@/components/package-text";
 import { CopyButton } from "@/components/copy-button";
 import { useCookieSettings, useProImpression } from "@/components/cookie-settings";
-import { samples, resolveLockfile, sampleCitation, sampleExcerpt, type Dependency } from "@/lib/playground";
+import { resolveLockfile, sampleCitation, sampleExcerpt, type Dependency } from "@/lib/playground";
 import { filterPackages, matchingUpgrade } from "@/lib/playground-results";
 import type { EventParams } from "@/lib/analytics-events";
-import { upgrades } from "@/lib/upgrade-examples";
+import { upgradeExample, upgradeIds, upgrades, type UpgradeId } from "@/lib/upgrade-examples";
+import { samples, upgradeSample } from "@/lib/playground-samples";
 import { formats, type Format } from "@/lib/lockfile-formats";
 import { useSiteLanguage } from "@/lib/site-language";
 
-type ExampleId = keyof typeof upgrades;
-const exampleIds = Object.keys(upgrades) as ExampleId[];
-const initialFormat = formats[0];
-const initialRows = resolveLockfile(initialFormat, samples[initialFormat]);
 const pageSize = 35;
 const snippet = JSON.stringify({ mcpServers: { lockdocs: { command: "npx", args: ["-y", "@sylphx/lockdocs", "mcp"] } } }, null, 2);
 
 export function Studio() {
+  const initialUpgrade = upgradeExample(useLocation().search);
+  const sample = initialUpgrade ? upgradeSample(initialUpgrade) : undefined;
+  const initialFormat = sample?.format ?? formats[0];
+  const initialInput = sample?.input ?? samples[initialFormat];
+  const initialRows = resolveLockfile(initialFormat, initialInput);
+  const initialSelection = initialRows.find(row => row.name + "@" + row.version === sample?.pin);
   const { proHref, text } = useSiteLanguage();
   const { trackEvent } = useCookieSettings();
   const upgradeImpression = useProImpression("playground_upgrade_cta");
   const reportImpression = useProImpression("playground_report_preview");
   const [formatUsed, setFormatUsed] = createSignal<Format>(initialFormat);
   const [rows, setRows] = createSignal(initialRows);
-  const [selected, setSelected] = createSignal<Dependency | null>(initialRows[0] ?? null);
+  const [selected, setSelected] = createSignal<Dependency | null>(initialSelection ?? initialRows[0] ?? null);
   const [message, setMessage] = createSignal<"empty" | "invalid">();
   const [count, setCount] = createSignal(pageSize);
   const [query, setQuery] = createSignal("");
@@ -43,7 +46,7 @@ export function Studio() {
     setCount(pageSize);
     packageList.scrollTop = 0;
   }
-  const [upgrade, setUpgrade] = createSignal<ExampleId>("next");
+  const [upgrade, setUpgrade] = createSignal<UpgradeId>(initialUpgrade ?? "next");
   const [snippetOpen, setSnippetOpen] = createSignal(false);
   const active = createMemo(() => upgrades[upgrade()]);
 
@@ -60,15 +63,15 @@ export function Studio() {
     if (example) setUpgrade(example);
     trackEvent("lockfile_resolved", { lockfile_format: nextFormat, source_kind: sourceKind, package_count: resolved.length });
   }
-  function switchExample(id: ExampleId) {
+  function switchExample(id: UpgradeId) {
     if (id === upgrade()) return;
     setUpgrade(id);
-    trackEvent("upgrade_preview_switched", { example_id: id });
+    trackEvent("upgrade_preview_switched", { example_id: id }, { requireExplicitConsent: true });
   }
 
   return <>
     <div class="studio-grid surface">
-      <StudioInput resolve={resolve}/>
+      <StudioInput initialFormat={initialFormat} initialInput={initialInput} resolve={resolve}/>
       <section class="studio-output">
         <div class="panel-title"><ListTree size={17}/> {text("Resolved packages", "找到的套件")}
           <span class="panel-count" aria-live="polite">{query().trim()
@@ -115,7 +118,7 @@ export function Studio() {
     </section>
     <section class="upgrade-section" id="upgrade" aria-labelledby="report-preview-title">
       <div class="page-intro" ref={reportImpression}><div class="kicker"><span/> {text("PRO / REPORT PREVIEW", "PRO / 升級報告預覽")}</div><h2 id="report-preview-title">{text("See exactly what breaks.", "升級後，哪些程式碼需要改？")}</h2><p>{text("Compare call sites before and after an upgrade, with source citations from each release. The lockfile preview checks versions only; it doesn’t scan your source code.", "比較升級前後的呼叫範例，並查看各版本的原始碼出處。上方的 lockfile 預覽只用來查版本，不會掃描你的程式碼。")}</p></div>
-      <div class="segmented" role="group" aria-label={text("Upgrade example", "升級範例")}><For each={exampleIds}>{id => <button type="button" aria-pressed={id === upgrade()} onClick={() => switchExample(id)}>{upgrades[id].label}</button>}</For></div>
+      <div class="segmented" role="group" aria-label={text("Upgrade example", "升級範例")}><For each={upgradeIds}>{id => <button type="button" aria-pressed={id === upgrade()} onClick={() => switchExample(id)}>{upgrades[id].label}</button>}</For></div>
       <article class="surface upgrade-card">
         <div class="panel-title studio-command"><GitCompareArrows size={17}/><code>{active().command}</code>
           <Show when={active().command} keyed>{command => <CopyButton value={command} label={text("Copy upgrade command", "複製升級指令")} analytics={{ surface: "playground_upgrade", command_kind: "cli" }}/>}</Show>

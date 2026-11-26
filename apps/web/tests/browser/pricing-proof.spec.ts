@@ -71,7 +71,7 @@ for (const zh of [false, true]) {
       await widthFits();
     }
     await expect(upgrade.getByRole("button", { pressed: true })).toHaveText(upgrades.react.label);
-    await expect(upgrade.getByRole("link")).toHaveAttribute("href", prefix + "/playground?utm_source=newsletter#upgrade");
+    await expect(upgrade.getByRole("link")).toHaveAttribute("href", prefix + "/playground?example=react&utm_source=newsletter#upgrade");
     await expect(registry.getByRole("link")).toHaveAttribute("href", "/pro?utm_source=newsletter#private-sources");
     await expect(proof.locator("[style]")).toHaveCount(0);
 

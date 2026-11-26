@@ -75,6 +75,51 @@ fn older_react_majors_use_the_official_archives() {
 }
 
 #[test]
+fn express_docs_site_selects_only_the_pinned_major_in_both_transports() {
+    for transport in [Codeload::ExpressSite, Codeload::ExpressSiteRest] {
+        for name in ["express", "@types/express"] {
+            for (major, other, version) in [(4, 5, "4.21.2"), (5, 4, "5.3.0")] {
+                for automatic in [false, true] {
+                    let f = fake(transport, false, Some(&format!("v{version}")));
+                    let out = tempfile::tempdir().unwrap();
+                    let m = build(&client(&f, MAX_ARCHIVE), &dep(name, version), &repo(None), automatic, out.path()).unwrap();
+                    let site = out.path().join("expressjs.com");
+                    let guide = site.join(format!("src/content/docs/en/{major}x/guide/routing.mdx"));
+                    assert_eq!(
+                        std::fs::read_to_string(&guide).unwrap_or_else(|e| panic!("{name}@{version}: missing {}: {e}", guide.display())),
+                        format!("# Express {major} Routing")
+                    );
+                    assert!(!site.join(format!("src/content/docs/en/{other}x/guide/routing.mdx")).exists());
+                    assert!(!site.join("src/content/docs/en/40x/guide/routing.mdx").exists());
+                    assert!(!site.join("src/content/docs/en/4x/guide/oversize.mdx").exists());
+                    assert_eq!(
+                        std::fs::read_to_string(site.join(format!("src/content/api/{major}x/api.mdx"))).unwrap(),
+                        format!("# Express {major} API")
+                    );
+                    assert!(!site.join(format!("src/content/api/{other}x/api.mdx")).exists());
+                    let source = if major == 5 {
+                        "github.com/expressjs/expressjs.com@main (current docs; your major is the latest)"
+                    } else {
+                        "github.com/expressjs/expressjs.com@main (versioned docs)"
+                    };
+                    assert_eq!(m.site.as_deref(), Some(source));
+                    assert_eq!(m.commit.as_deref(), Some(SHA));
+                    assert_eq!(m.via.as_deref(), Some("codeload")); // package archive, independent of the site transport
+                    assert_eq!(m.docs_sites_checked, !automatic);
+                    assert!(m.pages.is_empty() && m.note.is_none(), "{m:?}");
+                    assert_eq!(m.files, 4); // two package files, one API page and one guide
+                    assert_eq!(requests(&f, "/npm/express/latest"), 1);
+                    assert_eq!(requests(&f, "/expressjs/expressjs.com/tar.gz/main"), 1);
+                    let rest = transport == Codeload::ExpressSiteRest;
+                    assert_eq!(requests(&f, "/repos/expressjs/expressjs.com/git/trees/main?recursive=1"), usize::from(rest));
+                    assert_eq!(requests(&f, "/raw/expressjs/expressjs.com/main/"), if rest { 2 } else { 0 });
+                }
+            }
+        }
+    }
+}
+
+#[test]
 fn docs_site_files_follow_the_major_rules() {
     let (docs, pages): (Vec<String>, Vec<String>) = (vec!["src/content/docs/en".into()], vec!["src/app/installation".into()]);
     let versioned = vec!["src/content/api/4x".to_string()];

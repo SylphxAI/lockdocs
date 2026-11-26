@@ -39,7 +39,7 @@ pub struct Repo {
 
 /// Bump when what `fetch` downloads changes, so `lockdocs fetch` refreshes
 /// older copies (a stale copy is still used until then).
-pub const FORMAT: u32 = 7;
+pub const FORMAT: u32 = 8;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Manifest {

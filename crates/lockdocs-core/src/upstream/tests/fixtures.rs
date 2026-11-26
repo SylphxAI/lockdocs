@@ -87,7 +87,20 @@ pub(super) enum Codeload {
     Slow,
     /// Legacy docs fallback writes one file and fails another.
     PartialLegacy,
+    /// Express docs site with both majors on main and no version branches.
+    ExpressSite,
+    ExpressSiteRest,
 }
+
+// The two English guide paths and API paths match expressjs.com at
+// 264c3b928d096ea6ac49f02aefd3c4e0baae83ee; only their contents are synthetic.
+pub(super) const EXPRESS_SITE_DOCS: &[(&str, &[u8])] = &[
+    ("src/content/api/4x/api.mdx", b"# Express 4 API"),
+    ("src/content/docs/en/4x/guide/routing.mdx", b"# Express 4 Routing"),
+    ("src/content/api/5x/api.mdx", b"# Express 5 API"),
+    ("src/content/docs/en/5x/guide/routing.mdx", b"# Express 5 Routing"),
+    ("src/content/docs/en/40x/guide/routing.mdx", b"# Not Express 4"),
+];
 
 pub(super) const SHA: &str = "1111111111111111111111111111111111111111";
 
@@ -100,6 +113,16 @@ pub(super) fn fake(codeload: Codeload, api_blocked: bool, tag: Option<&str>) -> 
     let tag = tag.map(String::from);
     let site_docs_present = codeload == Codeload::PrivateWithSite;
     let site_archive = tarball(&[("src/content/learn/a.md", b"# learn")]);
+    let express = matches!(codeload, Codeload::ExpressSite | Codeload::ExpressSiteRest);
+    let express_oversize = "src/content/docs/en/4x/guide/oversize.mdx";
+    let express_archive = if express {
+        let oversized = vec![0; super::MAX_FILE as usize + 1];
+        let mut docs = EXPRESS_SITE_DOCS.to_vec();
+        docs.push((express_oversize, &oversized));
+        tarball(&docs)
+    } else {
+        Vec::new()
+    };
     let legacy_archive = tarball(&[
         ("content/docs/hooks-reference.md", b"# Hooks API Reference"),
         ("content/blog/new-api.md", b"# Future API"),
@@ -159,7 +182,7 @@ pub(super) fn fake(codeload: Codeload, api_blocked: bool, tag: Option<&str>) -> 
                 (401, "text/plain", Vec::new())
             } else if path.ends_with("/git-upload-pack") {
                 let mut resp = String::new();
-                if let Some(t) = &tag {
+                if let Some(t) = tag.as_ref().filter(|_| !path.starts_with("/expressjs/expressjs.com/")) {
                     let l = format!("{SHA} refs/tags/{t}\n");
                     resp.push_str(&format!("{:04x}{l}", l.len() + 4));
                 }
@@ -167,7 +190,7 @@ pub(super) fn fake(codeload: Codeload, api_blocked: bool, tag: Option<&str>) -> 
                 (200, "application/x-git-upload-pack-result", resp.into_bytes())
             } else if path.starts_with("/o/r/tar.gz/") {
                 match codeload {
-                    Codeload::Ok | Codeload::PartialLegacy => (200, "application/gzip", archive.clone()),
+                    Codeload::Ok | Codeload::PartialLegacy | Codeload::ExpressSite | Codeload::ExpressSiteRest => (200, "application/gzip", archive.clone()),
                     Codeload::Private | Codeload::PrivateWithSite => (404, "text/plain", Vec::new()),
                     Codeload::Fail => (500, "text/plain", b"boom".to_vec()),
                     Codeload::MissingWithAuth if authed => (404, "text/plain", Vec::new()),
@@ -184,6 +207,13 @@ pub(super) fn fake(codeload: Codeload, api_blocked: bool, tag: Option<&str>) -> 
                     json(serde_json::json!({"tree":[
                         {"path":"content/docs/good.md","type":"blob","sha":"b1","size":6},
                         {"path":"content/docs/bad.md","type":"blob","sha":"b2","size":6}]}))
+                } else if express && path == "/repos/expressjs/expressjs.com/git/trees/main?recursive=1" {
+                    let mut tree: Vec<_> = EXPRESS_SITE_DOCS
+                        .iter()
+                        .map(|(path, body)| serde_json::json!({"path": path, "type": "blob", "size": body.len()}))
+                        .collect();
+                    tree.push(serde_json::json!({"path": express_oversize, "type": "blob", "size": super::MAX_FILE + 1}));
+                    json(serde_json::json!({"tree": tree}))
                 } else if path.contains("/git/trees/docs-sha") {
                     json(serde_json::json!({"tree":[{"path":"guide.md","type":"blob","sha":"b2","size":7}]}))
                 } else if path.contains("/git/trees/") {
@@ -193,6 +223,19 @@ pub(super) fn fake(codeload: Codeload, api_blocked: bool, tag: Option<&str>) -> 
                         {"path":"src","type":"tree","sha":"src-sha","size":0}]}))
                 } else {
                     (404, "application/json", b"{}".to_vec())
+                }
+            } else if express && path == "/npm/express/latest" {
+                json(serde_json::json!({"version":"5.3.0"}))
+            } else if express && path == "/expressjs/expressjs.com/tar.gz/main" {
+                if codeload == Codeload::ExpressSiteRest {
+                    (500, "text/plain", Vec::new())
+                } else {
+                    (200, "application/gzip", express_archive.clone())
+                }
+            } else if let Some(p) = path.strip_prefix("/raw/expressjs/expressjs.com/main/").filter(|_| express) {
+                match EXPRESS_SITE_DOCS.iter().find(|(path, _)| *path == p) {
+                    Some((_, body)) => (200, "text/markdown", body.to_vec()),
+                    None => (404, "text/plain", Vec::new()),
                 }
             } else if path == "/npm/react/latest" {
                 json(serde_json::json!({"version":"19.0.0"}))

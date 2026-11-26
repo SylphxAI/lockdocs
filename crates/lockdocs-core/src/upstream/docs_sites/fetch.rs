@@ -87,7 +87,7 @@ pub(in crate::upstream) fn site_docs(agent: &Client, dep: &Dep, pkg_repo: Option
     } else {
         Vec::new()
     };
-    // Versioned API pages always come from the default branch.
+    // Versioned docs always come from the default branch.
     let versioned_ok = reference == site.branch;
     let keep = |p: &str| super::site_kind(p, major, &versioned, versioned_ok, &docs_dirs, &page_dirs);
     let dst = out.join(&repo.name);
@@ -138,7 +138,7 @@ pub(in crate::upstream) fn site_docs(agent: &Client, dep: &Dep, pkg_repo: Option
         "github.com/{}/{}@{short} ({})",
         repo.owner,
         repo.name,
-        if current { how.as_str() } else { "versioned API pages" }
+        if current { how.as_str() } else { "versioned docs" }
     );
     Ok(Some(SiteDocs { label, files, bytes, pages }))
 }

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.11
+
+- `lockdocs fetch` now includes code examples that docs pull in from other files in the same release, such as FastAPI’s startup guide. After upgrading, run `lockdocs fetch` again to refresh previously fetched docs.
+
 ## 0.7.10
 
 - `lockdocs fetch` now selects Express API pages and English guides for the major version pinned in your lockfile. Run it again to refresh previously fetched Express docs.

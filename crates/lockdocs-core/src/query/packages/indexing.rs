@@ -3,7 +3,7 @@
 use super::super::{Answer, Engine};
 use super::{ReadyPkg, Resolved};
 use crate::extract::Kind;
-use crate::{embed, index, Dep};
+use crate::{embed, index, upstream, Dep};
 use rayon::prelude::*;
 use serde_json::json;
 use std::collections::HashSet;
@@ -22,8 +22,13 @@ impl Engine {
                     index::source_stamp(dep, &src, &self.project.root)
                 );
                 if let Some(i) = self.indexes.lock().unwrap().get(&key) {
-                    // Rebuild once the embedding model has arrived.
-                    if !i.embed.is_empty() || !embed::available() {
+                    // A separate CLI fetch can replace a stale cache while MCP is running.
+                    let replaced = i
+                        .upstream_provenance
+                        .as_ref()
+                        .is_some_and(|m| upstream::stale(m) && upstream::cached(dep).is_some_and(|(_, cached)| cached.format != m.format));
+                    // Also rebuild once the embedding model has arrived.
+                    if !replaced && (!i.embed.is_empty() || !embed::available()) {
                         if let Some(n) = self.upstream_notes.lock().unwrap().get(&dep.id()) {
                             note = Some(match note {
                                 Some(old) => format!("{old} {n}"),

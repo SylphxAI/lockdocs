@@ -29,7 +29,7 @@ impl Engine {
         let SearchScope { scopes, public_calls } = search_scope(&ready, &imports, query)?;
         let q = query.trim();
         if q.is_empty() {
-            return Ok(overview(&ready, &scopes, tokens));
+            return Ok(self.with_upstream_hints(overview(&ready, &scopes, tokens), &ready));
         }
         let qterms = bm25::query_terms(q);
         // One BM25 over the selected packages so scores compare.
@@ -72,9 +72,10 @@ impl Engine {
                 ));
             }
         }
-        Ok(Answer {
+        let answer = Answer {
             json: json!({"query": q, "packages": ready.iter().map(|r| r.0.id()).collect::<Vec<_>>(), "hits": hits_json, "provenance": provenance(&ready), "tokens": est_tokens(&out.text)}),
             text: out.text,
-        })
+        };
+        Ok(self.with_upstream_hints(answer, ready.iter().filter(|(idx, _, _)| !broad || used_pkgs.contains(&idx.id()))))
     }
 }

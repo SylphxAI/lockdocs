@@ -282,30 +282,7 @@ fn explicit_flags_only_and_no_argument_mcp_keep_the_three_query_tools() {
         if !args.is_empty() {
             c.arg(fixture());
         }
-        let mut p = Process(c.spawn().unwrap());
-        let mut input = p.0.stdin.take().unwrap();
-        let reader = BufReader::new(p.0.stdout.take().unwrap());
-        let (send, receive) = mpsc::channel();
-        std::thread::spawn(move || {
-            for line in reader.lines() {
-                if send.send(line.unwrap()).is_err() {
-                    break;
-                }
-            }
-        });
-        let mut request = |value: Value| {
-            writeln!(input, "{value}").unwrap();
-            input.flush().unwrap();
-            if value.get("id").is_none() {
-                return Value::Null;
-            }
-            serde_json::from_str::<Value>(&receive.recv_timeout(Duration::from_secs(15)).expect("MCP response")).unwrap()
-        };
-        let initialized = request(
-            json!({"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"test","version":"1"}}}),
-        );
-        assert_eq!(initialized["result"]["serverInfo"]["name"], "lockdocs");
-        request(json!({"jsonrpc":"2.0","method":"notifications/initialized"}));
+        let mut request = mcp_client(c);
         let tools = request(json!({"jsonrpc":"2.0","id":2,"method":"tools/list"}));
         let mut names: Vec<_> = tools["result"]["tools"]
             .as_array()
@@ -329,5 +306,112 @@ fn explicit_flags_only_and_no_argument_mcp_keep_the_three_query_tools() {
             assert_ne!(answer["result"]["isError"], true, "{answer}");
             assert!(answer.to_string().contains(expected), "{answer}");
         }
+    }
+}
+
+fn mcp_client(mut command: Command) -> impl FnMut(Value) -> Value {
+    let mut p = Process(command.stdin(Stdio::piped()).spawn().unwrap());
+    let mut input = p.0.stdin.take().unwrap();
+    let reader = BufReader::new(p.0.stdout.take().unwrap());
+    let (send, receive) = mpsc::channel();
+    std::thread::spawn(move || {
+        for line in reader.lines() {
+            if send.send(line.unwrap()).is_err() {
+                break;
+            }
+        }
+    });
+    let mut request = move |value: Value| {
+        let _process = &p;
+        writeln!(input, "{value}").unwrap();
+        input.flush().unwrap();
+        if value.get("id").is_none() {
+            return Value::Null;
+        }
+        serde_json::from_str::<Value>(&receive.recv_timeout(Duration::from_secs(15)).expect("MCP response")).unwrap()
+    };
+    let initialized = request(
+        json!({"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"test","version":"1"}}}),
+    );
+    assert_eq!(initialized["result"]["serverInfo"]["name"], "lockdocs");
+    request(json!({"jsonrpc":"2.0","method":"notifications/initialized"}));
+    request
+}
+
+const REFRESH_HINT: &str = "Upstream docs for tiny-schema@1.2.0 were fetched with older rules. Refresh with `lockdocs fetch tiny-schema`.";
+
+fn write_upstream_cache(home: &Path, format: u32, files: usize, text: &str) {
+    let dir = home.join("cache/upstream/npm/tiny-schema@1.2.0");
+    std::fs::create_dir_all(dir.join("docs")).unwrap();
+    if files > 0 {
+        std::fs::write(dir.join("docs/fixture.md"), text).unwrap();
+    }
+    let manifest = json!({"format": format, "repo": "github.com/example/tiny-schema", "tag": "v1.2.0",
+        "commit": "0123456789abcdef0123456789abcdef01234567", "docs_sites_checked": true, "files": files, "bytes": text.len()});
+    std::fs::write(dir.join(".lockdocs-upstream.json"), manifest.to_string()).unwrap();
+}
+
+fn assert_refresh_hint(text: &str, show: bool) {
+    assert_eq!(text.lines().filter(|line| *line == REFRESH_HINT).count(), usize::from(show), "{text}");
+}
+
+#[test]
+fn stale_upstream_cache_hint_in_offline_cli() {
+    let home = tempfile::tempdir().unwrap();
+    for state in [None, Some((8, 0)), Some((8, 1)), Some((lockdocs_core::upstream::FORMAT, 1))] {
+        if let Some((format, files)) = state {
+            write_upstream_cache(home.path(), format, files, "# Octarine example\n\nOctarine fixture docs.");
+        }
+        for args in [
+            vec!["tiny-schema", "octarine"],
+            vec!["tiny-schema"],
+            vec!["docs", "octarine"],
+            vec!["api", "s.object", "--pkg", "tiny-schema"],
+        ] {
+            let mut c = command(home.path());
+            c.args(&args).arg("--offline").arg("-C").arg(fixture());
+            let output = output(c, false);
+            assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
+            let text = String::from_utf8(output.stdout).unwrap();
+            if state.is_some_and(|(_, files)| files > 0) && args.contains(&"octarine") {
+                assert!(text.contains("Octarine fixture docs."), "{text}");
+            }
+            assert_refresh_hint(&text, state == Some((8, 1)));
+        }
+    }
+}
+
+#[test]
+fn stale_upstream_cache_hint_in_offline_mcp_clears_after_refetch() {
+    let home = tempfile::tempdir().unwrap();
+    write_upstream_cache(home.path(), 8, 1, "# Octarine example\n\nOctarine old docs.");
+    let mut c = command(home.path());
+    c.args(["mcp", "--offline", "-C"]).arg(fixture());
+    let mut request = mcp_client(c);
+    for (id, package, query, show, expected) in [
+        (2, "tiny-schema", "octarine", true, "Octarine old docs."),
+        (3, "tiny-schema", "octarine", false, "Octarine refreshed docs."),
+        (4, "tinyrt", "spawn", false, "tinyrt@0.3.0"),
+    ] {
+        if id == 3 {
+            // Replace the fetched files and manifest as a successful fetch would.
+            write_upstream_cache(
+                home.path(),
+                lockdocs_core::upstream::FORMAT,
+                1,
+                "# Octarine example\n\nOctarine refreshed docs.",
+            );
+        }
+        let response = request(json!({"jsonrpc":"2.0","id":id,"method":"tools/call",
+            "params":{"name":"docs","arguments":{"package":package,"query":query}}}));
+        let result = &response["result"];
+        assert_ne!(result["isError"], true, "{response}");
+        assert!(result.get("structuredContent").is_none(), "{response}");
+        let content = result["content"].as_array().unwrap();
+        assert_eq!(content.len(), 1, "{response}");
+        assert_eq!(content[0]["type"], "text");
+        let text = content[0]["text"].as_str().unwrap();
+        assert!(text.contains(expected), "{text}");
+        assert_refresh_hint(text, show);
     }
 }

@@ -1,10 +1,13 @@
 //! Token-budgeted answer text, citations, and shared source provenance.
 
 use super::packages::ReadyPkg;
+use super::{Answer, Engine};
 use crate::extract::{Entry, Kind};
 use crate::index::PackageIndex;
-use crate::{est_tokens, Eco};
+use crate::project::Spec;
+use crate::{est_tokens, upstream, Eco};
 use serde_json::{json, Value};
+use std::collections::HashSet;
 
 pub(super) fn provenance(ready: &[ReadyPkg]) -> Vec<Value> {
     ready
@@ -16,6 +19,36 @@ pub(super) fn provenance(ready: &[ReadyPkg]) -> Vec<Value> {
             })
         })
         .collect()
+}
+
+impl Engine {
+    /// Add display-only advice without changing which evidence fits in the answer.
+    pub(super) fn with_upstream_hints<'a>(&self, mut answer: Answer, packages: impl IntoIterator<Item = &'a ReadyPkg>) -> Answer {
+        use std::fmt::Write;
+        let mut hints = String::new();
+        let mut shown = HashSet::new();
+        for (idx, dep, _) in packages {
+            if idx.upstream_provenance.as_ref().is_some_and(|m| m.files > 0 && upstream::stale(m)) && shown.insert((dep.eco, &dep.name, &dep.version)) {
+                let spec = if self
+                    .project
+                    .find(&Spec::parse(&dep.name))
+                    .first()
+                    .is_some_and(|d| d.eco == dep.eco && d.version == dep.version)
+                {
+                    dep.name.clone()
+                } else {
+                    format!("{}:{}", dep.eco, dep.id())
+                };
+                let _ = writeln!(
+                    hints,
+                    "Upstream docs for {} were fetched with older rules. Refresh with `lockdocs fetch {spec}`.",
+                    idx.id()
+                );
+            }
+        }
+        answer.text.insert_str(0, &hints);
+        answer
+    }
 }
 
 fn lang(eco: Eco) -> &'static str {

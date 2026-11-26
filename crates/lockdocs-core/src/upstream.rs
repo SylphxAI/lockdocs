@@ -37,8 +37,8 @@ pub struct Repo {
     pub host: Option<crate::private::Origin>,
 }
 
-/// Bump when what `fetch` downloads changes, so `lockdocs fetch` refreshes
-/// older copies (a stale copy is still used until then).
+/// Selection rules used by `fetch`; bump this when those rules change.
+/// Answers flag older copies until `lockdocs fetch` refreshes them.
 pub const FORMAT: u32 = 9;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

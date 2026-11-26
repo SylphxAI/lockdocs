@@ -1,19 +1,39 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 const cases = [
   {
-    path: "/benchmarks", label: "Find a guide", placeholder: "MCP, upgrade, CLI",
+    path: "/benchmarks", label: "Find a guide", placeholder: "MCP, upgrade",
     navigation: "Documentation", browse: "Browse documentation", hide: "Hide documentation navigation",
     query: "upgrade", match: "Pro reference", unfiltered: "Pro reference", href: "/pro",
     count: "1 matching guide", empty: "No matching guides.",
   },
   {
-    path: "/zh-TW/docs", label: "搜尋指南", placeholder: "MCP、下載、CLI",
+    path: "/zh-TW/docs", label: "搜尋指南", placeholder: "MCP、下載",
     navigation: "文件導覽", browse: "展開文件導覽", hide: "收合文件導覽",
     query: "下載", match: "下載文件（英文）", unfiltered: "下載文件", href: "/guide/fetch",
     count: "找到 1 篇指南", empty: "找不到符合的指南。",
   },
 ];
+
+async function placeholderClearance(page: Page, expected: string) {
+  await page.evaluate(() => document.fonts.ready);
+  const cdp = await page.context().newCDPSession(page);
+  try {
+    // Measure the native placeholder box; it already excludes the search field's clear button.
+    const { root } = await cdp.send("DOM.getDocument");
+    const { nodeId } = await cdp.send("DOM.querySelector", { nodeId: root.nodeId, selector: "#docs-query" });
+    const { node } = await cdp.send("DOM.describeNode", { nodeId, depth: 2, pierce: true });
+    const placeholder = node.shadowRoots?.[0]?.children?.find(child => child.attributes?.includes("-webkit-input-placeholder"));
+    const text = placeholder?.children?.[0];
+    if (!placeholder || text?.nodeValue !== expected) throw new Error("Native search placeholder is missing or differs from the expected text");
+    const { model: slot } = await cdp.send("DOM.getBoxModel", { backendNodeId: placeholder.backendNodeId });
+    const { model: glyphs } = await cdp.send("DOM.getBoxModel", { backendNodeId: text.backendNodeId });
+    expect(glyphs.width).toBeGreaterThan(0);
+    return slot.content[2] - glyphs.content[2];
+  } finally {
+    await cdp.detach();
+  }
+}
 
 for (const fixture of cases) {
   test("Docs search examples fit and filters work on " + fixture.path, async ({ page, isMobile }) => {
@@ -31,20 +51,7 @@ for (const fixture of cases) {
         await expect(search).toBeEmpty();
         await expect(search).toHaveAttribute("placeholder", fixture.placeholder);
         await expect(search).toHaveCSS("font-size", isMobile ? "16px" : "13px");
-        const { textWidth, innerWidth } = await search.evaluate(async (input: HTMLInputElement) => {
-          await document.fonts.ready;
-          const fieldStyle = getComputedStyle(input);
-          const placeholderStyle = getComputedStyle(input, "::placeholder");
-          const canvas = document.createElement("canvas").getContext("2d")!;
-          canvas.font = [placeholderStyle.fontStyle, placeholderStyle.fontWeight, placeholderStyle.fontSize, placeholderStyle.fontFamily].join(" ");
-          canvas.letterSpacing = placeholderStyle.letterSpacing === "normal" ? "0px" : placeholderStyle.letterSpacing;
-          return {
-            textWidth: canvas.measureText(input.placeholder).width,
-            innerWidth: input.clientWidth - parseFloat(fieldStyle.paddingLeft) - parseFloat(fieldStyle.paddingRight),
-          };
-        });
-        expect(textWidth).toBeGreaterThan(0);
-        expect(innerWidth - textWidth, "placeholder clearance in CSS pixels").toBeGreaterThanOrEqual(6);
+        expect(await placeholderClearance(page, fixture.placeholder), "placeholder clearance in CSS pixels").toBeGreaterThanOrEqual(6);
 
         if (isMobile) {
           await expect(nav).toBeHidden();

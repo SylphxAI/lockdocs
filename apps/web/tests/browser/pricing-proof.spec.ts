@@ -49,11 +49,11 @@ for (const zh of [false, true]) {
       : "Sign in first, then return here to continue to checkout.");
     await expect(buy).toBeVisible();
     expect(await buy.evaluate(link => {
-      const proof = link.previousElementSibling!;
       const next = link.nextElementSibling!;
-      const [proofBox, linkBox, nextBox] = [proof, link, next].map(el => el.getBoundingClientRect());
+      const proof = next.nextElementSibling!;
+      const [linkBox, nextBox, proofBox] = [link, next, proof].map(el => el.getBoundingClientRect());
       return proof.scrollWidth <= proof.clientWidth && linkBox.height >= 44 &&
-        proofBox.bottom <= linkBox.top && linkBox.bottom <= nextBox.top && nextBox.top - proofBox.bottom < 90;
+        linkBox.bottom <= nextBox.top && nextBox.bottom <= proofBox.top && proofBox.top - linkBox.bottom < 60;
     })).toBe(true);
     if (process.env.LOCKDOCS_LOCAL_CAPTURES) await plan.screenshot({ path: info.outputPath("pricing-decision.png"), animations: "disabled" });
     const proof = page.getByRole("region", { name: zh ? "Pro 功能實例" : "What Pro shows you" });

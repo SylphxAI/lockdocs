@@ -2,7 +2,7 @@ import { createEffect, createSignal, on, onCleanup, onMount } from "solid-js";
 import { useLocation, useSearchParams } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 import { mint } from "@sylphx/sdk/ids";
-import { createSignalBrowser, resolveEffectiveConsent, type SignalConsent } from "@sylphx/sdk/signal";
+import { createSignalBrowser, resolveEffectiveConsent, type SignalAttribution, type SignalConsent } from "@sylphx/sdk/signal";
 import { migrateSignalChoice, saveSignalChoice } from "@/lib/signal-browser";
 import { readSignalChoice, signalChoiceKey, signalRequestGpc, signalStorageKey, type StoredChoice } from "@/lib/signal-privacy";
 import { analyticsPage } from "@/lib/analytics-page";
@@ -12,6 +12,15 @@ import { useSiteLanguage } from "@/lib/site-language";
 import { localizedPath, defaultLocale } from "@/lib/locales";
 import { validGoogleAdsId, validGoogleAdsPurchaseLabel } from "@/lib/google-ads";
 import { createCookieGoogleAnalytics, type Ads } from "./cookie-google-analytics";
+
+// Signal merges attribution before caller properties. Undefined values suppress
+// those keys in the serialized event without changing campaign capture or links.
+const omitSignalAttribution: Record<Exclude<keyof SignalAttribution, "capturedAt">, undefined> = {
+  gclid: undefined, gbraid: undefined, wbraid: undefined, fbclid: undefined,
+  utm_id: undefined, utm_source: undefined, utm_medium: undefined, utm_campaign: undefined,
+  utm_term: undefined, utm_content: undefined, utm_source_platform: undefined,
+  utm_creative_format: undefined, utm_marketing_tactic: undefined,
+};
 
 export function createCookieConsent(setOpen: (open: boolean) => void) {
   const route = useLocation();
@@ -191,9 +200,11 @@ export function createCookieConsent(setOpen: (open: boolean) => void) {
   const trackEvent: TrackEvent = (event, params, options) => {
     try {
       const saved = syncChoice();
-      if (options?.requireExplicitConsent && (unpersistedDenial || (saved !== "analytics_only" && saved !== "granted"))) return false;
+      const pricingBuy = event === "pricing_buy_clicked";
+      if ((pricingBuy || options?.requireExplicitConsent) && (unpersistedDenial || (saved !== "analytics_only" && saved !== "granted"))) return false;
       const safe = behavioralParams(event, params);
       if (!safe) return false;
+      if (pricingBuy) return forwardSignal(event, { ...omitSignalAttribution, ...safe });
       const sent = forwardSignal(event, safe);
       return google.emit(event, safe) || sent;
     } catch { return false; } // Analytics failures must not interrupt the UI or a native form submit.

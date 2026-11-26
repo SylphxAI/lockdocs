@@ -81,6 +81,17 @@ test("behavioral events refuse unknown names and missing or invalid values", () 
   assert.equal(behavioralParams("upgrade_preview_switched", { example_id: "private-package" }), null);
 });
 
+test("pricing buy intent permits only a known origin, currency and locale", () => {
+  const params = { entry_surface: "article_pro", currency: "GBP", locale: "zh-TW" };
+  assert.deepEqual(behavioralParams("pricing_buy_clicked", {
+    ...params, next: "/pricing?token=private", email: "fixture@example.test", utm_content: "query text", gclid: "test-click-id",
+  }), params);
+  for (const invalid of [{ entry_surface: "pricing_proof_upgrade_report" }, { entry_surface: ["article_pro"] },
+    { currency: "JPY" }, { locale: "fr" }, { locale: undefined }]) {
+    assert.equal(behavioralParams("pricing_buy_clicked", { ...params, ...invalid }), null);
+  }
+});
+
 test("checkout events keep a named source and never emit arbitrary input", () => {
   for (const surface of ["pricing", "home_pro_band", "playground_upgrade_cta", "playground_report_preview",
     "context7_alternative", "guide_cursor_claude_code", "article_pro"]) {

@@ -320,6 +320,93 @@ for (const [path, heading, panelName, grant, labels, reportPath] of [
   }
 }
 
+for (const [mode, zh, currency, surface] of [
+  ["analytics only", true, "HKD", "article_docs_zh_tw"],
+  ["accept all", false, "GBP", "context7_alternative"],
+  ["pre-consent", false, "USD", "pricing"],
+  ["regional default", false, "EUR", "pricing"],
+  ["reject", true, "EUR", "article_pro"],
+  ["GPC", true, "HKD", "article_docs_zh_tw"],
+] as const) {
+  base("pricing buy click: " + mode, async ({ page, isMobile }) => {
+    const { rows, requests } = await signalOnly(page);
+    if (mode === "GPC" || mode === "regional default") {
+      await page.setExtraHTTPHeaders({ "CF-IPCountry": "US", ...(mode === "GPC" ? { "Sec-GPC": "1" } : {}) });
+    }
+    if (mode === "GPC") await page.addInitScript(() => {
+      document.cookie = "__Host-lockdocs-signal-choice=granted; Path=/; Secure; SameSite=Lax";
+    });
+    const pricingPath = zh ? "/zh-TW/pricing" : "/pricing";
+    const locale = zh ? "zh-TW" : "en";
+    const billingPath = currency === "USD" ? pricingPath : pricingPath + "?currency=" + currency;
+    const next = surface === "pricing" ? billingPath : billingPath + "&entry_surface=" + surface;
+    const input = new URL(pricingPath, "http://127.0.0.1");
+    input.search = query.toString();
+    input.searchParams.set("currency", currency);
+    // Unknown and even duplicated source parameters fall back to pricing.
+    input.searchParams.set("entry_surface", surface === "pricing" ? "private-query-fixture" : surface);
+    if (surface === "pricing") input.searchParams.append("entry_surface", "article_pro");
+    await page.goto(input.pathname + input.search + "#private-fragment");
+    const settingsName = zh ? "Cookie 設定" : "Cookie settings";
+    const panel = page.getByRole("region", { name: settingsName });
+    await expect(page.getByRole("button", { name: settingsName, exact: true })).toBeEnabled();
+    if (mode === "analytics only") await panel.getByRole("button", { name: "僅限分析", exact: true }).click();
+    if (mode === "accept all") await panel.getByRole("button", { name: "Allow analytics & ads", exact: true }).click();
+    if (mode === "reject") await panel.getByRole("button", { name: "拒絕選用項目", exact: true }).click();
+    if (mode === "pre-consent") await expect(panel).toBeVisible();
+    if (mode === "GPC") {
+      await page.getByRole("button", { name: settingsName, exact: true }).click();
+      await expect(panel.getByRole("button", { name: "僅限分析", exact: true })).toBeDisabled();
+      await page.keyboard.press("Escape");
+    }
+    const explicit = mode === "analytics only" || mode === "accept all";
+    if (explicit || mode === "regional default") await expect.poll(() => rows("pricing_view").map(row => row.properties.entry_surface)).toEqual([surface]);
+    if (mode === "accept all") expect(rows("pricing_view")[0].properties).toEqual({
+      path: pricingPath, entry_surface: surface, ...campaign, ...clicks,
+    });
+    expect(rows("pricing_buy_clicked")).toEqual([]);
+
+    const buy = page.getByRole("link", { name: zh ? /^購買 Lockdocs Pro/ : /^Get Lockdocs Pro/ });
+    const destination = new URL((await buy.getAttribute("href"))!, page.url());
+    expect(destination.pathname).toBe("/sign-in");
+    const { gclid, gbraid, wbraid } = clicks;
+    expect(Object.fromEntries(destination.searchParams)).toEqual(mode === "reject" || mode === "GPC"
+      ? { next } : { next, ...campaign, gclid, gbraid, wbraid });
+    if (explicit) {
+      // A programmatic click and a native new-tab gesture are not direct
+      // buy activations in this tab. Preserve the anchor and its modifier behavior.
+      await buy.evaluate(link => {
+        link.addEventListener("click", event => event.preventDefault(), { once: true });
+        (link as HTMLAnchorElement).click();
+      });
+      if (!isMobile) {
+        const before = page.url();
+        await page.evaluate(() => {
+          window.addEventListener("click", event => {
+            Object.assign(window, { modifiedBuyClick: { ctrl: event.ctrlKey, prevented: event.defaultPrevented } });
+          }, { once: true });
+        });
+        await buy.click({ modifiers: ["Control"] });
+        expect(await page.evaluate(() => Reflect.get(window, "modifiedBuyClick"))).toEqual({ ctrl: true, prevented: false });
+        await expect(page).toHaveURL(before);
+      }
+      expect(rows("pricing_buy_clicked")).toEqual([]);
+    }
+    if (isMobile) await buy.tap();
+    else await buy.press("Enter");
+    await expect(page).toHaveURL(destination.href);
+    await expect(page.getByRole("heading", { name: "Sign in", exact: false })).toBeVisible();
+    if (explicit) await expect.poll(() => rows("pricing_buy_clicked").map(row => row.properties)).toEqual([
+      { entry_surface: surface, currency, locale },
+    ]);
+    else expect(rows("pricing_buy_clicked")).toEqual([]);
+    if (mode === "pre-consent" || mode === "reject" || mode === "GPC") expect(requests).toEqual([]);
+    for (const event of ["pro_cta_clicked", "paywall_view", "begin_checkout", "checkout_started", "purchase_completed"]) {
+      expect(rows(event)).toEqual([]);
+    }
+  });
+}
+
 base("Sec-GPC denies Signal even with an existing grant", async ({ page }) => {
   const { batches } = await signalOnly(page);
   await page.setExtraHTTPHeaders({ "CF-IPCountry": "US", "Sec-GPC": "1" });

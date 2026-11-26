@@ -1,3 +1,16 @@
+.pricing-decision-proof {
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  border-inline-start: 2px solid var(--mint);
+  background: var(--canvas);
+  border-radius: 4px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.pricing-decision-proof .plan-label { margin-bottom: 3px; }
+.plan .pricing-decision-proof p { margin: 0; }
+.plan .pricing-sign-in-next { margin: 6px 0 0; font-size: 13px; }
+
 .pricing-proof {
   max-width: 970px;
   margin-top: 18px;

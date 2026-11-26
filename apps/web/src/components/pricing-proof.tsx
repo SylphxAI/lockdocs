@@ -12,6 +12,17 @@ import "./pricing-proof.css";
 type Registry = keyof typeof privateProofExamples;
 const registryIds = Object.keys(privateProofExamples) as Registry[];
 
+export function PricingDecisionProof() {
+  const { text } = useSiteLanguage();
+  const example = upgrades.next;
+  return <div class="pricing-decision-proof">
+    <div class="plan-label">{text("Upgrade report example", "升級報告範例")}</div>
+    <p><strong>{example.label}</strong> · {text(example.change[0], example.change[1])}<br/>
+      <code>{example.path}</code>
+    </p>
+  </div>;
+}
+
 export function PricingProof() {
   const { text, locale, href, carryCampaign } = useSiteLanguage();
   const { trackEvent } = useCookieSettings();

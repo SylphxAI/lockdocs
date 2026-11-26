@@ -3,10 +3,10 @@ import { signInMessages } from "@sylphx/auth-solid";
 import { Fingerprint } from "lucide-solid";
 import type { AuthCapabilities, SignInMethod } from "@/lib/auth";
 import { requestPasskey, supportsPasskeys } from "@/lib/passkey-client";
+import { useSiteLanguage } from "@/lib/site-language";
 
 type Options = { capabilities: AuthCapabilities; lastUsed: SignInMethod | null };
 type EmailAction = "send" | "verify";
-const messages = signInMessages.en;
 const mask = (address: string) => address[0] + "•••" + address.slice(address.lastIndexOf("@"));
 
 function GoogleMark() {
@@ -22,10 +22,20 @@ function GitHubMark() {
 }
 
 export function SignIn(props: { next: string }) {
+  const { locale, text } = useSiteLanguage();
+  const messages = () => locale() === "en" ? signInMessages.en : signInMessages["zh-Hant-TW"];
+  const errors = {
+    options: () => text("Couldn’t load sign-in options. Try again.", "無法載入登入選項，請重試。"),
+    passkey: () => text("Passkey sign-in didn’t finish. Try again or choose another method.", "未能使用通行金鑰登入，請重試或改用其他方式。"),
+    rate: () => text("Too many attempts. Wait a moment and try again.", "嘗試次數過多，請稍候再試。"),
+    verify: () => text("Couldn’t verify that code. Check it or request a new one.", "無法驗證這組驗證碼，請確認後再試，或要求重寄。"),
+    send: () => text("Couldn’t send a code. Try again or choose another method.", "無法寄出驗證碼，請重試或改用其他登入方式。"),
+    connection: () => text("Sign-in couldn’t connect. Try again.", "登入時無法連線，請重試。"),
+  };
   const [options, setOptions] = createSignal<Options>();
   const caps = () => options()?.capabilities;
   const [loading, setLoading] = createSignal(true);
-  const [message, setMessage] = createSignal("");
+  const [message, setMessage] = createSignal<keyof typeof errors>();
   const [email, setEmail] = createSignal("");
   const [step, setStep] = createSignal<"email" | "proof">("email");
   const [pending, setPending] = createSignal<EmailAction | "passkey">();
@@ -44,7 +54,7 @@ export function SignIn(props: { next: string }) {
 
   async function loadOptions() {
     setLoading(true);
-    setMessage("");
+    setMessage(undefined);
     try {
       const response = await fetch("/api/auth/options", { cache: "no-store", signal: life.signal });
       if (!response.ok) throw new Error();
@@ -52,7 +62,7 @@ export function SignIn(props: { next: string }) {
       if (!Object.values(data.capabilities).some(Boolean)) throw new Error();
       setOptions(data);
     } catch {
-      if (!life.signal.aborted) setMessage("Couldn’t load sign-in options. Try again.");
+      if (!life.signal.aborted) setMessage("options");
     } finally { setLoading(false); }
   }
 
@@ -71,7 +81,7 @@ export function SignIn(props: { next: string }) {
         window.location.assign((await response.json()).next);
       } catch {
         if (!cancel.signal.aborted && !life.signal.aborted && (mediation === "required" || pending() === "passkey")) {
-          setMessage("Passkey sign-in didn’t finish. Try again or choose another method.");
+          setMessage("passkey");
         }
       } finally {
         if (ceremony?.cancel === cancel) ceremony = undefined;
@@ -83,7 +93,7 @@ export function SignIn(props: { next: string }) {
 
   async function explicitPasskey() {
     if (pending()) return;
-    setMessage("");
+    setMessage(undefined);
     const old = ceremony;
     old?.cancel.abort();
     // A pending begin can still write its challenge cookie. Serialize replacements.
@@ -117,15 +127,14 @@ export function SignIn(props: { next: string }) {
   async function submitProof(action: EmailAction) {
     if (pending() || (action === "verify" && (!sent() || code().length !== 6)) || (action === "send" && cooldown())) return;
     setPending(action);
-    setMessage("");
+    setMessage(undefined);
     try {
       const response = await fetch("/api/auth/sign-in", {
         method: "POST", headers: { "Content-Type": "application/json" }, signal: life.signal,
         body: JSON.stringify({ action, next: props.next, ...(action === "verify" ? { code: code() } : { email: email() }) }),
       });
       if (!response.ok) {
-        setMessage(response.status === 429 ? "Too many attempts. Wait a moment and try again." : action === "verify"
-          ? "Couldn’t verify that code. Check it or request a new one." : "Couldn’t send a code. Try again or choose another method.");
+        setMessage(response.status === 429 ? "rate" : action);
         return;
       }
       const result = await response.json();
@@ -137,7 +146,7 @@ export function SignIn(props: { next: string }) {
         setCode("");
       }
     } catch {
-      if (!life.signal.aborted) setMessage("Sign-in couldn’t connect. Try again.");
+      if (!life.signal.aborted) setMessage("connection");
     } finally {
       setPending(undefined);
       if (action === "send") codeField?.focus();
@@ -149,7 +158,7 @@ export function SignIn(props: { next: string }) {
     if (pending()) return;
     ceremony?.cancel.abort();
     setEmail(String(new FormData(event.currentTarget).get("email")).trim());
-    setMessage("");
+    setMessage(undefined);
     setStep("proof");
     if (caps()?.email_otp && !sent()) void submitProof("send");
     const target = sent() ? codeField : proofHeading;
@@ -157,7 +166,7 @@ export function SignIn(props: { next: string }) {
   }
 
   function changeEmail() {
-    setMessage("");
+    setMessage(undefined);
     setCode("");
     setStep("email");
     queueMicrotask(() => emailField?.focus());
@@ -167,62 +176,62 @@ export function SignIn(props: { next: string }) {
     const value = input.replace(/[^0-9]/g, "").slice(0, 6);
     field.value = value;
     setCode(value);
-    setMessage("");
+    setMessage(undefined);
     if (value.length === 6) void submitProof("verify");
   }
 
-  const lastUsed = (method: SignInMethod) => <Show when={options()?.lastUsed === method}><span class="last-used">{messages.lastUsed}</span></Show>;
+  const lastUsed = (method: SignInMethod) => <Show when={options()?.lastUsed === method}><span class="last-used">{messages().lastUsed}</span></Show>;
   const PasskeyButton = () => <Show when={passkeys()}>
     <button class="button quiet auth-button auth-passkey" type="button" onClick={explicitPasskey} disabled={Boolean(pending())}>
-      <Fingerprint size={18}/>{pending() === "passkey" ? "Waiting for passkey…" : "Continue with a passkey"}{lastUsed("passkey")}
+      <Fingerprint size={18}/>{pending() === "passkey" ? text("Waiting for passkey…", "正在等待通行金鑰…") : text("Continue with a passkey", "使用通行金鑰登入")}{lastUsed("passkey")}
     </button>
   </Show>;
   const providerHref = (provider: "google" | "github") => "/api/auth/" + provider + "?" + new URLSearchParams({ next: props.next });
 
   return <div class="unified-auth">
-    <Show when={!loading()} fallback={<p class="quiet" role="status">{messages.loading}</p>}>
-      <Show when={options()} fallback={<button class="button secondary auth-button" type="button" onClick={loadOptions}>{messages.retry}</button>}>
+    <Show when={!loading()} fallback={<p class="quiet" role="status">{messages().loading}</p>}>
+      <Show when={options()} fallback={<button class="button secondary auth-button" type="button" onClick={loadOptions}>{messages().retry}</button>}>
         <Show when={step() === "email"} fallback={<>
-          <h2 class="proof-heading" tabIndex={-1} ref={proofHeading}>{caps()?.email_otp ? "Check your email" : "Choose a sign-in method"}</h2>
+          <h2 class="proof-heading" tabIndex={-1} ref={proofHeading}>{caps()?.email_otp ? text("Check your email", "查看電子郵件") : text("Choose a sign-in method", "選擇登入方式")}</h2>
           <Show when={caps()?.email_otp}>
             <Show when={sent()} fallback={
-              <Show when={pending() !== "send"} fallback={<p role="status" class="quiet">Requesting a code…</p>}>
-                <button type="button" class="button secondary auth-button" disabled={Boolean(pending())} onClick={() => void submitProof("send")}>Send me a code</button>
+              <Show when={pending() !== "send"} fallback={<p role="status" class="quiet">{text("Requesting a code…", "正在要求寄送驗證碼…")}</p>}>
+                <button type="button" class="button secondary auth-button" disabled={Boolean(pending())} onClick={() => void submitProof("send")}>{text("Send me a code", "寄送驗證碼")}</button>
               </Show>
             }>
-              <p class="quiet">Sent to <strong>{mask(email())}</strong></p>
+              <p class="quiet">{text("Sent to ", "已寄送至 ")}<strong>{mask(email())}</strong></p>
               <form method="post" onSubmit={event => { event.preventDefault(); void submitProof("verify"); }}>
-                <label for="signin-code">Six-digit code</label>
+                <label for="signin-code">{text("Six-digit code", "六位數驗證碼")}</label>
                 <input id="signin-code" ref={codeField} name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" value={code()} required
                   readOnly={Boolean(pending())} onInput={event => enterCode(event.currentTarget, event.currentTarget.value)}
                   onPaste={event => { if (pending()) return; event.preventDefault(); enterCode(event.currentTarget, event.clipboardData?.getData("text") ?? ""); }}/>
-                <button class="button primary auth-button" type="submit" disabled={code().length !== 6 || Boolean(pending())}>{pending() === "verify" ? "Verifying…" : messages.verifyCode}</button>
+                <button class="button primary auth-button" type="submit" disabled={code().length !== 6 || Boolean(pending())}>{pending() === "verify" ? text("Verifying…", "驗證中…") : messages().verifyCode}</button>
               </form>
-              <button class="auth-text-button" type="button" disabled={Boolean(pending()) || cooldown() > 0} onClick={() => void submitProof("send")}>{cooldown() ? "Resend in " + cooldown() + "s" : messages.resendCode}</button>
+              <button class="auth-text-button" type="button" disabled={Boolean(pending()) || cooldown() > 0} onClick={() => void submitProof("send")}>{cooldown() ? text("Resend in " + cooldown() + "s", cooldown() + " 秒後可重寄") : messages().resendCode}</button>
             </Show>
           </Show>
           <PasskeyButton/>
-          <button class="auth-text-button" type="button" disabled={Boolean(pending())} onClick={changeEmail}>Use a different email</button>
+          <button class="auth-text-button" type="button" disabled={Boolean(pending())} onClick={changeEmail}>{text("Use a different email", "改用其他電子郵件地址")}</button>
         </>}>
           <Show when={caps()?.google || caps()?.github}>
             <div class="auth-providers">
-              <Show when={caps()?.google}><a rel="external" class="button outline auth-button" href={providerHref("google")}><GoogleMark/> Continue with Google {lastUsed("google")}</a></Show>
-              <Show when={caps()?.github}><a rel="external" class="button outline auth-button" href={providerHref("github")}><GitHubMark/> Continue with GitHub {lastUsed("github")}</a></Show>
+              <Show when={caps()?.google}><a rel="external" class="button outline auth-button" href={providerHref("google")}><GoogleMark/> {text("Continue with Google", "使用 Google 登入")} {lastUsed("google")}</a></Show>
+              <Show when={caps()?.github}><a rel="external" class="button outline auth-button" href={providerHref("github")}><GitHubMark/> {text("Continue with GitHub", "使用 GitHub 登入")} {lastUsed("github")}</a></Show>
             </div>
           </Show>
           <Show when={caps()?.email_otp || passkeys()}>
-            <Show when={caps()?.google || caps()?.github}><div class="auth-divider" aria-hidden="true">or</div></Show>
+            <Show when={caps()?.google || caps()?.github}><div class="auth-divider" aria-hidden="true">{text("or", "或")}</div></Show>
             <form method="post" onSubmit={continueWithEmail}>
-              <label for="signin-email">{messages.email}</label>
+              <label for="signin-email">{messages().email}</label>
               <input id="signin-email" ref={emailField} type="email" name="email" autocomplete="username webauthn" inputmode="email" maxlength="254" value={email()} required/>
-              <button type="submit" class="button primary auth-button" disabled={Boolean(pending())}>Continue</button>
+              <button type="submit" class="button primary auth-button" disabled={Boolean(pending())}>{text("Continue", "繼續")}</button>
             </form>
             <PasskeyButton/>
           </Show>
         </Show>
       </Show>
     </Show>
-    <Show when={message()}><p class="notice" role="alert">{message()}</p></Show>
-    <p class="auth-terms">By continuing, you agree to the <a href="/legal/terms">Terms</a> and acknowledge the <a href="/legal/privacy">Privacy Policy</a>.</p>
+    <Show when={message()}>{error => <p class="notice" role="alert">{errors[error()]()}</p>}</Show>
+    <p class="auth-terms">{text("By continuing, you agree to the ", "繼續即表示你同意")}<a href="/legal/terms">{text("Terms", "服務條款")}</a>{text(" and acknowledge the ", "，並已知悉")}<a href="/legal/privacy">{text("Privacy Policy", "隱私權政策")}</a>{text(".", "。")}</p>
   </div>;
 }

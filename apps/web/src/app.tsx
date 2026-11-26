@@ -15,7 +15,7 @@ import { CookieSettings, CookieSettingsButton } from "@/components/cookie-settin
 
 import { useSiteLanguage } from "@/lib/site-language";
 import { localizedPath, pagePath } from "@/lib/locales";
-import { pricingPath } from "@/lib/auth-entry";
+import { pricingPath, signInLanguageHref } from "@/lib/auth-entry";
 
 const github = 'https://github.com/SylphxAI/lockdocs';
 function Wordmark() {
@@ -30,6 +30,7 @@ function Layout(props: ParentProps) {
   const targetLocale = () => locale() === "en" ? "zh-TW" : "en";
   const switchHref = () => {
     const current = pagePath(location.pathname);
+    if (current === "/sign-in") return signInLanguageHref(carryCampaign(current), location.search, targetLocale());
     const path = localizedPath(current, targetLocale());
     if (path === current) return carryCampaign(localizedPath("/", targetLocale()));
     return carryCampaign(localizedPath(path, "en") === "/pricing"

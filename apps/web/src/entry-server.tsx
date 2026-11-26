@@ -2,12 +2,14 @@ import { randomBytes } from "node:crypto";
 import { documentPolicy } from "@/lib/content-security-policy";
 import { createHandler, StartServer } from "@solidjs/start/server";
 import { getRequestEvent } from "solid-js/web";
-import { defaultLocale, pageLocale } from "@/lib/locales";
+import { defaultLocale } from "@/lib/locales";
+import { localeForLocation } from "@/lib/site-language";
 import { signalRequestGpc } from "@/lib/signal-privacy";
 
 export default createHandler(() => <StartServer document={({ assets, children, scripts }) => {
   const request = getRequestEvent()?.request;
-  const lang = request ? pageLocale(new URL(request.url).pathname) : defaultLocale;
+  const url = request && new URL(request.url);
+  const lang = url ? localeForLocation(url.pathname, url.search) : defaultLocale;
   return <html lang={lang} data-campaign-gpc={request && signalRequestGpc(request.headers) ? "1" : undefined}><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="theme-color" content="#06080C"/><link rel="manifest" href="/manifest.webmanifest"/><link rel="icon" href="/icon.svg"/><link rel="apple-touch-icon" href="/apple-touch-icon-180.png"/>{assets}</head><body><div id="app">{children}</div>{scripts}</body></html>;
 }} />, event => {
   // Even a clean URL carries the document’s GPC state into SPA navigation.

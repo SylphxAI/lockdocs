@@ -139,9 +139,10 @@ pub(super) fn read_tar(body: impl Read, cap: u64, mut keep: impl FnMut(&str, u64
         if !entry.header().entry_type().is_file() {
             continue;
         }
-        let size = entry.header().size().unwrap_or(0);
-        let raw = entry.path().context("archive path")?.to_string_lossy().replace('\\', "/");
-        if raw.starts_with('/') {
+        let size = entry.size();
+        let path_bytes = entry.path_bytes();
+        let Ok(raw) = std::str::from_utf8(&path_bytes) else { continue };
+        if raw.starts_with('/') || raw.contains('\\') {
             continue;
         }
         let Some((_, path)) = raw.split_once('/') else { continue };

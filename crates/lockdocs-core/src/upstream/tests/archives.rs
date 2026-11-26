@@ -103,3 +103,79 @@ fn tar_extraction_stops_at_the_size_cap() {
     let got = read_tar(&tgz[..], 1000, |_, _| true).unwrap();
     assert_eq!(got.len(), 1);
 }
+
+// Unmodified blobs from fastapi/fastapi tag 0.88.0, commit
+// 612b8ff168beee33fcf0c0bdff9718b4c8b1ac63 (MIT; see fixture license).
+const EVENTS_GUIDE: &str = "docs/en/docs/advanced/events.md";
+const STARTUP_EXAMPLE: &str = "docs_src/events/tutorial001.py";
+const SHUTDOWN_EXAMPLE: &str = "docs_src/events/tutorial002.py";
+const FASTAPI_DOCS: &[(&str, &[u8])] = &[
+    (EVENTS_GUIDE, include_bytes!("fastapi_088/events.md")),
+    (STARTUP_EXAMPLE, include_bytes!("fastapi_088/tutorial001.py")),
+    (SHUTDOWN_EXAMPLE, include_bytes!("fastapi_088/tutorial002.py")),
+    ("docs/fr/docs/advanced/events.md", b"# Translation"),
+    ("src/events/tutorial001.py", b"not documentation"),
+];
+
+#[test]
+fn fastapi_088_archive_selects_the_guide_and_both_examples() {
+    let tgz = tarball(FASTAPI_DOCS);
+    let got = extract_pkg_docs(&tgz[..], &dep("fastapi", "0.88.0"), &repo(None)).unwrap();
+    assert_eq!(names(&got), [EVENTS_GUIDE, STARTUP_EXAMPLE, SHUTDOWN_EXAMPLE]);
+    let cache = tempfile::tempdir().unwrap();
+    for ((path, bytes), (_, expected)) in got.iter().zip(FASTAPI_DOCS) {
+        assert_eq!(bytes, expected);
+        write_file(cache.path(), path, bytes).unwrap();
+    }
+    assert_fastapi_088_guide(cache.path());
+}
+
+#[test]
+fn fastapi_088_cache_renders_examples_inside_the_existing_fences() {
+    let cache = tempfile::tempdir().unwrap();
+    for (path, bytes) in &FASTAPI_DOCS[..3] {
+        write_file(cache.path(), path, bytes).unwrap();
+    }
+    assert_fastapi_088_guide(cache.path());
+}
+
+fn assert_fastapi_088_guide(cache: &Path) {
+    let src = tempfile::tempdir().unwrap();
+    let src = Source {
+        dir: src.path().to_owned(),
+        files: Some(vec![]),
+        metadata: None,
+        version: "0.88.0".into(),
+        label: "fixture".into(),
+        fetched: false,
+    };
+    let entries = crate::extract::extract(Eco::PyPI, "fastapi", &src, None, Some(cache));
+    for (event, highlight, (_, code)) in [("startup", 8, FASTAPI_DOCS[1]), ("shutdown", 6, FASTAPI_DOCS[2])] {
+        let section = entries
+            .iter()
+            .find(|e| e.file == format!("upstream:{EVENTS_GUIDE}") && e.name.ends_with(&format!("{event} event")))
+            .unwrap();
+        let code = std::str::from_utf8(code).unwrap().trim_end();
+        let fence = "```";
+        let expected = format!("{fence}Python hl_lines=\"{highlight}\"");
+        let expected = format!("{expected}\n{code}\n{fence}");
+        assert!(section.doc.contains(&expected), "{}", section.doc);
+        assert!(!section.doc.contains("{!"));
+        assert_eq!(section.doc.matches(fence).count(), 2);
+    }
+}
+
+#[test]
+fn fastapi_088_rest_fallback_uses_the_same_release_and_files() {
+    let f = fake(Codeload::Fail, false, Some("0.88.0"));
+    let out = tempfile::tempdir().unwrap();
+    let m = build(&client(&f, MAX_ARCHIVE), &dep("fastapi", "0.88.0"), &repo(None), true, out.path()).unwrap();
+    assert_eq!((m.tag.as_deref(), m.commit.as_deref(), m.via.as_deref()), (Some("0.88.0"), Some(FASTAPI_SHA), Some("rest")));
+    assert_eq!(m.files, 3);
+    for (path, bytes) in &FASTAPI_DOCS[..3] {
+        assert_eq!(std::fs::read(out.path().join(path)).unwrap(), *bytes);
+        assert_eq!(requests(&f, &format!("/raw/o/r/{FASTAPI_SHA}/{path}")), 1);
+    }
+    assert_eq!(requests(&f, "/raw/"), 3);
+    assert_fastapi_088_guide(out.path());
+}

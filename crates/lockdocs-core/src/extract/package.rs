@@ -38,9 +38,9 @@ pub fn extract(eco: Eco, pkg_name: &str, src: &Source, extra_types: Option<&Path
             match job.how {
                 How::Prose => {
                     prose_titled(&text, &job.rel, 0, None, package, &mut out);
-                    if job.rel.starts_with("upstream:") && !includes.files.is_empty() {
+                    if job.rel.starts_with("upstream:") {
                         for e in &mut out {
-                            e.doc = includes.expand(&e.doc);
+                            e.doc = includes.expand(&e.doc, &job.rel);
                         }
                     }
                 }

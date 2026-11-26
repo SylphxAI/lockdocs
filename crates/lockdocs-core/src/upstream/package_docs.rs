@@ -1,5 +1,6 @@
 //! Select and download docs from an exact package release.
 
+use std::collections::{BTreeMap, BTreeSet};
 use std::io::Read;
 use std::path::Path;
 
@@ -9,7 +10,7 @@ use crate::Dep;
 
 use super::archive::{codeload, read_tar};
 use super::client::Client;
-use super::github_files::{download, tree, write_file, Item};
+use super::github_files::{download, tree, write_file};
 use super::{Repo, MAX_BYTES, MAX_FILE, MAX_FILES};
 
 /// Which files of a package repository to keep. A docs root is a `docs`-like
@@ -20,10 +21,10 @@ struct PkgScan {
     short: String,
     sub_base: String,
     subdir: Option<String>,
-    roots: std::collections::BTreeSet<String>,
-    langs: std::collections::BTreeMap<String, std::collections::BTreeSet<String>>,
-    /// (full path, docs root it sits in, path inside that root, is a README-like file)
-    cands: Vec<(String, Option<String>, String, bool)>,
+    roots: BTreeSet<String>,
+    langs: BTreeMap<String, BTreeSet<String>>,
+    /// Full path -> (docs root, first language segment, README-like, size).
+    cands: BTreeMap<String, (Option<String>, Option<String>, bool, u64)>,
 }
 
 impl PkgScan {
@@ -34,7 +35,7 @@ impl PkgScan {
             subdir: repo.subdir.clone(),
             roots: Default::default(),
             langs: Default::default(),
-            cands: Vec::new(),
+            cands: BTreeMap::new(),
         }
     }
 
@@ -45,31 +46,42 @@ impl PkgScan {
             if DOC_ROOTS.contains(&name.as_str()) {
                 return Some(i + 1);
             }
-            // Only wanted folders are opened to look further down.
-            let full = dirs[..=i].join("/");
-            let wanted = WRAPPERS.contains(&name.as_str())
-                || (i >= 1 && (name == self.short || name == self.sub_base || name.contains("docs")))
-                || self.subdir.as_deref().is_some_and(|s| s == full || s.starts_with(&format!("{full}/")));
-            if i >= 2 || !wanted {
+            if !self.opens_wrapper(dirs, i) {
                 return None;
             }
         }
         None
     }
 
-    /// Look at one archive path; true when its content may be wanted.
+    fn opens_wrapper(&self, dirs: &[&str], i: usize) -> bool {
+        let name = dirs[i].to_ascii_lowercase();
+        let full = dirs[..=i].join("/");
+        i < 2
+            && (WRAPPERS.contains(&name.as_str())
+                || (i >= 1 && (name == self.short || name == self.sub_base || name.contains("docs")))
+                || self.subdir.as_deref().is_some_and(|s| s == full || s.starts_with(&format!("{full}/"))))
+    }
+
+    /// Record one regular repository file; true if the archive should keep its bytes.
     fn observe(&mut self, path: &str, size: u64) -> bool {
+        if !safe_path(path) {
+            return false;
+        }
         let comps: Vec<&str> = path.split('/').collect();
         let (file, dirs) = comps.split_last().expect("non-empty path");
-        let root = self.root_len(dirs).map(|n| dirs[..n].join("/"));
-        let mut rel_in_root = None;
-        if let Some(r) = &root {
+        let mut root = None;
+        let mut language = None;
+        if let Some(n) = self.root_len(dirs) {
+            let r = dirs[..n].join("/");
             self.roots.insert(r.clone());
-            let rel = &comps[r.split('/').count()..];
-            if rel.len() > 1 {
-                self.langs.entry(r.clone()).or_default().insert(rel[0].to_string());
+            if dirs.len() > n && is_lang(comps[n]) {
+                self.langs.entry(r.clone()).or_default().insert(comps[n].into());
+                language = Some(comps[n].into());
             }
-            rel_in_root = Some(rel.join("/"));
+            // Include the selected root itself: e.g. docs_src/events/tutorial001.py.
+            if doc_file(&comps[n - 1..].join("/")) {
+                root = Some(r);
+            }
         }
         let upper = file.to_ascii_uppercase();
         let near = dirs.is_empty() || self.subdir.as_deref() == Some(dirs.join("/").as_str());
@@ -78,145 +90,102 @@ impl PkgScan {
             && ["README", "CHANGELOG", "CHANGES", "HISTORY", "MIGRAT", "UPGRAD", "RELEASE"]
                 .iter()
                 .any(|p| upper.starts_with(p));
-        let in_root = rel_in_root.as_deref().is_some_and(doc_file);
-        let wanted = size <= MAX_FILE && (readme || in_root);
+        let wanted = size <= MAX_FILE && (readme || root.is_some());
         if wanted {
-            self.cands
-                .push((path.to_string(), root.filter(|_| in_root), rel_in_root.unwrap_or_default(), readme));
+            self.cands.insert(path.into(), (root, language, readme, size));
         }
         wanted
     }
 
-    /// Apply the root, language and size limits to what was read.
-    fn select(self, mut data: std::collections::HashMap<String, Vec<u8>>) -> Vec<(String, Vec<u8>)> {
-        let chosen: Vec<&String> = self.roots.iter().take(4).collect();
-        let mut keep: Vec<String> = Vec::new();
-        for (full, root, rel, readme) in &self.cands {
-            let in_chosen = root.as_ref().is_some_and(|r| chosen.contains(&r));
-            if !in_chosen && !readme {
-                continue;
-            }
-            if in_chosen && !readme {
-                let langs = self.langs.get(root.as_ref().expect("root"));
-                let only_en = langs.is_some_and(|l| l.iter().filter(|x| is_lang(x)).count() >= 2 && l.contains("en"));
-                let first = rel.split('/').next().unwrap_or("");
-                if only_en && rel.contains('/') && is_lang(first) && first != "en" {
-                    continue;
+    /// Apply identical root, language, and materialization budgets to both transports.
+    fn select(self, available: impl Fn(&str) -> bool) -> Vec<(String, u64)> {
+        let chosen: BTreeSet<_> = self.roots.iter().take(4).collect();
+        let mut bytes = 0;
+        self.cands
+            .into_iter()
+            .filter_map(|(path, (root, language, readme, size))| {
+                if !readme {
+                    let r = root.as_ref()?;
+                    if !chosen.contains(r) {
+                        return None;
+                    }
+                    let english_only = self.langs.get(r).is_some_and(|l| l.len() >= 2 && l.contains("en"));
+                    if english_only && language.is_some_and(|l| l != "en") {
+                        return None;
+                    }
                 }
-            }
-            keep.push(full.clone());
-        }
-        keep.sort();
-        keep.dedup();
-        let mut total = 0u64;
-        let mut out = Vec::new();
-        for p in keep {
-            let Some(d) = data.remove(&p) else { continue };
-            if total.saturating_add(d.len() as u64) > MAX_BYTES {
-                continue;
-            }
-            total += d.len() as u64;
-            out.push((p, d));
-            if out.len() >= MAX_FILES {
-                break;
-            }
-        }
-        out
+                if !available(&path) || bytes + size > MAX_BYTES {
+                    return None;
+                }
+                bytes += size;
+                Some((path, size))
+            })
+            .take(MAX_FILES)
+            .collect()
     }
 }
 
-/// The per-file fallback for one repository: GitHub's REST tree walk plus raw
-/// file requests (subject to the REST quota). Returns files written and bytes.
+fn safe_path(path: &str) -> bool {
+    !path.contains(['\\', ':', '\0']) && path.split('/').all(|c| !matches!(c, "" | "." | ".."))
+}
+
+/// The per-file fallback: discover the same roots via GitHub's REST trees,
+/// then fetch selected regular files only, always at the resolved commit.
 pub(super) fn rest_docs(agent: &Client, dep: &Dep, repo: &Repo, commit: &str, out: &Path) -> Result<(usize, u64)> {
     let root = tree(agent, repo, commit, false)?.context("release commit tree not found")?;
-    let short = dep.name.rsplit('/').next().unwrap_or(&dep.name).to_ascii_lowercase();
-    let sub_base = repo.subdir.as_deref().and_then(|s| s.rsplit('/').next()).unwrap_or("").to_ascii_lowercase();
-    let mut roots: Vec<(String, String)> = Vec::new(); // (path, tree sha)
-    let mut files: Vec<(String, u64)> = Vec::new();
+    let mut scan = PkgScan::new(dep, repo);
+    let mut roots = BTreeMap::new();
     let mut calls = 0;
-    let mut frontier: Vec<(String, Vec<Item>, usize)> = vec![(String::new(), root, 0)];
-    while let Some((prefix, items, depth)) = frontier.pop() {
+    let mut frontier = vec![(String::new(), root)];
+    while let Some((prefix, items)) = frontier.pop() {
         for it in items {
-            let name = it.path.to_ascii_lowercase();
+            if it.path.contains('/') || !safe_path(&it.path) {
+                continue;
+            }
             let full = if prefix.is_empty() {
                 it.path.clone()
             } else {
                 format!("{prefix}/{}", it.path)
             };
-            if it.kind == "blob" {
-                // Root-level (or package-level) READMEs and changelogs.
-                let upper = it.path.to_ascii_uppercase();
-                let near = depth == 0 || repo.subdir.as_deref() == Some(prefix.as_str());
-                if near
-                    && doc_file(&it.path)
-                    && ["README", "CHANGELOG", "CHANGES", "HISTORY", "MIGRAT", "UPGRAD", "RELEASE"]
-                        .iter()
-                        .any(|p| upper.starts_with(p))
-                {
-                    files.push((full, it.size));
-                }
-                continue;
-            }
-            if it.kind != "tree" {
-                continue;
-            }
-            if DOC_ROOTS.contains(&name.as_str()) {
-                roots.push((full, it.sha));
-            } else if depth < 2 && calls < 10 {
-                let wanted = WRAPPERS.contains(&name.as_str())
-                    || (depth >= 1 && (name == short || name == sub_base || name.contains("docs")))
-                    || repo.subdir.as_deref().is_some_and(|s| s == full || s.starts_with(&format!("{full}/")));
-                if wanted {
+            if it.is_regular() {
+                scan.observe(&full, it.size);
+            } else if it.kind == "tree" {
+                let dirs: Vec<_> = full.split('/').collect();
+                if scan.root_len(&dirs).is_some() {
+                    roots.insert(full, it.sha);
+                } else if calls < 10 && scan.opens_wrapper(&dirs, dirs.len() - 1) {
                     calls += 1;
                     if let Some(children) = tree(agent, repo, &it.sha, false)? {
-                        frontier.push((full, children, depth + 1));
+                        frontier.push((full, children));
                     }
                 }
             }
         }
     }
-    for (path, sha) in roots.iter().take(4) {
-        let Some(items) = tree(agent, repo, sha, true)? else { continue };
-        // Keep English when the docs are split by language.
-        let langs: Vec<&str> = items
-            .iter()
-            .filter(|i| i.kind == "tree" && !i.path.contains('/') && is_lang(&i.path))
-            .map(|i| i.path.as_str())
-            .collect();
-        let only_en = langs.len() >= 2 && langs.contains(&"en");
-        for i in &items {
-            if i.kind != "blob" || !doc_file(&i.path) || i.size > MAX_FILE {
-                continue;
-            }
-            if only_en {
-                let first = i.path.split('/').next().unwrap_or("");
-                if is_lang(first) && first != "en" {
-                    continue;
-                }
-            }
-            files.push((format!("{path}/{}", i.path), i.size));
+    for (path, sha) in roots.into_iter().take(4) {
+        let Some(items) = tree(agent, repo, &sha, true)? else { continue };
+        for i in items.into_iter().filter(|i| i.is_regular()) {
+            scan.observe(&format!("{path}/{}", i.path), i.size);
         }
     }
-    files.sort();
-    files.dedup();
-    let mut total = 0u64;
-    files.retain(|(_, s)| {
-        if *s > MAX_FILE || total.saturating_add(*s) > MAX_BYTES {
-            return false;
-        }
-        total += s;
-        true
-    });
-    files.truncate(MAX_FILES);
+    let files = scan.select(|_| true);
     let ok = download(agent, repo, commit, &files, out)?;
-    Ok((ok.len(), ok.iter().sum()))
+    let bytes = ok.iter().sum();
+    if bytes > MAX_BYTES {
+        bail!("release docs are over the {} MB limit", MAX_BYTES >> 20);
+    }
+    Ok((ok.len(), bytes))
 }
 
 /// Download one repository snapshot and keep its docs (see `PkgScan`).
 pub(super) fn extract_pkg_docs(body: impl Read, dep: &Dep, repo: &Repo) -> Result<Vec<(String, Vec<u8>)>> {
     let mut scan = PkgScan::new(dep, repo);
-    let data = read_tar(body, MAX_BYTES * 2, |p, size| scan.observe(p, size))?;
-    Ok(scan.select(data.into_iter().collect()))
+    let mut data: std::collections::HashMap<_, _> = read_tar(body, MAX_BYTES * 2, |p, size| scan.observe(p, size))?.into_iter().collect();
+    Ok(scan
+        .select(|p| data.contains_key(p))
+        .into_iter()
+        .filter_map(|(p, _)| data.remove(&p).map(|d| (p, d)))
+        .collect())
 }
 
 const DOC_ROOTS: &[&str] = &["docs", "doc", "documentation", "guide", "guides", "docs_src"];

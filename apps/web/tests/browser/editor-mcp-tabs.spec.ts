@@ -59,11 +59,18 @@ test("copies both editor setups and opens the Zod upgrade report with attributio
   await page.evaluate(() => document.fonts.ready);
   const connect = page.locator("#connect");
   const picker = connect.getByRole("group", { name: "MCP editor setup" });
-  const geometry = () => connect.evaluate(el => [el, document.querySelector("#verify-citation")!,
-    el.querySelector(".editor-mcp-panel:not([inert]) .copy-button")!].map(node => {
-    const { x, y, width, height } = node.getBoundingClientRect();
-    return [x, y + scrollY, width, height];
-  }));
+  const geometry = () => connect.evaluate(el => {
+    const step3 = document.querySelector("#verify-citation")!;
+    const card = el.querySelector(".editor-mcp-panel:not([inert]) .editorial-code")!;
+    return {
+      stableBoxes: [el, step3, card.querySelector(".copy-button")!].map(node => {
+        const { x, y, width, height } = node.getBoundingClientRect();
+        return [x, y + scrollY, width, height];
+      }),
+      cardHeight: card.getBoundingClientRect().height,
+      step3HeadingY: step3.querySelector("h2")!.getBoundingClientRect().y + scrollY,
+    };
+  });
   const assertNoOverflow = async () => expect(await page.evaluate(() => [document.documentElement,
     ...document.querySelectorAll(".editor-mcp, .editor-mcp-panel, .editor-mcp-panel pre, .upgrade-card, .studio-grid")]
     .filter(el => el.scrollWidth > el.clientWidth).map(el => el.className))).toEqual([]);
@@ -78,19 +85,29 @@ test("copies both editor setups and opens the Zod upgrade report with attributio
   };
 
   const initialGeometry = await geometry();
+  expect(initialGeometry.cardHeight).toBeGreaterThan(220);
+  const assertStableLayout = (current: typeof initialGeometry) => {
+    expect(Math.abs(current.step3HeadingY - initialGeometry.step3HeadingY)).toBeLessThanOrEqual(1);
+    expect(current.stableBoxes).toEqual(initialGeometry.stableBoxes);
+  };
   await assertNoOverflow();
   await expect(picker.getByRole("button")).toHaveCount(2);
   await copy(cursor);
   const claudeButton = picker.getByRole("button", { name: claude.name });
   if (isMobile) await claudeButton.tap();
   else await claudeButton.press("Enter");
-  expect(await geometry()).toEqual(initialGeometry);
+  await expect(picker.getByRole("button", { pressed: true })).toHaveText(claude.name);
+  const claudeGeometry = await geometry();
+  expect(claudeGeometry.cardHeight).toBeLessThan(160);
+  assertStableLayout(claudeGeometry);
   await assertNoOverflow();
   await copy(claude);
   if (process.env.LOCKDOCS_LOCAL_CAPTURES) await connect.screenshot({ path: info.outputPath("claude-mcp.png") });
   await picker.getByRole("button", { name: cursor.name }).press("Space");
   await expect(picker.getByRole("button", { pressed: true })).toHaveText(cursor.name);
-  expect(await geometry()).toEqual(initialGeometry);
+  const restoredGeometry = await geometry();
+  expect(restoredGeometry.cardHeight).toBeGreaterThan(220);
+  assertStableLayout(restoredGeometry);
   await expect(connect.locator("[style]")).toHaveCount(0);
 
   const link = page.locator("#verify-cli").getByRole("link", { name: "Try the Zod example in the playground" });

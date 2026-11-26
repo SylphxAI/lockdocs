@@ -109,6 +109,10 @@ body{padding-bottom:var(--cookie-bar-height,0px)}
 .article-bridge .button-row{margin-top:14px}
 .article-bridge .button{min-height:44px;color:var(--ink);text-decoration:none}
 .article-bridge .button svg{flex:none;color:var(--blue)}
+.article-upgrade-links{display:flex;align-items:center;flex-wrap:wrap;column-gap:12px;margin-top:14px;padding-top:8px;border-top:1px solid var(--line);font-size:13px;color:var(--dim)}
+.article-upgrade-row{display:flex;flex-wrap:wrap;gap:4px}
+.article-upgrade-row a{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding-inline:6px}
+.article-upgrade-row a:hover{color:var(--ink)}
 @media(max-width:480px){.article-bridge .button-row{align-items:stretch;flex-direction:column}}
 @media(max-width:740px){
   .pricing-section{padding-top:24px}

@@ -115,7 +115,7 @@ export function Studio() {
             "請先安裝專案的相依套件，再到專案根目錄執行。需使用 Node.js 18 以上；離線查詢前，npx 可能需要先下載 Lockdocs。",
           )} <Link href="/guide#install-lockdocs" class="underline underline-offset-2">{text("CLI install options", "CLI 安裝方式（英文）")}</Link></p>
           <div class="studio-command">
-            <code>{command}</code>
+            <code><PackageText text={command}/></code>
             <CopyButton value={command} label={text("Copy CLI command", "複製 CLI 指令")} analytics={{ surface: "playground_cli", command_kind: "cli" }}/>
           </div>
         </div>;}}</Show>

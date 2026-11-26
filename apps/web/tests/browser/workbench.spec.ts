@@ -36,7 +36,13 @@ for (const zh of [false, true]) {
     const install = inspect.getByRole("link", { name: zh ? "CLI 安裝方式（英文）" : "CLI install options" });
     await expect(install).toHaveAttribute("href", "/guide#install-lockdocs");
     const copy = inspect.getByRole("button", { name: zh ? "複製 CLI 指令" : "Copy CLI command", exact: true });
-    await expect(copy.locator("..").locator("code")).toHaveText(command);
+    const code = copy.locator("..").locator("code");
+    await expect(code).toHaveText(command);
+    expect(await code.evaluate(element => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      return range.toString();
+    })).toBe(command);
     await install.focus();
     await page.keyboard.press("Tab");
     await expect(copy).toBeFocused();

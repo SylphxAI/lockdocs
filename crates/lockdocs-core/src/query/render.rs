@@ -22,31 +22,51 @@ pub(super) fn provenance(ready: &[ReadyPkg]) -> Vec<Value> {
 }
 
 impl Engine {
-    /// Add display-only advice without changing which evidence fits in the answer.
-    pub(super) fn with_upstream_hints<'a>(&self, mut answer: Answer, packages: impl IntoIterator<Item = &'a ReadyPkg>) -> Answer {
+    /// Prepend at most one upstream notice per package after packing the evidence.
+    pub(super) fn with_answer_notices<'a>(&self, mut answer: Answer, packages: impl IntoIterator<Item = &'a ReadyPkg>, offer_fetch: bool) -> Answer {
         use std::fmt::Write;
-        let mut hints = String::new();
+        let mut notices = String::new();
         let mut shown = HashSet::new();
+        let mut legacy_tip_chars = 0;
         for (idx, dep, _) in packages {
-            if idx.upstream_provenance.as_ref().is_some_and(|m| m.files > 0 && upstream::stale(m)) && shown.insert((dep.eco, &dep.name, &dep.version)) {
-                let spec = if self
-                    .project
-                    .find(&Spec::parse(&dep.name))
-                    .first()
-                    .is_some_and(|d| d.eco == dep.eco && d.version == dep.version)
-                {
-                    dep.name.clone()
-                } else {
-                    format!("{}:{}", dep.eco, dep.id())
-                };
+            let stale = idx.upstream_provenance.as_ref().is_some_and(|m| m.files > 0 && upstream::stale(m));
+            let few_docs = offer_fetch
+                && !self.opts.fetch
+                && idx.upstream.is_none()
+                && idx.entries.iter().filter(|e| e.kind == Kind::Prose).take(40).count() < 40
+                && upstream::cached(dep).is_none();
+            if few_docs {
+                // Keep the JSON token estimate unchanged: the old trailing tip
+                // counted 125 fixed characters (including newlines), plus the ID and name.
+                legacy_tip_chars += 125 + idx.id().chars().count() + idx.name.chars().count();
+            }
+            if !(stale || few_docs) || !shown.insert((dep.eco, &dep.name, &dep.version)) {
+                continue;
+            }
+            let spec = if self
+                .project
+                .find(&Spec::parse(&dep.name))
+                .first()
+                .is_some_and(|d| d.eco == dep.eco && d.version == dep.version)
+            {
+                dep.name.clone()
+            } else {
+                format!("{}:{}", dep.eco, dep.id())
+            };
+            if stale {
                 let _ = writeln!(
-                    hints,
+                    notices,
                     "Upstream docs for {} were fetched with older rules. Refresh with `lockdocs fetch {spec}`.",
                     idx.id()
                 );
+            } else {
+                let _ = writeln!(notices, "Tip: {} ships few docs. Run `lockdocs fetch {spec}`.", idx.id());
             }
         }
-        answer.text.insert_str(0, &hints);
+        if legacy_tip_chars > 0 {
+            answer.json["tokens"] = json!((answer.text.chars().count() + legacy_tip_chars).div_ceil(3));
+        }
+        answer.text.insert_str(0, &notices);
         answer
     }
 }

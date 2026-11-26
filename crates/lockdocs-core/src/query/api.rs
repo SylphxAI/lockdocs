@@ -59,7 +59,7 @@ impl Engine {
         let import = requested_import.as_deref();
         let matches = matches::find(&ready, &last, &quals, &public_path, import);
         if let Some(reason) = matches.npm_miss {
-            return Ok(self.with_upstream_hints(render::npm_miss(&ready, matches, &public_path, import, reason, tokens), &ready));
+            return Ok(self.with_answer_notices(render::npm_miss(&ready, matches, &public_path, import, reason, tokens), &ready, false));
         }
         if matches.cands.is_empty() {
             // Nothing by that name: fall back to a docs search scoped to the same packages.
@@ -77,7 +77,7 @@ impl Engine {
             return Ok(a);
         }
         let best = &ready[matches.cands[0].1];
-        Ok(self.with_upstream_hints(render::exact(&ready, matches, &public_path, import, tokens), std::iter::once(best)))
+        Ok(self.with_answer_notices(render::exact(&ready, matches, &public_path, import, tokens), std::iter::once(best), false))
     }
 
     fn npm_import_prefix(&self, symbol: &str) -> Option<(Dep, String, String)> {

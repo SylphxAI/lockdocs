@@ -1,6 +1,3 @@
-.editor-mcp .segmented button { min-height: 44px; }
-.editor-mcp .segmented [aria-pressed="true"] { color: var(--mint); }
-
 /* Share row heights to keep the controls and next step fixed, without stretching the code card. */
 .editor-mcp-panels { display: grid; grid-template-columns: minmax(0, 1fr); row-gap: 12px; }
 .editor-mcp-panel { display: grid; grid-area: 1 / 1 / span 3; grid-template-rows: subgrid; }

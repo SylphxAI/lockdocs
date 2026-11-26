@@ -2,6 +2,7 @@ import { For, type JSX, type ParentProps } from "solid-js";
 import { CopyButton } from "@/components/copy-button";
 import { PackageText } from "@/components/package-text";
 import { JsonLd } from "@/components/json-ld";
+import type { EventParams } from "@/lib/analytics-events";
 import { faqPage, type Faq } from "@/lib/faq-schema";
 import "./editorial.css";
 
@@ -17,9 +18,9 @@ export function EditorialHero(props: ParentProps<{ label: string; title: string;
   </header>;
 }
 
-export function CodeExample(props: { label: string; code: string }) {
+export function CodeExample(props: { label: string; code: string; copyLabel?: string; analytics?: EventParams<"command_copied"> }) {
   return <figure class="editorial-code">
-    <figcaption><span>{props.label}</span><CopyButton value={props.code} label={"Copy " + props.label}/></figcaption>
+    <figcaption><span>{props.label}</span><CopyButton value={props.code} label={props.copyLabel ?? "Copy " + props.label} analytics={props.analytics}/></figcaption>
     <pre aria-label={props.label} tabindex="0"><code><PackageText text={props.code}/></code></pre>
   </figure>;
 }

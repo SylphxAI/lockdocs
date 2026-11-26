@@ -30,7 +30,7 @@ export function DocNavigation() {
   return <aside class="docs-sidebar">
     <form class="docs-search" role="search" onSubmit={event => event.preventDefault()}>
       <label for="docs-query">{text("Find a guide", "搜尋指南")}</label>
-      <div><Search size={16} aria-hidden="true"/><input type="search" id="docs-query" placeholder={text("e.g. MCP, upgrade", "例如：MCP、下載文件")} value={query()} onInput={event => setQuery(event.currentTarget.value)}/></div>
+      <div><Search size={16} aria-hidden="true"/><input type="search" id="docs-query" placeholder={text("MCP, upgrade, CLI", "MCP、下載、CLI")} value={query()} onInput={event => setQuery(event.currentTarget.value)}/></div>
     </form>
     <button type="button" class="docs-nav-toggle" aria-expanded={open()} aria-controls="docs-navigation" onClick={() => { const next = !open(); setQuery(""); setExpanded(next); }}>
       <BookOpen size={16}/>{open() ? text("Hide documentation navigation", "收合文件導覽") : text("Browse documentation", "展開文件導覽")}

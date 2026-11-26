@@ -6,12 +6,12 @@ const guide = "/guides/up-to-date-docs-for-cursor-and-claude-code";
 const campaign = { gclid: "TEST999", utm_source: "google", utm_medium: "cpc", utm_campaign: "Docs + MCP & Pro" };
 const query = new URLSearchParams({ ...campaign, token: "private-sentinel" });
 const hero = (page: Page) => page.locator(".editorial-hero");
-const playground = (page: Page) => hero(page).getByRole("link", { name: "Try the playground" });
+const playground = (page: Page) => hero(page).getByRole("link", { name: /^(Try the playground|Try the Zod example)$/ });
 const pricing = (page: Page) => hero(page).getByRole("link", { name: "See Lockdocs Pro" });
 
 for (const [path, secondary, destinations] of [
   [comparison, "See Lockdocs Pro", ["/playground", "/pricing", "/playground#upgrade", "/guide/how-it-works", "/compare", "/benchmarks", "/playground", "/docs", guide, "/pricing"]],
-  [guide, "Compare with Context7", ["/playground", comparison, "/guide/setup#without-nodejs", "/reference/tools", comparison, "/pricing"]],
+  [guide, "Compare with Context7", ["/playground#upgrade", comparison, "/guide/setup#without-nodejs", "/playground#upgrade", "/reference/tools", comparison, "/pricing"]],
 ] as const) {
   test(`shows campaign CTAs and keeps attribution URL-only on ${path}`, async ({ page }, info) => {
     const google = await install(page, "DE");
@@ -47,7 +47,7 @@ for (const [path, secondary, destinations] of [
     expect(bodyLinks.map(url => url.pathname + url.hash)).toEqual(destinations);
     for (const url of bodyLinks) expect(Object.fromEntries(url.searchParams)).toEqual(url.pathname === "/pricing"
       ? { ...campaign, entry_surface: path === comparison ? "context7_alternative" : "guide_cursor_claude_code" }
-      : url.hash === "#upgrade" ? { ...campaign, example: "next" } : campaign);
+      : url.hash === "#upgrade" ? { ...campaign, example: path === comparison ? "next" : "zod" } : campaign);
     for (const href of hrefs.filter(href => !href.startsWith("/"))) expect(href).not.toMatch(/gclid|utm_|private-sentinel/);
     if (process.env.LOCKDOCS_LOCAL_CAPTURES) {
       await page.screenshot({ path: info.outputPath("hero.png"), animations: "disabled" });
@@ -56,7 +56,7 @@ for (const [path, secondary, destinations] of [
     await (path === comparison ? pricing(page) : playground(page)).click();
     await expect(page).toHaveURL(url => url.pathname === next && url.searchParams.get("gclid") === campaign.gclid);
     expect(Object.fromEntries(new URL(page.url()).searchParams)).toEqual(path === comparison
-      ? { ...campaign, entry_surface: "context7_alternative" } : campaign);
+      ? { ...campaign, entry_surface: "context7_alternative" } : { ...campaign, example: "zod" });
     await expect(settings(page)).toBeVisible();
     await expect(page.locator(analyticsFrame)).toHaveCount(0);
     expect(await page.context().cookies()).toEqual([]);
@@ -73,7 +73,7 @@ for (const choice of ["Sec-GPC", "Reject optional"] as const) {
     expect(response.ok()).toBe(true);
     expect(response.headers()["cache-control"]).toBe("private, no-store");
     expect(response.headers().vary).toContain("Sec-GPC");
-    expect(await response.text()).toContain('href="/playground"');
+    expect(await response.text()).toContain('href="/playground?example=zod#upgrade"');
     expect(await response.text()).not.toMatch(/href="[^\"]*gclid=/);
     if (choice === "Sec-GPC") await page.setExtraHTTPHeaders(headers);
     await page.goto(guide + "?" + query);
@@ -81,7 +81,7 @@ for (const choice of ["Sec-GPC", "Reject optional"] as const) {
       await expect(playground(page)).toHaveAttribute("href", /gclid=TEST999/);
       await settings(page).getByRole("button", { name: choice }).click();
     }
-    await expect(playground(page)).toHaveAttribute("href", "/playground");
+    await expect(playground(page)).toHaveAttribute("href", "/playground?example=zod#upgrade");
     await hero(page).getByRole("link", { name: "Compare with Context7" }).click();
     await expect(page).toHaveURL(url => url.pathname === comparison && !url.search);
     await page.goto(comparison + "?" + query);

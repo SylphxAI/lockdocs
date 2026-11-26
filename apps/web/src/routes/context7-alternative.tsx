@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-solid";
 import { useCookieSettings } from "@/components/cookie-settings";
 import { CodeExample, EditorialFaq, EditorialHero } from "@/components/editorial";
 import { PageMeta } from "@/components/page-meta";
-import { PackageText } from "@/components/package-text";
+import { VersionProofAside } from "@/components/version-proof-aside";
 import { context7AlternativePath, editorGuidePath } from "@/lib/editorial-routes";
 import { canonicalOrigin } from "@/lib/indexing";
 import { useSiteLanguage } from "@/lib/site-language";
@@ -48,14 +48,7 @@ export default function Context7Alternative() {
       <A class="button primary" href={campaignHref("/playground")}>Try the playground <ArrowRight size={16}/></A>
       <A class="button outline" href={proHref("context7_alternative")} onClick={() => trackEvent("pro_cta_clicked", { entry_surface: "context7_alternative" })}>See Lockdocs Pro</A>
     </>}>
-      <aside class="editorial-aside" aria-label="Example: cookies from next/headers">
-        <p class="eyebrow">ONE IMPORT, TWO RETURN TYPES</p>
-        <dl class="editorial-signatures">
-          <div><dt><PackageText text="next@14.2.35"/></dt><dd><code>cookies(): ReadonlyRequestCookies</code></dd></div>
-          <div><dt><PackageText text="next@15.5.26"/></dt><dd><code>cookies(): Promise&lt;ReadonlyRequestCookies&gt;</code></dd></div>
-        </dl>
-        <small>Declarations retrieved from the installed packages.</small>
-      </aside>
+      <VersionProofAside/>
     </EditorialHero>
     <div class="wrap"><div class="editorial-body">
       <section class="editorial-section" aria-labelledby="lookup-title">

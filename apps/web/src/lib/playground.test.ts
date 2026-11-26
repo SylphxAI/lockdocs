@@ -5,7 +5,7 @@ import { resolveLockfile } from "./playground";
 import { samples, upgradeSample } from "./playground-samples";
 import { upgradeExample } from "./upgrade-examples";
 import { readPreviewFile } from "./playground-file";
-import { filterPackages, matchingUpgrade } from "./playground-results";
+import { filterPackages, matchingUpgrade, offlinePackageCommand } from "./playground-results";
 
 function pins(format: Format, input: string) {
   return resolveLockfile(format, input).map(({ name, version, ecosystem, source }) =>
@@ -166,6 +166,19 @@ test("package filtering matches each displayed field, ignoring case and surround
   assert.deepEqual(filterPackages(rows, "10.18").map(row => row.name), ["pydantic"]);
   assert.deepEqual(filterPackages(rows, "PyPi").map(row => row.name), ["pydantic"]);
   assert.deepEqual(filterPackages(rows, "missing"), []);
+});
+
+test("the CLI handoff carries the inspected ecosystem, package and exact pin", () => {
+  const cases: [Format, string, string][] = [
+    ["package-lock.json", '{"packages":{"node_modules/@scope/ui":{"version":"2.1.6"}}}', "npm:@scope/ui@2.1.6"],
+    ["requirements.txt", "Example==1!2.3+local", "'pypi:example@1!2.3+local'"],
+    ["Cargo.lock", samples["Cargo.lock"], "cargo:serde@1.0.219"],
+    ["go.mod", samples["go.mod"], "go:github.com/spf13/cobra@v1.8.0"],
+  ];
+  for (const [format, input, spec] of cases) {
+    const [row] = resolveLockfile(format, input);
+    assert.equal(offlinePackageCommand(row), `npx -y @sylphx/lockdocs ${spec} --offline`, format);
+  }
 });
 
 test("contextual examples match exact ecosystem and package names with fixed precedence", () => {

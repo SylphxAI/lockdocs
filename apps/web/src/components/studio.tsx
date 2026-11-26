@@ -7,7 +7,7 @@ import { PackageText } from "@/components/package-text";
 import { CopyButton } from "@/components/copy-button";
 import { useCookieSettings, useProImpression } from "@/components/cookie-settings";
 import { resolveLockfile, sampleCitation, sampleExcerpt, type Dependency } from "@/lib/playground";
-import { filterPackages, matchingUpgrade } from "@/lib/playground-results";
+import { filterPackages, matchingUpgrade, offlinePackageCommand } from "@/lib/playground-results";
 import type { EventParams } from "@/lib/analytics-events";
 import { upgradeExample, upgradeIds, upgrades, type UpgradeId } from "@/lib/upgrade-examples";
 import { samples, upgradeSample } from "@/lib/playground-samples";
@@ -103,14 +103,19 @@ export function Studio() {
         <ul ref={packageList} class="package-list"><For each={visibleRows().slice(0, count())}>{row => <li><button type="button" aria-pressed={isInspected(row)} onClick={() => setSelected(row)}><strong>{row.name}</strong><span>{row.version}</span><small>{row.ecosystem}</small></button></li>}</For></ul>
         {visibleRows().length > count() && <button class="button secondary small" type="button" onClick={() => setCount(count() + pageSize)}>{text("Show more packages", "顯示更多套件")}</button>}
         <Show when={inspected()} keyed>{item => {
-          const command = `lockdocs ${item.name} --offline`;
+          const command = offlinePackageCommand(item);
           return <div class="inspect">
           <div class="plan-label">{text("Bundled citation preview", "內建引用範例")}</div><h3><PackageText text={item.name + "@" + item.version}/></h3>
           <p class="quiet">{text("Pinned in ", "版本鎖定於 ")}<code>{formatUsed()}</code>{item.source === "git" && text(" · Git source", " · 來源為 Git")}{text(".", "。")}</p>
           <Show when={sampleExcerpt(item)} fallback={<>{sampleCitation(item) ? <p class="citation"><PackageText text={sampleCitation(item) ?? ""}/></p> : <p class="quiet">{text("No bundled citation for this version. Run the CLI in your project to search the installed files.", "此版本沒有內建的引用範例。請在專案中執行 CLI，搜尋已安裝的檔案。")}</p>}</>}>
             {excerpt => <><pre class="sample-source"><code>{excerpt().code}</code></pre><a class="doc-source" href={excerpt().url}>{excerpt().cite} <ArrowUpRight size={14}/></a></>}
-          </Show><div class="studio-command">
-            <code>{command}</code>
+          </Show>
+          <p class="quiet">{text(
+            "Run from your project root after installing its dependencies. Use Node.js 18+; npx may download Lockdocs before the offline query.",
+            "請先安裝專案的相依套件，再到專案根目錄執行。需使用 Node.js 18 以上；離線查詢前，npx 可能需要先下載 Lockdocs。",
+          )} <Link href="/guide#install-lockdocs" class="underline underline-offset-2">{text("CLI install options", "CLI 安裝方式（英文）")}</Link></p>
+          <div class="studio-command">
+            <code><PackageText text={command}/></code>
             <CopyButton value={command} label={text("Copy CLI command", "複製 CLI 指令")} analytics={{ surface: "playground_cli", command_kind: "cli" }}/>
           </div>
         </div>;}}</Show>

@@ -25,7 +25,7 @@ pub use repository::{parse_github, repo_of, repo_of_with};
 
 const MAX_FILES: usize = 2500;
 const MAX_BYTES: u64 = 40 * 1024 * 1024;
-const MAX_FILE: u64 = 2 * 1024 * 1024;
+pub(crate) const MAX_FILE: u64 = 2 * 1024 * 1024;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Repo {
@@ -39,7 +39,7 @@ pub struct Repo {
 
 /// Bump when what `fetch` downloads changes, so `lockdocs fetch` refreshes
 /// older copies (a stale copy is still used until then).
-pub const FORMAT: u32 = 8;
+pub const FORMAT: u32 = 9;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Manifest {

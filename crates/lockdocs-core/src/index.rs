@@ -17,7 +17,7 @@ pub(crate) use cache::source_stamp;
 pub use terms::{embed_text, entry_tf, head_tf, summary};
 
 /// Bump when extraction or the on-disk format changes.
-pub const FORMAT: u32 = 18;
+pub const FORMAT: u32 = 19;
 
 #[derive(Serialize, Deserialize)]
 pub struct PackageIndex {

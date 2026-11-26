@@ -102,6 +102,8 @@ pub(super) const EXPRESS_SITE_DOCS: &[(&str, &[u8])] = &[
     ("src/content/docs/en/40x/guide/routing.mdx", b"# Not Express 4"),
 ];
 
+pub(super) const FASTAPI_SHA: &str = "612b8ff168beee33fcf0c0bdff9718b4c8b1ac63";
+
 pub(super) const SHA: &str = "1111111111111111111111111111111111111111";
 
 pub(super) fn fake(codeload: Codeload, api_blocked: bool, tag: Option<&str>) -> Fake {
@@ -111,6 +113,7 @@ pub(super) fn fake(codeload: Codeload, api_blocked: bool, tag: Option<&str>) -> 
     let seen: std::sync::Arc<std::sync::Mutex<Vec<String>>> = Default::default();
     let log = seen.clone();
     let tag = tag.map(String::from);
+    let fastapi = tag.as_deref() == Some("0.88.0");
     let site_docs_present = codeload == Codeload::PrivateWithSite;
     let site_archive = tarball(&[("src/content/learn/a.md", b"# learn")]);
     let express = matches!(codeload, Codeload::ExpressSite | Codeload::ExpressSiteRest);
@@ -183,7 +186,8 @@ pub(super) fn fake(codeload: Codeload, api_blocked: bool, tag: Option<&str>) -> 
             } else if path.ends_with("/git-upload-pack") {
                 let mut resp = String::new();
                 if let Some(t) = tag.as_ref().filter(|_| !path.starts_with("/expressjs/expressjs.com/")) {
-                    let l = format!("{SHA} refs/tags/{t}\n");
+                    let sha = if fastapi { FASTAPI_SHA } else { SHA };
+                    let l = format!("{sha} refs/tags/{t}\n");
                     resp.push_str(&format!("{:04x}{l}", l.len() + 4));
                 }
                 resp.push_str("0000");
@@ -214,11 +218,41 @@ pub(super) fn fake(codeload: Codeload, api_blocked: bool, tag: Option<&str>) -> 
                         .collect();
                     tree.push(serde_json::json!({"path": express_oversize, "type": "blob", "size": super::MAX_FILE + 1}));
                     json(serde_json::json!({"tree": tree}))
+                } else if fastapi {
+                    let docs = super::FASTAPI_DOCS;
+                    let mut items: Vec<_> = if path.ends_with(FASTAPI_SHA) {
+                        vec![
+                            serde_json::json!({"path":"docs","type":"tree","sha":"docs-sha"}),
+                            serde_json::json!({"path":"docs_src","type":"tree","sha":"docs-src-sha"}),
+                            serde_json::json!({"path":"src","type":"tree","sha":"src-sha"}),
+                        ]
+                    } else {
+                        let scope = match path.split('/').next_back().unwrap() {
+                            "docs-sha?recursive=1" => "docs/",
+                            "docs-src-sha?recursive=1" => "docs_src/",
+                            _ => "src/",
+                        };
+                        docs.iter()
+                            .filter_map(|(p, b)| {
+                                p.strip_prefix(scope)
+                                    .map(|p| serde_json::json!({"path":p,"type":"blob","mode":"100644","size":b.len()}))
+                            })
+                            .collect()
+                    };
+                    if path.ends_with("docs-src-sha?recursive=1") {
+                        items.extend([
+                            serde_json::json!({"path":"events/link.py","type":"blob","mode":"120000","size":5}),
+                            serde_json::json!({"path":"events/oversize.py","type":"blob","mode":"100644","size":super::MAX_FILE + 1}),
+                            serde_json::json!({"path":"../outside.py","type":"blob","mode":"100644","size":5}),
+                            serde_json::json!({"path":"events/unknown-mode.py","type":"blob","size":5}),
+                        ]);
+                    }
+                    json(serde_json::json!({"tree":items}))
                 } else if path.contains("/git/trees/docs-sha") {
-                    json(serde_json::json!({"tree":[{"path":"guide.md","type":"blob","sha":"b2","size":7}]}))
+                    json(serde_json::json!({"tree":[{"path":"guide.md","type":"blob","mode":"100644","sha":"b2","size":7}]}))
                 } else if path.contains("/git/trees/") {
                     json(serde_json::json!({"tree":[
-                        {"path":"README.md","type":"blob","sha":"b1","size":8},
+                        {"path":"README.md","type":"blob","mode":"100644","sha":"b1","size":8},
                         {"path":"docs","type":"tree","sha":"docs-sha","size":0},
                         {"path":"src","type":"tree","sha":"src-sha","size":0}]}))
                 } else {
@@ -253,6 +287,14 @@ pub(super) fn fake(codeload: Codeload, api_blocked: bool, tag: Option<&str>) -> 
                 }
             } else if path.starts_with("/raw/reactjs/legacy.reactjs.org/") && path.ends_with("/good.md") {
                 (200, "text/markdown", b"# good".to_vec())
+            } else if fastapi && path.starts_with("/raw/o/r/") {
+                match path
+                    .strip_prefix(&format!("/raw/o/r/{FASTAPI_SHA}/"))
+                    .and_then(|p| super::FASTAPI_DOCS.iter().find(|(name, _)| *name == p))
+                {
+                    Some((_, body)) => (200, "text/plain", body.to_vec()),
+                    None => (404, "text/plain", Vec::new()),
+                }
             } else if path.starts_with("/raw/o/r/") {
                 (200, "text/markdown", b"# raw".to_vec())
             } else {

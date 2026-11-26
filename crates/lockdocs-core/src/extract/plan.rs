@@ -100,8 +100,11 @@ pub(super) fn walk_all(dir: &Path, rel: &Path, depth: usize, out: &mut Vec<PathB
         let r = rel.join(&name);
         match e.file_type() {
             Ok(t) if t.is_dir() => walk_all(&e.path(), &r, depth + 1, out),
-            Ok(_) => out.push(r),
+            Ok(t) if t.is_file() => out.push(r),
             _ => {}
+        }
+        if out.len() >= MAX_FILES {
+            return;
         }
     }
 }

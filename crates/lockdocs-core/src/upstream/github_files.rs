@@ -14,6 +14,13 @@ pub(super) struct Item {
     pub(super) kind: String,
     pub(super) sha: String,
     pub(super) size: u64,
+    mode: String,
+}
+
+impl Item {
+    pub(super) fn is_regular(&self) -> bool {
+        self.kind == "blob" && matches!(self.mode.as_str(), "100644" | "100755")
+    }
 }
 
 pub(super) fn tree(agent: &Client, repo: &Repo, sha_or_ref: &str, recursive: bool) -> Result<Option<Vec<Item>>> {
@@ -30,6 +37,7 @@ pub(super) fn tree(agent: &Client, repo: &Repo, sha_or_ref: &str, recursive: boo
                     path: i.get("path").and_then(|p| p.as_str()).unwrap_or("").to_string(),
                     kind: i.get("type").and_then(|p| p.as_str()).unwrap_or("").to_string(),
                     sha: i.get("sha").and_then(|p| p.as_str()).unwrap_or("").to_string(),
+                    mode: i.get("mode").and_then(|m| m.as_str()).unwrap_or("").to_string(),
                     size: i.get("size").and_then(|p| p.as_u64()).unwrap_or(0),
                 })
                 .collect()

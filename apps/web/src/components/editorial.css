@@ -46,11 +46,6 @@
 .editorial-aside nav a:hover, .editorial-body a:not(.button):hover { color: var(--ink); }
 .editorial-aside small { display: block; margin-top: 14px; color: var(--dim); }
 
-.editorial-signatures { display: grid; gap: 12px; }
-.editorial-signatures div + div { border-top: 1px solid var(--line); padding-top: 12px; }
-.editorial-signatures dt { font: 550 12px/1.5 var(--mono); color: var(--blue); }
-.editorial-signatures dd { margin: 4px 0 0; overflow-wrap: anywhere; font-size: 13px; }
-
 .editorial-body { width: min(100%, 784px); min-width: 0; margin-inline: auto; }
 .editorial-section { padding-block: clamp(28px, 4vw, 52px); border-bottom: 1px solid var(--line); }
 .editorial-section:last-child { border-bottom: 0; }

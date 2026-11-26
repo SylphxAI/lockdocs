@@ -10,7 +10,7 @@ const playground = (page: Page) => hero(page).getByRole("link", { name: "Try the
 const pricing = (page: Page) => hero(page).getByRole("link", { name: "See Lockdocs Pro" });
 
 for (const [path, secondary, destinations] of [
-  [comparison, "See Lockdocs Pro", ["/playground", "/pricing", "/guide/how-it-works", "/compare", "/benchmarks", "/playground", "/docs", guide, "/pricing"]],
+  [comparison, "See Lockdocs Pro", ["/playground", "/pricing", "/playground#upgrade", "/guide/how-it-works", "/compare", "/benchmarks", "/playground", "/docs", guide, "/pricing"]],
   [guide, "Compare with Context7", ["/playground", comparison, "/guide/setup#without-nodejs", "/reference/tools", comparison, "/pricing"]],
 ] as const) {
   test(`shows campaign CTAs and keeps attribution URL-only on ${path}`, async ({ page }, info) => {
@@ -46,7 +46,8 @@ for (const [path, secondary, destinations] of [
     const bodyLinks = hrefs.filter(href => href.startsWith("/")).map(href => new URL(href, page.url()));
     expect(bodyLinks.map(url => url.pathname + url.hash)).toEqual(destinations);
     for (const url of bodyLinks) expect(Object.fromEntries(url.searchParams)).toEqual(url.pathname === "/pricing"
-      ? { ...campaign, entry_surface: path === comparison ? "context7_alternative" : "guide_cursor_claude_code" } : campaign);
+      ? { ...campaign, entry_surface: path === comparison ? "context7_alternative" : "guide_cursor_claude_code" }
+      : url.hash === "#upgrade" ? { ...campaign, example: "next" } : campaign);
     for (const href of hrefs.filter(href => !href.startsWith("/"))) expect(href).not.toMatch(/gclid|utm_|private-sentinel/);
     if (process.env.LOCKDOCS_LOCAL_CAPTURES) {
       await page.screenshot({ path: info.outputPath("hero.png"), animations: "disabled" });

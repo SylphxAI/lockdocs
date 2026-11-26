@@ -26,7 +26,7 @@ jobs:
   crates:
     # An owner enables this only after registry ownership and both trusted
     # publisher records have been confirmed. Landing this workflow publishes nothing.
-    if: github.ref == 'refs/heads/main' && vars.CRATES_IO_PUBLISH_ENABLED == 'true'
+    if: github.event.repository.visibility == 'public' && github.ref == 'refs/heads/main' && vars.CRATES_IO_PUBLISH_ENABLED == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: crates-io
@@ -55,6 +55,7 @@ jobs:
         run: cargo publish --locked --workspace
 
   release:
+    if: github.event.repository.visibility == 'public'
     uses: SylphxAI/mcp-kit/.github/workflows/release.yml@0db554b5882d1f0e77d070089af544c6789f6c4c # main
     permissions:
       actions: write
@@ -105,6 +106,7 @@ jobs:
 
   package-managers:
     needs: release
+    if: github.event.repository.visibility == 'public'
     runs-on: ubuntu-latest
     timeout-minutes: 40
     permissions:
@@ -131,7 +133,7 @@ jobs:
 
   wheels:
     needs: release
-    if: ${{ !cancelled() && github.repository_visibility == 'public' && github.ref == 'refs/heads/main' && needs.release.result == 'success' }}
+    if: ${{ !cancelled() && github.event.repository.visibility == 'public' && github.ref == 'refs/heads/main' && needs.release.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -168,7 +170,7 @@ jobs:
 
   pypi:
     needs: wheels
-    if: ${{ !cancelled() && github.repository_visibility == 'public' && github.ref == 'refs/heads/main' && needs.wheels.result == 'success' && needs.wheels.outputs.built == 'true' }}
+    if: ${{ !cancelled() && github.event.repository.visibility == 'public' && github.ref == 'refs/heads/main' && needs.wheels.result == 'success' && needs.wheels.outputs.built == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: pypi

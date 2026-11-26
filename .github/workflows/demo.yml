@@ -20,6 +20,7 @@ concurrency:
 
 jobs:
   record:
+    if: github.event.repository.visibility == 'public'
     runs-on: ubuntu-latest
     permissions:
       contents: read

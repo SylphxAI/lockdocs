@@ -1,22 +1,29 @@
-import { createSignal, For, onCleanup, Show } from "solid-js";
+import { createSignal, For, onCleanup, Show, untrack } from "solid-js";
 import { ArrowRight, FileCode2, FolderOpen } from "lucide-solid";
 import { CopyButton } from "@/components/copy-button";
 import type { EventParams } from "@/lib/analytics-events";
 import { formats, type Format } from "@/lib/lockfile-formats";
-import { samples } from "@/lib/playground";
+import { samples } from "@/lib/playground-samples";
 import { offlineCommand, previewLimit, readPreviewFile } from "@/lib/playground-file";
 import { useSiteLanguage } from "@/lib/site-language";
 
 type SourceKind = EventParams<"lockfile_resolved">["source_kind"];
 
-export function StudioInput(props: { resolve: (format: Format, input: string, source: SourceKind) => void }) {
+export function StudioInput(props: {
+  initialFormat: Format;
+  initialInput: string;
+  resolve: (format: Format, input: string, source: SourceKind) => void;
+}) {
   const { text } = useSiteLanguage();
-  const [format, setFormat] = createSignal<Format>(formats[0]);
+  const initialFormat = untrack(() => props.initialFormat);
+  const initialInput = untrack(() => props.initialInput);
+  const [format, setFormat] = createSignal<Format>(initialFormat);
   const [dragging, setDragging] = createSignal(false);
   const [fileStatus, setFileStatus] = createSignal<"oversize" | "unreadable">();
   let editor!: HTMLTextAreaElement;
   let picker!: HTMLInputElement;
   let source: SourceKind = "sample";
+  let bundledInput = initialInput;
   let readId = 0;
 
   function cancelRead() {
@@ -26,7 +33,7 @@ export function StudioInput(props: { resolve: (format: Format, input: string, so
   onCleanup(() => { readId++; });
 
   function currentSource(): SourceKind {
-    return source === "sample" && editor.value !== samples[format()] ? "pasted" : source;
+    return source === "sample" && editor.value !== bundledInput ? "pasted" : source;
   }
   function submit(event: SubmitEvent) {
     event.preventDefault();
@@ -36,7 +43,8 @@ export function StudioInput(props: { resolve: (format: Format, input: string, so
   function loadSample(next: Format) {
     cancelRead();
     setFormat(next);
-    editor.value = samples[next];
+    bundledInput = next === initialFormat ? initialInput : samples[next];
+    editor.value = bundledInput;
     source = "sample";
     props.resolve(next, editor.value, source);
   }
@@ -76,8 +84,8 @@ export function StudioInput(props: { resolve: (format: Format, input: string, so
     }}>
     <div class="panel-title"><FileCode2 size={17}/> <label for="lockfile">{text("Lockfile input", "輸入 lockfile")}</label></div>
     <div class="input-tools">
-      <select aria-label={text("Lockfile format", "lockfile 格式")} value={format()} onChange={event => changeFormat(event.currentTarget.value as Format)}>
-        <For each={formats}>{option => <option>{option}</option>}</For>
+      <select aria-label={text("Lockfile format", "lockfile 格式")} onChange={event => changeFormat(event.currentTarget.value as Format)}>
+        <For each={formats}>{option => <option selected={format() === option}>{option}</option>}</For>
       </select>
       <button type="button" class="button secondary small" onClick={() => picker.click()}><FolderOpen size={15} aria-hidden="true"/> {text("Open file", "開啟檔案")}</button>
       <input type="file" ref={picker} hidden onChange={event => {
@@ -89,7 +97,7 @@ export function StudioInput(props: { resolve: (format: Format, input: string, so
     </div>
     {/* HTML uses the textarea's contents, not a value attribute, for its initial value. */}
     <textarea id="lockfile" ref={editor} onInput={() => { cancelRead(); source = "pasted"; }} spellcheck={false}
-      maxlength={previewLimit}>{samples[formats[0]]}</textarea>
+      maxlength={previewLimit}>{initialInput}</textarea>
     <div class="inline-actions">
       <button class="button primary small" type="submit">{text("Resolve versions", "查出套件版本")} <ArrowRight size={15}/></button>
       <span class="quiet mono">{text("Drop a lockfile here", "也可拖放 lockfile 至此")}</span>

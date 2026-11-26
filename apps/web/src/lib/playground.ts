@@ -64,53 +64,6 @@ export function resolveLockfile(format: Format, input: string) {
   return [...rows.values()].sort((a, b) => JSON.stringify(a) < JSON.stringify(b) ? -1 : 1);
 }
 
-export const samples: Record<Format, string> = {
-  "package-lock.json": JSON.stringify({ name: "my-next-app", lockfileVersion: 3, packages: {
-    "": { dependencies: { next: "15.0.0", react: "18.3.1", zod: "4.6.7" } },
-    "node_modules/next": { version: "15.0.0" }, "node_modules/react": { version: "18.3.1" }, "node_modules/zod": { version: "4.6.7" },
-  } }, null, 2),
-  "pnpm-lock.yaml": `lockfileVersion: '9.0'
-
-importers:
-  .:
-    dependencies:
-      react-dom:
-        specifier: ^18.3.0
-        version: 18.3.1(react@18.3.1)
-
-packages:
-  react-dom@18.3.1:
-    peerDependencies:
-      react: ^18.3.1
-  react@18.3.1: {}
-`,
-  "yarn.lock": `# yarn lockfile v1
-
-"@babel/core@^7.24.0", "@babel/core@^7.24.1":
-  version "7.24.1"
-  resolved "https://registry.yarnpkg.com/@babel/core/-/core-7.24.1.tgz"
-
-zod@^3.23.0:
-  version "3.23.8"
-  resolved "https://registry.yarnpkg.com/zod/-/zod-3.23.8.tgz"
-`,
-  "go.mod": `module example.com/my-service
-
-go 1.22.0
-
-require (
-    github.com/spf13/cobra v1.8.1
-    golang.org/x/sys v0.20.0 // indirect
-)
-
-replace github.com/spf13/cobra => github.com/spf13/cobra v1.8.0
-`,
-  "bun.lock": "{\n  \"lockfileVersion\": 1,\n  \"workspaces\": {\"\": {\"dependencies\": {\"next\": \"14.2.3\"}}},\n  \"packages\": {\n    \"next\": [\"next@14.2.3\", \"\", {}],\n    \"zod\": [\"zod@4.6.7\", \"\", {}],\n  },\n}",
-  "Cargo.lock": "version = 4\n\n[[package]]\nname = \"tokio\"\nversion = \"1.44.2\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\n\n[[package]]\nname = \"serde\"\nversion = \"1.0.219\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"",
-  "uv.lock": "version = 1\n\n[[package]]\nname = \"pydantic\"\nversion = \"2.9.2\"\nsource = { registry = \"https://pypi.org/simple\" }\n\n[[package]]\nname = \"annotated-types\"\nversion = \"0.7.0\"\nsource = { registry = \"https://pypi.org/simple\" }",
-  "requirements.txt": "pydantic==1.10.18\nrequests==2.32.3\n",
-};
-
 export function sampleCitation(row: Dependency) {
   if (row.source !== "release") return null;
   if (row.name === "next" && row.ecosystem === "npm") return row.version === "15.0.0" ? upgrades.next.newSource : row.version === "14.2.3" ? upgrades.next.oldSource : null;

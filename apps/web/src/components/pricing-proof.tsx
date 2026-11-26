@@ -4,21 +4,19 @@ import { createSignal, For } from "solid-js";
 import { useCookieSettings } from "@/components/cookie-settings";
 import { PackageText } from "@/components/package-text";
 import { useSiteLanguage } from "@/lib/site-language";
-import { upgrades } from "@/lib/upgrade-examples";
+import { upgradeIds, upgradePreviewPath, upgrades, type UpgradeId } from "@/lib/upgrade-examples";
 import { privateProofExamples } from "@/lib/private-proof-examples";
 import { proProofPaths } from "@/lib/pricing-faq";
 import "./pricing-proof.css";
 
-type Upgrade = keyof typeof upgrades;
 type Registry = keyof typeof privateProofExamples;
-const upgradeIds = Object.keys(upgrades) as Upgrade[];
 const registryIds = Object.keys(privateProofExamples) as Registry[];
 
 export function PricingProof() {
-  const { text, locale, carryCampaign } = useSiteLanguage();
+  const { text, locale, href, carryCampaign } = useSiteLanguage();
   const { trackEvent } = useCookieSettings();
   const paths = () => proProofPaths(locale());
-  const [upgrade, setUpgrade] = createSignal<Upgrade>("next");
+  const [upgrade, setUpgrade] = createSignal<UpgradeId>("next");
   const [registry, setRegistry] = createSignal<Registry>("npm");
   const example = () => upgrades[upgrade()];
   const privateExample = () => privateProofExamples[registry()];
@@ -41,7 +39,7 @@ export function PricingProof() {
           <div><pre><code>- {example().before}</code></pre><p><PackageText text={example().oldSource}/></p></div>
           <div><pre><code>+ {example().after}</code></pre><p><PackageText text={example().newSource}/></p></div>
         </div>
-        <A class="pricing-proof-link" href={carryCampaign(paths().preview)}
+        <A class="pricing-proof-link" href={carryCampaign(upgradePreviewPath(href("/playground"), upgrade()))}
           onClick={() => trackEvent("pro_cta_clicked", { entry_surface: "pricing_proof_upgrade_report" }, { requireExplicitConsent: true })}>{text("Try the report preview", "互動預覽升級報告")} <ArrowRight size={15} aria-hidden="true"/></A>
       </article>
       <article>

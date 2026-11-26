@@ -5,8 +5,8 @@ import { useSiteLanguage } from "@/lib/site-language";
 import { lockdocsApplication, freeOffer } from "@/lib/storefront-schema";
 import { PageMeta } from "@/components/page-meta";
 import { A as Link } from "@solidjs/router";
-import { ArrowRight, ArrowUpRight, Box, Command, FileCode2, GitCompareArrows, ShieldCheck } from 'lucide-solid';
-import { PackageText } from '@/components/package-text';
+import { ArrowRight, ArrowUpRight, Box, FileCode2, GitCompareArrows, ShieldCheck } from 'lucide-solid';
+import { HeroInspector } from "@/components/hero-inspector";
 import { InstallCommand } from "@/components/install-command";
 import { useCookieSettings, useProImpression } from "@/components/cookie-settings";
 
@@ -31,17 +31,7 @@ export default function Home() {
         <div class="hero-actions"><Link class="button primary" href={campaignHref("/playground")}>{text("Try the playground", "試用 lockfile 工具")} <ArrowRight size={17}/></Link><Link class="button quiet" href={locale() === "en" ? "/guide" : href("/docs")}>{text("Read the docs", "閱讀文件")} <ArrowUpRight size={15}/></Link></div>
         <InstallCommand />
       </div>
-      <div class="hero-preview">
-        <div class="preview-chrome"><span><FileCode2 size={15}/> {text("VERSION INSPECTOR", "版本檢視器")}</span><span class="preview-live"><span class="signal"/> {text("SAMPLE PROJECT", "範例專案")}</span></div>
-        <div class="preview-files"><span><span class="mint">{ '{ }' }</span> package-lock.json</span><span><PackageText text="next@14.2.3"/></span></div>
-        <div class="preview-body"><div class="code-line"><i>12</i><span><b>"node_modules/next"</b>: {'{'}</span></div><div class="code-line focus-line"><i>13</i><span>&nbsp; "version": <em>"14.2.3"</em>,</span></div><div class="code-line"><i>14</i><span>{'}'}</span></div></div>
-        <div class="preview-result">
-          <div class="preview-label"><Command size={14}/> {text("API LOOKUP", "查閱 API")} <span>next/headers</span></div>
-          <div class="diff-line before"><i>−</i><code>cookies(): ReadonlyRequestCookies</code></div>
-          <div class="diff-line after"><i>+</i><code>cookies(): Promise&lt;ReadonlyRequestCookies&gt;</code></div>
-          <Link href={campaignHref("/playground") + "#upgrade"} class="preview-link">{text("Inspect the Next.js 15 upgrade", "查看升級至 Next.js 15 的變更")} <ArrowUpRight size={14}/></Link>
-        </div>
-      </div>
+      <HeroInspector/>
     </section>
     <section class="wrap" aria-label={text("Benchmark highlights", "評測摘要")}>
       <div class="bench-rail">

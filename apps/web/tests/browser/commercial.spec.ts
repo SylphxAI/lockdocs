@@ -118,7 +118,7 @@ test("keeps the two benchmark scores distinct and the Home demo above the cookie
   await expect(benchmark.locator(".bench-lockdocs")).toContainText("+19");
   await expect(benchmark.locator(".bench-baseline")).toContainText("77/105");
   const top = (await dock(page).boundingBox())!.y;
-  for (const label of ["Try the playground", "Inspect the Next.js 15 upgrade"]) {
+  for (const label of ["Try the playground", "Inspect the Next.js upgrade"]) {
     const cta = await page.getByRole("link", { name: label }).boundingBox();
     expect(top - (cta!.y + cta!.height)).toBeGreaterThanOrEqual(20);
   }

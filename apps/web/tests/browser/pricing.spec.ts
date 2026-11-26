@@ -118,29 +118,29 @@ for (const { prefix, heading, FAQReport, price, privateHeading } of proofLocales
     expect(overflow).toEqual([0, 0]);
   });
 
-  test(pricing + " carries only approved campaign fields on proof and report links", async ({ page }) => {
+  test(pricing + " carries the selected example and only approved campaign fields", async ({ page }) => {
     await page.setExtraHTTPHeaders({ "CF-IPCountry": "DE" });
     await page.goto(pricing + "?" + proofQuery);
     const proof = page.getByRole("region", { name: heading });
     const reportFaq = page.locator("#faq details").filter({ hasText: FAQReport });
     await reportFaq.locator("summary").click();
     const links = [
-      { link: proof.getByRole("link").nth(0), path: preview, hash: "#upgrade" },
+      { link: proof.getByRole("link").nth(0), path: preview, hash: "#upgrade", example: "next" },
       { link: proof.getByRole("link").nth(1), path: "/pro", hash: "#private-sources" },
       { link: reportFaq.getByRole("link").nth(0), path: preview, hash: "#upgrade" },
       { link: reportFaq.getByRole("link").nth(1), path: "/pro", hash: "#upgrade-report" },
     ];
-    for (const { link, path, hash } of links) {
+    for (const { link, path, hash, example } of links) {
       const target = new URL((await link.getAttribute("href"))!, page.url());
       expect(target.pathname).toBe(path);
       expect(target.hash).toBe(hash);
-      expect(Object.fromEntries(target.searchParams)).toEqual(proofCampaign);
+      expect(Object.fromEntries(target.searchParams)).toEqual(example ? { ...proofCampaign, example } : proofCampaign);
     }
     expect(await page.context().cookies()).toEqual([]);
     expect(await page.evaluate(() => [localStorage.length, sessionStorage.length])).toEqual([0, 0]);
 
     await links[0].link.click();
-    await expect(page).toHaveURL(url => url.pathname === preview && url.hash === "#upgrade");
+    await expect(page).toHaveURL(url => url.pathname === preview && url.searchParams.get("example") === "next" && url.hash === "#upgrade");
     await expect(page.locator("#upgrade .sample-diff")).toContainText("next@15.0.0 dist/server/request/cookies.d.ts:24");
     await page.goto(pricing + "?" + proofQuery);
     await links[1].link.click();
@@ -152,7 +152,7 @@ for (const { prefix, heading, FAQReport, price, privateHeading } of proofLocales
     await page.setExtraHTTPHeaders({ "Sec-GPC": "1" });
     await page.goto(pricing + "?" + proofQuery);
     const proof = page.getByRole("region", { name: heading });
-    await expect(proof.getByRole("link").nth(0)).toHaveAttribute("href", preview + "#upgrade");
+    await expect(proof.getByRole("link").nth(0)).toHaveAttribute("href", preview + "?example=next#upgrade");
     await expect(proof.getByRole("link").nth(1)).toHaveAttribute("href", "/pro#private-sources");
   });
 }

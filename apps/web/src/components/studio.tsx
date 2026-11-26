@@ -12,9 +12,11 @@ import type { EventParams } from "@/lib/analytics-events";
 import { upgradeExample, upgradeIds, upgrades, type UpgradeId } from "@/lib/upgrade-examples";
 import { samples, upgradeSample } from "@/lib/playground-samples";
 import { formats, type Format } from "@/lib/lockfile-formats";
+import { previewLimit } from "@/lib/playground-file";
 import { useSiteLanguage } from "@/lib/site-language";
 
 const pageSize = 35;
+const parseErrorId = "lockfile-parse-error";
 
 export function Studio() {
   const initialUpgrade = upgradeExample(useLocation().search);
@@ -30,7 +32,7 @@ export function Studio() {
   const [formatUsed, setFormatUsed] = createSignal<Format>(initialFormat);
   const [rows, setRows] = createSignal(initialRows);
   const [selected, setSelected] = createSignal<Dependency | null>(initialSelection ?? initialRows[0] ?? null);
-  const [message, setMessage] = createSignal<"empty" | "invalid">();
+  const [message, setMessage] = createSignal<"empty" | "invalid" | "oversize">();
   const [count, setCount] = createSignal(pageSize);
   const [query, setQuery] = createSignal("");
   const visibleRows = createMemo(() => filterPackages(rows(), query()));
@@ -49,11 +51,20 @@ export function Studio() {
   const [upgrade, setUpgrade] = createSignal<UpgradeId>(initialUpgrade ?? "next");
   const active = createMemo(() => upgrades[upgrade()]);
 
+  function clearInputError() {
+    if (message() === "invalid" || message() === "oversize") setMessage(undefined);
+  }
+
   function resolve(nextFormat: Format, input: string, sourceKind: EventParams<"lockfile_resolved">["source_kind"]) {
     updateQuery("");
     let resolved: Dependency[];
     try { resolved = resolveLockfile(nextFormat, input); }
-    catch { setRows([]); setSelected(null); setMessage("invalid"); return; }
+    catch {
+      setRows([]);
+      setSelected(null);
+      setMessage(input.length > previewLimit ? "oversize" : input.trim() ? "invalid" : "empty");
+      return;
+    }
     setRows(resolved);
     setSelected(resolved[0] ?? null);
     setFormatUsed(nextFormat);
@@ -70,7 +81,8 @@ export function Studio() {
 
   return <>
     <div class="studio-grid surface">
-      <StudioInput initialFormat={initialFormat} initialInput={initialInput} resolve={resolve}/>
+      <StudioInput initialFormat={initialFormat} initialInput={initialInput} resolve={resolve}
+        errorId={message() === "invalid" ? parseErrorId : undefined} onEdit={clearInputError}/>
       <section class="studio-output">
         <div class="panel-title"><ListTree size={17}/> {text("Resolved packages", "找到的套件")}
           <span class="panel-count" aria-live="polite">{query().trim()
@@ -82,10 +94,10 @@ export function Studio() {
           <input type="search" aria-label={text("Filter packages", "篩選套件")} placeholder={text("Filter packages…", "篩選套件…")}
             value={query()} onInput={event => updateQuery(event.currentTarget.value)}/>
         </div></Show>
-        <Show when={message()}>{kind => <p class="notice" role="status">{kind() === "empty"
+        <Show when={message()}>{kind => <p class="notice" role="status" id={kind() === "invalid" ? parseErrorId : undefined}>{kind() === "empty"
           ? text("No exact package versions found in this input. Try a pinned sample.", "找不到指定確切版本的套件。可以先載入範例試試看。")
           : text("Couldn’t parse this input. Check the selected format and use a valid lockfile under 400,000 characters.", "無法讀取這份 lockfile。請確認選對格式，檔案內容正確，且不超過 40 萬個字元。")}</p>}</Show>
-        <Show when={!message() && !visibleRows().length}>
+        <Show when={query().trim() && !visibleRows().length}>
           <p class="notice">{text("No matching packages", "找不到符合的套件")}</p>
         </Show>
         <ul ref={packageList} class="package-list"><For each={visibleRows().slice(0, count())}>{row => <li><button type="button" aria-pressed={isInspected(row)} onClick={() => setSelected(row)}><strong>{row.name}</strong><span>{row.version}</span><small>{row.ecosystem}</small></button></li>}</For></ul>

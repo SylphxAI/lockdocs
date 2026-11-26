@@ -12,6 +12,8 @@ type SourceKind = EventParams<"lockfile_resolved">["source_kind"];
 export function StudioInput(props: {
   initialFormat: Format;
   initialInput: string;
+  errorId?: string;
+  onEdit: () => void;
   resolve: (format: Format, input: string, source: SourceKind) => void;
 }) {
   const { text } = useSiteLanguage();
@@ -51,7 +53,7 @@ export function StudioInput(props: {
   function changeFormat(next: Format) {
     // Switch bundled examples immediately, but never replace the visitor’s edits.
     if (currentSource() === "sample") loadSample(next);
-    else { cancelRead(); source = currentSource(); setFormat(next); }
+    else { cancelRead(); source = currentSource(); setFormat(next); props.onEdit(); }
   }
   async function openFile(file: File | undefined) {
     if (!file) return;
@@ -96,8 +98,8 @@ export function StudioInput(props: {
       <button type="button" class="button secondary small" onClick={() => loadSample(format())}>{text("Load sample", "載入範例")}</button>
     </div>
     {/* HTML uses the textarea's contents, not a value attribute, for its initial value. */}
-    <textarea id="lockfile" ref={editor} onInput={() => { cancelRead(); source = "pasted"; }} spellcheck={false}
-      maxlength={previewLimit}>{initialInput}</textarea>
+    <textarea id="lockfile" ref={editor} onInput={() => { cancelRead(); source = "pasted"; props.onEdit(); }} spellcheck={false}
+      aria-invalid={props.errorId ? "true" : undefined} aria-describedby={props.errorId} maxlength={previewLimit}>{initialInput}</textarea>
     <div class="inline-actions">
       <button class="button primary small" type="submit">{text("Resolve versions", "查出套件版本")} <ArrowRight size={15}/></button>
       <span class="quiet mono">{text("Drop a lockfile here", "也可拖放 lockfile 至此")}</span>

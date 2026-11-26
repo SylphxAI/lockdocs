@@ -47,8 +47,10 @@ pub(in crate::upstream) const DOCS_SITES: &[DocsSite] = &[
         names: &["express", "@types/express"],
         repo: ("expressjs", "expressjs.com"),
         branch: "main",
-        versioned: &["src/content/api/{major}x"],
-        current: &["src/content/docs/en"],
+        // Express keeps both majors on main. A broad English root would mix
+        // majors, even for a project pinned to the latest major.
+        versioned: &["src/content/api/{major}x", "src/content/docs/en/{major}x"],
+        current: &[],
         pages: &[],
         before_next_major: false,
     },

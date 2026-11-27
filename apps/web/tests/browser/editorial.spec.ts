@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 const origin = "https://lockdocs.sylphx.com";
 const comparison = "/context7-alternative";
 const guide = "/guides/up-to-date-docs-for-cursor-and-claude-code";
+const recipe = "/guides/nextjs-15-async-cookies";
 
 for (const { path, from, heading, type } of [
   { path: comparison, from: "/compare", heading: "Context7 alternative for exact-version docs", type: "SoftwareApplication" },
@@ -75,7 +76,51 @@ for (const { path, from, heading, type } of [
   });
 }
 
-test("sitemap is XML, cached, and lists both canonical routes once", async ({ page }) => {
+test("Next.js 15 cookies recipe is linked from the docs and cites both installed declarations", async ({ page, request }) => {
+  const googleRequests: string[] = [];
+  await page.route(/^https:\/\/([^/]+\.)?(googletagmanager\.com|google-analytics\.com|doubleclick\.net|google\.com|googleadservices\.com)\//, route => {
+    googleRequests.push(route.request().url());
+    return route.abort();
+  });
+  await page.route("**/cdn-cgi/trace", route => route.fulfill({ contentType: "text/plain", body: "loc=DE\n" }));
+  const heading = "Next.js 15 made cookies() async: fix cookies().get()";
+
+  expect(await (await request.get("/docs")).text()).toContain('href="' + recipe + '"');
+  await page.goto("/docs");
+  await page.locator('#main a[href="' + recipe + '"]').click();
+  await expect(page.getByRole("heading", { level: 1, name: heading })).toBeVisible();
+  await expect(page).toHaveTitle(heading + " · Lockdocs");
+
+  const response = await page.goto(recipe + "?ref=editorial-check");
+  expect(response?.status()).toBe(200);
+  const canonical = origin + recipe;
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", canonical);
+  await expect(page.locator('meta[property="og:url"]')).toHaveAttribute("content", canonical);
+  await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", heading + " · Lockdocs");
+  const html = await response!.text();
+  const schema = [...html.matchAll(/<script\b[^>]*\btype="application\/ld\+json"[^>]*>(.*?)<\/script>/gs)].map(([, json]) => JSON.parse(json));
+  expect(schema).toEqual([expect.objectContaining({ "@context": "https://schema.org", "@type": "TechArticle", headline: heading, url: canonical })]);
+
+  for (const [label, citation, signature] of [
+    ["Actual output: Next.js 14 project", "next@14.2.35 dist/client/components/headers.d.ts:13", "export declare function cookies(): ReadonlyRequestCookies"],
+    ["Actual output: same project on Next.js 15.5.29", "next@15.5.29 dist/server/request/cookies.d.ts:24", "export declare function cookies(): Promise<ReadonlyRequestCookies>"],
+  ]) {
+    const output = page.getByLabel(label, { exact: true });
+    await expect(output).toContainText(citation);
+    await expect(output).toContainText(signature);
+  }
+  await expect(page.getByLabel("Actual output: git diff after the codemod (step 2)", { exact: true })).toContainText('+  const token = (await cookies()).get("session")');
+  await expect(page.getByText("The account page is a synthetic type-check example, not production authentication.")).toHaveCount(2);
+  for (const id of await page.locator('nav[aria-label="Recipe sections"] a').evaluateAll(links => links.map(link => link.getAttribute("href")!))) {
+    await expect(page.locator(id)).toHaveCount(1);
+  }
+  const internal = await page.locator("main .editorial-body a[href^='/']").evaluateAll(links => links.map(link => link.getAttribute("href")!));
+  expect(internal).toEqual([guide, "/pro", "/playground?example=next#upgrade"]);
+  for (const href of internal) expect((await request.get(href)).status()).toBe(200);
+  expect(googleRequests).toEqual([]);
+});
+
+test("sitemap is XML, cached, and lists each editorial route once", async ({ page }) => {
   const response = await page.goto("/sitemap.xml");
   expect(response?.status()).toBe(200);
   expect(response?.headers()["content-type"]).toBe("application/xml; charset=utf-8");
@@ -84,5 +129,5 @@ test("sitemap is XML, cached, and lists both canonical routes once", async ({ pa
     const xml = new DOMParser().parseFromString(await (await fetch("/sitemap.xml")).text(), "application/xml");
     return [...xml.getElementsByTagNameNS("http://www.sitemaps.org/schemas/sitemap/0.9", "loc")].map(loc => loc.textContent);
   });
-  for (const path of [comparison, guide]) expect(urls.filter(url => url === origin + path)).toHaveLength(1);
+  for (const path of [comparison, guide, recipe]) expect(urls.filter(url => url === origin + path)).toHaveLength(1);
 });

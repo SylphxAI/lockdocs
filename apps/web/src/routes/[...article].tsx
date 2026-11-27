@@ -13,7 +13,7 @@ import { canonicalOrigin } from "@/lib/indexing";
 import { JsonLd } from "@/components/json-ld";
 import { PackageText } from "@/components/package-text";
 import { PageMeta } from "@/components/page-meta";
-import { context7AlternativePath, editorGuidePath } from "@/lib/editorial-routes";
+import { context7AlternativePath, editorGuidePath, nextCookiesRecipePath } from "@/lib/editorial-routes";
 import { docHref, docPages } from "@/lib/docs";
 import { legacyAliases } from "@/lib/legacy-aliases";
 
@@ -52,7 +52,7 @@ export default function Article() {
         <JsonLd data={schema}/>
         <DocNavigation />
         <article class="doc-body"><div class="kicker"><span/> {text("LOCKDOCS MANUAL", "LOCKDOCS 使用指南")}</div>
-        <Show when={page.route === "/docs"}><h1>{text("Documentation", "文件總覽")}</h1><p>{text("Look up APIs for the version you installed. Start in the terminal, then give the same answers to your coding agent.", "查閱你實際安裝版本的 API。先在終端機試用，再讓程式開發代理工具查閱同一版本的文件。")}</p><div class="doc-start"><A href="/guide"><Terminal size={18}/> {text("Quickstart", "快速入門（英文）")} <ArrowRight size={15}/></A><A href="/reference"><BookOpen size={18}/> {text("CLI reference", "CLI 參考（英文）")} <ArrowRight size={15}/></A><A href={editorGuidePath}>{text("Cursor & Claude Code setup", "設定 Cursor 與 Claude Code（英文）")} <ArrowRight size={15}/></A></div></Show>
+        <Show when={page.route === "/docs"}><h1>{text("Documentation", "文件總覽")}</h1><p>{text("Look up APIs for the version you installed. Start in the terminal, then give the same answers to your coding agent.", "查閱你實際安裝版本的 API。先在終端機試用，再讓程式開發代理工具查閱同一版本的文件。")}</p><div class="doc-start"><A href="/guide"><Terminal size={18}/> {text("Quickstart", "快速入門（英文）")} <ArrowRight size={15}/></A><A href="/reference"><BookOpen size={18}/> {text("CLI reference", "CLI 參考（英文）")} <ArrowRight size={15}/></A><A href={editorGuidePath}>{text("Cursor & Claude Code setup", "設定 Cursor 與 Claude Code（英文）")} <ArrowRight size={15}/></A><A href={nextCookiesRecipePath}>{text("Next.js 15 cookies() fix", "修正 Next.js 15 的 cookies()（英文）")} <ArrowRight size={15}/></A></div></Show>
         <Show when={chinese()} fallback={
         <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[customAnchors,rehypeSlug]} transformLinkUri={(url) => {
           const target = docHref(url, page);

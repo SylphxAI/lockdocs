@@ -1,9 +1,9 @@
 import { chinesePaths } from "@/lib/locales";
 import { docPages } from "@/lib/docs";
-import { context7AlternativePath, editorGuidePath } from "@/lib/editorial-routes";
+import { context7AlternativePath, editorGuidePath, nextCookiesRecipePath } from "@/lib/editorial-routes";
 import { canonicalOrigin } from "@/lib/indexing";
 
-const paths = ["/", "/pricing", "/playground", "/legal/privacy", "/legal/terms", ...docPages.map(({ route }) => route), context7AlternativePath, editorGuidePath, ...chinesePaths];
+const paths = ["/", "/pricing", "/playground", "/legal/privacy", "/legal/terms", ...docPages.map(({ route }) => route), context7AlternativePath, editorGuidePath, nextCookiesRecipePath, ...chinesePaths];
 
 export function GET() {
   const urls = paths.map(path => `<url><loc>${canonicalOrigin}${path}</loc></url>`).join("\n");

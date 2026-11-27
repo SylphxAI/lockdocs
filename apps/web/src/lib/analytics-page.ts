@@ -1,5 +1,5 @@
 import { docPages } from "./docs";
-import { context7AlternativePath, editorGuidePath } from "./editorial-routes";
+import { context7AlternativePath, editorGuidePath, nextCookiesRecipePath } from "./editorial-routes";
 
 // Report only known routes. A catch-all pathname can contain private data just
 // as easily as a query string. Never use a URL or title supplied by the visitor.
@@ -18,6 +18,7 @@ const titles = new Map<string, string>([
   ["/legal/terms", "Terms of service · Lockdocs"],
   [context7AlternativePath, "Context7 alternative for exact-version docs · Lockdocs"],
   [editorGuidePath, "Up-to-date docs for Cursor and Claude Code · Lockdocs"],
+  [nextCookiesRecipePath, "Next.js 15 made cookies() async: fix cookies().get() · Lockdocs"],
   ...docPages.map(({ route, title }): [string, string] => [route, title + " · Lockdocs"]),
 ]);
 

@@ -4,7 +4,7 @@ import { createSignal, For } from "solid-js";
 import { useCookieSettings } from "@/components/cookie-settings";
 import { PackageText } from "@/components/package-text";
 import { useSiteLanguage } from "@/lib/site-language";
-import { releaseSourceUrl, upgradeIds, upgradePreviewPath, upgrades, type UpgradeId } from "@/lib/upgrade-examples";
+import { decisionProofUpgrade, releaseSourceUrl, showcaseUpgrade, upgradeIds, upgradePreviewPath, upgrades, type UpgradeId } from "@/lib/upgrade-examples";
 import { privateProofExamples } from "@/lib/private-proof-examples";
 import { proProofPaths } from "@/lib/pricing-faq";
 import "./pricing-proof.css";
@@ -14,11 +14,11 @@ const registryIds = Object.keys(privateProofExamples) as Registry[];
 
 export function PricingDecisionProof() {
   const { text, locale, href, carryCampaign } = useSiteLanguage();
-  const example = upgrades.next;
+  const example = upgrades[decisionProofUpgrade];
   const citations = [example.oldSource, example.newSource];
   return <div class="pricing-decision-proof" role="group" aria-labelledby="pricing-decision-proof-label">
     <div id="pricing-decision-proof-label" class="plan-label">{text("Before you buy, see the proof", "購買前，先看實例")}</div>
-    <A class="decision-trigger" href={carryCampaign(upgradePreviewPath(href("/playground"), "next"))}>
+    <A class="decision-trigger" href={carryCampaign(upgradePreviewPath(href("/playground"), decisionProofUpgrade))}>
       <span>{text("Find affected call sites before an upgrade", "升級前，先找出受影響的呼叫位置")}</span><ArrowRight size={16} aria-hidden="true"/>
     </A>
     <div class="decision-evidence">
@@ -45,7 +45,7 @@ export function PricingProof() {
   const { text, locale, href, carryCampaign } = useSiteLanguage();
   const { trackEvent } = useCookieSettings();
   const paths = () => proProofPaths(locale());
-  const [upgrade, setUpgrade] = createSignal<UpgradeId>("next");
+  const [upgrade, setUpgrade] = createSignal<UpgradeId>(showcaseUpgrade);
   const [registry, setRegistry] = createSignal<Registry>("npm");
   const example = () => upgrades[upgrade()];
   const privateExample = () => privateProofExamples[registry()];

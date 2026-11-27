@@ -96,11 +96,13 @@ for (const { prefix, heading, FAQReport, price, privateHeading } of proofLocales
     await page.goto(pricing + "?" + proofQuery);
     const proof = page.getByRole("region", { name: heading });
     await expect(proof.getByRole("heading", { level: 3 })).toHaveCount(2);
-    await expect(proof).toContainText("app/account/page.tsx:8");
-    await expect(proof).toContainText('const token = cookies().get("session")');
-    await expect(proof).toContainText('const token = (await cookies()).get("session")');
-    await expect(proof).toContainText("next@14.2.3 dist/client/components/headers.d.ts:13");
-    await expect(proof).toContainText("next@15.0.0 dist/server/request/cookies.d.ts:24");
+    await expect(proof).toContainText("app/serializers.py:14");
+    await expect(proof).toContainText("payload = account.dict()");
+    await expect(proof).toContainText("payload = account.model_dump()");
+    await expect(proof).toContainText("pydantic@1.10.18 pydantic/main.py:427");
+    await expect(proof).toContainText("pydantic@2.9.2 pydantic/main.py:352");
+    // The Pro card's decision proof already shows the Next.js diff; this section must not repeat it.
+    await expect(proof).not.toContainText("app/account/page.tsx:8");
     await expect(proof).toContainText("lockdocs fetch @acme/session");
     await expect(proof).toContainText('lockdocs docs "session renewal" --pkg @acme/session --offline');
 
@@ -125,7 +127,7 @@ for (const { prefix, heading, FAQReport, price, privateHeading } of proofLocales
     const reportFaq = page.locator("#faq details").filter({ hasText: FAQReport });
     await reportFaq.locator("summary").click();
     const links = [
-      { link: proof.getByRole("link").nth(0), path: preview, hash: "#upgrade", example: "next" },
+      { link: proof.getByRole("link").nth(0), path: preview, hash: "#upgrade", example: "pydantic" },
       { link: proof.getByRole("link").nth(1), path: "/pro", hash: "#private-sources" },
       { link: reportFaq.getByRole("link").nth(0), path: preview, hash: "#upgrade" },
       { link: reportFaq.getByRole("link").nth(1), path: "/pro", hash: "#upgrade-report" },
@@ -140,8 +142,8 @@ for (const { prefix, heading, FAQReport, price, privateHeading } of proofLocales
     expect(await page.evaluate(() => [localStorage.length, sessionStorage.length])).toEqual([0, 0]);
 
     await links[0].link.click();
-    await expect(page).toHaveURL(url => url.pathname === preview && url.searchParams.get("example") === "next" && url.hash === "#upgrade");
-    await expect(page.locator("#upgrade .sample-diff")).toContainText("next@15.0.0 dist/server/request/cookies.d.ts:24");
+    await expect(page).toHaveURL(url => url.pathname === preview && url.searchParams.get("example") === "pydantic" && url.hash === "#upgrade");
+    await expect(page.locator("#upgrade .sample-diff")).toContainText("pydantic@2.9.2 pydantic/main.py:352");
     await page.goto(pricing + "?" + proofQuery);
     await links[1].link.click();
     await expect(page).toHaveURL(url => url.pathname === "/pro" && url.hash === "#private-sources");
@@ -152,7 +154,7 @@ for (const { prefix, heading, FAQReport, price, privateHeading } of proofLocales
     await page.setExtraHTTPHeaders({ "Sec-GPC": "1" });
     await page.goto(pricing + "?" + proofQuery);
     const proof = page.getByRole("region", { name: heading });
-    await expect(proof.getByRole("link").nth(0)).toHaveAttribute("href", preview + "?example=next#upgrade");
+    await expect(proof.getByRole("link").nth(0)).toHaveAttribute("href", preview + "?example=pydantic#upgrade");
     await expect(proof.getByRole("link").nth(1)).toHaveAttribute("href", "/pro#private-sources");
   });
 }
@@ -186,6 +188,21 @@ for (const { prefix, buy, upgrade, privateDocs, free } of decisionLocales) {
     expect(order).toEqual([true, true]);
     await expect(page.locator(".plan:not(.plan-pro) h2")).toHaveText(free);
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBe(0);
+    // The Free card ends after its own button rather than stretching to the Pro card's height.
+    expect(await page.evaluate(() => {
+      const free = document.querySelector(".plan:not(.plan-pro)")!;
+      return free.getBoundingClientRect().bottom - free.querySelector(".button")!.getBoundingClientRect().bottom;
+    })).toBeLessThan(48);
+    // Chinese notes wrap at punctuation, so 程式碼 is never split across lines.
+    if (prefix) expect(await page.evaluate(() => {
+      const note = document.querySelector(".pricing-decision-proof .decision-note")!;
+      const text = [...note.childNodes].find(node => node.textContent!.includes("程式碼"))!;
+      const start = text.textContent!.indexOf("程式碼"), range = document.createRange();
+      return new Set([0, 1, 2].map(offset => {
+        range.setStart(text, start + offset); range.setEnd(text, start + offset + 1);
+        return Math.round(range.getBoundingClientRect().top);
+      })).size;
+    })).toBe(1);
 
     await proof.getByRole("link", { name: privateDocs }).focus();
     await expect(proof.getByRole("link", { name: privateDocs })).toBeFocused();

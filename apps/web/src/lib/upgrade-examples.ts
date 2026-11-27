@@ -40,6 +40,9 @@ export const upgrades = {
 
 export type UpgradeId = keyof typeof upgrades;
 export const upgradeIds = Object.keys(upgrades) as UpgradeId[];
+// The Pro decision proof cites Next.js, so the "What Pro shows you" section opens on another example.
+export const decisionProofUpgrade = "next" satisfies UpgradeId;
+export const showcaseUpgrade: UpgradeId = "pydantic";
 
 export function upgradeExample(search: string) {
   const values = new URLSearchParams(search).getAll("example");

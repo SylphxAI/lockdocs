@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { upgrades } from "../../src/lib/upgrade-examples";
+import { decisionProofUpgrade, showcaseUpgrade, upgrades } from "../../src/lib/upgrade-examples";
 import { privateProofExamples } from "../../src/lib/private-proof-examples";
 
 for (const zh of [false, true]) {
@@ -39,7 +39,7 @@ for (const zh of [false, true]) {
     const locale = zh ? 1 : 0;
     const plan = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Lockdocs Pro", exact: true }) });
     const decisionProof = plan.locator(".pricing-decision-proof");
-    const example = upgrades.next;
+    const example = upgrades[decisionProofUpgrade];
     await expect(decisionProof).toBeVisible();
     await expect(decisionProof).toContainText(example.label);
     await expect(decisionProof).toContainText(example.change[locale]);
@@ -65,7 +65,8 @@ for (const zh of [false, true]) {
       return blocks.filter(el => el.scrollWidth > el.clientWidth).map(el => el.tagName);
     })).toEqual([]);
 
-    await expect(upgrade.getByRole("button", { pressed: true })).toHaveText(upgrades.next.label);
+    await expect(upgrade.getByRole("button", { pressed: true })).toHaveText(upgrades[showcaseUpgrade].label);
+    await expect(upgrade).not.toContainText(example.path);
     await expect(registry.getByRole("button", { pressed: true })).toHaveText("npm");
     await expect(upgrade.getByRole("group").getByRole("button")).toHaveCount(4);
     await expect(registry.getByRole("group").getByRole("button")).toHaveCount(4);

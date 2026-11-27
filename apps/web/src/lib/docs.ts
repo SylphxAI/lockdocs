@@ -11,6 +11,7 @@ const entries = [
   ["/reference/tools", "reference/tools.md", "MCP tools", "The MCP contract for resolve, docs and api, with arguments and expected responses."],
   ["/benchmarks", "benchmarks.md", "Benchmarks", "Evaluate Lockdocs and Context7 on 105 version-sensitive questions, including correctness, latency and methodology."],
   ["/compare", "compare.md", "Compare", "Compare Lockdocs and Context7 for local, version-sensitive developer documentation."],
+  ["/guide/docs-site-mcp", "guide/docs-site-mcp.md", "Docs-site MCP servers", "Compare docs-site MCP servers from Mintlify, ReadMe and Docusaurus with Lockdocs, and see which one picks your dependency version."],
   ["/capabilities", "capabilities.md", "Capabilities", "See which Lockdocs capabilities work today and where its coverage stops."],
   ["/vision", "vision.md", "Vision", "The design direction for local, exact-version library documentation."],
   ["/pro", "pro.md", "Pro reference", "Technical documentation for Lockdocs Pro upgrade reports and private package docs."],

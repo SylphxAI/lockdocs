@@ -6,7 +6,7 @@ test.beforeEach(async ({ page }) => {
   await page.route("**/api/analytics/config", route => route.fulfill({ json: { measurementId: null } }));
 });
 
-const allDocs = ["/docs", "/guide", "/guide/setup", "/guide/how-it-works", "/guide/ecosystems", "/guide/fetch", "/reference", "/reference/tools", "/benchmarks", "/compare", "/capabilities", "/vision", "/pro", "/context7-alternative", "/guides/up-to-date-docs-for-cursor-and-claude-code"];
+const allDocs = ["/docs", "/guide", "/guide/setup", "/guide/how-it-works", "/guide/ecosystems", "/guide/fetch", "/reference", "/reference/tools", "/benchmarks", "/compare", "/guide/docs-site-mcp", "/capabilities", "/vision", "/pro", "/context7-alternative", "/guides/up-to-date-docs-for-cursor-and-claude-code"];
 
 test("public HTML protects package versions without changing selectable commands", async ({ page, request }) => {
   const sitemap = await request.get("/sitemap.xml");

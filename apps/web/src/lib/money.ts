@@ -1,4 +1,5 @@
 import catalogue from "../../../../config/money-catalogue.json";
+import { createHash } from "node:crypto";
 import {
   appOrigin, authConfigured, getSession, httpsOrigin, isVerifiedSession, moneyAccessToken,
   privateJson, privateRedirect, providerFetch, sameOrigin, type Session,
@@ -11,6 +12,7 @@ import { signalCheckoutStarted } from "./signal-server";
 import { knownCheckoutSurface, pricingCheckoutSurface, proPrice, type CheckoutSurface } from "./analytics-events";
 import { pricingPath, signInHref } from "./auth-entry";
 import { currencyCodePattern, liveCheckoutSessionId } from "./google-ads";
+import { checkoutIntent, checkoutIntentField } from "./checkout-intent";
 
 const feature = "lockdocs_pro_seat_year";
 const product = catalogue.spec.products.find((item) => item.key === feature);
@@ -52,6 +54,12 @@ async function endUserHeaders(cfg: MoneyConfig, session: Session) {
   return token ? { authorization: "Bearer " + token, "x-sylphx-key": cfg.key, accept: "application/json" } : null;
 }
 
+// Money replays a create for the same key. Scope it to this product, plan, buyer and request, so a reused
+// intent can't return another buyer's or currency's session, and hash it so the key carries no raw identifier.
+function checkoutKey(plan: string, subject: string, currency: string, surface: string, intent: string) {
+  return "lockdocs-" + plan + "-" + createHash("sha256").update(JSON.stringify([subject, currency, surface, intent])).digest("hex");
+}
+
 function stripeUrl(url: unknown, host: "checkout.stripe.com" | "billing.stripe.com") {
   if (typeof url !== "string") return null;
   try {
@@ -79,9 +87,13 @@ export async function checkout(request: Request) {
   const signalEnabled = signalConfig() !== null;
   const privacy = signalRequestPrivacy(request);
   let attribution: SignalAttribution | undefined;
+  let intent: string | undefined;
   try {
     const form = await request.formData();
     currency = form.getAll("currency").length === 1 ? form.get("currency") : null;
+    // Optional: a missing, duplicate or malformed intent (a stale page or no-JS submit) checks out without a key.
+    const intents = form.getAll(checkoutIntentField);
+    intent = intents.length === 1 ? checkoutIntent(intents[0]) : undefined;
     const surfaces = form.getAll("entry_surface");
     if (surfaces.length) {
       const known = surfaces.length === 1 ? knownCheckoutSurface(surfaces[0]) : undefined;
@@ -104,10 +116,11 @@ export async function checkout(request: Request) {
   }
   if (!isVerifiedSession(session)) return privateJson({ error: "authentication_required" }, 401);
   const backToPricing = new URL(pricingPath(currency, surface), cfg.origin);
+  const idempotency = intent ? { "idempotency-key": checkoutKey(cfg.price.key, session.id, currency, surface, intent) } : undefined;
   try {
     const response = await providerFetch(resource(cfg, "checkout_sessions", false), {
       method: "POST",
-      headers: { authorization: "Bearer " + cfg.secret, "content-type": "application/json", accept: "application/json" },
+      headers: { authorization: "Bearer " + cfg.secret, "content-type": "application/json", accept: "application/json", ...idempotency },
       body: JSON.stringify({
         subject: { end_user: session.id },
         line_items: [{ price: cfg.price.key, quantity: 1 }],

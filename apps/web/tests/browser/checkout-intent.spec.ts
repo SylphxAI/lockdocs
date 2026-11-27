@@ -33,5 +33,12 @@ test("the pricing form posts one browser intent per checkout attempt", async ({ 
   const usd = await submit();
   expect(usd).not.toBe(attempt);
   await page.goto(auth.origin + "/pricing?currency=USD");
-  expect(await submit()).not.toBe(usd);
+  const fresh = await submit();
+  expect(fresh).not.toBe(usd);
+  // Money definitely refused: no session exists, so the next submit is a new attempt that an ambiguous failure then keeps.
+  await page.goto(auth.origin + "/pricing?currency=USD&billing=unavailable&attempt=done");
+  const renewed = await submit();
+  expect(renewed).not.toBe(fresh);
+  await page.goto(auth.origin + "/pricing?currency=USD&billing=unavailable");
+  expect(await submit()).toBe(renewed);
 });

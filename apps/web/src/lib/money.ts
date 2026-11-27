@@ -9,10 +9,11 @@ import { signalRequestPrivacy } from "./signal-privacy";
 import { canonicalOrigin } from "./indexing";
 import { measurementId, signalConfig } from "./analytics-config";
 import { signalCheckoutStarted } from "./signal-server";
+import { checkoutRefusal, signalCheckoutFailed } from "./checkout-failure-signal";
 import { knownCheckoutSurface, pricingCheckoutSurface, proPrice, type CheckoutSurface } from "./analytics-events";
 import { pricingPath, signInHref } from "./auth-entry";
 import { currencyCodePattern, liveCheckoutSessionId } from "./google-ads";
-import { checkoutIntent, checkoutIntentField } from "./checkout-intent";
+import { checkoutIntent, checkoutIntentField, finishedAttempt } from "./checkout-intent";
 
 const feature = "lockdocs_pro_seat_year";
 const product = catalogue.spec.products.find((item) => item.key === feature);
@@ -117,6 +118,7 @@ export async function checkout(request: Request) {
   if (!isVerifiedSession(session)) return privateJson({ error: "authentication_required" }, 401);
   const backToPricing = new URL(pricingPath(currency, surface), cfg.origin);
   const idempotency = intent ? { "idempotency-key": checkoutKey(cfg.price.key, session.id, currency, surface, intent) } : undefined;
+  let refused = false;
   try {
     const response = await providerFetch(resource(cfg, "checkout_sessions", false), {
       method: "POST",
@@ -151,9 +153,13 @@ export async function checkout(request: Request) {
         }
         return privateRedirect(location);
       }
+    } else {
+      refused = intent !== undefined && checkoutRefusal(response.status) !== undefined;
+      void signalCheckoutFailed(response.status, intent, surface, privacy, request.headers);
     }
   } catch { /* Fail closed on upstream errors and unexpected data. */ }
   backToPricing.searchParams.set("billing", "unavailable");
+  if (refused) backToPricing.searchParams.set(finishedAttempt.name, finishedAttempt.value);
   return privateRedirect(backToPricing);
 }
 

@@ -7,6 +7,14 @@ const storageKey = "lockdocs.checkout.intent";
 // that a replayed open session is still payable, since Stripe sessions last at least 30 minutes (24 hours by default).
 export const attemptLifetime = 30 * 60_000;
 
+// The failed-checkout return carries this marker only when Money definitely refused, so no session exists:
+// the next submit starts a new attempt instead of replaying the refusal under the same key.
+export const finishedAttempt = { name: "attempt", value: "done" } as const;
+
+export function continuesAttempt(billing: unknown, attempt: unknown) {
+  return billing === "unavailable" && attempt !== finishedAttempt.value;
+}
+
 export type CheckoutAttempt = { scope: string; intent: string; minted: number };
 
 export function checkoutIntent(value: unknown): string | undefined {

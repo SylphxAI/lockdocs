@@ -14,7 +14,7 @@ import { ArrowRight, Check, LockKeyhole } from "lucide-solid";
 import { billingCurrencies, knownCheckoutSurface, pricingCheckoutSurface } from "@/lib/analytics-events";
 import { pricingPath, signInHref } from "@/lib/auth-entry";
 import { useCookieSettings } from "@/components/cookie-settings";
-import { attemptIntent, checkoutIntentField, type CheckoutAttempt } from "@/lib/checkout-intent";
+import { attemptIntent, checkoutIntentField, continuesAttempt, type CheckoutAttempt } from "@/lib/checkout-intent";
 import { annualAmount, annualBilling, perYear, pricePrefixes as prefixes } from "@/lib/pro-plan";
 
 const currencies = billingCurrencies;
@@ -62,7 +62,7 @@ export default function Pricing() {
           try {
             const field = form.elements.namedItem(checkoutIntentField);
             if (field instanceof HTMLInputElement) {
-              field.value = attemptIntent(currency() + ":" + entrySurface(), query.billing === "unavailable", checkoutPage);
+              field.value = attemptIntent(currency() + ":" + entrySurface(), continuesAttempt(query.billing, query.attempt), checkoutPage);
               field.disabled = false;
             }
           } catch { /* A native form submit must never depend on the intent. */ }

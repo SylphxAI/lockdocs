@@ -44,6 +44,11 @@
   text-underline-offset: 3px;
 }
 .plan .pricing-decision-proof .decision-note { color: var(--dim); font-size: 12px; line-height: 1.5; }
+/* Wrap Chinese notes at punctuation and spaces so words like 程式碼 stay whole. */
+.pricing-decision-proof .decision-note:lang(zh),
+.pricing-proof-grid p:lang(zh) { word-break: keep-all; }
+/* Each plan ends after its own call to action instead of stretching to the taller card. */
+.pricing-section .plan-grid { align-items: start; }
 @media (prefers-reduced-motion: reduce) { .decision-trigger svg { transition: none; } }
 .plan .pricing-sign-in-next { margin: 6px 0 0; font-size: 13px; }
 

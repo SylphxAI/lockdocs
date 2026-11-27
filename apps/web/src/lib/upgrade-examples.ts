@@ -49,3 +49,10 @@ export function upgradeExample(search: string) {
 export function upgradePreviewPath(playgroundPath: string, id: UpgradeId) {
   return playgroundPath + "?example=" + id + "#upgrade";
 }
+
+// Links a "package@version path:line" citation to that file in the published package.
+// %40 keeps public HTML free of name@version text that Cloudflare mistakes for email.
+export function releaseSourceUrl(citation: string) {
+  const match = /^(\S+)@([^@\s]+) ([^:\s]+):\d+$/.exec(citation);
+  return match ? "https://unpkg.com/" + match[1] + "%40" + match[2] + "/" + match[3] : undefined;
+}

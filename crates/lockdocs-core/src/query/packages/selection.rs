@@ -119,16 +119,22 @@ impl Engine {
             ));
         }
         let near = self.project.similar(&spec.name, 6);
-        Err(if near.is_empty() {
+        Err(if self.project.lockfiles.is_empty() {
+            // `resolve` would list nothing here, so point at the two ways out.
+            format!(
+                "`{}` is not a dependency of {}: no lockfile found there. Run lockdocs in the project directory \
+                 (or pass -C <dir>), or name an exact version with fetching enabled: \
+                 npm:{}@<version> --fetch (or pypi:, cargo:, go:).",
+                spec.name,
+                self.project.root.display(),
+                spec.name
+            )
+        } else if near.is_empty() {
             format!(
                 "`{}` is not a dependency of {} (lockfiles: {}). Use `resolve` to list dependencies.",
                 spec.name,
                 self.project.root.display(),
-                if self.project.lockfiles.is_empty() {
-                    "none found".into()
-                } else {
-                    self.project.lockfiles.join(", ")
-                }
+                self.project.lockfiles.join(", ")
             )
         } else {
             format!("`{}` is not a dependency here. Did you mean: {}?", spec.name, near.join(", "))

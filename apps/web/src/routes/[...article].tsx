@@ -15,6 +15,7 @@ import { PackageText } from "@/components/package-text";
 import { PageMeta } from "@/components/page-meta";
 import { context7AlternativePath, editorGuidePath } from "@/lib/editorial-routes";
 import { docHref, docPages } from "@/lib/docs";
+import { legacyAliases } from "@/lib/legacy-aliases";
 
 import { DocNavigation } from "@/components/doc-navigation";
 import { CopyButton } from "@/components/copy-button";
@@ -22,7 +23,6 @@ import { localizedPath, pagePath } from "@/lib/locales";
 import { useSiteLanguage } from "@/lib/site-language";
 
 const files = import.meta.glob("../../../../docs/**/*.md", { eager: true, query: "?raw", import: "default" }) as Record<string, string>;
-const redirects: Record<string, string> = { "/guide/quickstart": "/guide", "/reference/cli": "/reference", "/recover": "/dashboard" };
 const isPricingLink = (href?: string) => /^\/pricing\/?(?:[?#]|$)/.test(href ?? "");
 function customAnchors() {
   return (tree: Parameters<typeof visit>[0]) => visit(tree, "element", (node) => {
@@ -45,7 +45,7 @@ export default function Article() {
     const page = docPages.find(({ route }) => route === path);
     return page && { page, ...docMetadata(page, locale()) };
   });
-  return <Show when={redirects[location.pathname]} fallback={
+  return <Show when={legacyAliases.get(location.pathname)} fallback={
     <Show when={article()} keyed fallback={<div class="wrap content-section"><HttpStatusCode code={404}/><PageMeta title="Page not found · Lockdocs" description="This Lockdocs page does not exist." unlisted/><h1>Page not found</h1><A href="/docs">Open the docs</A></div>}>
       {({ page, title, description, schema }) => <div class="wrap docs-layout">
         <PageMeta title={title} description={description}/>

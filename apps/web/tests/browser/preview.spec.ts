@@ -56,6 +56,25 @@ test("legacy guide links permanently redirect only with safe campaign parameters
   }
 });
 
+test("retired page paths permanently redirect in one hop without carrying the query", async ({ request }) => {
+  for (const [path, location] of [["/guide/quickstart", "/guide"], ["/reference/cli", "/reference"], ["/recover", "/dashboard"]]) {
+    for (const variant of [path, path + "/"]) {
+      const head = await request.head(variant, { maxRedirects: 0 });
+      expect(head.status(), variant).toBe(308);
+      expect(head.headers().location, variant).toBe(location);
+      const get = await request.get(variant + "?session_id=cs_test&utm_source=x&gclid=test-id", { maxRedirects: 0 });
+      expect(get.status(), variant).toBe(308);
+      expect(get.headers().location, variant).toBe(location);
+      expect(get.headers()["cache-control"], variant).toBe(path === "/recover" ? "private, no-store" : undefined);
+    }
+    expect((await request.post(path, { maxRedirects: 0 })).status(), path).toBe(302);
+    expect((await request.get(path)).status(), path).toBe(200);
+  }
+  for (const path of ["/recover/x", "/zh-TW/recover", "/reference/cli-x"]) {
+    expect((await request.get(path, { maxRedirects: 0 })).status(), path).toBe(404);
+  }
+});
+
 test("Pro reference replaces the placeholder and links directly to pricing", async ({ page }) => {
   await page.goto("/pro");
   await expect(page.locator("main")).not.toContainText("<this page>");

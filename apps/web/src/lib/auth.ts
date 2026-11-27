@@ -54,13 +54,14 @@ function sdk(auth: AuthConfig, session?: SessionAdapter) {
   return createIdentityHandler(auth, process.env.LOCKDOCS_TENANT_AUTH_ORIGIN, session);
 }
 
-// Keep the existing options shape for the Lockdocs sign-in view.
-export async function getCapabilities(request: Request, auth = config()): Promise<AuthCapabilities | null> {
+// Keep the existing options shape for the Lockdocs sign-in view. The handler's
+// config route is reached only from here; `/api/auth/[provider]` serves no config.
+export async function getCapabilities(request: Request, auth = config(), headers: Headers = request.headers): Promise<AuthCapabilities | null> {
   if (!auth) return null;
   try {
     const url = new URL(request.url);
     url.pathname = routePrefix + "/config";
-    const response = await sdk(auth)(new Request(url, { headers: request.headers, signal: request.signal }));
+    const response = await sdk(auth)(new Request(url, { headers, signal: request.signal }));
     if (!response.ok) return null;
     const entry: EntryConfig = await response.json();
     return { google: entry.providers.includes("google"), github: entry.providers.includes("github"),
@@ -86,12 +87,38 @@ function equal(left: string, right: string) {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
-export async function signInOptions(request: Request) {
-  const capabilities = await getCapabilities(request);
-  if (!capabilities) return privateJson({ error: "auth_unavailable" }, 503);
+export type SignInOptions = { capabilities: AuthCapabilities; lastUsed: SignInMethod | null };
+
+/** Public method switches and this browser's last-used method; no session or account data. */
+async function readSignInOptions(request: Request, headers: Headers): Promise<SignInOptions | null> {
+  const capabilities = await getCapabilities(request, config(), headers);
+  if (!capabilities) return null;
   const last = cookie(request, LAST_USED);
-  const lastUsed = last && Object.hasOwn(capabilities, last) && capabilities[last as SignInMethod] ? last : null;
-  return Response.json({ capabilities, lastUsed }, { headers: { ...privateHeaders, "Cache-Control": "private, no-store" } });
+  const lastUsed = last && Object.hasOwn(capabilities, last) && capabilities[last as SignInMethod] ? last as SignInMethod : null;
+  return { capabilities, lastUsed };
+}
+
+/**
+ * Server-only read while rendering `/sign-in`. The page is a navigation that may
+ * come from any site, so it isn't presented to the handler as a browser call to
+ * an Auth route: it carries only the public-edge identity the handler authorizes
+ * and the User-Agent its upstream transport sends. No cookie, session or origin
+ * is forwarded; the handler's upstream read omits credentials either way.
+ */
+export function pageSignInOptions(request: Request) {
+  const headers = new Headers();
+  for (const name of ["sylphx-edge", "x-forwarded-host", "x-forwarded-proto", "user-agent"]) {
+    const value = request.headers.get(name);
+    if (value !== null) headers.set(name, value);
+  }
+  return readSignInOptions(request, headers);
+}
+
+/** The browser endpoint keeps the handler's fetch-metadata checks on the caller's own headers. */
+export async function signInOptions(request: Request) {
+  const options = await readSignInOptions(request, request.headers);
+  if (!options) return privateJson({ error: "auth_unavailable" }, 503);
+  return Response.json(options, { headers: { ...privateHeaders, "Cache-Control": "private, no-store" } });
 }
 
 function signInRetry(origin: string, next: string) {

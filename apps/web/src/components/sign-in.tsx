@@ -1,13 +1,14 @@
-import { createEffect, createSignal, onCleanup, onMount, Show } from "solid-js";
+import { createEffect, createSignal, onCleanup, onMount, Show, untrack } from "solid-js";
 import { signInMessages } from "@sylphx/auth-solid";
 import { Fingerprint } from "lucide-solid";
-import type { AuthCapabilities, SignInMethod } from "@/lib/auth";
+import type { SignInMethod } from "@/lib/auth";
 import { requestPasskey, supportsPasskeys } from "@/lib/passkey-client";
+import type { SignInOptions as Options } from "@/lib/sign-in-options";
 import { useSiteLanguage } from "@/lib/site-language";
 
-type Options = { capabilities: AuthCapabilities; lastUsed: SignInMethod | null };
 type EmailAction = "send" | "verify";
 const mask = (address: string) => address[0] + "•••" + address.slice(address.lastIndexOf("@"));
+const usable = (options: Options | null | undefined) => options && Object.values(options.capabilities).some(Boolean) ? options : undefined;
 
 function GoogleMark() {
   return <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
@@ -21,7 +22,8 @@ function GitHubMark() {
   return <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.1c-3.3.7-4-1.4-4-1.4-.5-1.4-1.3-1.7-1.3-1.7-1.1-.8.1-.8.1-.8 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.9 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-6a4.7 4.7 0 0 1 1.3-3.2c-.1-.3-.6-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.7 1.7.3 2.9.1 3.2a4.6 4.6 0 0 1 1.3 3.2c0 4.7-2.8 5.7-5.5 6 .4.4.8 1.1.8 2.2v3.2c0 .3.2.7.8.6A12 12 0 0 0 12 0z"/></svg>;
 }
 
-export function SignIn(props: { next: string }) {
+/** Server-rendered from `initial`, so the form keeps its place when the page hydrates. */
+export function SignIn(props: { next: string; initial: Options | null }) {
   const { locale, text } = useSiteLanguage();
   const messages = () => locale() === "en" ? signInMessages.en : signInMessages["zh-Hant-TW"];
   const errors = {
@@ -32,10 +34,14 @@ export function SignIn(props: { next: string }) {
     send: () => text("Couldn’t send a code. Try again or choose another method.", "無法寄出驗證碼，請重試或改用其他登入方式。"),
     connection: () => text("Sign-in couldn’t connect. Try again.", "登入時無法連線，請重試。"),
   };
-  const [options, setOptions] = createSignal<Options>();
+  // The first render uses the server's answer; a retry replaces it.
+  const initial = untrack(() => usable(props.initial));
+  const [options, setOptions] = createSignal(initial);
   const caps = () => options()?.capabilities;
-  const [loading, setLoading] = createSignal(true);
-  const [message, setMessage] = createSignal<keyof typeof errors>();
+  const [loading, setLoading] = createSignal(false);
+  const [message, setMessage] = createSignal<keyof typeof errors | undefined>(initial ? undefined : "options");
+  // Interactive controls wait for hydration; their place on the page does not.
+  const [mounted, setMounted] = createSignal(false);
   const [email, setEmail] = createSignal("");
   const [step, setStep] = createSignal<"email" | "proof">("email");
   const [pending, setPending] = createSignal<EmailAction | "passkey">();
@@ -44,7 +50,8 @@ export function SignIn(props: { next: string }) {
   const [now, setNow] = createSignal(0);
   const sent = () => delivery()?.email === email() && now() < delivery()!.expiresAt;
   const cooldown = () => sent() ? Math.max(0, Math.ceil((delivery()!.resendAt - now()) / 1000)) : 0;
-  const [passkeySupported, setPasskeySupported] = createSignal(false);
+  // Assume support until the browser answers, so a supported browser draws the same button the server did.
+  const [passkeySupported, setPasskeySupported] = createSignal(true);
   const passkeys = () => caps()?.passkey && passkeySupported();
   const life = new AbortController();
   let ceremony: { cancel: AbortController; done: Promise<void> } | undefined;
@@ -58,8 +65,8 @@ export function SignIn(props: { next: string }) {
     try {
       const response = await fetch("/api/auth/options", { cache: "no-store", signal: life.signal });
       if (!response.ok) throw new Error();
-      const data: Options = await response.json();
-      if (!Object.values(data.capabilities).some(Boolean)) throw new Error();
+      const data = usable(await response.json());
+      if (!data) throw new Error();
       setOptions(data);
     } catch {
       if (!life.signal.aborted) setMessage("options");
@@ -107,14 +114,14 @@ export function SignIn(props: { next: string }) {
 
   onMount(() => {
     setPasskeySupported(supportsPasskeys());
-    void loadOptions();
+    setMounted(true);
     const interval = window.setInterval(() => setNow(Date.now()), 250);
     setNow(Date.now());
     onCleanup(() => window.clearInterval(interval));
   });
   onCleanup(() => { life.abort(); ceremony?.cancel.abort(); });
   createEffect(() => {
-    if (!passkeys() || step() !== "email") return;
+    if (!mounted() || !passkeys() || step() !== "email") return;
     let active = true;
     void (async () => {
       if (!(await PublicKeyCredential.isConditionalMediationAvailable?.()) || !active || pending()) return;
@@ -182,7 +189,7 @@ export function SignIn(props: { next: string }) {
 
   const lastUsed = (method: SignInMethod) => <Show when={options()?.lastUsed === method}><span class="last-used">{messages().lastUsed}</span></Show>;
   const PasskeyButton = () => <Show when={passkeys()}>
-    <button class="button quiet auth-button auth-passkey" type="button" onClick={explicitPasskey} disabled={Boolean(pending())}>
+    <button class="button quiet auth-button auth-passkey" type="button" onClick={explicitPasskey} disabled={!mounted() || Boolean(pending())}>
       <Fingerprint size={18}/>{pending() === "passkey" ? text("Waiting for passkey…", "正在等待通行金鑰…") : text("Continue with a passkey", "使用通行金鑰登入")}{lastUsed("passkey")}
     </button>
   </Show>;
@@ -224,7 +231,7 @@ export function SignIn(props: { next: string }) {
             <form method="post" onSubmit={continueWithEmail}>
               <label for="signin-email">{messages().email}</label>
               <input id="signin-email" ref={emailField} type="email" name="email" autocomplete="username webauthn" inputmode="email" maxlength="254" value={email()} required/>
-              <button type="submit" class="button primary auth-button" disabled={Boolean(pending())}>{text("Continue", "繼續")}</button>
+              <button type="submit" class="button primary auth-button" disabled={!mounted() || Boolean(pending())}>{text("Continue", "繼續")}</button>
             </form>
             <PasskeyButton/>
           </Show>

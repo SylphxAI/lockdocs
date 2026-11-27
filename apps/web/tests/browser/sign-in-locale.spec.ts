@@ -46,7 +46,7 @@ for (const [index, buyer] of rows.entries()) {
 }
 
 test("a sign-in options error follows the selected language without starting an auth flow", async ({ page, auth }) => {
-  await page.route("**/api/auth/options", route => route.fulfill({ status: 503 }), { times: 1 });
+  auth.outages.config = 1;
   await page.goto(auth.origin + "/sign-in?next=%2Fzh-TW%2Fpricing");
   const card = page.locator(".sign-in-card");
   await expect(card.getByRole("alert")).toHaveText("無法載入登入選項，請重試。");

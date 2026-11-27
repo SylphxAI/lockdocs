@@ -4,7 +4,7 @@ import { createSignal, For } from "solid-js";
 import { useCookieSettings } from "@/components/cookie-settings";
 import { PackageText } from "@/components/package-text";
 import { useSiteLanguage } from "@/lib/site-language";
-import { upgradeIds, upgradePreviewPath, upgrades, type UpgradeId } from "@/lib/upgrade-examples";
+import { releaseSourceUrl, upgradeIds, upgradePreviewPath, upgrades, type UpgradeId } from "@/lib/upgrade-examples";
 import { privateProofExamples } from "@/lib/private-proof-examples";
 import { proProofPaths } from "@/lib/pricing-faq";
 import "./pricing-proof.css";
@@ -13,13 +13,31 @@ type Registry = keyof typeof privateProofExamples;
 const registryIds = Object.keys(privateProofExamples) as Registry[];
 
 export function PricingDecisionProof() {
-  const { text } = useSiteLanguage();
+  const { text, locale, href, carryCampaign } = useSiteLanguage();
   const example = upgrades.next;
-  return <div class="pricing-decision-proof">
-    <div class="plan-label">{text("Upgrade report example", "升級報告範例")}</div>
-    <p><strong>{example.label}</strong> · {text(example.change[0], example.change[1])}<br/>
-      <code>{example.path}</code>
-    </p>
+  const citations = [example.oldSource, example.newSource];
+  return <div class="pricing-decision-proof" role="group" aria-labelledby="pricing-decision-proof-label">
+    <div id="pricing-decision-proof-label" class="plan-label">{text("Before you buy, see the proof", "購買前，先看實例")}</div>
+    <A class="decision-trigger" href={carryCampaign(upgradePreviewPath(href("/playground"), "next"))}>
+      <span>{text("Find affected call sites before an upgrade", "升級前，先找出受影響的呼叫位置")}</span><ArrowRight size={16} aria-hidden="true"/>
+    </A>
+    <div class="decision-evidence">
+      <p class="decision-site"><code>{example.path}</code><span>{example.label} · {text(example.change[0], example.change[1])}</span></p>
+      <div class="sample-diff">
+        <div><pre><code>- {example.before}</code></pre></div>
+        <div><pre><code>+ {example.after}</code></pre></div>
+      </div>
+      <ul class="decision-citations" aria-label={text("Release citations", "版本出處")}>
+        <For each={citations}>{citation => <li><a href={releaseSourceUrl(citation)}><PackageText text={citation}/></a></li>}</For>
+      </ul>
+      <p class="decision-note">{text("Sample project. Both citations match the published Next.js packages. Your own report comes from lockdocs upgrade on your machine; this page never reads your code.",
+        "範例專案。兩個版本出處都與正式發布的 Next.js 套件一致。你的專案報告由 lockdocs upgrade 在本機產生，這個頁面不會讀取你的程式碼。")}</p>
+    </div>
+    <A class="decision-trigger" href={carryCampaign(proProofPaths(locale()).privateSources)} hreflang="en">
+      <span>{text("Query private package docs at the version you installed", "依已安裝的版本查詢私有套件文件")}</span><ArrowRight size={16} aria-hidden="true"/>
+    </A>
+    <p class="decision-note">{text("Setup guide: uses your existing npm, PyPI, Cargo or Go registry settings. Credentials go only to their configured origin.",
+      "設定說明（英文）：沿用現有的 npm、PyPI、Cargo 或 Go 套件庫設定，憑證只會傳到原本設定的來源。")}</p>
   </div>;
 }
 

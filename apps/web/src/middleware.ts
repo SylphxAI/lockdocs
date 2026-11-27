@@ -1,6 +1,7 @@
 import { createMiddleware } from "@solidjs/start/middleware";
 import { legacySignIn } from "@/lib/auth-entry";
 import { legacyGuide } from "@/lib/guide-redirects";
+import { legacyAlias } from "@/lib/legacy-aliases";
 import { allowIndexing } from "@/lib/indexing";
 import { chinesePaths, pagePath } from "@/lib/locales";
 export default createMiddleware({ onRequest: (event) => {
@@ -22,5 +23,5 @@ export default createMiddleware({ onRequest: (event) => {
       return new Response(null, { status: 308, headers: { Location: canonical + search } });
     }
   }
-  return legacyGuide(event.request) ?? legacySignIn(event.request);
+  return legacyGuide(event.request) ?? legacyAlias(event.request) ?? legacySignIn(event.request);
 } });

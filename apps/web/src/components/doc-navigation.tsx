@@ -9,7 +9,7 @@ const titles = {
   "/docs": "文件總覽", "/guide": "快速入門", "/guide/setup": "設定程式開發代理工具",
   "/guide/how-it-works": "運作方式", "/guide/ecosystems": "支援的語言與套件管理工具",
   "/guide/fetch": "下載文件", "/reference": "CLI 參考", "/reference/tools": "MCP 工具",
-  "/benchmarks": "評測結果", "/compare": "工具比較", "/capabilities": "功能與限制",
+  "/benchmarks": "評測結果", "/compare": "工具比較", "/guide/docs-site-mcp": "文件網站 MCP 伺服器", "/capabilities": "功能與限制",
   "/vision": "設計方向", "/pro": "Pro 功能參考",
 } satisfies Record<DocPage["route"], string>;
 const groups: Record<string, string> = { Introduction: "介紹", Guide: "指南", Reference: "參考", Project: "專案" };

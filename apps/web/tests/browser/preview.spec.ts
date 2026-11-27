@@ -6,7 +6,7 @@ test.beforeEach(async ({ page }) => {
   await page.route("**/api/analytics/config", route => route.fulfill({ json: { measurementId: null } }));
 });
 
-const allDocs = ["/docs", "/guide", "/guide/setup", "/guide/how-it-works", "/guide/ecosystems", "/guide/fetch", "/reference", "/reference/tools", "/benchmarks", "/compare", "/capabilities", "/vision", "/pro", "/context7-alternative", "/guides/up-to-date-docs-for-cursor-and-claude-code"];
+const allDocs = ["/docs", "/guide", "/guide/setup", "/guide/how-it-works", "/guide/ecosystems", "/guide/fetch", "/reference", "/reference/tools", "/benchmarks", "/compare", "/guide/docs-site-mcp", "/capabilities", "/vision", "/pro", "/context7-alternative", "/guides/up-to-date-docs-for-cursor-and-claude-code"];
 
 test("public HTML protects package versions without changing selectable commands", async ({ page, request }) => {
   const sitemap = await request.get("/sitemap.xml");
@@ -53,6 +53,25 @@ test("legacy guide links permanently redirect only with safe campaign parameters
     expect(alias.headers().location).toBe("/guide?gclid=test-id&utm_source=release+notes&utm_medium=email");
     expect((await request.get(path)).status()).toBe(200);
     expect((await request.post(path, { maxRedirects: 0 })).status()).not.toBe(301);
+  }
+});
+
+test("retired page paths permanently redirect in one hop without carrying the query", async ({ request }) => {
+  for (const [path, location] of [["/guide/quickstart", "/guide"], ["/reference/cli", "/reference"], ["/recover", "/dashboard"]]) {
+    for (const variant of [path, path + "/"]) {
+      const head = await request.head(variant, { maxRedirects: 0 });
+      expect(head.status(), variant).toBe(308);
+      expect(head.headers().location, variant).toBe(location);
+      const get = await request.get(variant + "?session_id=cs_test&utm_source=x&gclid=test-id", { maxRedirects: 0 });
+      expect(get.status(), variant).toBe(308);
+      expect(get.headers().location, variant).toBe(location);
+      expect(get.headers()["cache-control"], variant).toBe(path === "/recover" ? "private, no-store" : undefined);
+    }
+    expect((await request.post(path, { maxRedirects: 0 })).status(), path).toBe(302);
+    expect((await request.get(path)).status(), path).toBe(200);
+  }
+  for (const path of ["/recover/x", "/zh-TW/recover", "/reference/cli-x"]) {
+    expect((await request.get(path, { maxRedirects: 0 })).status(), path).toBe(404);
   }
 });
 

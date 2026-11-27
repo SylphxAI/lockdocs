@@ -156,3 +156,40 @@ for (const { prefix, heading, FAQReport, price, privateHeading } of proofLocales
     await expect(proof.getByRole("link").nth(1)).toHaveAttribute("href", "/pro#private-sources");
   });
 }
+
+const decisionLocales = [
+  { prefix: "", buy: "Get Lockdocs Pro — US$120/yr", upgrade: "Find affected call sites before an upgrade", privateDocs: "Query private package docs at the version you installed", free: "Free" },
+  { prefix: "/zh-TW", buy: "購買 Lockdocs Pro — US$120／年", upgrade: "升級前，先找出受影響的呼叫位置", privateDocs: "依已安裝的版本查詢私有套件文件", free: "免費版" },
+];
+
+for (const { prefix, buy, upgrade, privateDocs, free } of decisionLocales) {
+  test(prefix + "/pricing puts verified proof and both Pro triggers between the Buy link and Free", async ({ page, request }) => {
+    const html = await (await request.get(prefix + "/pricing")).text();
+    for (const visible of [upgrade, privateDocs, "app/account/page.tsx:8", "https://unpkg.com/next%4015.0.0/dist/server/request/cookies.d.ts"]) expect(html).toContain(visible);
+
+    await page.goto(prefix + "/pricing");
+    const pro = page.locator(".plan-pro");
+    const proof = pro.getByRole("group").filter({ has: page.locator("#pricing-decision-proof-label") });
+    await expect(pro.getByRole("link", { name: buy })).toBeVisible();
+    await expect(proof.getByRole("link", { name: upgrade })).toHaveAttribute("href", prefix + "/playground?example=next#upgrade");
+    await expect(proof.getByRole("link", { name: privateDocs })).toHaveAttribute("href", "/pro#private-sources");
+    await expect(proof.locator(".decision-citations a")).toHaveText(["next@14.2.3 dist/client/components/headers.d.ts:13", "next@15.0.0 dist/server/request/cookies.d.ts:24"]);
+    expect(await proof.locator(".decision-citations a").evaluateAll(links => links.map(link => link.getAttribute("href")))).toEqual([
+      "https://unpkg.com/next%4014.2.3/dist/client/components/headers.d.ts", "https://unpkg.com/next%4015.0.0/dist/server/request/cookies.d.ts"]);
+    await expect(proof).toContainText('const token = (await cookies()).get("session")');
+    await expect(proof).not.toContainText(/upload|scan/i);
+
+    const order = await page.evaluate(() => {
+      const nodes = [".plan-pro .button.primary", ".pricing-decision-proof", ".plan:not(.plan-pro)"].map(selector => document.querySelector(selector)!);
+      return [nodes[0].compareDocumentPosition(nodes[1]), nodes[1].compareDocumentPosition(nodes[2])].map(position => Boolean(position & Node.DOCUMENT_POSITION_FOLLOWING));
+    });
+    expect(order).toEqual([true, true]);
+    await expect(page.locator(".plan:not(.plan-pro) h2")).toHaveText(free);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBe(0);
+
+    await proof.getByRole("link", { name: privateDocs }).focus();
+    await expect(proof.getByRole("link", { name: privateDocs })).toBeFocused();
+    await proof.getByRole("link", { name: privateDocs }).press("Enter");
+    await expect(page).toHaveURL(url => url.pathname === "/pro" && url.hash === "#private-sources");
+  });
+}

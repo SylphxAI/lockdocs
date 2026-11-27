@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test, type TestContext } from "node:test";
 import { checkout } from "../src/lib/money";
-import { attemptIntent, checkoutIntent } from "../src/lib/checkout-intent";
+import { attemptIntent, attemptLifetime, checkoutIntent } from "../src/lib/checkout-intent";
 
 const app = "https://lockdocs.example.test";
 const identity = "https://identity.example.test";
@@ -107,26 +107,53 @@ test("an intent changes neither the Money body, the attribution binding nor any 
 function memoryStorage(entries = new Map<string, string>()) {
   return () => ({ getItem: (key: string) => entries.get(key) ?? null, setItem: (key: string, value: string) => { entries.set(key, value); } }) as Storage;
 }
+const minted = Date.UTC(2026, 10, 27, 1, 0);
 
-test("the browser continues an attempt only on a failed return for the same currency and surface", () => {
+test("the browser continues an attempt on a resubmit or a failed return for the same currency and surface", () => {
   const storage = memoryStorage();
-  const first = attemptIntent("GBP:pricing", false, storage);
+  const page = {};
+  const first = attemptIntent("GBP:pricing", false, page, storage, minted);
   assert.equal(checkoutIntent(first), first);
-  assert.equal(attemptIntent("GBP:pricing", true, storage), first);
-  assert.equal(attemptIntent("GBP:pricing", true, storage), first);
-  const usd = attemptIntent("USD:pricing", true, storage);
+  assert.equal(attemptIntent("GBP:pricing", false, page, storage, minted + 1000), first);
+  assert.equal(attemptIntent("GBP:pricing", true, {}, storage, minted + 1000), first);
+  assert.notEqual(attemptIntent("GBP:pricing", false, {}, storage, minted + 1000), first);
+  const usd = attemptIntent("USD:pricing", true, page, storage, minted);
   assert.notEqual(usd, first);
-  const fresh = attemptIntent("USD:pricing", false, storage);
-  assert.notEqual(fresh, usd);
-  assert.equal(attemptIntent("USD:pricing", true, storage), fresh);
+  assert.notEqual(attemptIntent("GBP:pricing", true, page, storage, minted), first);
 });
 
-test("unavailable or stale browser storage still mints a valid intent", () => {
+test("an attempt older than 30 minutes mints a new intent and so a new Money key", async t => {
+  assert.equal(attemptLifetime, 30 * 60_000);
+  const storage = memoryStorage();
+  const page = {};
+  const first = attemptIntent("GBP:pricing", true, page, storage, minted);
+  assert.equal(attemptIntent("GBP:pricing", true, {}, storage, minted + attemptLifetime - 1), first);
+  assert.equal(attemptIntent("GBP:pricing", true, page, storage, minted + attemptLifetime - 1), first);
+  const renewed = attemptIntent("GBP:pricing", true, {}, storage, minted + attemptLifetime);
+  assert.notEqual(renewed, first);
+  assert.notEqual(attemptIntent("GBP:pricing", false, page, storage, minted + attemptLifetime), first);
+  // A clock moved back can't extend an attempt either.
+  assert.notEqual(attemptIntent("GBP:pricing", true, {}, memoryStorage(new Map([["lockdocs.checkout.intent",
+    JSON.stringify({ scope: "GBP:pricing", intent: first, minted: minted + 60_000 })]])), minted), first);
+
+  const { creates, start } = fixture(t);
+  await start([first]);
+  await start([first]);
+  await start([renewed]);
+  assert.equal(creates[0].key, creates[1].key);
+  assert.notEqual(creates[2].key, creates[0].key);
+});
+
+test("unavailable or stale browser storage still mints a valid intent that the page keeps", () => {
   const broken = () => { throw new DOMException("denied", "SecurityError"); };
-  const stale = memoryStorage(new Map([["lockdocs.checkout.intent", "{not json"]]));
-  const tampered = memoryStorage(new Map([["lockdocs.checkout.intent", JSON.stringify({ scope: "GBP:pricing", intent: "x" })]]));
-  for (const storage of [broken, stale, tampered]) {
-    const intent = attemptIntent("GBP:pricing", true, storage);
-    assert.equal(checkoutIntent(intent), intent);
+  const page = {};
+  const intent = attemptIntent("GBP:pricing", true, page, broken, minted);
+  assert.equal(checkoutIntent(intent), intent);
+  assert.equal(attemptIntent("GBP:pricing", true, page, broken, minted + 1000), intent);
+  for (const saved of ["{not json", JSON.stringify({ scope: "GBP:pricing", intent: "x", minted }),
+    JSON.stringify({ scope: "GBP:pricing", intent: "a".repeat(64), minted: "soon" }), JSON.stringify({ scope: "GBP:pricing", intent: "a".repeat(64) })]) {
+    const fresh = attemptIntent("GBP:pricing", true, {}, memoryStorage(new Map([["lockdocs.checkout.intent", saved]])), minted);
+    assert.equal(checkoutIntent(fresh), fresh);
+    assert.notEqual(fresh, "a".repeat(64));
   }
 });

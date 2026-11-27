@@ -14,7 +14,7 @@ import { ArrowRight, Check, LockKeyhole } from "lucide-solid";
 import { billingCurrencies, knownCheckoutSurface, pricingCheckoutSurface, proPrice as price } from "@/lib/analytics-events";
 import { pricingPath, signInHref } from "@/lib/auth-entry";
 import { useCookieSettings } from "@/components/cookie-settings";
-import { attemptIntent, checkoutIntentField } from "@/lib/checkout-intent";
+import { attemptIntent, checkoutIntentField, type CheckoutAttempt } from "@/lib/checkout-intent";
 
 const currencies = billingCurrencies;
 const prefixes = { USD: "US$", GBP: "£", EUR: "€", HKD: "HK$" };
@@ -39,7 +39,7 @@ export default function Pricing() {
   const details = createAsync(() => account(), { deferStream: true });
   const session = () => details()?.user;
   const entitlement = () => details()?.entitlement;
-  const intents = new Map<string, string>();
+  const checkoutPage: { attempt?: CheckoutAttempt } = {};
   return <>
     <PageMeta title={text("Pricing · Lockdocs", "價格 · Lockdocs")} description={text("Compare Free and Lockdocs Pro, with tax-inclusive annual pricing in four currencies.", "比較免費版與 Lockdocs Pro。年費已含稅，支援四種付款幣別。")}/>
     <JsonLd data={lockdocsApplication(pricingUrl(), [freeOffer(currency()), proOffer(currency(), canonicalOrigin + pricingPath(currency(), undefined, locale()))])}/>
@@ -62,10 +62,8 @@ export default function Pricing() {
           // Resubmits reuse the intent, so Money opens one session per attempt. Without one, checkout works as before.
           try {
             const field = form.elements.namedItem(checkoutIntentField);
-            const scope = currency() + ":" + entrySurface();
             if (field instanceof HTMLInputElement) {
-              field.value = intents.get(scope) ?? attemptIntent(scope, query.billing === "unavailable");
-              intents.set(scope, field.value);
+              field.value = attemptIntent(currency() + ":" + entrySurface(), query.billing === "unavailable", checkoutPage);
               field.disabled = false;
             }
           } catch { /* A native form submit must never depend on the intent. */ }

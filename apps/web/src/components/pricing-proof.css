@@ -36,9 +36,8 @@
 .decision-evidence .sample-diff { margin: 0; }
 .decision-citations { display: grid; }
 .decision-citations a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 24px;
+  display: inline-block;
+  padding-block: 4px;
   color: var(--blue);
   font: 500 11px/1.45 var(--mono);
   text-decoration: underline;

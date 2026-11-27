@@ -43,7 +43,7 @@ for (const zh of [false, true]) {
     await expect(decisionProof).toBeVisible();
     await expect(decisionProof).toContainText(example.label);
     await expect(decisionProof).toContainText(example.change[locale]);
-    await expect(decisionProof.locator("code")).toHaveText(example.path);
+    await expect(decisionProof.locator(".decision-site code")).toHaveText(example.path);
     const buy = plan.getByRole("link", { name: zh ? "購買 Lockdocs Pro — €109／年" : "Get Lockdocs Pro — €109/yr", exact: true });
     await expect(buy).toHaveAccessibleDescription(zh ? "請先登入，回到此頁後即可繼續結帳。"
       : "Sign in first, then return here to continue to checkout.");

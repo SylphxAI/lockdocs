@@ -1,14 +1,51 @@
 .pricing-decision-proof {
   margin-top: 12px;
-  padding: 8px 12px;
-  border-inline-start: 2px solid var(--mint);
-  background: var(--canvas);
-  border-radius: 4px;
+  padding-top: 12px;
+  border-top: 1px solid #2a4644;
   font-size: 13px;
   overflow-wrap: anywhere;
 }
-.pricing-decision-proof .plan-label { margin-bottom: 3px; }
+.pricing-decision-proof .plan-label { margin-bottom: 2px; }
 .plan .pricing-decision-proof p { margin: 0; }
+.decision-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding-block: 8px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 620;
+  line-height: 1.35;
+}
+.decision-trigger svg { flex: none; color: var(--mint); transition: transform .15s ease; }
+.decision-trigger:hover { color: var(--blue); }
+.decision-trigger:hover svg { transform: translateX(2px); }
+.decision-evidence + .decision-trigger { margin-top: 10px; border-top: 1px solid var(--line); }
+.decision-evidence {
+  display: grid;
+  gap: 7px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--canvas);
+}
+.plan .decision-site { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; color: var(--dim); font: 500 12px/1.5 var(--mono); }
+.plan .decision-site code { color: var(--ink); }
+.decision-evidence .sample-diff { margin: 0; }
+.decision-citations { display: grid; }
+.decision-citations a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  color: var(--blue);
+  font: 500 11px/1.45 var(--mono);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.plan .pricing-decision-proof .decision-note { color: var(--dim); font-size: 12px; line-height: 1.5; }
+@media (prefers-reduced-motion: reduce) { .decision-trigger svg { transition: none; } }
 .plan .pricing-sign-in-next { margin: 6px 0 0; font-size: 13px; }
 
 .pricing-proof {

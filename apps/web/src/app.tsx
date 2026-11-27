@@ -6,7 +6,7 @@ import { MetaProvider } from "@solidjs/meta";
 import { A as Link, useLocation, useSearchParams } from "@solidjs/router";
 import { ArrowUpRight, Braces, GitFork } from 'lucide-solid';
 import '@fontsource-variable/inter';
-import '@fontsource-variable/jetbrains-mono';
+import './fonts/jetbrains-mono.css';
 import './globals.css';
 import { context7AlternativePath, editorGuidePath } from "@/lib/editorial-routes";
 import { pypiUrl } from "@/lib/install";

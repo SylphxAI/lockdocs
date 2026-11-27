@@ -15,6 +15,7 @@ test("guides, reference, capabilities and vision describe Lockdocs as technical 
   for (const [route, headline] of [
     ["/guide", "Quickstart"], ["/guide/setup", "Agent setup"], ["/guide/how-it-works", "How it works"],
     ["/guide/ecosystems", "Supported ecosystems"], ["/guide/fetch", "Fetching docs"],
+    ["/guide/docs-site-mcp", "Docs-site MCP servers"],
     ["/reference", "CLI reference"], ["/reference/tools", "MCP tools"],
     ["/capabilities", "Capabilities"], ["/vision", "Vision"],
   ]) {

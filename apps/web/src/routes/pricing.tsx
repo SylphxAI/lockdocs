@@ -11,14 +11,13 @@ import { account } from "@/lib/account-query";
 import { PageMeta } from "@/components/page-meta";
 import { A as Link } from "@solidjs/router";
 import { ArrowRight, Check, LockKeyhole } from "lucide-solid";
-import { billingCurrencies, knownCheckoutSurface, pricingCheckoutSurface, proPrice as price } from "@/lib/analytics-events";
+import { billingCurrencies, knownCheckoutSurface, pricingCheckoutSurface } from "@/lib/analytics-events";
 import { pricingPath, signInHref } from "@/lib/auth-entry";
 import { useCookieSettings } from "@/components/cookie-settings";
 import { attemptIntent, checkoutIntentField, type CheckoutAttempt } from "@/lib/checkout-intent";
+import { annualAmount, annualBilling, perYear, pricePrefixes as prefixes } from "@/lib/pro-plan";
 
 const currencies = billingCurrencies;
-const prefixes = { USD: "US$", GBP: "£", EUR: "€", HKD: "HK$" };
-const annualAmount = (code: typeof currencies[number]) => Number(price.unit_amounts[code]) / 100;
 
 export default function Pricing() {
   const { href, carryCampaign, text, locale } = useSiteLanguage();
@@ -47,7 +46,7 @@ export default function Pricing() {
     <div class="page-intro pricing-intro"><div class="kicker"><span/> {text("LOCKDOCS PLANS", "LOCKDOCS 方案")}</div><h1>{text("Know what breaks before you upgrade.", "升級前，先找出受影響的程式碼")}</h1><p>{text("Exact-version docs are free. Pro adds call-site upgrade reports and private package docs.", "免費查閱指定版本的文件。Pro 提供附有呼叫位置的升級報告，以及私有套件文件。")}</p></div>
     <nav class="segmented currency-picker" aria-label={text("Billing currency", "付款幣別")}><For each={currencies}>{(code) => <a aria-current={code === currency() ? "page" : undefined} href={carryCampaign(currencyHref(code))}>{code}</a>}</For></nav>
     <div class="plan-grid">
-      <article class="surface plan plan-pro"><div class="plan-label">{text("PAID PLAN", "付費方案")}</div><h2>Lockdocs Pro</h2><div class="plan-price">{annual()}{text("/yr", "／年")}</div><p class="plan-total">{text("Billed annually upfront · Tax included", "年費一次付清，已含稅")}</p><ul class="check-list"><For each={[text("Everything in Free", "包含免費版的所有功能"), text("Upgrade Reports with call-site citations", "升級報告，附上受影響的呼叫位置"), text("Private Package Docs", "私有套件文件")]}>{(item) => <li><Check size={17}/>{item}</li>}</For></ul>
+      <article class="surface plan plan-pro"><div class="plan-label">{text("PAID PLAN", "付費方案")}</div><h2>Lockdocs Pro</h2><div class="plan-price">{annual()}{text(...perYear)}</div><p class="plan-total">{text(...annualBilling)}</p><ul class="check-list"><For each={[text("Everything in Free", "包含免費版的所有功能"), text("Upgrade Reports with call-site citations", "升級報告，附上受影響的呼叫位置"), text("Private Package Docs", "私有套件文件")]}>{(item) => <li><Check size={17}/>{item}</li>}</For></ul>
       {query.billing === "unavailable" && <p role="status" class="notice">{text("Checkout isn’t available right now. No payment was confirmed here.", "目前無法結帳，尚未確認任何付款。")}</p>}
       {entitlement()?.entitled ? <Link class="button primary" href="/dashboard">Manage Pro <ArrowRight size={16}/></Link> : !session() ? <>
         <Link class="button primary" href={carryCampaign(signInHref(returnPath()))} aria-describedby="pricing-sign-in-next"

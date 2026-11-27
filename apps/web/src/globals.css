@@ -32,6 +32,9 @@
 }
 .sign-in-card{max-width:480px;margin-inline:auto}
 .sign-in-card h1{font-size:clamp(32px,5vw,43px);letter-spacing:-.055em}
+.purchase-resume{display:grid;gap:4px;margin-block:4px 18px;padding:14px 16px;border:1px solid var(--line);border-radius:8px}
+.purchase-resume h2{font-size:19px;margin:2px 0}
+.purchase-resume p{margin:0}
 .unified-auth,.auth-providers{display:grid;gap:10px}
 .unified-auth form{display:grid;gap:8px}
 .unified-auth .button,.unified-auth input{min-height:44px}

@@ -2,8 +2,10 @@ import { createResource, createSignal, ErrorBoundary, onMount, Show, Suspense } 
 import { A, createAsync, useSearchParams } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 import { PageMeta } from "@/components/page-meta";
+import { PurchaseSummary } from "@/components/purchase-resume";
 import { SignIn } from "@/components/sign-in";
 import { validateNext } from "@/lib/auth-entry";
+import { purchaseResume } from "@/lib/purchase-resume";
 import { signInOptions } from "@/lib/sign-in-options";
 import { useSiteLanguage } from "@/lib/site-language";
 
@@ -20,9 +22,10 @@ export const route = { preload: () => signInOptions() };
 export default function SignInPage() {
   getRequestEvent()?.response.headers.set("Cache-Control", "private, no-store");
   const [params] = useSearchParams();
-  const { text } = useSiteLanguage();
+  const { locale, text } = useSiteLanguage();
   const loading = () => <p class="quiet" role="status">{text("Loading sign-in options…", "正在載入登入選項…")}</p>;
   const next = () => validateNext(typeof params.next === "string" ? params.next : null);
+  const purchase = () => purchaseResume(next(), locale());
   // The methods render on the server so the card has its final shape on first paint.
   const options = createAsync(() => signInOptions(), { deferStream: true });
   // Use the same-origin Auth endpoint on both document loads and SPA navigation.
@@ -43,6 +46,7 @@ export default function SignInPage() {
       <div class="plan-label">{text("YOUR WORKSPACE", "你的工作區")}</div>
       <h1>{text("Sign in to Lockdocs", "登入 Lockdocs")}</h1>
       <p class="quiet">{text("Manage your subscription and connect the Lockdocs CLI.", "管理訂閱並連結 Lockdocs CLI。")}</p>
+      <Show when={purchase()} keyed>{selected => <PurchaseSummary purchase={selected}/>}</Show>
       <Show when={params.auth === "failed" || params.error === "signin" || params.error === "cancelled" || params.error === "use_existing"}><p role="status" class="notice">{text("Sign-in didn’t finish. Try again or choose another method.", "未能完成登入，請重試或改用其他登入方式。")}</p></Show>
       <ErrorBoundary fallback={failed()}>
         <Show when={!session.error} fallback={failed()}>

@@ -53,6 +53,8 @@ npx -y @sylphx/lockdocs setup     # add lockdocs to Claude Code, Codex, Cursor, 
 
 That's it. Using Claude Code only? `claude mcp add lockdocs -- npx -y @sylphx/lockdocs mcp`. `setup` detects the clients you have, writes their MCP config, and prints every change. Run it again and nothing changes. Then ask your agent something like *"Use lockdocs: how do I reject unknown keys with the zod we use?"*
 
+Per-client and manual steps are in the [agent setup guide](https://lockdocs.sylphx.com/guide/setup). To confirm that Cursor or Claude Code cites the version in your lockfile, follow [Up-to-date docs for Cursor and Claude Code](https://lockdocs.sylphx.com/guides/up-to-date-docs-for-cursor-and-claude-code).
+
 You can also install or run the CLI from [PyPI](https://pypi.org/project/lockdocs/):
 
 ```bash
@@ -168,6 +170,8 @@ Three tools, cheap enough to call before every unfamiliar API:
 | `docs` | "How do I reject unknown keys?" (optionally `package: "zod"`) | The most relevant README, changelog and API sections of the installed version, within budget, each cited `zod@4.1.5 v4/classic/schemas.d.ts:453` |
 | `api` | `z.object`, `tokio::spawn`, `BaseModel.model_dump`, `gin.Context.JSON` | The exact signature and doc comment, overloads, members of a class/interface/struct/trait, and other matches |
 
+Arguments and responses for each tool: [MCP tools reference](https://lockdocs.sylphx.com/reference/tools).
+
 ## Ecosystems
 
 | Ecosystem | Versions from | Docs read from | API reference |
@@ -222,6 +226,8 @@ The same 105 questions are also asked through [Sylphx Search](https://sylphx.com
 | License | MIT | MIT client, hosted service | MIT | Proprietary |
 
 Context7 knows many sites and guides that never ship inside a package, so for a question whose answer lives only on a docs website, it can do better. lockdocs is for the other case: when the version matters, when you are offline or rate-limited, and when the package is yours. They combine well.
+
+[Lockdocs vs Context7](https://lockdocs.sylphx.com/compare) compares the two feature by feature and cites the Context7 README revision it checked. To see the difference in your own Next.js project, run the `cookies` lookup in [Context7 alternative for exact-version docs](https://lockdocs.sylphx.com/context7-alternative).
 
 ## How it works
 

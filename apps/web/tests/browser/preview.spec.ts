@@ -1,12 +1,12 @@
 import { expect, test } from "@playwright/test";
 
-const pages = ["/", "/playground", "/pricing", "/dashboard", "/docs", "/guide", "/reference", "/benchmarks", "/compare", "/pro", "/context7-alternative", "/guides/up-to-date-docs-for-cursor-and-claude-code"];
+const pages = ["/", "/playground", "/pricing", "/dashboard", "/docs", "/guide", "/reference", "/benchmarks", "/compare", "/pro", "/context7-alternative", "/guides/up-to-date-docs-for-cursor-and-claude-code", "/guides/nextjs-15-async-cookies"];
 // These smoke tests exercise the unconfigured preview; analytics.spec.ts covers consent separately.
 test.beforeEach(async ({ page }) => {
   await page.route("**/api/analytics/config", route => route.fulfill({ json: { measurementId: null } }));
 });
 
-const allDocs = ["/docs", "/guide", "/guide/setup", "/guide/how-it-works", "/guide/ecosystems", "/guide/fetch", "/reference", "/reference/tools", "/benchmarks", "/compare", "/guide/docs-site-mcp", "/capabilities", "/vision", "/pro", "/context7-alternative", "/guides/up-to-date-docs-for-cursor-and-claude-code"];
+const allDocs = ["/docs", "/guide", "/guide/setup", "/guide/how-it-works", "/guide/ecosystems", "/guide/fetch", "/reference", "/reference/tools", "/benchmarks", "/compare", "/guide/docs-site-mcp", "/capabilities", "/vision", "/pro", "/context7-alternative", "/guides/up-to-date-docs-for-cursor-and-claude-code", "/guides/nextjs-15-async-cookies"];
 
 test("public HTML protects package versions without changing selectable commands", async ({ page, request }) => {
   const sitemap = await request.get("/sitemap.xml");

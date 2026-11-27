@@ -206,8 +206,12 @@ ${rule}
   await expect(page.getByRole("link", { name: "Sign in", exact: true })).toHaveAttribute("href", "/sign-in?next=%2Fdashboard");
   const signIn = await request.get("/sign-in");
   expect(signIn.headers()["cache-control"]).toBe("private, no-store");
-  expect(await signIn.text()).not.toMatch(/sign-in isn.t available|couldn.t load sign-in options/i);
+  // Missing bindings render the same fail-closed retry state on the server and in the browser: no method is offered.
+  const signInHtml = await signIn.text();
+  expect(signInHtml).toContain("Couldn’t load sign-in options. Try again.");
+  expect(signInHtml).not.toMatch(/href="\/api\/auth\/(?:google|github)|id="signin-email"/);
   await page.goto("/sign-in");
   await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Continue with/ })).toHaveCount(0);
   expect((await request.post("/api/billing/checkout")).status()).toBe(503);
 });

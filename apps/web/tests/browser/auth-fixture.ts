@@ -27,6 +27,9 @@ async function startFixture(billing: boolean, googleAds: boolean) {
   const cert = join(tmp, "cert.pem");
   const key = join(tmp, "key.pem");
   const methods = { email_otp: false, passkey: false, password: true, sign_up: true };
+  // Upcoming Auth config reads to fail, and how: unavailable (503), refused (another
+  // instance's metadata, which the handler rejects) or missing (no methods enabled).
+  const outages: { config: number; mode: "unavailable" | "refused" | "missing" } = { config: 0, mode: "unavailable" };
   const social = ["google", "github"].map(provider => ({ provider, enabled: true, credentials: "shared" }));
   const calls: string[] = [];
   const shipments: string[] = [];
@@ -174,6 +177,12 @@ async function startFixture(billing: boolean, googleAds: boolean) {
     switch (path) {
       case "/v1/client/config":
         if (req.method !== "GET") return rejectContract("config method");
+        if (outages.config > 0) {
+          outages.config--;
+          if (outages.mode === "refused") return json(res, { instance: { id: "ins_other", slug: "other", environment: "test" }, methods, social });
+          if (outages.mode === "missing") return json(res, { instance: { id: instance, slug: "lockdocs", environment: "test" }, methods: { ...methods, email_otp: false, passkey: false }, social: [] });
+          return json(res, {}, 503);
+        }
         return json(res, { instance: { id: instance, slug: "lockdocs", environment: "test" }, methods, social });
       case "/v1/client/oauth/google/start":
       case "/v1/client/oauth/github/start": {
@@ -265,7 +274,7 @@ async function startFixture(billing: boolean, googleAds: boolean) {
     if (health.status !== 200 || (await health.json()).money !== (billing ? "ok" : "unconfigured")) {
       throw new Error("Fixture app health did not report the expected Money state");
     }
-    return { origin, methods, calls, rejections, shipments, bindings, checkouts, signalBatches, passkey, pro, ticketSignal, close };
+    return { origin, methods, outages, calls, rejections, shipments, bindings, checkouts, signalBatches, passkey, pro, ticketSignal, close };
   } catch (error) {
     await close();
     throw error;

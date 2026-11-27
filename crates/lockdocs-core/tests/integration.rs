@@ -82,6 +82,24 @@ fn missing_packages_explain_themselves() {
 }
 
 #[test]
+fn no_lockfile_points_at_the_project_or_an_exact_version() {
+    engine();
+    let empty = tempfile::tempdir().unwrap();
+    let e = Engine::new(
+        empty.path(),
+        Options {
+            fetch: false,
+            upstream: false,
+            private: false,
+        },
+    );
+    let err = e.docs(Some("zod"), "strict", 1000).err().unwrap();
+    assert!(err.contains("not a dependency") && err.contains("no lockfile found"), "{err}");
+    assert!(err.contains("-C <dir>") && err.contains("npm:zod@<version> --fetch"), "{err}");
+    assert!(!err.contains("Use `resolve`"), "{err}");
+}
+
+#[test]
 fn budget_is_respected() {
     let e = engine();
     let a = e.docs(None, "schema object strict model dict spawn json", 300).unwrap();

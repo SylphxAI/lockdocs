@@ -1,25 +1,37 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type BrowserContext, type Page } from "@playwright/test";
 import { test } from "./auth-fixture";
 
 const path = "/sign-in?next=%2Fpricing";
 
+// Web-font swap is a separate, font-owned shift that varies with the runner's
+// fallback fonts. Keep the fallback font for the whole run, in both the
+// JavaScript-off and hydrated pages, so these checks measure the sign-in structure.
+const fallbackFonts = (target: Page | BrowserContext) => target.route(url => /\.woff2?$/.test(url.pathname), route => route.abort());
+
 async function recordShifts(page: Page) {
+  await fallbackFonts(page);
   await page.addInitScript(() => {
-    const shifts: number[] = [];
+    const shifts: { value: number; sources: string[] }[] = [];
     Object.defineProperty(window, "__layoutShifts", { value: shifts });
+    type Shift = PerformanceEntry & { value: number; hadRecentInput: boolean; sources: { node?: Node; previousRect: DOMRectReadOnly; currentRect: DOMRectReadOnly }[] };
     new PerformanceObserver(list => {
-      for (const entry of list.getEntries() as (PerformanceEntry & { value: number; hadRecentInput: boolean })[]) {
-        if (!entry.hadRecentInput) shifts.push(entry.value);
+      for (const entry of list.getEntries() as Shift[]) {
+        if (!entry.hadRecentInput) shifts.push({ value: entry.value, sources: entry.sources.map(source =>
+          (source.node instanceof Element ? source.node.tagName + "." + source.node.className : source.node?.nodeName) + " y" + source.previousRect.y + "→" + source.currentRect.y) });
       }
     }).observe({ type: "layout-shift", buffered: true });
   });
 }
 
 const settle = (page: Page) => page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
-const shiftTotal = (page: Page) => page.evaluate(() => (window as unknown as { __layoutShifts: number[] }).__layoutShifts.reduce((sum, value) => sum + value, 0));
+async function expectNoShift(page: Page) {
+  const shifts = await page.evaluate(() => (window as unknown as { __layoutShifts: { value: number; sources: string[] }[] }).__layoutShifts);
+  expect(shifts.reduce((sum, shift) => sum + shift.value, 0), JSON.stringify(shifts)).toBeLessThan(0.01);
+}
 
 async function serverLayout(page: Page, url: string) {
   const context = await page.context().browser()!.newContext({ javaScriptEnabled: false, viewport: page.viewportSize(), ignoreHTTPSErrors: true });
+  await fallbackFonts(context);
   try {
     const plain = await context.newPage();
     await plain.goto(url);
@@ -47,7 +59,7 @@ for (const passkey of [false, true]) {
     if (passkey) await expect(page.getByRole("button", { name: "Continue with a passkey" })).toBeEnabled();
     await settle(page);
     expect(await page.locator(".auth-terms").boundingBox()).toEqual(before);
-    expect(await shiftTotal(page)).toBeLessThan(0.01);
+    await expectNoShift(page);
     expect(auth.rejections).toEqual([]);
   });
 }
@@ -65,7 +77,7 @@ for (const mode of ["unavailable", "refused", "missing"] as const) {
     const card = page.locator(".sign-in-card");
     await expect(card.getByRole("alert")).toHaveText("Couldn’t load sign-in options. Try again.");
     await settle(page);
-    expect(await shiftTotal(page)).toBeLessThan(0.01);
+    await expectNoShift(page);
     await card.getByRole("button", { name: "Try again", exact: true }).click();
     await expect(card.getByRole("link", { name: "Continue with Google" })).toHaveAttribute("href", "/api/auth/google?next=%2Fpricing");
     await expect(card.getByRole("alert")).toHaveCount(0);
